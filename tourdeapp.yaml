@@ -1,0 +1,9 @@
+exposedPort: 80
+containers:
+  - name: app
+    image: registry.tourde.cloud/<slug>/app
+    port: 3000
+build:
+  - name: app
+    context: .
+    dockerfile: ./Dockerfile

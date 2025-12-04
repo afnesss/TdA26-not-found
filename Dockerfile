@@ -1,4 +1,4 @@
-FROM node:22-alphine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm install --production
 COPY . .
 
 ENV PORT=3000
-EXPOSE ${PORT}
+EXPOSE $PORT
 
 CMD [ "node", "server.js" ]
 

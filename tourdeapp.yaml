@@ -1,18 +1,15 @@
 version: 1
 exposedPort: 80
 
-app:
-  name: app
-
-  containers:
-    app:
-      image: registry.tourde.cloud/<slug>/app
-      port: 3000
-      env:
-        PORT: "3000"
-        NODE_ENV: "production"
+containers:
+  - name: app
+    image: registry.tourde.cloud/<slug>/app
+    port: 3000
+    env:
+      PORT: "3000"
+      NODE_ENV: "production"
 
 build:
-  app:
+  - name: app
     context: .
     dockerfile: Dockerfile

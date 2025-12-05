@@ -1,4 +1,3 @@
-version: 1
 exposedPort: 80
 
 containers:

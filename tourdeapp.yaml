@@ -1,8 +1,8 @@
 version: 1
+exposedPort: 80
 
 app:
   name: app
-  exposedPort: 80
 
   containers:
     app:

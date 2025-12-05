@@ -3,7 +3,10 @@ containers:
   - name: app
     image: registry.tourde.cloud/<slug>/app
     port: 3000
+    env:
+      PORT: "3000"
+      NODE_ENV: "production"
 build:
   - name: app
     context: .
-    dockerfile: ./Dockerfile
+    dockerfile: Dockerfile

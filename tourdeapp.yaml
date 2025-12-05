@@ -3,7 +3,6 @@ exposedPort: 80
 containers:
   - name: app
     image: registry.tourde.cloud/<slug>/app
-    tag: latest
     port: 3000
     env:
       PORT: "3000"

@@ -3,12 +3,18 @@ exposedPort: 80
 containers:
   - name: app
     image: registry.tourde.cloud/not-found/app
-    port: 3000
+    port: 80
     env:
       PORT: "3000"
       NODE_ENV: "production"
+  - name: caddy
+    image: registry.tourde.cloud/not-found/caddy
+    port: 80
 
 build:
   - name: app
     context: .
     dockerfile: Dockerfile
+  - name: caddy
+    context: ./caddy
+    dockerfile: ./caddy/Dockerfile

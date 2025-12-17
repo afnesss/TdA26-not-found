@@ -11,9 +11,6 @@ node_modules/
 # Logs
 *.log
 
-# Drizzle migrations
-drizzle/
-
 # IDE files
 .vscode/
 .idea/

@@ -27,10 +27,10 @@ containers:
 build:
   - name: api
     context: ./apps/api
-    dockerfile: Dockerfile
+    dockerfile: ./apps/api/Dockerfile
   - name: client
     context: ./apps/client
-    dockerfile: Dockerfile
+    dockerfile: ./apps/client/Dockerfile
   - name: caddy
     context: ./apps/caddy
-    dockerfile: Dockerfile
+    dockerfile: ./apps/caddy/Dockerfile

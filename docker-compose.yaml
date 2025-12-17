@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tda26
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist database data across container restarts
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      # Connect to the 'db' service within the Docker network
+      DATABASE_URL: postgresql://postgres:password@db:5432/tda26
+    depends_on:
+      - db
+
+  client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile
+    ports:
+      - "80" # This port is internal to the Docker network, no need to expose it to host
+    depends_on:
+      - api
+
+  caddy:
+    build:
+      context: ./apps/caddy
+      dockerfile: Dockerfile
+    ports:
+      # Expose Caddy's port 80 to the host's port 8080
+      - "8080:80"
+    depends_on:
+      - api
+      - client
+    # Mount the Caddyfile for easy local changes without rebuilding the image
+    volumes:
+      - ./apps/caddy/Caddyfile:/etc/caddy/Caddyfile
+
+volumes:
+  db_data:
+    driver: local

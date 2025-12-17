@@ -17,7 +17,8 @@ containers:
     port: 3001
 
   - name: db
-    image: postgres:16
+    image: postgres
+    tag: "16"
     port: 5432
     env:
       POSTGRES_DB: tda26

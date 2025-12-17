@@ -1,0 +1,7 @@
+{
+  "name": "TdA26-not-found",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}

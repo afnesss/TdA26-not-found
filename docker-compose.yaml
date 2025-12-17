@@ -8,30 +8,36 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Persist database data across container restarts
       - db_data:/var/lib/postgresql/data
 
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
+    command: npm run dev
     ports:
       - "3000:3000"
     environment:
       PORT: 3000
-      # Connect to the 'db' service within the Docker network
       DATABASE_URL: postgresql://postgres:password@db:5432/tda26
     depends_on:
       - db
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
 
   client:
     build:
       context: ./apps/client
       dockerfile: Dockerfile
+    command: npm run dev
     ports:
-      - "80" # This port is internal to the Docker network, no need to expose it to host
+      - "3001:3001"
     depends_on:
       - api
+    volumes:
+      - ./apps/client:/app
+      - /app/node_modules
 
   caddy:
     build:

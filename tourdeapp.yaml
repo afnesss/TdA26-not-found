@@ -14,7 +14,7 @@ containers:
 
   - name: client
     image: registry.tourde.cloud/<slug>/client
-    port: 80
+    port: 3001
 
   - name: db
     image: postgres:16

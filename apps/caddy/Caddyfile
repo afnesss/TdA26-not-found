@@ -1,12 +1,4 @@
 :80 {
-	# Route all API requests to the 'api' service container.
-	handle_path /api/* {
-		reverse_proxy api:3000
-	}
-
-	# Handle all other requests by sending them to the 'client' service container,
-	# which is running Nginx to serve the React app.
-	handle {
-		reverse_proxy client:80
-	}
+	reverse_proxy /api/* localhost:3000
+	reverse_proxy * localhost:3001
 }

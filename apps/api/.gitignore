@@ -1,0 +1,19 @@
+# Compiled TypeScript output
+dist/
+
+# Node.js modules
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# Drizzle migrations
+drizzle/
+
+# IDE files
+.vscode/
+.idea/

@@ -1,0 +1,27 @@
+import cors from "cors";
+import * as dotenv from "dotenv";
+import express from "express";
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT;
+
+if (!port) {
+  throw new Error("PORT is undefined or is not set in .env file");
+}
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("API is running!");
+});
+
+app.get("/api/", (req, res) => {
+  res.json({ organization: "Student Cyber Games" });
+});
+
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
+});

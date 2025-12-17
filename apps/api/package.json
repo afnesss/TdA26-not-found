@@ -8,8 +8,8 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate:pg",
-    "db:migrate": "drizzle-kit migrate:pg"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "keywords": [],
   "author": "",

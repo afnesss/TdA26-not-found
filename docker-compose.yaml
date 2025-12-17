@@ -53,7 +53,7 @@ services:
       - client
     # Mount the Caddyfile for easy local changes without rebuilding the image
     volumes:
-      - ./apps/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./apps/caddy/Caddyfile.development:/etc/caddy/Caddyfile
 
 volumes:
   db_data:

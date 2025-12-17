@@ -17,5 +17,7 @@ COPY --from=base /app/package.json /app/package-lock.json ./
 RUN npm install --omit=dev
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle ./drizzle
+# Copy the drizzle config from the 'build' stage
+COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
 EXPOSE 3000
 CMD ["npm", "run", "start"]

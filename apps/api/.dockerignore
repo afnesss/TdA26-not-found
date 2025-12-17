@@ -1,0 +1,2 @@
+# Ignore the node_modules directory to prevent conflicts with the container's own modules
+node_modules

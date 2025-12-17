@@ -9,7 +9,7 @@ containers:
     image: registry.tourde.cloud/<slug>/api
     port: 3000
     env:
-      PORT: 3000
+      PORT: "3000"
       DATABASE_URL: postgresql://postgres:password@localhost:5432/tda26
 
   - name: client

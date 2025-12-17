@@ -1,12 +1,21 @@
 exposedPort: 80
 
 containers:
+  - name: caddy
+    image: registry.tourde.cloud/<slug>/caddy
+    port: 80
+
   - name: api
-    image: registry.tourde.cloud/not-found/api
-    port: 8000
+    image: registry.tourde.cloud/<slug>/api
+    port: 3000
     env:
-      PORT: 8000
+      PORT: 3000
       DATABASE_URL: postgresql://postgres:password@localhost:5432/tda26
+
+  - name: client
+    image: registry.tourde.cloud/<slug>/client
+    port: 80
+
   - name: db
     image: postgres:16
     port: 5432
@@ -14,14 +23,14 @@ containers:
       POSTGRES_DB: tda26
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-  - name: caddy
-    image: registry.tourde.cloud/not-found/caddy
-    port: 80
 
 build:
   - name: api
     context: ./apps/api
     dockerfile: Dockerfile
+  - name: client
+    context: ./apps/client
+    dockerfile: Dockerfile
   - name: caddy
-    context: ./caddy
-    dockerfile: ./caddy/Dockerfile
+    context: ./apps/caddy
+    dockerfile: Dockerfile

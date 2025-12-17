@@ -2,18 +2,18 @@ exposedPort: 80
 
 containers:
   - name: caddy
-    image: registry.tourde.cloud/<slug>/caddy
+    image: registry.tourde.cloud/not-found/caddy
     port: 80
 
   - name: api
-    image: registry.tourde.cloud/<slug>/api
+    image: registry.tourde.cloud/not-found/api
     port: 3000
     env:
       PORT: "3000"
       DATABASE_URL: postgresql://postgres:password@localhost:5432/tda26
 
   - name: client
-    image: registry.tourde.cloud/<slug>/client
+    image: registry.tourde.cloud/not-found/client
     port: 3001
 
   - name: db

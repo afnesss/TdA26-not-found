@@ -11,6 +11,7 @@ This repository contains the monorepo for our Tour de App 2026 project. It inclu
 - [Local Development](#local-development)
   - [Recommended Setup: Docker Compose](#recommended-setup-docker-compose)
   - [Alternative Setup: Manual](#alternative-setup-manual)
+  - [Connecting Frontend to Backend](#connecting-frontend-to-backend)
 - [Development Workflow](#development-workflow)
   - [Git Flow](#git-flow)
   - [Database Migrations](#database-migrations)
@@ -75,7 +76,22 @@ While not recommended, you can run services individually. This is useful if you 
 
 2.  **Running Services Manually:** If you run the API or Client on your host machine, you will need to create a `.env` file for them and configure the environment variables correctly.
     - **API**: Requires `DATABASE_URL` (e.g., `postgresql://postgres:password@localhost:5432/tda26`).
-    - **Client**: Will require `VITE_API_URL` (e.g., `http://localhost:3000`) once API calls are implemented.
+
+### Connecting Frontend to Backend
+
+When making API calls from the client, you should **always use relative URLs that go through the Caddy proxy**. This approach works seamlessly for both local development and production without requiring any environment variables for the API URL.
+
+The Caddy proxy (running on `localhost:8080` locally, and the public URL in production) is the single entry point for our application. It knows how to route requests starting with `/api` to the backend service.
+
+**Correct Way (in client code):**
+
+```javascript
+// This works everywhere.
+axios.get("/api/courses");
+```
+
+By using `/api/courses`, the browser will automatically make the request to the correct host (`localhost:8080` locally or your production domain), and Caddy will handle the rest.
+
     - Check .env.example files, there will be detailed and up to date information about required env vars.
 
 ---

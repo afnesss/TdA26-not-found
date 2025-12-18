@@ -3,5 +3,12 @@
   "private": true,
   "workspaces": [
     "apps/*"
-  ]
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "validate": "npm run typecheck -w api && npm run build -w api && npm run typecheck -w client && npm run build -w client"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
 }

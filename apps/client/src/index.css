@@ -1,3 +1,4 @@
+@import './assets/fonts.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -75,6 +76,7 @@
 }
 
 @theme inline {
+  --font-sans: 'Dosis', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

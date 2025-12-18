@@ -14,6 +14,7 @@ This repository contains the monorepo for our Tour de App 2026 project. It inclu
 - [Development Workflow](#development-workflow)
   - [Git Flow](#git-flow)
   - [Database Migrations](#database-migrations)
+- [Commit Conventions](#commit-conventions)
 - [Deployment](#deployment)
   - [Critical Deployment Files](#critical-deployment-files)
 - [Tooling & Quality Assurance](#tooling--quality-assurance)
@@ -101,6 +102,19 @@ We use Drizzle to manage database schema changes.
     npm run db:migrate -w api
     ```
 4.  Commit the newly generated migration file along with your schema changes. Migrations are run automatically on the production server at startup.
+
+### Commit Conventions
+
+While it is not strictly necessary, using a conventional commit message format helps to identify where changes were made without looking at the commit itself. It keeps the project history clean and easy to read.
+
+A good format is `type(scope): description`. For example:
+
+- `feat(client): add user login form`
+- `fix(caddy): resolve api routing issue`
+- `chore: update npm dependencies`
+- `docs: explain local development setup`
+
+- use it pls :D
 
 ---
 

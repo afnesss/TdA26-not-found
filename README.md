@@ -25,6 +25,10 @@ This repository contains the monorepo for our Tour de App 2026 project. It inclu
 
 This project is structured as a monorepo using npm workspaces, which allows us to manage multiple applications within a single repository.
 
+For more detailed information on each application, please refer to their dedicated README files:
+-   [**Client Application README**](apps/client/README.md)
+-   [**API Application README**](apps/api/README.md)
+
 ### Client (`apps/client`)
 
 - **Framework**: React with Vite

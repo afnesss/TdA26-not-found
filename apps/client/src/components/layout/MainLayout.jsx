@@ -36,7 +36,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden hero-gradient">
+    <div className="flex flex-col h-screen overflow-hidden">
       <Header/>
       <section className='flex-1 p-3 overflow-y-auto sm:p-5 bg-linear-to-b from-accent-teal-dark/10 to-accent-teal/10 hide-scrollbar'>
         {renderBackground()} 

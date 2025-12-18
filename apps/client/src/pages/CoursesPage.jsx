@@ -333,7 +333,8 @@ const CoursesPage = () => {
                   Žádné kurzy nenalezeny
                 </h3>
                 <Button 
-                  variant='primary' 
+                  variant='primary'
+                  size='primary' 
                   onClick={() => {setSearchQuery(''); setDisplayCount(9)}}
                 >
                   Vymazat vyhledávání
@@ -346,6 +347,7 @@ const CoursesPage = () => {
               <div className='mt-8 text-center'>
                 <Button 
                   variant='primary'
+                  size='primary' 
                   onClick={() => {setIsLoading(true); loadMoreCourses();}}
                 >
                   Načíst další kurzy

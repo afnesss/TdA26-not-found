@@ -11,9 +11,9 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         primary:
-          "rounded-xl cursor-pointer bg-linear-to-r from-accent-teal to-primary text-white px-7 py-3.5 \
+          "rounded-xl cursor-pointer bg-linear-to-r from-accent-teal to-primary text-background\
           font-bold hover:from-accent-teal-dark hover:to-accent-blue transition-all duration-300 \
-          shadow-lg hover:shadow-xl hover:scale-102 text-base max-sm:py-2 max-sm:text-md sm:text-md",
+          shadow-lg hover:shadow-xl hover:scale-102 text-base max-sm:text-md sm:text-md",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
@@ -25,6 +25,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
+        primary: "px-7 py-3.5 max-sm:py-2", 
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-7 has-[>svg]:px-4 py-3.5",

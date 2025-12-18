@@ -46,7 +46,7 @@ const HomePage = () => {
 
       <div className='flex flex-row gap-5'>
         
-        <Button variant='primary' onClick={() => {navigate('/courses')}}>Procházet Kurzy</Button>      
+        <Button variant='primary' size="primary" onClick={() => {navigate('/courses')}}>Procházet Kurzy</Button>      
 
       </div>
 

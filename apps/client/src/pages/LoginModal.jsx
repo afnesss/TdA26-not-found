@@ -55,7 +55,7 @@ const LoginModal = ({close}) => {
 
                 </div>
 
-              <Button variant='primary'>{isLogin ? "Sign In" : "Register"}</Button>
+              <Button variant='primary' size="primary">{isLogin ? "Sign In" : "Register"}</Button>
                   
 
                 <p className="text-sm text-gray-600 mt-3">

@@ -10,12 +10,22 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        primary:
+          "rounded-xl cursor-pointer bg-gradient-to-r from-accent-teal to-primary text-primary-foreground \
+          px-7 py-3.5 font-bold text-base hover:from-accent-teal-light hover:to-accent-teal-dark \
+          transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] \
+          focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 \
+          disabled:opacity-50 disabled:pointer-events-none",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "bg-background cursor-pointer \
+          text-primary font-semibold \
+          rounded-lg px-4 py-2 \
+          shadow-md transition-colors duration-200 \
+          hover:bg-accent \
+          focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 \
+          disabled:opacity-50 disabled:pointer-events-none",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

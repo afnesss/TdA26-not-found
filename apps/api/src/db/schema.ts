@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -13,4 +20,22 @@ export const courses = pgTable("courses", {
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// course_id is INTEGER referencing courses.id (not UUID)
+export const courseMaterials = pgTable("course_materials", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  courseId: integer("course_id")
+    .notNull()
+    .references(() => courses.uuid, { onDelete: "cascade" }),
+  type: varchar("type", { length: 10 }).notNull(), // 'link' or 'file'
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  // Link-specific
+  url: text("url"),
+  // File-specific
+  fileContent: text("file_content"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  originalFilename: varchar("original_filename", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });

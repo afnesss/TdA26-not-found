@@ -20,7 +20,6 @@ const MainLayout = () => {
       navigate('/');
     }
   };
-
   const renderBackground = () => {
     if (!isLoginOpen) {
       return <Outlet />;

@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Search, Calendar, ArrowRight, BookOpen, MessageSquare, Filter } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Calendar, ArrowRight, BookOpen} from 'lucide-react'
 import {Button} from '../components/ui/button';
 import HintPageText from '../components/shared/HintPageText';
 

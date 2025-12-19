@@ -2,6 +2,7 @@ import {Route, createBrowserRouter, createRoutesFromElements, RouterProvider} fr
 import HomePage from './pages/HomePage';
 import MainLayout from './components/layout/MainLayout';
 import CoursesPage from './pages/CoursesPage';
+import LoginPage from './pages/LoginPage'
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -9,7 +10,7 @@ function App() {
     <Route path='/' element={<MainLayout />}>
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
-        <Route path='/login' element={null}></Route>
+        <Route path='/login' element={<LoginPage />}></Route>
     </Route>
   ));
 

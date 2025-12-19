@@ -10,9 +10,16 @@ const CoursesPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [displayCount, setDisplayCount] = useState(9);
- 
+
+  type Courses = {
+    uuid: string,
+    name: string,
+    description: string,
+    createdAt: string,
+    updatedAt: string
+  }
   
-  const mockCourses = [
+  const mockCourses: Courses[] = [
     {
       uuid: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       name: "Kritické myšlení pro začátečníky",
@@ -91,10 +98,11 @@ const CoursesPage = () => {
     { id: 'updated', label: 'Nedávno aktualizované', icon: ArrowRight }
   ];
 
-  const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'];
+  const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'] as const;
+  type AccentColor = typeof colors[number];
 
-  const getIconBgClass = (color) => {
-    const colorMap = {
+  const getIconBgClass = (color:AccentColor):string => {
+    const colorMap: Record<AccentColor, string>= {
       'accent-teal-light': 'bg-linear-to-br from-accent-teal-light/20 to-accent-teal-light/60',
       'accent-teal': 'bg-linear-to-br from-accent-teal/20 to-accent-teal/60',
       'accent-teal-dark': 'bg-linear-to-br from-accent-teal-dark/20 to-accent-teal-dark/60',
@@ -102,8 +110,8 @@ const CoursesPage = () => {
     return colorMap[color];
   };
 
-  const getGradientClass = (color) => {
-    const gradientMap = {
+  const getGradientClass = (color:AccentColor):string => {
+    const gradientMap: Record<AccentColor, string> = {
       'accent-teal-light': 'from-secondary via-accent-teal-light to-accent-teal-light',
       'accent-teal': 'from-accent-teal-light via-accent-teal to-accent-teal',
       'accent-teal-dark': 'from-accent-teal via-accent-teal-dark to-primary',
@@ -119,13 +127,12 @@ const CoursesPage = () => {
 
   // Сортування згідно фільтру
   const sortedCourses = [...filteredCourses].sort((a, b) => {
-    if (selectedFilter === 'newest') {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    }
-    if (selectedFilter === 'updated') {
-      return new Date(b.updatedAt) - new Date(a.updatedAt);
-    }
-    return 0;
+    const dateKey = selectedFilter === 'newest' ? 'createdAt' :
+    selectedFilter === 'updated' ? 'updatedAt': null;
+
+    if (!dateKey) return 0;
+
+    return new Date(b[dateKey]).getTime() - new Date(a[dateKey]).getTime();
   });
 
   const hasMoreCourses = sortedCourses.length > displayCount;
@@ -136,9 +143,9 @@ const CoursesPage = () => {
   }
 
   // Розрахунок часу з останнього оновлення
-  const getTimeAgo = (date) => {
-    const now = new Date();
-    const updated = new Date(date);
+  const getTimeAgo = (date: string) => {
+    const now = new Date().getTime();
+    const updated = new Date(date).getTime();
     const diffInDays = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
     
     if (diffInDays === 0) return 'Dnes';

@@ -13,7 +13,7 @@ const MainLayout = () => {
   const isLoginOpen = location.pathname === '/login';
   const background = location.state?.background;
 
-    const closeLogin = () => {
+    const closeLogin = ():void => {
     if (background) {
       navigate(background);
     } else {

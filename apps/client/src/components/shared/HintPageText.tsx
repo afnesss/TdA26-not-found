@@ -1,10 +1,15 @@
+type HintPageTextProps = {
+  text: string;
+  icon: React.ElementType;
+  spanText?: string | null;
+};
 
-const HintPageText = ({text, icon: Icon, spanText = null}) => {
+const HintPageText = ({text, icon: Icon, spanText = null}: HintPageTextProps) => {
   return (
     <div className='flex items-center gap-4'>
 
       <span className="bg-linear-to-r from-secondary/40 to-accent-teal-light/30
-                    text-primary px-3 py-2 rounded-full max-sm:text-xs sm:text-xs text-sm font-bold 
+                    text-primary px-3 py-2 rounded-full max-sm:text-xs sm:text-sm text-md font-bold 
                     inline-flex items-center gap-2 border-2 border-secondary/50 shadow-sm">
         <Icon className="w-4 h-4" />
         {text}

@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Eye, EyeOff, X } from 'lucide-react'
 import {Button} from '../components/ui/button';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 // import { useModalStore } from '../../stores/useZustStore';
-
-const LoginModal = ({close}) => {
+type LoginModalProps ={
+  close: () => void;
+}
+const LoginModal = ({close}: LoginModalProps) => {
   // const closeLogin = useModalStore((state) => state.closeLogin)
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const[show, setShow] = useState(false);
 

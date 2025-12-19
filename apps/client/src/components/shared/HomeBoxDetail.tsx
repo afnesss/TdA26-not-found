@@ -1,4 +1,11 @@
-const HomeBoxDetail = ({bg, icon: Icon, text}) => {
+type HomeBoxDetailProps = {
+  bg: BgVariant;
+  icon: React.ElementType;
+  text: string;
+};
+type BgVariant = "accent-teal-light" | "accent-teal" | "accent-teal-dark";
+
+const HomeBoxDetail = ({bg, icon: Icon, text}: HomeBoxDetailProps) => {
   const bgClasses = {
     'accent-teal-light': 'bg-gradient-to-br from-accent-teal-light/20 to-accent-teal-light/60 text-[#2D8B6B]' ,
     'accent-teal': 'bg-gradient-to-br from-accent-teal/20 to-accent-teal/60 text-[#246969]',

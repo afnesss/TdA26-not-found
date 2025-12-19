@@ -51,7 +51,7 @@ const HomePage = () => {
       </div>
 
       <div className='grid grid-cols-3 max-w-2xl gap-3 sm:gap-5'>
-        <HomeBoxDetail className='col-span-1' bg='accent-teal-light' icon={Brain} text='Chytré řešení'/>
+        <HomeBoxDetail bg='accent-teal-light' icon={Brain} text='Chytré řešení'/>
         <HomeBoxDetail bg='accent-teal' icon={Lightbulb} text='Interaktivní přístup'/>
         <HomeBoxDetail bg='accent-teal-dark' icon={Zap} text='Jednoduše a rychle'/>
       </div>

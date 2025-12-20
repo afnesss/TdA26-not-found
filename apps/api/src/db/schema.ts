@@ -22,10 +22,9 @@ export const courses = pgTable("courses", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// course_id is INTEGER referencing courses.id (not UUID)
 export const courseMaterials = pgTable("course_materials", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  courseId: integer("course_id")
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  courseId: uuid("course_id")
     .notNull()
     .references(() => courses.uuid, { onDelete: "cascade" }),
   type: varchar("type", { length: 10 }).notNull(), // 'link' or 'file'

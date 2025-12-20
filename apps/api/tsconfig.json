@@ -7,8 +7,8 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "types": ["node"]
+    "types": ["node", "express"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/types"],
   "exclude": ["node_modules"]
 }

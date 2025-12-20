@@ -42,8 +42,8 @@ app.get("/", (req, res) => {
   res.json({ organization: "Student Cyber Games" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/courses", courseRoutes);
+app.use("/auth", authRoutes);
+app.use("/courses", courseRoutes);
 
 async function start() {
   try {

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "npm run db:migrate && node dist/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "npm run db:migrate && nodemon src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",

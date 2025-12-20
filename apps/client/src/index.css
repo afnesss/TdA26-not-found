@@ -143,6 +143,7 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
  }
+ 
 @layer components{
 .center-box{
     @apply fixed inset-0 flex items-center justify-center;

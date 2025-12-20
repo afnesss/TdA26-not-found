@@ -245,13 +245,12 @@ const CoursesPage = () => {
                 return (
                   <div
                     key={course.uuid}
-                    className='bg-linear-to-br from-white to-secondary/20 rounded-xl shadow-lg 
-                           hover:shadow-2xl transition-all duration-300 overflow-hidden 
-                           border-2 border-secondary/30 hover:border-accent-teal-light group 
-                           cursor-pointer hover:-translate-y-1'
+                    className='bg-background rounded-xl shadow-lg 
+                           hover:shadow-2xl transition-all duration-300 overflow-hidden  group 
+                           cursor-pointer hover:-translate-y-0.5'
                   >
                     {/* Градієнт топ */}
-                    <div className={`h-3 bg-linear-to-r ${getGradientClass(courseColor)}`} />
+                    <div className={`h-2 bg-linear-to-r ${getGradientClass(courseColor)}`} />
                     
                     <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
                       

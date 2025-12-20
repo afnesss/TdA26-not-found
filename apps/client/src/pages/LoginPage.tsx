@@ -45,10 +45,6 @@ const LoginPage = () => {
           <span className="text-primary">Think Different Academy</span>
         </h1>
 
-          {/* <p className="text-lg text-foreground max-w-xl">
-            Přihlaste se a pokračujte v rozvoji svého kritického a kreativního myšlení. Objevte interaktivní kurzy, které vás posunou vpřed.
-          </p> */}
-
           {/* Animated logo section */}
           <div className="relative flex items-center justify-center pt-8">
             <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48'/>
@@ -75,22 +71,6 @@ const LoginPage = () => {
             {/* Form content */}
             <div className="px-6 lg:px-8 py-8 bg-background/95">
               <div className="flex flex-col gap-5">
-                
-                {/* {!isLogin && (
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Celé jméno
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
-                      <input
-                        type="text"
-                        placeholder="Jan Novák"
-                        className="w-full pl-11 pr-4 py-3 rounded-lg focus-ring-input transition-all duration-200 outline-none"
-                      />
-                    </div>
-                  </div>
-                )} */}
 
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
@@ -170,7 +150,7 @@ const LoginPage = () => {
             </div>
 
             {/* Bottom colored bar */}
-            <div className="h-1.5 bg-linear-to-r from-secondary via-accent-teal-light to-accent-teal"></div>
+            {/* <div className="h-2 bg-linear-to-r from-secondary via-accent-teal-light to-accent-teal"></div> */}
           </div>
         </div>
       </div>

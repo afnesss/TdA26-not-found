@@ -2,15 +2,12 @@
 import HomeBoxDetail from '../components/shared/HomeBoxDetail'
 import { Brain, Lightbulb, Zap, Trophy } from 'lucide-react'
 import {Button} from '../components/ui/button';
-import logo from "../assets/blue_logo.png";
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import HintPageText from '../components/shared/HintPageText';
 import LogoAnim from '@/components/shared/LogoAnim';
 
 
 const HomePage = () => {
-  // const {isLoginOpen} = useModalStore();
 
   const navigate = useNavigate();
 
@@ -56,7 +53,6 @@ const HomePage = () => {
         <HomeBoxDetail bg='accent-teal' icon={Lightbulb} text='Interaktivní přístup'/>
         <HomeBoxDetail bg='accent-teal-dark' icon={Zap} text='Jednoduše a rychle'/>
       </div>
-
 
     </div>
 

@@ -1,7 +1,6 @@
 import React from 'react'
 import Header from './Header'
 import { Outlet } from 'react-router'
-import Footer from './Footer';
 
 const MainLayout = () => {
   // const location = useLocation();
@@ -36,9 +35,6 @@ const MainLayout = () => {
       <section className='flex-1 p-3 overflow-y-auto sm:p-5 bg-linear-to-b from-accent-teal-dark/10 to-accent-teal/10 hide-scrollbar'>
         <Outlet />
       </section>
-      <Footer />
-
-    {/* {isLoginOpen && <LoginModal close={closeLogin}/>} */}
 
     </div>
   )

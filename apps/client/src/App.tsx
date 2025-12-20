@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage';
 import MainLayout from './components/layout/MainLayout';
 import CoursesPage from './pages/CoursesPage';
 import LoginPage from './pages/LoginPage'
+import CoursePage from './pages/ExactCoursePage';
 
 function App() {
   // const [count, setCount] = useState(0)
@@ -11,6 +12,7 @@ function App() {
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
+        <Route path='/course' element={<CoursePage />}></Route>
     </Route>
   ));
 

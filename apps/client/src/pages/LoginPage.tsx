@@ -3,6 +3,8 @@ import { Eye, EyeOff, Lock, Mail, User, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import logo from '../assets/blue_logo.png'
 import HintPageText from '@/components/shared/HintPageText';
+import { Input } from '@/components/ui/input';
+import LogoAnim from '@/components/shared/LogoAnim';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -49,45 +51,7 @@ const LoginPage = () => {
 
           {/* Animated logo section */}
           <div className="relative flex items-center justify-center pt-8">
-            {/* Background blur circles */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div 
-                className="absolute w-40 h-40 bg-secondary rounded-full blur-3xl"
-                style={{
-                  animation: 'pulse 4s ease-in-out infinite',
-                  opacity: 0.4
-                }}
-              />
-              <div 
-                className="absolute w-48 h-48 bg-accent-teal-light rounded-full blur-3xl"
-                style={{
-                  animation: 'pulse 5s ease-in-out infinite',
-                  animationDelay: '1s',
-                  opacity: 0.3
-                }}
-              />
-            </div>
-
-            {/* Logo - Replace this div with motion.img */}
-            <div className="relative z-10">
-              <motion.img 
-                src={logo} 
-                className='h-32 w-32 lg:h-40 lg:w-40 object-contain'
-                animate={{
-                  y: [0, -15, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{
-                  filter: 'drop-shadow(0 20px 40px rgba(69, 123, 255, 0.3)) drop-shadow(0 10px 20px rgba(145, 245, 173, 0.2))'
-                }}
-              />
-             
-              
-            </div>
+            <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48'/>
           </div>
 
           <style>{`
@@ -134,10 +98,10 @@ const LoginPage = () => {
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
-                      <input
+                      <Input
                         type="text"
                         placeholder="Jan Novák"
-                        className="w-full pl-11 pr-4 py-3 rounded-lg focus-ring-input transition-all duration-200 outline-none"
+                        className=" pl-11 pr-4"
                       />
                     </div>
                   </div>
@@ -148,9 +112,9 @@ const LoginPage = () => {
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
-                    <input
+                    <Input
                       placeholder="••••••••"
-                      className="w-full pl-11 pr-12 py-3 rounded-lg focus-ring-input transition-all duration-200 outline-none"
+                      className="pl-11 pr-12"
                       type={show ? 'text' : 'password'}
                     />
                     <button
@@ -169,7 +133,7 @@ const LoginPage = () => {
                   </div>
                 </div>
 
-                {isLogin && (
+                {/* {isLogin && (
                   <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
                       <input 
@@ -182,7 +146,7 @@ const LoginPage = () => {
                       Zapomenuté heslo?
                     </button>
                   </div>
-                )}
+                )} */}
 
                 <button
                   onClick={handleSubmit}

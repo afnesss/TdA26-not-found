@@ -6,6 +6,7 @@ import logo from "../assets/blue_logo.png";
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import HintPageText from '../components/shared/HintPageText';
+import LogoAnim from '@/components/shared/LogoAnim';
 
 
 const HomePage = () => {
@@ -60,54 +61,7 @@ const HomePage = () => {
     </div>
 
       <div className='col-span-1 relative  items-center justify-center h-full hidden md:flex'>
-
-        <div className='absolute inset-0 flex items-center justify-center'>
-
-          <motion.div 
-            className='absolute w-72 h-72 bg-secondary rounded-full blur-3xl'
-            animate={{
-              opacity: [0.4, 0.6, 0.4],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          
-          <motion.div 
-            className='absolute w-80 h-80 bg-accent-teal-light rounded-full blur-3xl'
-            animate={{
-              opacity: [0.2, 0.35, 0.2],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1
-            }}
-          />
-
-        </div>
-
-        <motion.div className='relative z-10'>
-          <motion.img 
-            src={logo} 
-            className='h-50 w-50 lg:h-64 lg:w-64 object-contain'
-            animate={{
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            style={{
-              filter: 'drop-shadow(0 20px 40px rgba(69, 123, 255, 0.3)) drop-shadow(0 10px 20px rgba(145, 245, 173, 0.2))'
-            }}
-          />
-        </motion.div>
-
+        <LogoAnim className='h-50 w-50 lg:h-64 lg:w-64'/>
       </div>
     </div>
   )

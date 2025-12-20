@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Search, Calendar, ArrowRight, BookOpen} from 'lucide-react'
 import {Button} from '../components/ui/button';
 import HintPageText from '../components/shared/HintPageText';
+import { Input } from '@/components/ui/input';
 
 const dateNow = Date.now();
 
@@ -101,7 +102,7 @@ const CoursesPage = () => {
   const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'] as const;
   type AccentColor = typeof colors[number];
 
-  const getIconBgClass = (color:AccentColor):string => {
+  const getBtnBgClass = (color:AccentColor):string => {
     const colorMap: Record<AccentColor, string>= {
       'accent-teal-light': 'bg-linear-to-br from-accent-teal-light/20 to-accent-teal-light/60',
       'accent-teal': 'bg-linear-to-br from-accent-teal/20 to-accent-teal/60',
@@ -115,6 +116,8 @@ const CoursesPage = () => {
       'accent-teal-light': 'from-secondary via-accent-teal-light to-accent-teal-light',
       'accent-teal': 'from-accent-teal-light via-accent-teal to-accent-teal',
       'accent-teal-dark': 'from-accent-teal via-accent-teal-dark to-primary',
+
+      
     };
     return gradientMap[color];
   };
@@ -171,15 +174,12 @@ const CoursesPage = () => {
                          group-focus-within:text-primary transition-all duration-300' 
               size={20} 
             />
-            <input
+            <Input
               type='text'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder='Vyhledat kurz podle názvu...'
-              className='w-full pl-12 pr-4 py-2 rounded-xl text-foreground text-sm md:text-base
-                       bg-background/90 focus-ring-input
-                       transition-all duration-300 outline-none shadow-sm
-                       hover:shadow-md focus:shadow-lg'
+              className='pl-12 pr-12'
             />
             
             {/* Počet výsledků */}
@@ -245,20 +245,20 @@ const CoursesPage = () => {
                 return (
                   <div
                     key={course.uuid}
-                    className='bg-white rounded-xl shadow-md hover:shadow-2xl 
-                             transition-all duration-300 overflow-hidden group
-                             border-2 border-secondary/20 hover:border-secondary
-                             cursor-pointer flex flex-col hover:-translate-y-2'
+                    className='bg-linear-to-br from-white to-secondary/20 rounded-xl shadow-lg 
+                           hover:shadow-2xl transition-all duration-300 overflow-hidden 
+                           border-2 border-secondary/30 hover:border-accent-teal-light group 
+                           cursor-pointer hover:-translate-y-1'
                   >
                     {/* Градієнт топ */}
                     <div className={`h-3 bg-linear-to-r ${getGradientClass(courseColor)}`} />
                     
                     <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
                       
-                      {/* Hover glow effect */}
+                      {/* Hover glow effect
                       <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl 
-                                  -translate-y-1/2 translate-x-1/2 ${getIconBgClass(courseColor)}
-                                  opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                  -translate-y-1/2 translate-x-1/2 ${getBtnBgClass(courseColor)}
+                                  opacity-0 group-hover:opacity-100 transition-opacity duration-500`} /> */}
                       
                       <div>
 
@@ -312,7 +312,7 @@ const CoursesPage = () => {
 
 
                           <button 
-                        className={`px-6 py-2.5 rounded-xl ${getIconBgClass(courseColor)} 
+                        className={`px-6 py-2.5 rounded-xl ${getBtnBgClass(courseColor)} 
                                     flex items-center justify-between
                                     hover:scale-110 transition-transform duration-300 cursor-pointer`}
                       >

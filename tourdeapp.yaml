@@ -11,7 +11,8 @@ containers:
     env:
       PORT: "3000"
       DATABASE_URL: postgresql://postgres:password@localhost:5432/tda26
-      SESSION_SECRET: ce39f7e6860f7a57c669f3b275cc33fb6ae58ee31b32a5ec37bd88a5e2a63067
+      SESSION_SECRET: ce3D9f7e6860f7a57c669f3b275cc33fb6ae58ee31b32a5ec37bd88a5e2a63067
+      NODE_ENV: production
 
   - name: client
     image: registry.tourde.cloud/not-found/client

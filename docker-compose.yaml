@@ -9,6 +9,11 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tda26"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
@@ -24,7 +29,8 @@ services:
       SESSION_SECRET: ce39f7e6860f7a57c669f3b275cc33fb6ae58ee31b32a5ec37bd88a5e2a63067
       NODE_ENV: development
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./apps/api:/app
       - /app/node_modules

@@ -5,6 +5,8 @@ import {Button} from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import HintPageText from '../components/shared/HintPageText';
 import LogoAnim from '@/components/shared/LogoAnim';
+import { Label } from '@/components/ui/label';
+import TitleText from '@/components/shared/TitleText';
 
 
 const HomePage = () => {
@@ -17,30 +19,10 @@ const HomePage = () => {
       
       <div className='flex flex-col max-sm:justify-center md:col-span-2 gap-10 w-full'>
       <HintPageText text="Učení může být zábava" icon={Trophy}/>
-      <h1 className=' max-sm:text-2xl text-3xl lg:text-4xl text-foreground font-bold text-left'>Rozvíjejte své 
-        {' '}
-        <span className="relative inline-block my-2">
-          kritické a kreativní
-          <svg 
-            className="absolute -bottom-2 left-0 w-full overflow-visible" 
-            height="12" 
-            viewBox="0 0 400 12"
-            preserveAspectRatio="none"
-          >
-            <path 
-              d="M0,10 Q50,3 110,9 Q150,14 200,4 Q250,2 300,11 Q350,15 400,6"
-              stroke="#91F5AD" 
-              strokeWidth="5" 
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-        </span> {' '}
-        myšlení s <br/>
-        <span className='text-primary'>Think Different Academy</span>
-      </h1>
+      
+      <TitleText addtext1='Rozvíjejte své ' underlinedText='kritické a kreativní' addtext2=' myšlení s' highlightedText='Think Different Academy'/>
 
-      <div className='text-md md:text-lg text-foreground text-left max-w-full md:max-w-xl lg:max-w-2xl'>Nezisková organizace zaměřená na rozvoj kritického a kreativního myšlení. Moderní, interaktivní přístup bez úmorného pročítání textů.</div>
+      <Label variant={"description"}>Nezisková organizace zaměřená na rozvoj kritického a kreativního myšlení. Moderní, interaktivní přístup bez úmorného pročítání textů.</Label>
 
       <div className='flex flex-row gap-5'>
         

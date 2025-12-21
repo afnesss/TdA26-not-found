@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import LogoAnim from '@/components/shared/LogoAnim';
 import {useForm, type FieldValues} from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import TitleText from '@/components/shared/TitleText';
+
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -41,28 +43,7 @@ const LoginPage = () => {
         <div className="space-y-8 text-left">
 
           <HintPageText icon={Sparkles} text='Začněte svou cestu'/>
-
-        <h1 className="max-sm:text-2xl text-3xl lg:text-4xl font-bold text-foreground leading-tight">
-          <span className="relative inline-block mb-2">
-            Vítejte zpět v
-            <svg 
-              className="absolute -bottom-1 left-0 w-full overflow-visible" 
-              height="12" 
-              viewBox="0 0 400 12"
-              preserveAspectRatio="none"
-            >
-              <path 
-                d="M0,10 Q50,3 110,9 Q150,14 200,4 Q250,2 300,11 Q350,15 400,6"
-                stroke="#91F5AD" 
-                strokeWidth="5" 
-                fill="none"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <br/>
-          <span className="text-primary">Think Different Academy</span>
-        </h1>
+          <TitleText underlinedText='Vítejte zpět v' highlightedText='Think Different Academy'/>
 
           {/* Animated logo section */}
           <div className="relative flex items-center justify-center pt-8">

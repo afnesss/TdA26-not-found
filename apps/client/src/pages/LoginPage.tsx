@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { Eye, EyeOff, Lock, Mail, User, Sparkles } from 'lucide-react'
-import { motion } from 'framer-motion'
-import logo from '../assets/blue_logo.png'
+import { Eye, EyeOff, Lock, User, Sparkles } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText';
 import { Input } from '@/components/ui/input';
 import LogoAnim from '@/components/shared/LogoAnim';
 import {useForm, type FieldValues} from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import TitleText from '@/components/shared/TitleText';
+import FormField from '@/components/shared/FormField';
 
 
 const LoginPage = () => {
@@ -49,13 +48,6 @@ const LoginPage = () => {
           <div className="relative flex items-center justify-center pt-8">
             <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48'/>
           </div>
-
-          <style>{`
-            @keyframes float {
-              0%, 100% { transform: translateY(0px); }
-              50% { transform: translateY(-15px); }
-            }
-          `}</style>
         </div>
       </div>
 
@@ -65,19 +57,15 @@ const LoginPage = () => {
           <div className="bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10">
             {/* Header with linear */}
             <div className="relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-5">
-              <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span>
+              {/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
+              Přihlášení
             </div>
 
             {/* Form content */}
             <div className="px-6 lg:px-8 py-8 bg-background/95">
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
 
-                  <div>
-                    <label className="block text-sm font-semibold text-foreground mb-2">
-                      Jméno
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                  <FormField label='Jméno' icon={User} children={(
                       <Input
                         {...register('name', 
                           {required: 'Jméno je povinné'
@@ -87,17 +75,12 @@ const LoginPage = () => {
                         placeholder="Jan Novák"
                         className=" pl-11 pr-4"
                       />
-                    </div>
-                  </div>
+                  )}/>
                   {errors.name && 
                   <p className='text-destructive'>{errors.name.message as string}</p>}
-
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-2">
-                    Heslo
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                
+                <FormField label='Heslo' icon={Lock} children={(
+                  <>
                     <Input
                       {...register('password', 
                         {required: 'Heslo je povinné'
@@ -120,9 +103,9 @@ const LoginPage = () => {
                         <EyeOff className="w-5 h-5 text-gray-800/50" />
                       )}
                     </button>
-                  </div>
+                  </>
+                )}/>
 
-                </div>
                   {errors.password && 
                   <p className='text-destructive'>{errors.password.message as string}</p>}
                   {errors.root && 
@@ -165,9 +148,6 @@ const LoginPage = () => {
                 </p> */}
               </form>
             </div>
-
-            {/* Bottom colored bar */}
-            {/* <div className="h-2 bg-linear-to-r from-secondary via-accent-teal-light to-accent-teal"></div> */}
           </div>
         </div>
       </div>

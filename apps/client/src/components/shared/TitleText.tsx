@@ -32,7 +32,7 @@ const TitleText = ({addtext1, addtext2, underlinedText, highlightedText}: TitleP
       </span> 
       {addtext2}
        <br/>
-      <span className='text-primary'>{highlightedText}</span>
+      {highlightedText && <span className='text-primary'>{highlightedText}</span>}
     </h1>
     </>
   )

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const labelVariants = cva('', { 
     variants: {
       variant: {
-        default: "text-foreground text-left text-md",
+        default: "block text-sm font-semibold text-foreground mb-2",
         title:
           "max-sm:text-2xl text-3xl lg:text-4xl text-foreground font-bold text-left",
         description:
@@ -43,7 +43,7 @@ function Label({
       data-slot="label"
       data-variant={variant}
       className={cn(
-        "flex items-center gap-2 text-sm leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+      "select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
         labelVariants({ variant }),
         className
       )}

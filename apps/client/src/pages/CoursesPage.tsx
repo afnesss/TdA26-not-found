@@ -197,19 +197,19 @@ const CoursesPage = () => {
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12'>
         <div className='flex flex-wrap gap-3 justify-center'>
           {filters.map((filter) => (
-            <button
+            <Button
+              variant='filter'
               key={filter.id}
               onClick={() => setSelectedFilter(filter.id)}
-              className={`px-4 py-1.5 rounded-xl max-sm:text-xs text-sm font-medium
-                       transition-all duration-300 flex items-center gap-2
+              className={`
                        ${selectedFilter === filter.id 
-                         ? 'bg-primary text-white shadow-md' 
-                         : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                         ? 'bg-primary text-background shadow-md' 
+                         : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
                        }`}
             >
               <filter.icon className='max-sm:w-3 max-sm:h-3 h-4 w-4' />
               {filter.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

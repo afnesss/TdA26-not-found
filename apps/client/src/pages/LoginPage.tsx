@@ -5,15 +5,34 @@ import logo from '../assets/blue_logo.png'
 import HintPageText from '@/components/shared/HintPageText';
 import { Input } from '@/components/ui/input';
 import LogoAnim from '@/components/shared/LogoAnim';
+import {useForm, type FieldValues} from 'react-hook-form';
+import { Button } from '@/components/ui/button';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [show, setShow] = useState(false);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: {errors, isSubmitting},
+    reset,
+    setError
+  } = useForm();
+
+  const onSubmit = async (data: FieldValues) => {
     console.log('Form submitted');
-  };
+
+    if (data.name!== '' && data.name !== 'Lecturer' || data.password !== 'TdA26!' && data.password !== '') {
+      setError('root', {
+      type: 'manual',
+      message: 'Nesprávné přihlašovací údaje'
+    });
+    return;
+  }
+    await new Promise ((resolve) => setTimeout(resolve,1000))
+    reset();
+  }
 
   return (
     <div className="max-w-6xl mx-auto overflow-hidden grid h-full md:grid-cols-2 lg:grid-cols-2">
@@ -70,7 +89,7 @@ const LoginPage = () => {
 
             {/* Form content */}
             <div className="px-6 lg:px-8 py-8 bg-background/95">
-              <div className="flex flex-col gap-5">
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
 
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
@@ -79,12 +98,18 @@ const LoginPage = () => {
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
                       <Input
+                        {...register('name', 
+                          {required: 'Jméno je povinné'
+                          }
+                        )}
                         type="text"
                         placeholder="Jan Novák"
                         className=" pl-11 pr-4"
                       />
                     </div>
                   </div>
+                  {errors.name && 
+                  <p className='text-destructive'>{errors.name.message as string}</p>}
 
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
@@ -93,6 +118,10 @@ const LoginPage = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
                     <Input
+                      {...register('password', 
+                        {required: 'Heslo je povinné'
+                        })
+                      }
                       placeholder="••••••••"
                       className="pl-11 pr-12"
                       type={show ? 'text' : 'password'}
@@ -111,7 +140,12 @@ const LoginPage = () => {
                       )}
                     </button>
                   </div>
+
                 </div>
+                  {errors.password && 
+                  <p className='text-destructive'>{errors.password.message as string}</p>}
+                  {errors.root && 
+                  <p className='text-destructive'>{errors.root.message as string}</p>}
 
                 {/* {isLogin && (
                   <div className="flex items-center justify-between text-sm">
@@ -128,12 +162,14 @@ const LoginPage = () => {
                   </div>
                 )} */}
 
-                <button
-                  onClick={handleSubmit}
-                  className="w-full px-4 py-3 rounded-xl cursor-pointer bg-linear-to-r from-accent-teal to-primary text-background font-bold hover:from-accent-teal-dark hover:to-accent-blue transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-102 text-base mt-2"
+                <Button
+                  disabled={isSubmitting}
+                  type='submit'
+                  variant='primary'
+                  size='primary'
                 >
                   {isLogin ? "Přihlásit se" : "Zaregistrovat se"}
-                </button>
+                </Button>
 
                 {/* For future registration */}
                 {/* <p className="text-sm text-gray-600 text-center mt-2">
@@ -146,7 +182,7 @@ const LoginPage = () => {
                     {isLogin ? "Zaregistrujte se" : "Přihlaste se"}
                   </button>
                 </p> */}
-              </div>
+              </form>
             </div>
 
             {/* Bottom colored bar */}

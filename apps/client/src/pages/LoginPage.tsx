@@ -7,6 +7,7 @@ import {useForm, type FieldValues} from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import TitleText from '@/components/shared/TitleText';
 import FormField from '@/components/shared/FormField';
+import { Label } from '@/components/ui/label';
 
 
 const LoginPage = () => {
@@ -56,10 +57,9 @@ const LoginPage = () => {
         <div className="w-full max-w-md">
           <div className="bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10">
             {/* Header with linear */}
-            <div className="relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-5">
-              {/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
+            <Label variant={'formTitle'}>{/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
               Přihlášení
-            </div>
+            </Label>
 
             {/* Form content */}
             <div className="px-6 lg:px-8 py-8 bg-background/95">

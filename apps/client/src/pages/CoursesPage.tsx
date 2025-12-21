@@ -3,8 +3,11 @@ import { Search, Calendar, ArrowRight, BookOpen} from 'lucide-react'
 import {Button} from '../components/ui/button';
 import HintPageText from '../components/shared/HintPageText';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { colorStyles, colors } from '@/lib/constants';
 
 const dateNow = Date.now();
+
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,29 +101,6 @@ const CoursesPage = () => {
     { id: 'newest', label: 'Nejnovější', icon: Calendar },
     { id: 'updated', label: 'Nedávno aktualizované', icon: ArrowRight }
   ];
-
-  const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'] as const;
-  type AccentColor = typeof colors[number];
-
-  const getBtnBgClass = (color:AccentColor):string => {
-    const colorMap: Record<AccentColor, string>= {
-      'accent-teal-light': 'bg-linear-to-br from-accent-teal-light/20 to-accent-teal-light/60',
-      'accent-teal': 'bg-linear-to-br from-accent-teal/20 to-accent-teal/60',
-      'accent-teal-dark': 'bg-linear-to-br from-accent-teal-dark/20 to-accent-teal-dark/60',
-    };
-    return colorMap[color];
-  };
-
-  const getGradientClass = (color:AccentColor):string => {
-    const gradientMap: Record<AccentColor, string> = {
-      'accent-teal-light': 'from-secondary via-accent-teal-light to-accent-teal-light',
-      'accent-teal': 'from-accent-teal-light via-accent-teal to-accent-teal',
-      'accent-teal-dark': 'from-accent-teal via-accent-teal-dark to-primary',
-
-      
-    };
-    return gradientMap[color];
-  };
 
   // Фільтрація курсів
   const filteredCourses = mockCourses.filter(course => 
@@ -250,14 +230,9 @@ const CoursesPage = () => {
                            cursor-pointer hover:-translate-y-0.5'
                   >
                     {/* Градієнт топ */}
-                    <div className={`h-2 bg-linear-to-r ${getGradientClass(courseColor)}`} />
+                    <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseColor]}`} />
                     
                     <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
-                      
-                      {/* Hover glow effect
-                      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl 
-                                  -translate-y-1/2 translate-x-1/2 ${getBtnBgClass(courseColor)}
-                                  opacity-0 group-hover:opacity-100 transition-opacity duration-500`} /> */}
                       
                       <div>
 
@@ -310,17 +285,16 @@ const CoursesPage = () => {
                         </div>
 
 
-                          <button 
-                        className={`px-6 py-2.5 rounded-xl ${getBtnBgClass(courseColor)} 
-                                    flex items-center justify-between
-                                    hover:scale-110 transition-transform duration-300 cursor-pointer`}
-                      >
+                          <Button 
+                          variant={'grid'} size={'grid'}
+                          className={cn(
+                            'bg-linear-to-br',
+                            colorStyles.bg[courseColor],
+                            colorStyles.text[courseColor]
+                          )}>
+                      
                         <span className='font-semibold'>Zobrazit</span>
-                        {/* <ArrowRight 
-                          className='group-hover/btn:translate-x-1 transition-all duration-300'
-                          size={18} 
-                        /> */}
-                      </button>
+                      </Button>
                       </div>
                     </div>
                   </div>

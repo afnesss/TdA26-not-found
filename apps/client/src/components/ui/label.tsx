@@ -11,9 +11,10 @@ const labelVariants = cva('', {
           "max-sm:text-2xl text-3xl lg:text-4xl text-foreground font-bold text-left",
         description:
           "text-md md:text-lg text-foreground text-left max-w-full md:max-w-xl lg:max-w-2xl",
-          
         name:
-        "text-lg md:text-xl font-bold text-neutral-black group-hover:text-primary transition-colors duration-300 relative z-10 line-clamp-2 leading-snug flex-1 pr-2"
+        "text-lg md:text-xl font-bold text-neutral-black group-hover:text-primary transition-colors duration-300 relative z-10 line-clamp-2 leading-snug flex-1 pr-2",
+        formTitle:
+        "relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-5"
       },
       // size: {
       //   primary: "px-7 py-3.5 max-sm:py-2", 

@@ -1,4 +1,4 @@
-@import './assets/fonts.css';
+
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -11,13 +11,14 @@
   --card-foreground: oklch(0.1 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.1 0 0);
-  --primary: oklch(0.44 0.18 258); /* #0070BB */
+  --primary: oklch(53.28% 0.144 248.22); /* #0070BB */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.85 0.15 145); /* #91F5AD */
+  --secondary: oklch(89.03% 0.138 151.75); /* #91F5AD */
   --secondary-foreground: oklch(0.1 0 0);
-  --accent-teal-light: oklch(0.74 0.14 165); /* #6DD4B1 */
-  --accent-teal: oklch(0.65 0.12 180); /* #49B3B4 */
-  --accent-teal-dark: oklch(0.5 0.15 240); /* #2592B8 */
+  --accent-teal-light: oklch(79.81% 0.110 169.04); /* #6DD4B1 */
+  --accent-teal: oklch(70.64% 0.096 196.06); /* #49B3B4 */
+  --accent-teal-dark: oklch(0.6179 0.1089 226.89); /* #2592B8 */
+  --accent-blue: oklch(45.93% 0.144 253.78);
   --muted: oklch(0.96 0 0);
   --muted-foreground: oklch(0.45 0 0);
   --accent: oklch(0.96 0 0);
@@ -50,13 +51,14 @@
   --card-foreground: oklch(0.98 0 0);
   --popover: oklch(0.1 0 0);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.36 0.15 258); /* #0257A5 */
+  --primary: oklch(53.28% 0.144 248.22);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.85 0.15 145); /* #91F5AD */
+  --secondary: oklch(89.03% 0.138 151.75); /* #91F5AD */
   --secondary-foreground: oklch(0.1 0 0);
-  --accent-teal-light: oklch(0.74 0.14 165); /* #6DD4B1 */
-  --accent-teal: oklch(0.65 0.12 180); /* #49B3B4 */
-  --accent-teal-dark: oklch(0.5 0.15 240); /* #2592B8 */
+  --accent-teal-light: oklch(79.81% 0.110 169.04); /* #6DD4B1 */
+  --accent-teal: oklch(70.64% 0.096 196.06); /* #49B3B4 */
+  --accent-teal-dark: oklch(0.6179 0.1089 226.89); /* #2592B8 */
+  --accent-blue: oklch(45.93% 0.144 253.78);
   --muted: oklch(0.15 0 0);
   --muted-foreground: oklch(0.64 0 0);
   --accent: oklch(0.15 0 0);
@@ -96,6 +98,7 @@
   --color-accent-teal-light: var(--accent-teal-light);
   --color-accent-teal: var(--accent-teal);
   --color-accent-teal-dark: var(--accent-teal-dark);
+  --color-accent-blue: var(--accent-blue);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
@@ -131,4 +134,30 @@
   body {
     @apply bg-background text-foreground;
   }
+  
 }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; 
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+ }
+ 
+@layer components{
+.center-box{
+    @apply fixed inset-0 flex items-center justify-center;
+  }
+
+.pop-box {
+    @apply shadow-[0_0_40px_rgba(0,0,0,0.25)] rounded-xl bg-gray-200 p-4;
+  }
+
+.focus-ring-input{
+  @apply border-2 border-gray-200 focus:border-accent-teal-light focus:ring-2 focus:ring-accent-teal/20 ;
+}
+} 
+
+
+
+

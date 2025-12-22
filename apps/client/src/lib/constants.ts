@@ -1,0 +1,35 @@
+export const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'] as const;
+export type ColorVariant = 'accent-teal-light' | 'accent-teal' | 'accent-teal-dark';
+
+export const colorStyles = {
+    bg: {
+      'accent-teal-light': 'from-accent-teal-light/20 to-accent-teal-light/60',
+      'accent-teal': 'from-accent-teal/20 to-accent-teal/60',
+      'accent-teal-dark': 'from-accent-teal-dark/20 to-accent-teal-dark/60',
+    },
+    text: {
+      'accent-teal-light': 'text-[#2D8B6B]',
+      'accent-teal': 'text-[#246969]',
+      'accent-teal-dark': 'text-[#166289]',
+    },
+    gradient: {
+      'accent-teal-light': 'from-secondary via-accent-teal-light to-accent-teal-light',
+      'accent-teal': 'from-accent-teal-light via-accent-teal to-accent-teal',
+      'accent-teal-dark': 'from-accent-teal via-accent-teal-dark to-primary',
+    },
+    iconBg: {
+      'accent-teal-light': 'bg-accent-teal-light/10',
+      'accent-teal': 'bg-accent-teal/10',
+      'accent-teal-dark': 'bg-accent-teal-dark/10',
+    },
+ expandedBg: {
+    'accent-teal-light': 'bg-accent-teal-light/5',
+    'accent-teal': 'bg-accent-teal/5',
+    'accent-teal-dark': 'bg-accent-teal-dark/5',
+  },
+  questionBorder: {
+    'accent-teal-light': 'border-accent-teal-light/20',
+    'accent-teal': 'border-accent-teal/20',
+    'accent-teal-dark': 'border-accent-teal-dark/20',
+  },
+  };

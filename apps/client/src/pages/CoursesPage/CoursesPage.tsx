@@ -140,30 +140,21 @@ const CoursesPage = () => {
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pt-3 pb-6'>
         <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center'>
           {/* Badge */}
-          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={mockCourses.length.toString()}/>
+          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery&& displayedCourses.length.toString() || mockCourses.length.toString()}/>
           
           {/* Search Bar */}
           <div className='relative group max-w-2xl w-full'>
             <Search 
               className='absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 
                          group-focus-within:text-primary transition-all duration-300' 
-              size={20} 
-            />
+              size={20} />
             <Input
               type='text'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder='Vyhledat kurz podle názvu...'
-              className='pl-12 pr-12'
-            />
+              className='pl-12 pr-12'/>
             
-            {/* Počet výsledků */}
-            {searchQuery && (
-              <div className='absolute right-4 top-1/2 -translate-y-1/2 
-                           bg-primary text-background text-xs px-2 py-1 rounded-full'>
-                {displayedCourses.length}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -223,9 +214,9 @@ const CoursesPage = () => {
                     <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
                       
                       <CardContent>
-                          <CardTitle>{course.name}</CardTitle>
+                          <CardTitle className='mb-4'>{course.name}</CardTitle>
 
-                        <CardDescription>{course.description}</CardDescription>
+                        <CardDescription className='mb-4'>{course.description}</CardDescription>
                       </CardContent>
 
                       {/* Footer */}

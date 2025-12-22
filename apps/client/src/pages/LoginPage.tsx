@@ -72,7 +72,7 @@ const LoginPage = () => {
                           }
                         )}
                         type="text"
-                        placeholder="Jan Novák"
+                        placeholder="lecturer123"
                         className=" pl-11 pr-4"
                       />
                   )}/>

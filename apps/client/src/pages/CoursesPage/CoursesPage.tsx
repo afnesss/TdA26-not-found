@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { Search, Calendar, ArrowRight, BookOpen} from 'lucide-react'
-import {Button} from '../components/ui/button';
-import HintPageText from '../components/shared/HintPageText';
+import {Button} from '../../components/ui/button';
+import HintPageText from '../../components/shared/HintPageText';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { colorStyles, colors } from '@/lib/constants';
-
-const dateNow = Date.now();
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Courses } from '@/lib/constants';
+import CardDate from './components/CardDate';
+import { Label } from '@/components/ui/label';
+// const dateNow = Date.now();
 
 
 const CoursesPage = () => {
@@ -15,21 +18,15 @@ const CoursesPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [displayCount, setDisplayCount] = useState(9);
 
-  type Courses = {
-    uuid: string,
-    name: string,
-    description: string,
-    createdAt: string,
-    updatedAt: string
-  }
+
   
   const mockCourses: Courses[] = [
     {
       uuid: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       name: "Kritické myšlení pro začátečníky",
       description: "Naučte se základy kritického myšlení a logické argumentace. Tento kurz vás provede klíčovými koncepty a technikami.",
-      createdAt: "2024-01-15T10:00:00Z",
-      updatedAt: "2024-01-20T14:30:00Z"
+      createdAt: "2025-01-15T10:00:00Z",
+      updatedAt: "2025-12-22T14:30:00Z"
     },
     {
       uuid: "2b7c4d8e-9a1f-4c3b-8e5f-1d2a3b4c5d6e",
@@ -102,13 +99,12 @@ const CoursesPage = () => {
     { id: 'updated', label: 'Nedávno aktualizované', icon: ArrowRight }
   ];
 
-  // Фільтрація курсів
+  
   const filteredCourses = mockCourses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Сортування згідно фільтру
   const sortedCourses = [...filteredCourses].sort((a, b) => {
     const dateKey = selectedFilter === 'newest' ? 'createdAt' :
     selectedFilter === 'updated' ? 'updatedAt': null;
@@ -125,7 +121,6 @@ const CoursesPage = () => {
     setIsLoading(false)
   }
 
-  // Розрахунок часу з останнього оновлення
   const getTimeAgo = (date: string) => {
     const now = new Date().getTime();
     const updated = new Date(date).getTime();
@@ -173,7 +168,6 @@ const CoursesPage = () => {
         </div>
       </div>
 
-      {/* Фільтри */}
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12'>
         <div className='flex flex-wrap gap-3 justify-center'>
           {filters.map((filter) => (
@@ -223,67 +217,20 @@ const CoursesPage = () => {
                 const courseColor = colors[index % 3];
 
                 return (
-                  <div
-                    key={course.uuid}
-                    className='bg-background rounded-xl shadow-lg 
-                           hover:shadow-2xl transition-all duration-300 overflow-hidden  group 
-                           cursor-pointer hover:-translate-y-0.5'
-                  >
-                    {/* Градієнт топ */}
+                  <Card key={course.uuid}>
                     <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseColor]}`} />
                     
                     <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
                       
-                      <div>
+                      <CardContent>
+                          <CardTitle>{course.name}</CardTitle>
 
-                        {/* Назва курсу */}
-                        <div className='flex items-start justify-between mb-4'>
-                          <h3 className='text-lg md:text-xl font-bold text-neutral-black 
-                                      group-hover:text-primary transition-colors duration-300 
-                                      relative z-10 line-clamp-2 leading-snug flex-1 pr-2'>
-                            {course.name}
-                          </h3>
-                        
-                        </div>
-
-
-                        {/* Опис */}
-                        <p className='text-sm text-gray-600 mb-4 line-clamp-3 relative z-10 leading-relaxed'>
-                          {course.description}
-                        </p>
-
-                        {/* Badge з останнім оновленням (якщо недавно) */}
-                        {new Date(course.updatedAt) > new Date(dateNow - 7 * 24 * 60 * 60 * 1000) && (
-                          <div className='inline-flex items-center gap-1.5 px-3 py-1.5 
-                                     bg-linear-to-r from-accent-teal-light/20 to-accent-teal/20 
-                                     rounded-full mb-4 relative z-10'>
-                            <div className='w-2 h-2 bg-accent-teal-light rounded-full animate-pulse' />
-                            <span className='text-xs font-medium text-accent-teal'>
-                              Nedávno aktualizováno
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                        <CardDescription>{course.description}</CardDescription>
+                      </CardContent>
 
                       {/* Footer */}
-                      <div className='flex items-center gap-2 text-xs md:text-sm text-gray-500 
-                                    relative z-10 justify-between pt-4 border-t border-gray-100'>
-                        <div className='flex flex-col gap-1'>
-                          <div className='flex items-center gap-1.5'>
-                            <Calendar size={14} className='text-primary' />
-                            <span>
-                              {new Date(course.createdAt).toLocaleDateString('cs-CZ', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
-                          </div>
-                          <span className='text-xs text-gray-400'>
-                            Aktualizováno {getTimeAgo(course.updatedAt)}
-                          </span>
-                        </div>
-
+                      <CardFooter>
+                          <CardDate course={course} getTime={getTimeAgo}/>
 
                           <Button 
                           variant={'grid'} size={'grid'}
@@ -292,12 +239,12 @@ const CoursesPage = () => {
                             colorStyles.bg[courseColor],
                             colorStyles.text[courseColor]
                           )}>
-                      
-                        <span className='font-semibold'>Zobrazit</span>
-                      </Button>
-                      </div>
+                          <span className='font-semibold'>Zobrazit</span>
+                        </Button>
+
+                      </CardFooter>
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>}
@@ -309,14 +256,12 @@ const CoursesPage = () => {
                            justify-center mx-auto mb-6'>
                   <Search size={45} className='text-primary' />
                 </div>
-                <h3 className='text-xl md:text-2xl font-bold text-neutral-black mb-7'>
-                  Žádné kurzy nenalezeny
-                </h3>
-                <Button 
-                  variant='primary'
-                  size='primary' 
-                  onClick={() => {setSearchQuery(''); setDisplayCount(9)}}
-                >
+              <Label asChild variant="emptyState"size="md">
+                <h3>Žádné kurzy nenalezeny</h3>
+              </Label>
+
+                <Button variant='primary'size='primary' 
+                  onClick={() => {setSearchQuery(''); setDisplayCount(9)}}>
                   Vymazat vyhledávání
                 </Button>
               </div>
@@ -325,11 +270,8 @@ const CoursesPage = () => {
             {/* Load More button */}
             {hasMoreCourses && (
               <div className='mt-8 text-center'>
-                <Button 
-                  variant='primary'
-                  size='primary' 
-                  onClick={() => {setIsLoading(true); loadMoreCourses();}}
-                >
+                <Button variant='primary'size='primary' 
+                  onClick={() => {setIsLoading(true); loadMoreCourses();}}>
                   Načíst další kurzy
                 </Button>
               </div>

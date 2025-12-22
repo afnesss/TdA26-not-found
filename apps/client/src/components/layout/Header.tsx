@@ -4,14 +4,6 @@ import { useNavigate, useLocation } from 'react-router';
 
 export default function Header() {
   const navigate = useNavigate();
-  // const location = useLocation();
-
-  // const openLogin = () => {
-  //   console.log(location.pathname)
-  //   navigate('/login', { 
-  //     state: { background: location.pathname } 
-  //   });
-  // };
 
   return (
     <>

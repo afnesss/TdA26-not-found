@@ -13,11 +13,11 @@ const HomeBoxDetail = ({bg, icon: Icon, text}: HomeBoxDetailProps) => {
   }
 
   return (
-    <div className={`h-20 lg:w-50 md:h-30 ${bgClasses[bg]} p-2 md:p-3 lg:p-5 rounded-xl text-center font-semibold text-md lg:text-lg flex justify-center flex-col transition-all hover:scale-105 duration-200 shadow-lg hover:shadow-xl`}>
+    <div className={`h-20 lg:w-40 md:h-24 ${bgClasses[bg]} p-2 md:p-3 lg:p-4 rounded-2xl text-center font-semibold flex justify-center flex-col transition-all hover:scale-105 duration-200 shadow-lg hover:shadow-xl`}>
       <div className="h-8 lg:h-12 flex justify-center items-center">
-        <Icon className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12"/>
+        <Icon className="w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10"/>
       </div>
-      <p className='text-xs sm:text-sm md:text-base'>{text}</p>
+      <p className='text-xs sm:text-sm'>{text}</p>
     </div>
   )
 }

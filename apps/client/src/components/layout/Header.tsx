@@ -9,7 +9,7 @@ export default function Header() {
     <>
       <div className="w-full h-22 flex">
         <div className="w-1/2 bg-accent-blue px-4 sm:px-8 md:px-12 lg:px-20 flex items-center">
-          <img src={logo} className="h-16 sm:h-18 md:h-20 w-auto py-3 cursor-pointer hover:scale-102 transition-all duration-200" onClick={() => navigate('/')}/>
+          <img src={logo} className="h-15 sm:h-17 md:h-18 w-auto py-3 cursor-pointer hover:scale-102 transition-all duration-200" onClick={() => navigate('/')}/>
         </div>
         <div className="w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center justify-end-safe bg-primary">
           <button className='bg-background cursor-pointer text-accent-blue transition-colors duration-300 shadow-md rounded-lg px-4 py-2 hover:bg-secondary font-semibold' onClick={()=> {navigate('/login')}}>Přihlásit se</button>

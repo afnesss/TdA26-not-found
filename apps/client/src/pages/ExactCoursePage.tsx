@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { colorStyles, colors } from '@/lib/constants';
 import type { ColorVariant } from '@/lib/constants';
+import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 
 const CoursePage = () => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
@@ -187,27 +188,27 @@ const CoursePage = () => {
                     'bg-background group'
                   )}
                 >
-                  {/* <div className={cn('h-2 bg-linear-to-r', colorStyles.gradient[color])} /> */}
+                  <div className={cn('h-2 bg-linear-to-r', colorStyles.gradient[color])} />
                   
-                  <div className='p-5 relative overflow-hidden h-full'>
+                  <Card>
                     
-                    <div className='relative z-10'>
-                      <div className='flex-1 inline-flex items-start gap-3 mb-3'>
+                    <div className=' relative p-4 md:p-6 flex-1 flex flex-col justify-between'>
+                      <CardContent className='flex-1 inline-flex items-start gap-3 mb-3'>
                         <div className='text-4xl drop-shadow-lg'>
                           {material.type === 'file' ? getFileIcon(material.mimeType) : '🔗'}
                         </div>
                         <div className='flex-1 min-w-0'>
-                          <h3 className='font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-1 text-lg'>
+                          <CardTitle className='mb-1'>
                             {material.name}
-                          </h3>
-                          <p className='text-sm text-gray-600 line-clamp-2'>
+                          </CardTitle>
+                          <CardDescription>
                             {material.description}
-                          </p>
+                          </CardDescription>
                         </div>
-                      </div>
+                      </CardContent>
 
                       {material.type === 'file' ? (
-                        <div className='flex items-center justify-between mt-4 pt-4 border-t border-secondary/30'>
+                        <CardFooter>
                           <span className={`text-xs font-semibold ${colorStyles.iconBg[color]} text-gray-600 px-3 py-1 rounded-full`}>
                             {formatFileSize(material.sizeBytes)}
                           </span>
@@ -219,9 +220,9 @@ const CoursePage = () => {
                             <Download size={16} />
                             <span>Stáhnout</span>
                           </Button>
-                        </div>
+                        </CardFooter>
                       ) : (
-                        <div className='mt-4 pt-4 border-t border-secondary/30'>
+                        <CardFooter>
                           <Button size={'md'} variant={'grid'} className={cn(
                             'w-full justify-center bg-linear-to-br',
                             colorStyles.bg[color],
@@ -230,10 +231,10 @@ const CoursePage = () => {
                             <Link2 size={16} />
                             <span>Otevřít odkaz</span>
                           </Button>
-                        </div>
+                        </CardFooter>
                       )}
                     </div>
-                  </div>
+                  </Card>
                 </div>
               );
             })}

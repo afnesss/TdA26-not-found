@@ -1,18 +1,17 @@
 import {Route, createBrowserRouter, createRoutesFromElements, RouterProvider} from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import MainLayout from './components/layout/MainLayout';
-import CoursesPage from './pages/CoursesPage';
+import CoursesPage from './pages/CoursesPage/CoursesPage';
 import LoginPage from './pages/LoginPage'
-// import CoursePage from './pages/ExactCoursePage';
+import CoursePage from './pages/ExactCoursePage';
 
 function App() {
-  // const [count, setCount] = useState(0)
   const router = createBrowserRouter(createRoutesFromElements(
     <Route path='/' element={<MainLayout />}>
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
-        {/* <Route path='/course' element={<CoursePage />}></Route> */}
+        <Route path='/course' element={<CoursePage />}></Route>
     </Route>
   ));
 

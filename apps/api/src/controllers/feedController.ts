@@ -49,11 +49,6 @@ export const updatePost = async (req: Request, res: Response) => {
   const { message } = req.body;
 
   try {
-    // Only manual posts can be updated? Spec says "Příspěvky od lektora... editovatelné". 
-    // It doesn't explicitly say system events cannot be edited, but it implies manual posts.
-    // I'll check if the post exists and is manual if strictly needed, but strict filtering isn't requested.
-    // However, I should probably check if it belongs to the course.
-
     const [updatedItem] = await db
       .update(feedItems)
       .set({
@@ -67,9 +62,6 @@ export const updatePost = async (req: Request, res: Response) => {
     if (!updatedItem) {
       return res.status(404).json({ message: "Post not found" });
     }
-
-    // Optional: Broadcast update
-    // sseManager.broadcast(courseId, "update_post", updatedItem);
 
     res.json(updatedItem);
   } catch (error) {

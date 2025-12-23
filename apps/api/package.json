@@ -22,7 +22,8 @@
     "express": "^5.2.1",
     "express-session": "^1.18.2",
     "pg": "^8.16.3",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

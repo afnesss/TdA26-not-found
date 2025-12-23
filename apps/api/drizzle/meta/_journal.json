@@ -15,6 +15,13 @@
       "when": 1766497481936,
       "tag": "0001_futuristic_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766498805750,
+      "tag": "0002_wonderful_magneto",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courses } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { courses, quizzes, quizSubmissions, courseMaterials } from "../db/schema";
+import { eq, sql, desc } from "drizzle-orm";
 
 export async function getAllCourses(_req: Request, res: Response) {
   const allCourses = await db.select({
@@ -31,10 +31,31 @@ export async function getCourseByUuid(req: Request, res: Response) {
     return;
   }
 
+  const fetchedQuizzes = await db
+    .select({
+      uuid: quizzes.uuid,
+      title: quizzes.title,
+      courseId: quizzes.courseId,
+      questions: quizzes.questions,
+      createdAt: quizzes.createdAt,
+      updatedAt: quizzes.updatedAt,
+      attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+    })
+    .from(quizzes)
+    .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
+    .where(eq(quizzes.courseId, uuid))
+    .groupBy(quizzes.uuid)
+    .orderBy(desc(quizzes.createdAt));
+
+  const fetchedMaterials = await db
+    .select()
+    .from(courseMaterials)
+    .where(eq(courseMaterials.courseId, uuid));
+
   res.json({
     ...course[0],
-    materials: [],
-    quizzes: [],
+    materials: fetchedMaterials,
+    quizzes: fetchedQuizzes,
     feed: [],
   });
 }

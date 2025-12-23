@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, integer, jsonb } from "drizzle-orm/pg-core";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -34,4 +34,26 @@ export const courseMaterials = pgTable("course_materials", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const quizzes = pgTable("quizzes", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  courseId: uuid("course_id")
+    .references(() => courses.uuid, { onDelete: "cascade" })
+    .notNull(),
+  title: varchar("title", { length: 256 }).notNull(),
+  questions: jsonb("questions").notNull(), // Stores Question[]
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const quizSubmissions = pgTable("quiz_submissions", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  quizId: uuid("quiz_id")
+    .references(() => quizzes.uuid, { onDelete: "cascade" })
+    .notNull(),
+  score: integer("score").notNull(),
+  maxScore: integer("max_score").notNull(),
+  answers: jsonb("answers").notNull(), // Stores QuizAnswer[]
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });

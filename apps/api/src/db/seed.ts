@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, courses } from "./schema";
+import { courses } from "./schema";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
@@ -15,18 +15,18 @@ const sampleCourses = [
 export async function seed() {
   console.log("Seeding database...");
 
-  const existingLecturer = await db.select().from(users).where(eq(users.username, LECTURER_USERNAME));
+  // const existingLecturer = await db.select().from(users).where(eq(users.username, LECTURER_USERNAME));
   
-  if (existingLecturer.length === 0) {
-    const passwordHash = await bcrypt.hash(LECTURER_PASSWORD, 10);
-    await db.insert(users).values({
-      username: LECTURER_USERNAME,
-      passwordHash: passwordHash,
-    });
-    console.log("Lecturer account created");
-  } else {
-    console.log("Lecturer account already exists");
-  }
+  // if (existingLecturer.length === 0) {
+  //   const passwordHash = await bcrypt.hash(LECTURER_PASSWORD, 10);
+  //   await db.insert(users).values({
+  //     username: LECTURER_USERNAME,
+  //     passwordHash: passwordHash,
+  //   });
+  //   console.log("Lecturer account created");
+  // } else {
+  //   console.log("Lecturer account already exists");
+  // }
 
   const existingCourses = await db.select().from(courses);
   

@@ -31,7 +31,12 @@ export async function getCourseByUuid(req: Request, res: Response) {
     return;
   }
 
-  res.json(course[0]);
+  res.json({
+    ...course[0],
+    materials: [],
+    quizzes: [],
+    feed: [],
+  });
 }
 
 export async function createCourse(req: Request, res: Response) {

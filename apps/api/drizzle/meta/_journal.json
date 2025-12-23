@@ -8,6 +8,13 @@
       "when": 1766496192912,
       "tag": "0000_soft_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766497481936,
+      "tag": "0001_futuristic_obadiah_stane",
+      "breakpoints": true
     }
   ]
 }

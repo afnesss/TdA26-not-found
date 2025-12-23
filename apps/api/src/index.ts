@@ -3,7 +3,9 @@ import express from "express";
 // import session from "express-session";
 import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
+import materialRoutes from "./routes/materialRoutes";
 import { seed } from "./db/seed";
+import path from "path";
 
 const app = express();
 const port = process.env.PORT;
@@ -42,7 +44,12 @@ app.get("/", (req, res) => {
   res.json({ organization: "Student Cyber Games" });
 });
 
+// Serve static files from uploads directory
+// Caddy strips /api, so request to /api/uploads/... becomes /uploads/... here
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 // app.use("/auth", authRoutes);
+app.use("/courses/:courseId/materials", materialRoutes);
 app.use("/courses", courseRoutes);
 
 async function start() {

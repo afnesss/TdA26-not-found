@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, integer, jsonb, boolean } from "drizzle-orm/pg-core";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -56,4 +56,16 @@ export const quizSubmissions = pgTable("quiz_submissions", {
   maxScore: integer("max_score").notNull(),
   answers: jsonb("answers").notNull(), // Stores QuizAnswer[]
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const feedItems = pgTable("feed_items", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  courseId: uuid("course_id")
+    .references(() => courses.uuid, { onDelete: "cascade" })
+    .notNull(),
+  type: varchar("type", { length: 20 }).notNull(), // 'manual' or 'system'
+  message: text("message").notNull(),
+  edited: boolean("edited").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

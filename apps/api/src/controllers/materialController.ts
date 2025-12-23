@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courseMaterials } from "../db/schema";
+import { courseMaterials, feedItems } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 import {
   FileMaterialCreateRequestSchema,
@@ -11,6 +11,7 @@ import {
 import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { sseManager } from "../utils/sseManager";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
@@ -125,6 +126,18 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
+      // System Feed Event
+      const [feedItem] = await db
+        .insert(feedItems)
+        .values({
+          courseId,
+          type: "system",
+          message: `New material added: ${name}`,
+        })
+        .returning();
+
+      sseManager.broadcast(courseId, "new_post", feedItem);
+
       res.status(201).json(mapMaterial(material));
 
     } else if (type === "url") {
@@ -155,6 +168,18 @@ export const createMaterial = async (req: Request, res: Response) => {
           faviconUrl,
         })
         .returning();
+
+      // System Feed Event
+      const [feedItem] = await db
+        .insert(feedItems)
+        .values({
+          courseId,
+          type: "system",
+          message: `New material added: ${name}`,
+        })
+        .returning();
+
+      sseManager.broadcast(courseId, "new_post", feedItem);
 
       res.status(201).json(mapMaterial(material));
 

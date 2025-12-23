@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { quizzes, quizSubmissions } from "../db/schema";
+import { quizzes, quizSubmissions, feedItems } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { Quiz, QuizAnswer, QuizSubmitRequest, QuizSubmitResponse } from "../schemas/quiz";
 import { v4 as uuidv4 } from "uuid";
+import { sseManager } from "../utils/sseManager";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
@@ -51,6 +52,18 @@ export const createQuiz = async (req: Request, res: Response) => {
         questions: questionsWithIds,
       })
       .returning();
+
+    // System Feed Event
+    const [feedItem] = await db
+      .insert(feedItems)
+      .values({
+        courseId,
+        type: "system",
+        message: `New quiz added: ${quizData.title}`,
+      })
+      .returning();
+
+    sseManager.broadcast(courseId, "new_post", feedItem);
 
     // Return with attemptsCount 0
     res.status(201).json({ ...newQuiz, attemptsCount: 0 });

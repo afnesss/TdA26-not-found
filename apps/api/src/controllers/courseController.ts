@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courses, quizzes, quizSubmissions, courseMaterials } from "../db/schema";
+import { courses, quizzes, quizSubmissions, courseMaterials, feedItems } from "../db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 
 export async function getAllCourses(_req: Request, res: Response) {
@@ -50,13 +50,20 @@ export async function getCourseByUuid(req: Request, res: Response) {
   const fetchedMaterials = await db
     .select()
     .from(courseMaterials)
-    .where(eq(courseMaterials.courseId, uuid));
+    .where(eq(courseMaterials.courseId, uuid))
+    .orderBy(desc(courseMaterials.createdAt));
+
+  const fetchedFeed = await db
+    .select()
+    .from(feedItems)
+    .where(eq(feedItems.courseId, uuid))
+    .orderBy(desc(feedItems.createdAt));
 
   res.json({
     ...course[0],
     materials: fetchedMaterials,
     quizzes: fetchedQuizzes,
-    feed: [],
+    feed: fetchedFeed,
   });
 }
 

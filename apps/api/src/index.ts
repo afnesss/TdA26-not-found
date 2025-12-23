@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
 import materialRoutes from "./routes/materialRoutes";
 import quizRoutes from "./routes/quizRoutes";
+import feedRoutes from "./routes/feedRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 
@@ -52,6 +53,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // app.use("/auth", authRoutes);
 app.use("/courses/:courseId/materials", materialRoutes);
 app.use("/courses/:courseId/quizzes", quizRoutes);
+app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
 
 async function start() {

@@ -1,4 +1,4 @@
-CREATE TABLE "feed_items" (
+CREATE TABLE IF NOT EXISTS "feed_items" (
 	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"course_id" uuid NOT NULL,
 	"type" varchar(20) NOT NULL,

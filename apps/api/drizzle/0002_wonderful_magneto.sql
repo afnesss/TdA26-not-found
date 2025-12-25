@@ -1,4 +1,4 @@
-CREATE TABLE "quiz_submissions" (
+CREATE TABLE IF NOT EXISTS "quiz_submissions" (
 	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"quiz_id" uuid NOT NULL,
 	"score" integer NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE "quiz_submissions" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "quizzes" (
+CREATE TABLE IF NOT EXISTS "quizzes" (
 	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"course_id" uuid NOT NULL,
 	"title" varchar(256) NOT NULL,

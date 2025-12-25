@@ -1,4 +1,4 @@
-CREATE TABLE "courses" (
+CREATE TABLE IF NOT EXISTS "courses" (
 	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(256) NOT NULL,
 	"description" text,

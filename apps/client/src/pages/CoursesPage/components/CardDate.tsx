@@ -1,7 +1,7 @@
 import { Calendar } from "lucide-react"
-import type { Courses } from "@/lib/constants"
+import type { CoursesSummary } from "@/lib/types"
 type CardDateProps ={
-  course: Courses,
+  course: CoursesSummary,
   getTime: (date: string) => string;
 }
 const CardDate = ({course, getTime}:CardDateProps) => {

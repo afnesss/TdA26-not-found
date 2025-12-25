@@ -14,3 +14,7 @@ node_modules/
 # IDE files
 .vscode/
 .idea/
+
+# Uploads
+uploads/
+uploads_temp/

@@ -6,15 +6,17 @@ import {
   updateCourse,
   deleteCourse,
 } from "../controllers/courseController";
-import { authMiddleware } from "../middleware/auth";
+// import { authMiddleware } from "../middleware/auth";
+import { validate } from "../middleware/validate";
+import { CourseCreateRequestSchema, CourseUpdateRequestSchema } from "../schemas/course";
 
 const router = Router();
 
 router.get("/", getAllCourses);
 router.get("/:uuid", getCourseByUuid);
 
-router.post("/", authMiddleware, createCourse);
-router.put("/:uuid", authMiddleware, updateCourse);
-router.delete("/:uuid", authMiddleware, deleteCourse);
+router.post("/", validate(CourseCreateRequestSchema), createCourse);
+router.put("/:uuid", validate(CourseUpdateRequestSchema), updateCourse);
+router.delete("/:uuid", deleteCourse);
 
 export default router;

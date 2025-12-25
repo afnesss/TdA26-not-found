@@ -1,21 +1,25 @@
 import cors from "cors";
 import express from "express";
-import session from "express-session";
+// import session from "express-session";
 import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
+import materialRoutes from "./routes/materialRoutes";
+import quizRoutes from "./routes/quizRoutes";
+import feedRoutes from "./routes/feedRoutes";
 import { seed } from "./db/seed";
+import path from "path";
 
 const app = express();
 const port = process.env.PORT;
-const sessionSecret = process.env.SESSION_SECRET;
+// const sessionSecret = process.env.SESSION_SECRET;
 
 if (!port) {
   throw new Error("PORT is undefined or is not set in .env file");
 }
 
-if (!sessionSecret) {
-  throw new Error("SESSION_SECRET in undefined or is not set in .env file");
-}
+// if (!sessionSecret) {
+//   throw new Error("SESSION_SECRET in undefined or is not set in .env file");
+// }
 
 app.use(
   cors({
@@ -25,24 +29,31 @@ app.use(
 );
 app.use(express.json());
 
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
-    },
-  })
-);
+// app.use(
+//   session({
+//     secret: sessionSecret,
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       secure: process.env.NODE_ENV === "production",
+//       httpOnly: true,
+//       maxAge: 24 * 60 * 60 * 1000,
+//     },
+//   })
+// );
 
 app.get("/", (req, res) => {
   res.json({ organization: "Student Cyber Games" });
 });
 
-app.use("/auth", authRoutes);
+// Serve static files from uploads directory
+// Caddy strips /api, so request to /api/uploads/... becomes /uploads/... here
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+// app.use("/auth", authRoutes);
+app.use("/courses/:courseId/materials", materialRoutes);
+app.use("/courses/:courseId/quizzes", quizRoutes);
+app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
 
 async function start() {

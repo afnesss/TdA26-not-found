@@ -5,8 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1766231488062,
-      "tag": "0000_daffy_nehzno",
+      "when": 1766496192912,
+      "tag": "0000_soft_whizzer",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766497481936,
+      "tag": "0001_futuristic_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766498805750,
+      "tag": "0002_wonderful_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766499843646,
+      "tag": "0003_last_the_captain",
       "breakpoints": true
     }
   ]

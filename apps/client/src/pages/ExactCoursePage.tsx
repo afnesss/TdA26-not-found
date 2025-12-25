@@ -1,127 +1,58 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
-  FileText, Link2, Download, 
-  Trophy, CheckCircle, Clock, MessageSquare, 
-  ChevronDown, ChevronUp, Play, Calendar, Edit, Bell, Target, BookCheck
+  Link2, Download, 
+   CheckCircle, Clock, 
+  ChevronDown, ChevronUp, Play, Calendar, Edit, Bell, Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { colorStyles, colors } from '@/lib/constants';
 import type { ColorVariant } from '@/lib/constants';
 import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
+// import type { Course } from '@/lib/types';
+import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas';
+import { getCourseById } from '@/api/queries';
+import { useParams } from 'react-router';
+import { Label } from '@/components/ui/label';
 
 const CoursePage = () => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | number[]>>({});
+  const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
+  const [hoveredMaterial, setHoveredMaterial] = useState<string | null>('');
 
-  // Mock data based on API structure
-  const courseData = {
-    uuid: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    name: "Kritické myšlení pro začátečníky",
-    description: "Naučte se základy kritického myšlení a logické argumentace. Tento kurz vás provede klíčovými koncepty a technikami, které můžete aplikovat v každodenním životě.",
-    materials: [
-      {
-        uuid: "mat-2",
-        type: "url",
-        name: "Interaktivní cvičení",
-        description: "Online nástroj pro procvičování logických úloh",
-        url: "https://example.com/exercises",
-        faviconUrl: "https://example.com/favicon.ico"
-      },
-      {
-        uuid: "mat-3",
-        type: "file",
-        name: "Pracovní listy.docx",
-        description: "Soubor s praktickými úkoly",
-        fileUrl: "#",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        sizeBytes: 1024000
+  const {id} = useParams<{ id: string }>();
+  console.log("Course id param:", id);
+  useEffect ( () => {
+
+    const load = async () => {
+      try {
+        const raw = await getCourseById(id!);
+        if (!raw) {
+          throw new Error("Course not found");
+        }
+        const parsed = CourseDetailSchema.safeParse(raw);
+
+        if (!parsed.success) {
+          console.error("Course schema validation failed", parsed.error);
+          throw new Error("Invalid course data");
+        }
+
+        setCourseData(parsed.data);
+      } catch (err) {
+        console.error(err);
       }
-    ],
-    quizzes: [
-      {
-        uuid: "quiz-1",
-        title: "Základy logického myšlení",
-        attemptsCount: 3,
-        questions: [
-          {
-            uuid: "q1",
-            type: "singleChoice",
-            question: "Co je základem kritického myšlení?",
-            options: [
-              "Přijímání všech informací bez otázek",
-              "Analýza a hodnocení informací",
-              "Rychlé rozhodování",
-              "Spoléhání se na emoce"
-            ],
-            correctIndex: 1
-          },
-          {
-            uuid: "q2",
-            type: "multipleChoice",
-            question: "Které z následujících jsou součástí kritického myšlení? (Vyberte všechny správné)",
-            options: [
-              "Logická analýza long text ledujících jsou součástí kritického myšlení? (Vyberte všechny sp",
-              "Ověřování zdrojů",
-              "Subjektivní hodnocení",
-              "Rozpoznávání předsudků"
-            ],
-            correctIndices: [0, 1, 3]
-          }
-        ]
-      },
-      {
-        uuid: "quiz-2",
-        title: "Praktická aplikace",
-        attemptsCount: 2,
-        questions: [
-          {
-            uuid: "q3",
-            type: "singleChoice",
-            question: "Jak nejlépe vyhodnotit věrohodnost zdroje?",
-            options: [
-              "Podle počtu lajků",
-              "Podle autority a důkazů",
-              "Podle délky textu",
-              "Podle osobního souhlasu"
-            ],
-            correctIndex: 1
-          }
-        ]
-      }
-    ],
-    feed: [
-      {
-        uuid: "feed-1",
-        type: "manual",
-        message: "Vítejte v kurzu! Začněte prostudováním materiálů v sekci Materiály.",
-        edited: false,
-        createdAt: "2024-11-15T10:00:00Z",
-        updatedAt: "2024-11-15T10:00:00Z"
-      },
-      {
-        uuid: "feed-2",
-        type: "manual",
-        message: "Nové pracovní listy byly přidány. Nezapomeňte si je stáhnout!",
-        edited: true,
-        createdAt: "2024-11-20T14:30:00Z",
-        updatedAt: "2024-11-21T09:15:00Z"
-      },
-      {
-        uuid: "feed-3",
-        type: "manual",
-        message: "Připomenutí: Dokončete kvízy před koncem týdne pro získání certifikátu.",
-        edited: false,
-        createdAt: "2024-11-25T16:00:00Z",
-        updatedAt: "2024-11-25T16:00:00Z"
-      }
-    ]
-  };
+    };
+
+  load();
+  }, [id])
+
+    useEffect(() => {
+      console.log(courseData);
+    }, [courseData]);
 
   // Component style variants
   const styles = {
-    card: 'rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer',
-    cardHover: 'hover:-translate-y-1',
     sectionTitle: 'text-2xl md:text-3xl font-bold text-primary',
     iconBox: 'p-2 bg-primary rounded-xl shadow-lg',
     badge: 'text-sm font-bold text-foreground',
@@ -171,95 +102,122 @@ const CoursePage = () => {
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8'>
         {/* Materials Section */}
         <section>
-          <div className='flex items-center gap-3 mb-5'>
-            <h2 className={styles.sectionTitle}>Studijní materiály</h2>
-          </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'>
-            {courseData.materials.map((material, index) => {
-              const color = getColorVariant(index);
+          <Label size='lg'>Studijní materiály</Label>
 
-              return (
+          <div className='space-y-3'>
+            {courseData?.materials.map((material, index) => {
+
+          return (
                 <div
                   key={material.uuid}
-                  className={cn(
-                    styles.card,
-                    styles.cardHover,
-                    'bg-background group'
-                  )}
+                  className='bg-background rounded-xl transition-all duration-300 p-4 border border-gray-100 hover:border-gray-200'
                 >
-                  <div className={cn('h-2 bg-linear-to-r', colorStyles.gradient[color])} />
-                  
-                  <Card>
-                    
-                    <div className=' relative p-4 md:p-6 flex-1 flex flex-col justify-between'>
-                      <CardContent className='flex-1 inline-flex items-start gap-3 mb-3'>
-                        <div className='text-4xl drop-shadow-lg'>
-                          {material.type === 'file' ? getFileIcon(material.mimeType) : '🔗'}
+                  <div className='flex items-center justify-between gap-4'>
+                    <div className='flex items-center gap-3 flex-1 min-w-0'>
+                      <div className={' rounded-lg shrink-0'}>
+                        <div className='text-xl'>
+                          {material.type === "file" ? (
+                            getFileIcon(material.mimeType)
+                          ) : material.faviconUrl ? (
+                            <img
+                              src={material.faviconUrl}
+                              alt=""
+                              className="w-6 h-6 rounded"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            "🔗"
+                          )}
                         </div>
-                        <div className='flex-1 min-w-0'>
-                          <CardTitle className='mb-1'>
+                      </div>
+                      
+                      <div className='flex-1 group '>
+                        <div className='flex items-center gap-2'>
+                          <Label>
                             {material.name}
-                          </CardTitle>
-                          <CardDescription>
-                            {material.description}
-                          </CardDescription>
-                        </div>
-                      </CardContent>
+                          </Label>
+                          {material.description && (
+                            <div className='relative w-fit'>
+                            <button className='shrink-0 text-gray-400 hover:text-primary transition-colors'
+                            onMouseEnter={() => setHoveredMaterial(material.uuid ?? null)}
+                            onMouseLeave={() => setHoveredMaterial(null)}>
+                              <Info size={16} />
 
-                      {material.type === 'file' ? (
-                        <CardFooter>
-                          <span className={`text-xs font-semibold ${colorStyles.iconBg[color]} text-gray-600 px-3 py-1 rounded-full`}>
+                            </button>
+                             {hoveredMaterial === material.uuid && (
+                                <div className='absolute left-full ml-2 top-1/2 w-max -translate-y-1/2 z-10 bg-background border border-gray-200 rounded-lg shadow-xl p-3 text-sm text-gray-700  max-w-xl leading-relaxed '>
+                                  {material.description}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                        {material.type === 'file' && (
+                          <span className='text-xs text-gray-600 font-medium'>
                             {formatFileSize(material.sizeBytes)}
                           </span>
-                            <Button variant={'grid'} size={'md'} className={cn(
-                            'bg-linear-to-br',
-                            colorStyles.bg[color],
-                            colorStyles.text[color]
-                          )}>
-                            <Download size={16} />
-                            <span>Stáhnout</span>
-                          </Button>
-                        </CardFooter>
-                      ) : (
-                        <CardFooter>
-                          <Button size={'md'} variant={'grid'} className={cn(
-                            'w-full justify-center bg-linear-to-br',
-                            colorStyles.bg[color],
-                            colorStyles.text[color]
-                          )}>
-                            <Link2 size={16} />
-                            <span>Otevřít odkaz</span>
-                          </Button>
-                        </CardFooter>
-                      )}
+                        )}
+
+                      </div>
                     </div>
-                  </Card>
+
+                    {material.type === 'file' ? (
+                      <Button 
+                          variant={'grid'} size={'grid'}
+                          className={cn(
+                            'bg-linear-to-br',
+                            colorStyles.bg['accent-teal'],
+                            colorStyles.text['accent-teal']
+                          )}>
+                        <Download size={14} />
+                        <span>Stáhnout</span>
+                      </Button>
+                    ) : (
+                    <Button
+                          variant={'grid'} size={'grid'}
+                          className={cn(
+                            'bg-linear-to-br',
+                            colorStyles.bg['accent-teal-light'],
+                            colorStyles.text['accent-teal-light']
+                          )}>
+                        <Link2 size={14} />
+                        <span>Otevřít</span>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Popover for description */}
+
                 </div>
               );
             })}
           </div>
         </section>
 
+
         {/* Quizzes Section */}
         <section>
-          <div className='flex items-center gap-3 mb-5'>
-            <h2 className={styles.sectionTitle}>Kvízy</h2>
-          </div>
+
+          <Label size="lg">Kvízy</Label>
 
           <div className='space-y-4'>
-            {courseData.quizzes.map((quiz, quizIndex) => {
+            {courseData?.quizzes.map((quiz) => {
               const isExpanded = expandedQuiz === quiz.uuid;
-              // const color = getColorVariant(0);
-              // const QuizIcon = quizIndex === 0 ? Trophy : quizIndex === 1 ? Target : BookCheck;
+
 
               return (
-                <div key={quiz.uuid} className='bg-background rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
+                <div key={quiz.uuid} className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
                   {/* Quiz Header */}
                   {/* <div className={cn('h-1.5 bg-linear-to-r', colorStyles.gradient[color])} /> */}
                   <div
                     className='p-5 cursor-pointer hover:bg-gray-50 transition-colors'
-                    onClick={() => toggleQuiz(quiz.uuid)}
+                    onClick={() => quiz.uuid && toggleQuiz(quiz.uuid)}
                   >
                     <div className='flex items-center justify-between gap-4'>
                       <div className='flex items-center gap-4 flex-1'>
@@ -267,15 +225,15 @@ const CoursePage = () => {
                           <QuizIcon className={colorStyles.text['secondary']} size={24} />
                         </div> */}
                         <div className='flex-1'>
-                          <h3 className='text-lg font-bold text-foreground mb-2'>{quiz.title}</h3>
+                          <Label className='mb-3' variant={'name'}>{quiz.title}</Label>
                           <div className='flex items-center gap-4 text-sm text-gray-600'>
                             <span className='flex items-center gap-1.5'>
                               <Clock size={16} className='text-primary' />
-                              <span className='font-medium'>{quiz.attemptsCount} pokusů</span>
+                              <span className='font-medium'>{quiz.attemptsCount ?? 0} pokusů</span>
                             </span>
                             <span className='flex items-center gap-1.5'>
                               <CheckCircle size={16} className='text-accent-teal' />
-                              <span className='font-medium'>{quiz.questions.length} otázek</span>
+                              <span className='font-medium'>{quiz.questions?.length} otázek</span>
                             </span>
                           </div>
                         </div>
@@ -295,7 +253,7 @@ const CoursePage = () => {
                       {quiz.questions.map((question, qIndex) => (
                         // <div key={question.uuid} className='bg-background'>
                         <>
-                          <div key={question.uuid} className='flex items-center gap-3 mb-4 '>
+                          <div key={question.uuid ?? qIndex} className='flex items-center gap-3 mb-4 '>
                             
                             <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
@@ -306,7 +264,7 @@ const CoursePage = () => {
                           <div className='space-y-2.5 pl-11'>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5'>
                             {question.options.map((option, optIndex) => (
-                              <label
+                              <Label
                                 key={optIndex}
                                 className='flex items-center gap-3 p-3.5 bg-gray-100 rounded-lg cursor-pointer hover:bg-primary/20 hover:border-gray-300 transition-all border border-gray-200'
                               >
@@ -316,18 +274,20 @@ const CoursePage = () => {
                                   className={styles.input}
                                   onChange={() => {
                                     if (question.type === 'singleChoice') {
-                                      handleAnswer(question.uuid, optIndex);
+                                      if (question.uuid) handleAnswer(question.uuid, optIndex);
                                     } else {
-                                      const current = (selectedAnswers[question.uuid] as number[]) || [];
-                                      const newValue = current.includes(optIndex)
-                                        ? current.filter(i => i !== optIndex)
-                                        : [...current, optIndex];
-                                      handleAnswer(question.uuid, newValue);
+                                      if (question.uuid) {
+                                        const current = (selectedAnswers[question.uuid] as number[]) || [];
+                                        const newValue = current.includes(optIndex)
+                                          ? current.filter(i => i !== optIndex)
+                                          : [...current, optIndex];
+                                        handleAnswer(question.uuid, newValue);
+                                      }
                                     }
                                   }}
                                 />
                                 <span className='text-sm font-medium text-foreground'>{option}</span>
-                              </label>
+                              </Label>
                             ))}
                           </div>
                           </div>
@@ -350,12 +310,10 @@ const CoursePage = () => {
 
         {/* Feed Section */}
         <section>
-          <div className='flex items-center gap-3 mb-5'>
-            <h2 className={styles.sectionTitle}>Oznámení a novinky</h2>
-          </div>
+            <Label size="lg">Oznámení a novinky</Label>
 
           <div className='space-y-3'>
-            {courseData.feed.map((item, index) => {
+            {courseData?.feed.map((item, index) => {
               const color = getColorVariant(index);
               
               return (

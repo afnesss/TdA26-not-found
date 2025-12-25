@@ -36,12 +36,3 @@ export const colorStyles = {
     'accent-teal-dark': 'border-accent-teal-dark/20',
   },
   };
-
-
-export type Courses = {
-    uuid: string,
-    name: string,
-    description: string,
-    createdAt: string,
-    updatedAt: string
-  }

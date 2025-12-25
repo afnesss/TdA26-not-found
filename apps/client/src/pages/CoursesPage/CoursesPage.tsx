@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { colorStyles, colors } from '@/lib/constants';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Courses } from '@/lib/constants';
+import type { CoursesSummary } from '@/lib/types';
 import CardDate from './components/CardDate';
 import { Label } from '@/components/ui/label';
 import { getCourses } from '@/api/queries';
@@ -19,12 +19,12 @@ const CoursesPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [displayCount, setDisplayCount] = useState(9);
-  const [courses, setCourses] = useState<Courses[]>([]);
+  const [courses, setCourses] = useState<CoursesSummary[]>([]);
   const navigate = useNavigate();
 
   useEffect ( () => {
     const getData = async () =>{
-      const data: Courses[] = await getCourses();
+      const data: CoursesSummary[] = await getCourses();
       setCourses(data);
     }
     getData();

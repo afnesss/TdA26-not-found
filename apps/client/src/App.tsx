@@ -11,7 +11,7 @@ function App() {
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
-        <Route path='/courses/:uuid' element={<CoursePage />}></Route>
+        <Route path='/courses/:id' element={<CoursePage />}></Route>
     </Route>
   ));
 

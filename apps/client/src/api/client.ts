@@ -31,7 +31,9 @@ export default async function apiFetch<T>(
     try {
       errorBody = response.json();
     } catch (error) {
-      console.log('error');
+      throw new Error(
+      `API ${response.status}: ${JSON.stringify(errorBody)}`
+    );
     }
 
     throw {

@@ -1,25 +1,28 @@
-const base = import.meta.env.VITE_API_BASE_URL;
 
 type ApiClientOptions = {
   headers? : HeadersInit,
   token? : string
 }
 
-export async function apiClient<T>(
+export default async function apiFetch<T>(
   input: string,
-  options: RequestInit,
-  clientOptions: ApiClientOptions
+  options?: RequestInit,
+  clientOptions?: ApiClientOptions
 ): Promise<T> {
   
-  const {headers, token} = clientOptions;
+  const safeOptions: RequestInit = options ?? {}
+  const safeClientOptions: ApiClientOptions = clientOptions ?? {}
 
-  const response = await fetch(`/api/${input}`, {
-    ...options,
+  const { headers, token } = safeClientOptions
+
+///api/${input}
+  const response = await fetch(`http://localhost:3000${input}`, {
+    ...safeOptions,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
-      ...options.headers,
+      ...safeOptions?.headers,
     },
   })
   if (!response.ok){

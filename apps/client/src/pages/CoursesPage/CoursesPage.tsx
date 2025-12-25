@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, Calendar, ArrowRight, BookOpen} from 'lucide-react'
 import {Button} from '../../components/ui/button';
 import HintPageText from '../../components/shared/HintPageText';
@@ -9,6 +9,8 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import type { Courses } from '@/lib/constants';
 import CardDate from './components/CardDate';
 import { Label } from '@/components/ui/label';
+import { getCourses } from '@/api/queries';
+import { useNavigate } from 'react-router';
 // const dateNow = Date.now();
 
 
@@ -17,81 +19,16 @@ const CoursesPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [displayCount, setDisplayCount] = useState(9);
+  const [courses, setCourses] = useState<Courses[]>([]);
+  const navigate = useNavigate();
 
-
-  
-  const mockCourses: Courses[] = [
-    {
-      uuid: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-      name: "Kritické myšlení pro začátečníky",
-      description: "Naučte se základy kritického myšlení a logické argumentace. Tento kurz vás provede klíčovými koncepty a technikami.",
-      createdAt: "2025-01-15T10:00:00Z",
-      updatedAt: "2025-12-22T14:30:00Z"
-    },
-    {
-      uuid: "2b7c4d8e-9a1f-4c3b-8e5f-1d2a3b4c5d6e",
-      name: "Kreativní řešení problémů",
-      description: "Rozvíjejte svou kreativitu a najděte inovativní přístupy k řešení složitých problémů.",
-      createdAt: "2024-02-20T14:30:00Z",
-      updatedAt: "2024-02-25T09:15:00Z"
-    },
-    {
-      uuid: "7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b",
-      name: "Argumentace a rétorika",
-      description: "Zdokonalte své schopnosti v oblasti argumentace, přesvědčování a veřejného vystupování.",
-      createdAt: "2024-03-10T09:15:00Z",
-      updatedAt: "2024-03-15T11:00:00Z"
-    },
-        {
-      uuid: "4c5d6e7f-8a9b-0c1d-2e3f-4a5b6c7d8e9f",
-      name: "Logika a filozofie",
-      description: "Prozkoumejte základy logického myšlení a filozofických konceptů pro lepší porozumění světu.",
-      createdAt: "2024-03-25T11:00:00Z",
-      updatedAt: "2024-03-30T16:45:00Z"
-    },
-    {
-      uuid: "9a0b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d",
-      name: "Etické rozhodování",
-      description: "Naučte se řešit morální dilema a činit etická rozhodnutí v osobním i profesním životě.",
-      createdAt: "2024-04-05T15:30:00Z",
-      updatedAt: "2024-04-10T10:20:00Z"
-    },
-    {
-      uuid: "5f6a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c",
-      name: "Mediální gramotnost",
-      description: "Rozvíjejte schopnost kriticky hodnotit informace z médií a rozpoznávat dezinformace.",
-      createdAt: "2024-04-18T09:00:00Z",
-      updatedAt: "2024-04-22T13:30:00Z"
-    },
-    {
-      uuid: "7e8f9a0b-1c2d-3e4f-5a6b-7c8d9e0f8a2b",
-      name: "Argumentace a rétorika",
-      description: "Zdokonalte své schopnosti v oblasti argumentace, přesvědčování a veřejného vystupování.",
-      createdAt: "2024-03-10T09:15:00Z",
-      updatedAt: "2024-03-15T11:00:00Z"
-    },
-        {
-      uuid: "4c2d6e7f-8a9b-0c1d-2e3f-4a5b657d8e9f",
-      name: "Logika a filozofie",
-      description: "Prozkoumejte základy logického myšlení a filozofických konceptů pro lepší porozumění světu.",
-      createdAt: "2024-03-25T11:00:00Z",
-      updatedAt: "2024-03-30T16:45:00Z"
-    },
-    {
-      uuid: "7e8f920b-1c2d-3e4f-5a6b-7c8d9e0f8a2b",
-      name: "Argumentace a rétorika",
-      description: "Zdokonalte své schopnosti v oblasti argumentace, přesvědčování a veřejného vystupování.",
-      createdAt: "2024-03-10T09:15:00Z",
-      updatedAt: "2024-03-15T11:00:00Z"
-    },
-        {
-      uuid: "4c5d6e7f-8a9b-0c1d-2e3f-4a5b657d8e9f",
-      name: "Logika a filozofie",
-      description: "Prozkoumejte základy logického myšlení a filozofických konceptů pro lepší porozumění světu.",
-      createdAt: "2024-03-25T11:00:00Z",
-      updatedAt: "2024-03-30T16:45:00Z"
-    },
-  ];
+  useEffect ( () => {
+    const getData = async () =>{
+      const data: Courses[] = await getCourses();
+      setCourses(data);
+    }
+    getData();
+  }, [])
 
   const filters = [
     { id: 'all', label: 'Všechny kurzy', icon: BookOpen },
@@ -100,7 +37,7 @@ const CoursesPage = () => {
   ];
 
   
-  const filteredCourses = mockCourses.filter(course => 
+  const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -140,7 +77,7 @@ const CoursesPage = () => {
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pt-3 pb-6'>
         <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center'>
           {/* Badge */}
-          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery&& displayedCourses.length.toString() || mockCourses.length.toString()}/>
+          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery&& displayedCourses.length.toString() || courses.length.toString()}/>
           
           {/* Search Bar */}
           <div className='relative group max-w-2xl w-full'>
@@ -230,7 +167,7 @@ const CoursesPage = () => {
                             colorStyles.bg[courseColor],
                             colorStyles.text[courseColor]
                           )}>
-                          <span className='font-semibold'>Zobrazit</span>
+                          <span className='font-semibold' onClick={() => {navigate(`/courses/${course.uuid}`)}}>Zobrazit</span>
                         </Button>
 
                       </CardFooter>

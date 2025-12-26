@@ -86,3 +86,12 @@ export interface Course {
   quizzes: Quiz[];
   feed: FeedItem[];
 }
+
+
+export type QuizResults = Record<string, {
+  submitted: boolean;
+  answers:
+   Record<string, {
+    correctAnswer: number | number[];
+  }>;
+}>;

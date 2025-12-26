@@ -2,24 +2,26 @@ import { useEffect, useState } from 'react';
 import { 
   Link2, Download, 
    CheckCircle, Clock, BookOpen, Sparkles, ChevronLeft ,
-  ChevronDown, ChevronUp, Play, Calendar, Edit, Bell, Info
+  ChevronDown, ChevronUp, Play, Calendar, Edit, Bell, Info, Check 
 } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { colorStyles, colors } from '@/lib/constants';
 import type { ColorVariant } from '@/lib/constants';
-import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
+// import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 // import type { Course } from '@/lib/types';
-import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas';
+import { CourseDetailSchema, type CourseDetail, type Quiz } from '@/lib/schemas';
 import { getCourseById } from '@/api/queries';
 import { useNavigate, useParams } from 'react-router';
 import { Label } from '@/components/ui/label';
+import type { QuizResults } from '@/lib/types';
 
 const CoursePage = () => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | number[]>>({});
   const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
+  const [quizResults, setQuizResults] = useState<QuizResults>({});
   const navigate = useNavigate();
 
   const {id} = useParams<{ id: string }>();
@@ -49,7 +51,26 @@ const CoursePage = () => {
   }, [id])
 
     useEffect(() => {
-      console.log(courseData);
+      if (!courseData?.quizzes) return;
+
+      const initialResults: QuizResults = {};
+      courseData?.quizzes.forEach(quiz => {
+        if (quiz.uuid){
+          const correctAnswers: Record<string,  {correctAnswer: number | number[]}> = {};
+          quiz.questions.forEach(question => {
+            correctAnswers[question.uuid!] = {
+              correctAnswer: question.type === 'singleChoice'?
+              question.correctIndex :
+              question.correctIndices
+            }
+          });
+          initialResults[quiz.uuid] = {
+            submitted: false,
+            answers: correctAnswers
+          }
+        }
+      });
+      setQuizResults(initialResults);
     }, [courseData]);
 
   // Component style variants
@@ -62,7 +83,6 @@ const CoursePage = () => {
   };
 
   // Helper functions
-  const getColorVariant = (index: number): ColorVariant => colors[index % 3];
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'N/A';
@@ -222,7 +242,6 @@ const CoursePage = () => {
                     )}
                   </div>
 
-                  {/* Popover for description */}
 
                 </div>
               );
@@ -243,8 +262,7 @@ const CoursePage = () => {
 
               return (
                 <div key={quiz.uuid} className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
-                  {/* Quiz Header */}
-                  {/* <div className={cn('h-1.5 bg-linear-to-r', colorStyles.gradient[color])} /> */}
+
                   <div
                     className='p-5 cursor-pointer hover:bg-gray-50 transition-colors'
                     onClick={() => quiz.uuid && toggleQuiz(quiz.uuid)}
@@ -257,7 +275,7 @@ const CoursePage = () => {
                           <div className='flex items-center gap-4 text-sm text-gray-600'>
                             <span className='flex items-center gap-1.5'>
                               <Clock size={16} className='text-primary' />
-                              <span className='font-medium'>{quiz.attemptsCount ?? 0} pokusů</span>
+                              <span className='font-medium'>{quiz.attemptsCount ?? 0} vyplnění</span>
                             </span>
                             <span className='flex items-center gap-1.5'>
                               <CheckCircle size={16} className='text-accent-teal' />
@@ -279,11 +297,11 @@ const CoursePage = () => {
                   {isExpanded && (
                     <div className='px-5 pb-5 space-y-4 border-t border-gray-100 pt-5 bg-gray-50/50'>
                       {quiz.questions.map((question, qIndex) => (
-                        // <div key={question.uuid} className='bg-background'>
+
                         <>
                           <div key={question.uuid ?? qIndex} className='flex items-center gap-3 mb-4 '>
                             
-                            <span className='font-bold text-background text-base bg-accent-teal min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
+                            <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
                             </span>
                             <p className='font-semibold text-foreground text-base'>{question.question}</p>
@@ -291,40 +309,67 @@ const CoursePage = () => {
 
                           <div className='space-y-2.5 pl-11'>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5'>
-                            {question.options.map((option, optIndex) => (
-                              <Label
-                                key={optIndex}
-                                className='flex items-center gap-3 p-3.5 bg-gray-100 rounded-lg cursor-pointer hover:bg-primary/20 hover:border-gray-300 transition-all border border-gray-200'
-                              >
-                                <input
-                                  type={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
-                                  name={question.uuid}
-                                  className={styles.input}
-                                  onChange={() => {
-                                    if (question.type === 'singleChoice') {
-                                      if (question.uuid) handleAnswer(question.uuid, optIndex);
-                                    } else {
-                                      if (question.uuid) {
-                                        const current = (selectedAnswers[question.uuid] as number[]) || [];
-                                        const newValue = current.includes(optIndex)
-                                          ? current.filter(i => i !== optIndex)
-                                          : [...current, optIndex];
-                                        handleAnswer(question.uuid, newValue);
-                                      }
-                                    }
-                                  }}
-                                />
-                                <span className='text-sm font-medium text-foreground'>{option}</span>
-                              </Label>
-                            ))}
+                              {question.options.map((option, optIndex) => {
+                                const isSelected = question.type === 'singleChoice'?
+                                selectedAnswers[question.uuid!] === optIndex:
+                                (selectedAnswers[question.uuid!] as number[] || []).includes(optIndex);
+                                const isQuizSubmitted = quizResults[quiz.uuid!]?.submitted;
+                                const isCorrectOption = isQuizSubmitted && (question.type ==='singleChoice' ? 
+                                        quizResults[quiz.uuid!].answers[question.uuid!].correctAnswer === optIndex : 
+                                        (quizResults[quiz.uuid!].answers[question.uuid!].correctAnswer as number[]).includes(optIndex)
+                                      )
+                                return (
+                                  <Label
+                                    key={optIndex}
+                                    className={cn(`flex items-center gap-3 p-3.5  rounded-lg  transition-all border border-gray-200' 
+                                      ${!isQuizSubmitted && 'cursor-pointer hover:bg-primary/20 hover:border-gray-300'}
+                                      ${isSelected? 'bg-primary/10': 'bg-gray-100'}
+                                      ${isSelected && isCorrectOption && 'bg-secondary/40'}
+                                      ${isSelected && !isCorrectOption && isQuizSubmitted && 'bg-destructive/40'}
+                                      ${!isSelected && isCorrectOption && 'border-secondary border-2'}
+                                     `)}
+                                  >
+                                    <input
+                                      type={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
+                                      name={question.uuid}
+                                      className={styles.input}
+                                      onChange={() => {
+                                        if (question.type === 'singleChoice') {
+                                          if (question.uuid) handleAnswer(question.uuid, optIndex);
+                                        } else {
+                                          if (question.uuid) {
+                                            const current = (selectedAnswers[question.uuid] as number[]) || [];
+                                            const newValue = current.includes(optIndex)
+                                              ? current.filter(i => i !== optIndex)
+                                              : [...current, optIndex];
+                                            handleAnswer(question.uuid, newValue);
+                                          }
+                                        }
+                                      }}
+                                    />
+                                    <div className='flex justify-between w-full'>
+                                    <span className='text-sm font-medium text-foreground'>{option}</span>
+                                    {!isSelected && isCorrectOption && <Check className='text-secondary self-end' size={20}/>}
+                                    </div>
+
+                                  </Label>
+                                )
+                              })}
                           </div>
-                          </div>
+                        </div>
                           <hr className='border-b border my-6 border-gray-100'></hr>
-                        {/* // </div> */}
                         </>
                       ))}
 
-                      <Button variant='primary' size='primary' className='ml-11'>
+                      <Button variant='primary' size='primary' className='ml-11' onClick={() =>
+                      setQuizResults(prev => ({
+                        ...prev,
+                        [quiz.uuid!]: {
+                          ...(prev[quiz.uuid!] ?? { submitted: false, answers: {} }),
+                          submitted: true,
+                        },
+                      }))
+                    }>
                         <Play size={20} />
                         Odeslat odpovědi
                       </Button>
@@ -341,15 +386,13 @@ const CoursePage = () => {
             <Label size="lg">Oznámení a novinky</Label>
 
           <div className='space-y-3'>
-            {courseData?.feed.map((item, index) => {
-              // const color = getColorVariant(index);
+            {courseData?.feed.map((item) => {
               
               return (
                 <div
                   key={item.uuid}
                   className='bg-background rounded-xl transition-all duration-300 p-5 border border-gray-100 hover:border-gray-200'
                 >
-                  {/* <div className={cn('h-1 bg-linear-to-r mb-4 rounded-full', colorStyles.gradient[color])} /> */}
                   <div className='flex items-start gap-4'>
                     <div className={cn('p-2.5 rounded-lg shrink-0', colorStyles.iconBg['accent-teal-light'])}>
                       <Bell className={colorStyles.text['accent-teal-light']} size={22} />

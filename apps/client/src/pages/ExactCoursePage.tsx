@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { 
   Link2, Download, 
-   CheckCircle, Clock, 
+   CheckCircle, Clock, BookOpen, Sparkles, ChevronLeft ,
   ChevronDown, ChevronUp, Play, Calendar, Edit, Bell, Info
 } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { colorStyles, colors } from '@/lib/constants';
@@ -12,14 +13,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/com
 // import type { Course } from '@/lib/types';
 import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas';
 import { getCourseById } from '@/api/queries';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Label } from '@/components/ui/label';
 
 const CoursePage = () => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | number[]>>({});
   const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
-  const [hoveredMaterial, setHoveredMaterial] = useState<string | null>('');
+  const navigate = useNavigate();
 
   const {id} = useParams<{ id: string }>();
   console.log("Course id param:", id);
@@ -100,6 +101,36 @@ const CoursePage = () => {
     <div className='h-full overflow-y-auto hide-scrollbar'>
 
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8'>
+
+    <section>
+      <div className="bg-background rounded-xl border border-gray-100 overflow-hidden relative">
+        <div className="bg-linear-to-r from-secondary to-accent-teal-light h-2" />
+
+
+        <div className="px-5 md:px-6 py-5 gap-3 flex flex-col">
+          <div className='flex md:flex-row gap-2 items-center'>
+            <Button variant={'grid'}
+           className={cn(
+              'bg-linear-to-br px-3 py-1 h-8',
+              colorStyles.bg['accent-teal-light'],
+              colorStyles.text['accent-teal-light']
+            )}
+             onClick={() => navigate(-1)}>
+              <ChevronLeft size={16}/>
+                <span>Zpět</span>
+            </Button>
+            <Label className='mb-0' size="lg">{courseData?.name}</Label>
+           </div>
+          {courseData?.description && (
+            <p className="text-gray-600 text-base leading-relaxed mb-2">
+              {courseData.description}
+            </p>
+          )}
+        
+        </div>
+      </div>
+    </section>
+
         {/* Materials Section */}
         <section>
 
@@ -143,17 +174,16 @@ const CoursePage = () => {
                           </Label>
                           {material.description && (
                             <div className='relative w-fit'>
-                            <button className='shrink-0 text-gray-400 hover:text-primary transition-colors'
-                            onMouseEnter={() => setHoveredMaterial(material.uuid ?? null)}
-                            onMouseLeave={() => setHoveredMaterial(null)}>
+                              <Popover>
+                                <PopoverTrigger>
+                            <Button variant={'ghost'}>
                               <Info size={16} />
-
-                            </button>
-                             {hoveredMaterial === material.uuid && (
-                                <div className='absolute left-full ml-2 top-1/2 w-max -translate-y-1/2 z-10 bg-background border border-gray-200 rounded-lg shadow-xl p-3 text-sm text-gray-700  max-w-xl leading-relaxed '>
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent side="right" align="center" sideOffset={4} alignOffset={0} avoidCollisions>
                                   {material.description}
-                                </div>
-                              )}
+                              </PopoverContent>
+                              </Popover>
                             </div>
                           )}
 
@@ -171,7 +201,7 @@ const CoursePage = () => {
                       <Button 
                           variant={'grid'} size={'grid'}
                           className={cn(
-                            'bg-linear-to-br',
+                            'bg-linear-to-br w-25',
                             colorStyles.bg['accent-teal'],
                             colorStyles.text['accent-teal']
                           )}>
@@ -182,7 +212,7 @@ const CoursePage = () => {
                     <Button
                           variant={'grid'} size={'grid'}
                           className={cn(
-                            'bg-linear-to-br',
+                            'bg-linear-to-br w-25',
                             colorStyles.bg['accent-teal-light'],
                             colorStyles.text['accent-teal-light']
                           )}>
@@ -221,9 +251,7 @@ const CoursePage = () => {
                   >
                     <div className='flex items-center justify-between gap-4'>
                       <div className='flex items-center gap-4 flex-1'>
-                        {/* <div className={cn('p-3 rounded-xl', colorStyles.iconBg['secondary'])}>
-                          <QuizIcon className={colorStyles.text['secondary']} size={24} />
-                        </div> */}
+
                         <div className='flex-1'>
                           <Label className='mb-3' variant={'name'}>{quiz.title}</Label>
                           <div className='flex items-center gap-4 text-sm text-gray-600'>
@@ -238,10 +266,10 @@ const CoursePage = () => {
                           </div>
                         </div>
                       </div>
-                      <button className='p-2 hover:bg-gray-100 rounded-full transition-colors'>
+                      <button className='p-2 hover:bg-gray-200 rounded-full transition-colors'>
                         {isExpanded ? 
-                          <ChevronUp size={24} className='text-primary' /> : 
-                          <ChevronDown size={24} className='text-primary' />
+                          <ChevronUp size={24} className='text-accent-teal' /> : 
+                          <ChevronDown size={24} className='text-accent-teal' />
                         }
                       </button>
                     </div>
@@ -255,7 +283,7 @@ const CoursePage = () => {
                         <>
                           <div key={question.uuid ?? qIndex} className='flex items-center gap-3 mb-4 '>
                             
-                            <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
+                            <span className='font-bold text-background text-base bg-accent-teal min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
                             </span>
                             <p className='font-semibold text-foreground text-base'>{question.question}</p>
@@ -314,7 +342,7 @@ const CoursePage = () => {
 
           <div className='space-y-3'>
             {courseData?.feed.map((item, index) => {
-              const color = getColorVariant(index);
+              // const color = getColorVariant(index);
               
               return (
                 <div
@@ -323,8 +351,8 @@ const CoursePage = () => {
                 >
                   {/* <div className={cn('h-1 bg-linear-to-r mb-4 rounded-full', colorStyles.gradient[color])} /> */}
                   <div className='flex items-start gap-4'>
-                    <div className={cn('p-2.5 rounded-lg shrink-0', colorStyles.iconBg[color])}>
-                      <Bell className={colorStyles.text[color]} size={22} />
+                    <div className={cn('p-2.5 rounded-lg shrink-0', colorStyles.iconBg['accent-teal-light'])}>
+                      <Bell className={colorStyles.text['accent-teal-light']} size={22} />
                     </div>
                     
                     <div className='flex-1 min-w-0'>
@@ -338,12 +366,6 @@ const CoursePage = () => {
                           <span className='font-medium'>{formatDate(item.createdAt)}</span>
                         </span>
                         
-                        {item.edited && (
-                          <span className='flex items-center gap-1.5 text-accent-teal font-medium bg-accent-teal/10 px-2 py-0.5 rounded-full'>
-                            <Edit size={14} />
-                            <span>Upraveno</span>
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>

@@ -3,7 +3,7 @@ import HomePage from './pages/HomePage';
 import MainLayout from './components/layout/MainLayout';
 import CoursesPage from './pages/CoursesPage/CoursesPage';
 import LoginPage from './pages/LoginPage'
-import CoursePage from './pages/ExactCoursePage';
+import CoursePage from './pages/CoursePage/ExactCoursePage';
 
 function App() {
   const router = createBrowserRouter(createRoutesFromElements(

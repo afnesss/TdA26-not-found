@@ -1,7 +1,8 @@
 import { Calendar } from "lucide-react"
-import type { CoursesSummary } from "@/lib/types"
+import type { CourseSummary } from "@/lib/schemas/course"
+
 type CardDateProps ={
-  course: CoursesSummary,
+  course: CourseSummary,
   getTime: (date: string) => string;
 }
 const CardDate = ({course, getTime}:CardDateProps) => {
@@ -18,7 +19,7 @@ const CardDate = ({course, getTime}:CardDateProps) => {
           </span>
         </div>
         <span className='text-xs text-gray-400'>
-          Aktualizováno {getTime(course.updatedAt)}
+          Aktualizováno {getTime(typeof course.updatedAt === 'string' ? course.updatedAt : course.updatedAt.toISOString())}
         </span>
       </div>
   )

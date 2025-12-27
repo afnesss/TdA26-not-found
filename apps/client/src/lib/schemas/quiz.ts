@@ -47,6 +47,23 @@ export const QuizSubmitResponseSchema = z.object({
   submittedAt: z.string().datetime(),
 });
 
+export const QuizResultsSchema = z.record(
+  z.string(),
+  z.object({
+    submitted: z.boolean(),
+    answers: 
+      z.record(
+        z.string(),
+        z.object({
+        correctAnswer: z.union([
+          z.number(),
+          z.array(z.number())
+        ]),
+        })
+      ),
+  })
+)
+
 export type SingleChoiceQuestion = z.infer<typeof SingleChoiceQuestionSchema>;
 export type MultipleChoiceQuestion = z.infer<typeof MultipleChoiceQuestionSchema>;
 export type Question = z.infer<typeof QuestionSchema>;
@@ -54,3 +71,4 @@ export type Quiz = z.infer<typeof QuizSchema>;
 export type QuizAnswer = z.infer<typeof QuizAnswerSchema>;
 export type QuizSubmitRequest = z.infer<typeof QuizSubmitRequestSchema>;
 export type QuizSubmitResponse = z.infer<typeof QuizSubmitResponseSchema>;
+export type QuizResults = z.infer<typeof QuizResultsSchema>;

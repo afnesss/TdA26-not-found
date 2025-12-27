@@ -1,17 +1,16 @@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { CourseDetail } from "@/lib/schemas";
-import type { QuizResults } from "@/lib/types";
+import type { QuizResults } from "@/lib/schemas";
 import { useState, useEffect, startTransition, Fragment } from "react";
 import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type QuizesSectionProps ={
   courseData: CourseDetail  | null,
-  styles: string
 }
 
-const QuizesSection = ({courseData, styles}: QuizesSectionProps) => {
+const QuizesSection = ({courseData}: QuizesSectionProps) => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number | number[]>>({});
   const [quizResults, setQuizResults] = useState<QuizResults>({});
@@ -58,7 +57,7 @@ const QuizesSection = ({courseData, styles}: QuizesSectionProps) => {
           <Label size="lg">Kvízy</Label>
 
           <div className='space-y-4'>
-            {courseData?.quizzes.map((quiz) => {
+            {courseData?.quizzes?.map((quiz) => {
               const isExpanded = expandedQuiz === quiz.uuid;
 
 
@@ -135,7 +134,7 @@ const QuizesSection = ({courseData, styles}: QuizesSectionProps) => {
                                     <input
                                       type={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
                                       name={question.uuid}
-                                      className={styles}
+                                      className='w-5 h-5 text-primary accent-primary'
                                       onChange={() => {
                                         if (question.type === 'singleChoice') {
                                           if (question.uuid) handleAnswer(question.uuid, optIndex);

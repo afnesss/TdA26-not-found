@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { CourseDetailSchema, type CourseDetail, type Quiz } from '@/lib/schemas';
 import { getCourseById } from '@/api/queries';
 import { useParams } from 'react-router';
-import QuizesSection from './QuizesSection';
-import SummarySection from './SummarySection';
-import MaterialsSection from './MaterialsSection';
-import FeedSection from './FeedSection';
+import QuizesSection from './components/QuizesSection';
+import SummarySection from './components/SummarySection';
+import MaterialsSection from './components/MaterialsSection';
+import FeedSection from './components/FeedSection';
 
 const CoursePage = () => {
   const [courseData, setCourseData] = useState<CourseDetail  | null>(null);

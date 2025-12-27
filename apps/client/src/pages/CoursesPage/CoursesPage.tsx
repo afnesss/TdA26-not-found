@@ -4,42 +4,46 @@ import {Button} from '../../components/ui/button';
 import HintPageText from '../../components/shared/HintPageText';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { colorStyles, colors } from '@/lib/constants';
+import { colorStyles, colors, type FilterIds } from '@/lib/constants';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CoursesSummary } from '@/lib/types';
 import CardDate from './components/CardDate';
 import { Label } from '@/components/ui/label';
 import { getCourses } from '@/api/queries';
 import { useNavigate } from 'react-router';
-// const dateNow = Date.now();
-
+import type { CourseSummary } from '@/lib/schemas';
+import LoadingSceleton from './components/LoadingSceleton';
+import Filters from './components/Filters';
+import EmptyStateComp from './components/EmptyStateComp';
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('all');
   const [displayCount, setDisplayCount] = useState(9);
-  const [courses, setCourses] = useState<CoursesSummary[]>([]);
+  const [courses, setCourses] = useState<CourseSummary[]>([]);
   const navigate = useNavigate();
 
   useEffect ( () => {
     const getData = async () =>{
-      const data: CoursesSummary[] = await getCourses();
-      setCourses(data);
+    try {
+      setIsLoading(true)
+      
+        const data: CourseSummary[] = await getCourses();
+        setCourses(data);
+      
+      
+    } catch (error) {
+      console.log(error)
+    } finally{
+      setIsLoading(false)
     }
-    getData();
+  }
+  getData();
   }, [])
 
-  const filters = [
-    { id: 'all', label: 'Všechny kurzy', icon: BookOpen },
-    { id: 'newest', label: 'Nejnovější', icon: Calendar },
-    { id: 'updated', label: 'Nedávno aktualizované', icon: ArrowRight }
-  ];
-
-  
   const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.description.toLowerCase().includes(searchQuery.toLowerCase())
+    course.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const sortedCourses = [...filteredCourses].sort((a, b) => {
@@ -55,7 +59,7 @@ const CoursesPage = () => {
    const displayedCourses = sortedCourses.slice(0, displayCount)
   const loadMoreCourses = () => {
     setDisplayCount(prev => prev+6);
-    setIsLoading(false)
+    setIsLoading(false);
   }
 
   const getTimeAgo = (date: string) => {
@@ -96,47 +100,12 @@ const CoursesPage = () => {
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12'>
-        <div className='flex flex-wrap gap-3 justify-center'>
-          {filters.map((filter) => (
-            <Button
-              variant='filter'
-              key={filter.id}
-              onClick={() => setSelectedFilter(filter.id)}
-              className={`
-                       ${selectedFilter === filter.id 
-                         ? 'bg-primary text-background shadow-md' 
-                         : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
-                       }`}
-            >
-              <filter.icon className='max-sm:w-3 max-sm:h-3 h-4 w-4' />
-              {filter.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Filters selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter}/>
 
       {/* Kurzy Grid */}
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 py-6 relative'>
         
-        {/* Loading skeleton */}
-        {isLoading ? (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className='bg-white rounded-xl p-5 animate-pulse border-2 border-gray-100'>
-                <div className='h-3 bg-gray-200 rounded mb-4' />
-                <div className='h-10 bg-gray-200 rounded-xl mb-3' />
-                <div className='h-6 bg-gray-200 rounded mb-3 w-3/4' />
-                <div className='h-4 bg-gray-200 rounded mb-2' />
-                <div className='h-4 bg-gray-200 rounded w-5/6 mb-4' />
-                <div className='flex justify-between pt-4 border-t border-gray-200'>
-                  <div className='h-4 bg-gray-200 rounded w-24' />
-                  <div className='h-8 w-8 bg-gray-200 rounded-full' />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
+        {isLoading ? <LoadingSceleton /> : (
           <>
             {/* Grid kurzů */}
             { displayedCourses &&
@@ -156,7 +125,6 @@ const CoursesPage = () => {
                         <CardDescription className='mb-4'>{course.description}</CardDescription>
                       </CardContent>
 
-                      {/* Footer */}
                       <CardFooter>
                           <CardDate course={course} getTime={getTimeAgo}/>
 
@@ -179,20 +147,7 @@ const CoursesPage = () => {
 
             {/* Empty state */}
             {displayedCourses.length === 0 && (
-              <div className='text-center py-16'>
-                <div className='w-22 h-22 bg-secondary/20 rounded-full flex items-center 
-                           justify-center mx-auto mb-6'>
-                  <Search size={45} className='text-primary' />
-                </div>
-              <Label asChild variant="emptyState"size="md">
-                <h3>Žádné kurzy nenalezeny</h3>
-              </Label>
-
-                <Button variant='primary'size='primary' 
-                  onClick={() => {setSearchQuery(''); setDisplayCount(9)}}>
-                  Vymazat vyhledávání
-                </Button>
-              </div>
+              <EmptyStateComp onClick={() => {setSearchQuery(''); setDisplayCount(9)}}/>
             )}
 
             {/* Load More button */}

@@ -1,5 +1,9 @@
+import { BookOpen, Calendar, ArrowRight } from 'lucide-react';
+
+
 export const colors = ['accent-teal-light', 'accent-teal', 'accent-teal-dark'] as const;
-export type ColorVariant = 'accent-teal-light' | 'accent-teal' | 'accent-teal-dark';
+export type ColorVariant = typeof colors[number];
+
 
 export const colorStyles = {
     bg: {
@@ -36,3 +40,12 @@ export const colorStyles = {
     'accent-teal-dark': 'border-accent-teal-dark/20',
   },
   };
+
+
+export const filters = [
+    { id: 'all', label: 'Všechny kurzy', icon: BookOpen },
+    { id: 'newest', label: 'Nejnovější', icon: Calendar },
+    { id: 'updated', label: 'Nedávno aktualizované', icon: ArrowRight }
+  ] as const;
+
+export type FilterIds = typeof filters[number]['id'];

@@ -1,5 +1,4 @@
 import apiFetch from "./client"
-// import type { CoursesSummary, Course } from "@/lib/types"
 import type { CourseSummary, CourseDetail } from "@/lib/schemas"
 
 export const getCourses = async () =>

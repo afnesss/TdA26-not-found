@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { CourseDetail } from "@/lib/schemas";
 import type { QuizResults } from "@/lib/types";
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, startTransition, Fragment } from "react";
 import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -100,8 +100,8 @@ const QuizesSection = ({courseData, styles}: QuizesSectionProps) => {
                     <div className='px-5 pb-5 space-y-4 border-t border-gray-100 pt-5 bg-gray-50/50'>
                       {quiz.questions.map((question, qIndex) => (
 
-                        <>
-                          <div key={question.uuid ?? qIndex} className='flex items-center gap-3 mb-4 '>
+                        <Fragment key={question.uuid ?? qIndex}>
+                          <div className='flex items-center gap-3 mb-4 '>
                             
                             <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
@@ -161,7 +161,7 @@ const QuizesSection = ({courseData, styles}: QuizesSectionProps) => {
                           </div>
                         </div>
                           <hr className='border-b border my-6 border-gray-100'></hr>
-                        </>
+                        </Fragment>
                       ))}
 
                       <Button variant='primary' size='primary' className='ml-11' onClick={() =>

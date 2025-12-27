@@ -16,6 +16,7 @@ import { getCourseById } from '@/api/queries';
 import { useNavigate, useParams } from 'react-router';
 import { Label } from '@/components/ui/label';
 import QuizesSection from './QuizesSection';
+import SummarySection from './SummarySection';
 
 const CoursePage = () => {
   const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
@@ -87,34 +88,7 @@ const CoursePage = () => {
 
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8'>
 
-    <section>
-      <div className="bg-background rounded-xl border border-gray-100 overflow-hidden relative">
-        <div className="bg-linear-to-r from-secondary to-accent-teal-light h-2" />
-
-
-        <div className="px-5 md:px-6 py-5 gap-3 flex flex-col">
-          <div className='flex md:flex-row gap-2 items-center'>
-            <Button variant={'grid'}
-           className={cn(
-              'bg-linear-to-br px-3 py-1 h-8',
-              colorStyles.bg['accent-teal-light'],
-              colorStyles.text['accent-teal-light']
-            )}
-             onClick={() => navigate(-1)}>
-              <ChevronLeft size={16}/>
-                <span>Zpět</span>
-            </Button>
-            <Label className='mb-0' size="lg">{courseData?.name}</Label>
-           </div>
-          {courseData?.description && (
-            <p className="text-gray-600 text-base leading-relaxed mb-2">
-              {courseData.description}
-            </p>
-          )}
-        
-        </div>
-      </div>
-    </section>
+      <SummarySection name={courseData?.name} description={courseData?.description ?? undefined}/>
 
         {/* Materials Section */}
         <section>
@@ -161,9 +135,9 @@ const CoursePage = () => {
                             <div className='relative w-fit'>
                               <Popover>
                                 <PopoverTrigger>
-                            <Button variant={'ghost'}>
-                              <Info size={16} />
-                            </Button>
+                            {/* <Button variant={'ghost'}> */}
+                              <Info className='text-gray-400 hover:text-primary active:text-primary cursor-pointer' size={16} />
+                            {/* </Button> */}
                             </PopoverTrigger>
                             <PopoverContent side="right" align="center" sideOffset={4} alignOffset={0} avoidCollisions>
                                   {material.description}

@@ -14,6 +14,7 @@ import type { CourseSummary } from '@/lib/schemas';
 import LoadingSceleton from './components/LoadingSceleton';
 import Filters from './components/Filters';
 import EmptyStateComp from './components/EmptyStateComp';
+import SearchBar from '@/components/shared/SearchBar';
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,7 +31,6 @@ const CoursesPage = () => {
       
         const data: CourseSummary[] = await getCourses();
         setCourses(data);
-      
       
     } catch (error) {
       console.log(error)
@@ -56,7 +56,7 @@ const CoursesPage = () => {
   });
 
   const hasMoreCourses = sortedCourses.length > displayCount;
-   const displayedCourses = sortedCourses.slice(0, displayCount)
+  const displayedCourses = sortedCourses.slice(0, displayCount);
   const loadMoreCourses = () => {
     setDisplayCount(prev => prev+6);
     setIsLoading(false);
@@ -77,26 +77,13 @@ const CoursesPage = () => {
   return (
     <div className='h-full'>
       
-      {/* Hero sekce */}
+      {/* Hero */}
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pt-3 pb-6'>
         <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center'>
-          {/* Badge */}
-          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery&& displayedCourses.length.toString() || courses.length.toString()}/>
+
+          <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery && displayedCourses.length.toString() || courses.length.toString()}/>
           
-          {/* Search Bar */}
-          <div className='relative group max-w-2xl w-full'>
-            <Search 
-              className='absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 
-                         group-focus-within:text-primary transition-all duration-300' 
-              size={20} />
-            <Input
-              type='text'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Vyhledat kurz podle názvu...'
-              className='pl-12 pr-12'/>
-            
-          </div>
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
         </div>
       </div>
 

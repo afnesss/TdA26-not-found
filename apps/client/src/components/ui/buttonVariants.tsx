@@ -14,8 +14,8 @@ const buttonVariants = cva(
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "bg-background cursor-pointer text-accent-blue transition-colors \
-          duration-200 shadow-md rounded-lg px-4 py-2 hover:bg-secondary \
+          "bg-background cursor-pointer shadow-md text-accent-blue transition-colors \
+          duration-200 rounded-lg px-4 py-2 hover:bg-secondary \
         font-semibold",
         filter: "px-4 py-1.5 rounded-xl max-sm:text-xs text-sm font-medium \
         transition-all duration-300 flex items-center gap-2 cursor-pointer",
@@ -23,7 +23,7 @@ const buttonVariants = cva(
         "flex items-center rounded-xl font-bold text-sm hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer",
         ghost:
         "hover:text-primary active-text-primary cursor-pointer text-gray-400 transition-colors",
-        // link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline-offset-4 hover:underline font-semibold cursor-pointer",
       },
       size: {
         primary: "px-7 py-3.5 max-sm:py-2", 

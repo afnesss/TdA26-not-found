@@ -16,6 +16,8 @@ type QuizState = {
     status: 'idle' | 'submitting' | 'submitted' | 'error',
     results?: QuizSubmitResponse,
     error?: string
+    showCorrect?: boolean,
+    isQuizComplete: boolean
 }
 type QuizStateById = Record<string, QuizState>;
 
@@ -33,6 +35,8 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
       initialResults[quiz.uuid] = {
         status: 'idle',
         answers: {},
+        showCorrect: false,
+        isQuizComplete: false
       }
       
     });
@@ -108,7 +112,8 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
       [quizId]: {
         ...prev[quizId],
         status: 'submitted',
-        results: parsed.data
+        results: parsed.data,
+        showCorrect: false
       }
     }))
       return parsed.data;
@@ -220,6 +225,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                                   ? answer?.selectedIndex === optIndex
                                   : (answer?.selectedIndices ?? []).includes(optIndex);
                                 const isSubmitted = quizState[quiz.uuid!].status === 'submitted';
+                                const showCorrect = quizState[quiz.uuid!].showCorrect;
                                 const isCorrectOption = isSubmitted && (question.type ==='singleChoice' ? 
                                         question.correctIndex === optIndex : 
                                         (question.correctIndices as number[]).includes(optIndex)
@@ -228,12 +234,16 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                                   <Label
                                     key={optIndex}
                                     className={cn(
-                                      'flex items-center gap-3 p-3.5 rounded-lg transition-all border border-gray-200',
+                                      'flex items-center gap-3 p-3.5 rounded-lg transition-all border border-gray-200 bg-gray-100',
                                       !isSubmitted && 'cursor-pointer hover:bg-primary/20 hover:border-gray-300',
-                                      isSelected ? 'bg-primary/10' : 'bg-gray-100',
-                                      isSelected && isCorrectOption && 'bg-secondary/40',
-                                      isSelected && !isCorrectOption && isSubmitted && 'bg-destructive/30',
-                                      !isSelected && isCorrectOption && 'border-secondary border-2'
+                                      
+                                      isSelected && !showCorrect && !isSubmitted && 'bg-primary/10',
+                                      isSelected && isSubmitted && !showCorrect && 'bg-gray-200',
+
+                                      isSelected && isCorrectOption && showCorrect && 'bg-secondary/40',
+                                      isSelected && !isCorrectOption && isSubmitted && showCorrect&& 'bg-destructive/30',
+                                      !isSelected && isCorrectOption && showCorrect && 'border-secondary border-2'
+
                                     )}
                                   >
                                     <input
@@ -255,7 +265,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
 
                                     <div className='flex justify-between w-full'>
                                     <span className='text-sm font-medium text-foreground'>{option}</span>
-                                    {!isSelected && isCorrectOption && <Check className='text-secondary self-end' size={20}/>}
+                                    {!isSelected && isCorrectOption && quizState[quiz.uuid!].showCorrect && <Check className='text-secondary self-end' size={20}/>}
                                     </div>
 
                                   </Label>
@@ -269,6 +279,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                       <div className="flex flex-col mx-11">
                       {queryMutation.isError && <Label size={'md'} variant={'error'} className="mb-3">{queryMutation.error.message as string}</Label>}
                       <div className="flex flex-row items-center justify-between">
+                        <div className="flex items-center gap-10">
                       <Button variant='primary' size='primary' className="w-fit"
                       disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted'}
                       onClick={() =>{handleSubmit(quiz.uuid!)}
@@ -276,7 +287,21 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                         <Play size={20} />
                         Odeslat odpovědi
                       </Button>
-
+   
+                      <Button variant='link'  className="rounded-lg shadow-none"
+                      disabled={quizState[quiz.uuid!]?.status !== 'submitted'}
+                      onClick={() =>{setQuizState(prev => ({
+                        ...prev,
+                        [quiz.uuid!]:{
+                          ...prev[quiz.uuid!],
+                          showCorrect: !(prev[quiz.uuid!].showCorrect ?? true)
+                        }
+                      })
+                      )}
+                    }>
+                        {quizState[quiz.uuid!].showCorrect ?  'Skrýt odpovědi': 'Zobrazit odpovědi'}
+                      </Button>
+                      </div>
                       {quizState[quiz.uuid!]?.status === 'submitted' && 
                       <Label className="text-primary flex items-center gap-3" size={'lg'}>
                         <CheckCircle size={20} />

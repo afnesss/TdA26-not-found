@@ -15,31 +15,19 @@ import LoadingSceleton from './components/LoadingSceleton';
 import Filters from './components/Filters';
 import EmptyStateComp from './components/EmptyStateComp';
 import SearchBar from '@/components/shared/SearchBar';
+import { useQuery } from '@tanstack/react-query';
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<FilterIds>('all');
   const [displayCount, setDisplayCount] = useState(9);
-  const [courses, setCourses] = useState<CourseSummary[]>([]);
   const navigate = useNavigate();
 
-  useEffect ( () => {
-    const getData = async () =>{
-    try {
-      setIsLoading(true)
-      
-        const data: CourseSummary[] = await getCourses();
-        setCourses(data);
-      
-    } catch (error) {
-      console.log(error)
-    } finally{
-      setIsLoading(false)
+  const {data: courses = [], isLoading, isError, refetch} = useQuery<CourseSummary[]>({
+    queryKey: ['courses'],
+    queryFn: getCourses,
     }
-  }
-  getData();
-  }, [])
+  )
 
   const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,7 +47,7 @@ const CoursesPage = () => {
   const displayedCourses = sortedCourses.slice(0, displayCount);
   const loadMoreCourses = () => {
     setDisplayCount(prev => prev+6);
-    setIsLoading(false);
+    refetch();
   }
 
   const getTimeAgo = (date: string) => {
@@ -117,12 +105,13 @@ const CoursesPage = () => {
 
                           <Button 
                           variant={'grid'} size={'grid'}
+                          onClick={() => {navigate(`/courses/${course.uuid}`)}}
                           className={cn(
                             'bg-linear-to-br',
                             colorStyles.bg[courseColor],
                             colorStyles.text[courseColor]
                           )}>
-                          <span className='font-semibold' onClick={() => {navigate(`/courses/${course.uuid}`)}}>Zobrazit</span>
+                          <span className='font-semibold'>Zobrazit</span>
                         </Button>
 
                       </CardFooter>
@@ -133,7 +122,7 @@ const CoursesPage = () => {
             </div>}
 
             {/* Empty state */}
-            {displayedCourses.length === 0 && (
+            {displayedCourses.length === 0 && !isLoading &&(
               <EmptyStateComp onClick={() => {setSearchQuery(''); setDisplayCount(9)}}/>
             )}
 
@@ -141,7 +130,7 @@ const CoursesPage = () => {
             {hasMoreCourses && (
               <div className='mt-8 text-center'>
                 <Button variant='primary'size='primary' 
-                  onClick={() => {setIsLoading(true); loadMoreCourses();}}>
+                  onClick={() => { loadMoreCourses(); }}>
                   Načíst další kurzy
                 </Button>
               </div>

@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { type CourseDetail, type QuizResults, type QuizAnswer, QuizSubmitResponseSchema, type QuizSubmitResponse, QuizAnswerSchema } from "@/lib/schemas";
 import { useState, useEffect, startTransition, Fragment } from "react";
-import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play } from "lucide-react";
+import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitQuiz } from "@/api/queries";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +17,6 @@ type QuizState = {
     results?: QuizSubmitResponse,
     error?: string
     showCorrect?: boolean,
-    isQuizComplete: boolean
 }
 type QuizStateById = Record<string, QuizState>;
 
@@ -36,7 +35,6 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
         status: 'idle',
         answers: {},
         showCorrect: false,
-        isQuizComplete: false
       }
       
     });
@@ -146,6 +144,15 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
 
   })
 
+  const isQuizComplete = (quizId: string, totalQuestions: number): boolean =>{
+    const answers = quizState[quizId].answers ?? {};
+
+    const answersCount = Object.values(answers).filter(i => i.selectedIndex !== undefined ||
+      Array.isArray(i.selectedIndices) && i.selectedIndices.length > 0
+    ).length;
+
+    return answersCount === totalQuestions;
+  }
 
   const handleSubmit = async (quizId: string) => {
 
@@ -210,13 +217,19 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                         <Fragment key={question.uuid ?? qIndex}>
                           <div className='flex items-center gap-3 mb-4 '>
                             
-                            <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
+                            <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
                             </span>
                             <Label size={'md'}>{question.question}</Label>
+                            {
+                              quizState[quiz.uuid!].status === 'submitted' && (
+                                quizState[quiz.uuid!].results?.correctPerQuestion[qIndex] ?
+                                  <Check className='text-secondary' size={22} strokeWidth={3}/>
+                                  : <X className="text-destructive" size={22} strokeWidth={3}/> )
+                            }
                           </div>
 
-                          <div className='space-y-2.5 pl-11'>
+                          <div className='space-y-2.5  lg:pl-10'>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5'>
                               {question.options.map((option, optIndex) => {
                                 const answer = quizState[quiz.uuid!].answers[question.uuid!];
@@ -263,10 +276,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                                       }}
                                     />
 
-                                    <div className='flex justify-between w-full'>
                                     <span className='text-sm font-medium text-foreground'>{option}</span>
-                                    {!isSelected && isCorrectOption && quizState[quiz.uuid!].showCorrect && <Check className='text-secondary self-end' size={20}/>}
-                                    </div>
 
                                   </Label>
                                 )
@@ -276,18 +286,18 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                           <hr className='border-b border mt-6 mb-4 border-gray-100'></hr>
                         </Fragment>
                       ))}
-                      <div className="flex flex-col mx-11">
+                      <div className="flex flex-col mx-10">
                       {queryMutation.isError && <Label size={'md'} variant={'error'} className="mb-3">{queryMutation.error.message as string}</Label>}
                       <div className="flex flex-row items-center justify-between">
-                        <div className="flex items-center gap-10">
+                        <div className="flex items-center gap-3 md:gap-10  flex-col md:flex-row">
                       <Button variant='primary' size='primary' className="w-fit"
-                      disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted'}
+                      disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted' || !isQuizComplete(quiz.uuid!, quiz.questions.length)}
                       onClick={() =>{handleSubmit(quiz.uuid!)}
                     }>
                         <Play size={20} />
                         Odeslat odpovědi
                       </Button>
-   
+                    
                       <Button variant='link'  className="rounded-lg shadow-none"
                       disabled={quizState[quiz.uuid!]?.status !== 'submitted'}
                       onClick={() =>{setQuizState(prev => ({
@@ -305,8 +315,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                       {quizState[quiz.uuid!]?.status === 'submitted' && 
                       <Label className="text-primary flex items-center gap-3" size={'lg'}>
                         <CheckCircle size={20} />
-                        {quizState[quiz.uuid!].results?.score}/
-                        {quizState[quiz.uuid!].results?.maxScore}
+                        {quizState[quiz.uuid!].results?.score} / {quizState[quiz.uuid!].results?.maxScore}
                       </Label>}
                       </div>
                     </div>

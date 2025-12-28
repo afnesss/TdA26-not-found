@@ -14,7 +14,7 @@ const EmptyStateComp = ({onClick}: Props) => {
                   justify-center mx-auto mb-6'>
         <Search size={45} className='text-primary' />
       </div>
-    <Label asChild variant="emptyState"size="md">
+    <Label asChild variant="emptyState"size="xl">
       <h3>Žádné kurzy nenalezeny</h3>
     </Label>
 

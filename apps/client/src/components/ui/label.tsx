@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 const labelVariants = cva('', { 
     variants: {
       variant: {
-        default: "block text-foreground",
+        default: "block text-foreground font-semibold ",
         title:
           " text-foreground font-bold text-left",
         description:
@@ -21,8 +21,10 @@ const labelVariants = cva('', {
       size: {
         primary: "max-sm:text-2xl text-3xl lg:text-4xl", 
         default: "text-lg md:text-xl",
-        lg: "text-2xl md:text-3xl font-bold mb-5",
-        md: 'text-xl md:text-2xl'
+        xl: "text-2xl md:text-3xl font-bold mb-5",
+        lg: 'text-xl md:text-2xl',
+        md: 'text-md',
+        sm: 'text-sm'
       },
     },
     defaultVariants: {

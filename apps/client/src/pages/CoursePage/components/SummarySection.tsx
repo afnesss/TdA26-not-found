@@ -21,7 +21,7 @@ const SummarySection = ({name, description}: SummarySectionProps) => {
 
 
         <div className="px-5 md:px-6 py-5 gap-3 flex flex-col">
-          <div className='flex md:flex-row gap-2 items-center'>
+          <div className='flex md:flex-row gap-3 items-center'>
             <Button variant={'grid'}
            className={cn(
               'bg-linear-to-br px-3 py-1 h-8',
@@ -32,7 +32,7 @@ const SummarySection = ({name, description}: SummarySectionProps) => {
               <ChevronLeft size={16}/>
                 <span>Zpět</span>
             </Button>
-            <Label className='mb-0' size="lg">{name}</Label>
+            <Label className='mb-0' size="xl">{name}</Label>
            </div>
           {description && (
             <p className="text-gray-600 text-base leading-relaxed mb-2">

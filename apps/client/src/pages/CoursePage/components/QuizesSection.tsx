@@ -5,42 +5,41 @@ import { useState, useEffect, startTransition, Fragment } from "react";
 import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitQuiz } from "@/api/queries";
+// import {useQuery}
+
 
 type QuizesSectionProps ={
   courseData: CourseDetail  | null,
 }
+type QuizState = {
+    answers: Record<string, QuizAnswer>,
+    status: 'idle' | 'submitting' | 'submitted' | 'error',
+    result?: QuizSubmitResponse,
+    error?: string
+}
+type QuizStateById = Record<string, QuizState>;
 
 const QuizesSection = ({courseData}: QuizesSectionProps) => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, QuizAnswer>>({});
-  const [quizResults, setQuizResults] = useState<QuizResults>({});
-  const [quizResultsResp, setQuizResultsResp] = useState<QuizSubmitResponse[]>([]);//if includes response data with the right id -> show results f.e. 3/5
+  const [quizState, setQuizState]= useState<QuizStateById>({});
 
   useEffect(() => {
     if (!courseData?.quizzes) return;
 
-    const initialResults: QuizResults = {};
+    const initialResults: QuizStateById = {};
     courseData?.quizzes.forEach(quiz => {
-      if (quiz.uuid){
-        const correctAnswers: Record<string,  {correctAnswer: number | number[]}> = {};
-        quiz.questions.forEach(question => {
-          correctAnswers[question.uuid!] = {
-            correctAnswer: question.type === 'singleChoice'?
-            question.correctIndex :
-            question.correctIndices
-          }
-        });
-        initialResults[quiz.uuid] = {
-          submitted: false,
-          answers: correctAnswers
-        }
+      if (!quiz.uuid) return;
+
+      initialResults[quiz.uuid] = {
+        status: 'idle',
+        answers: {},
       }
+      
     });
-    // Only set quiz results if there is something to set and avoid unnecessary updates
     if (Object.keys(initialResults).length === 0) return;
 
     startTransition(() => {
-      setQuizResults(prev => (Object.keys(prev).length ? prev : initialResults));
+      setQuizState(prev => (Object.keys(prev).length ? prev : initialResults));
     });
   }, [courseData]);
 
@@ -48,44 +47,50 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
     setExpandedQuiz(expandedQuiz === quizId ? null : quizId);
   };
 
-  const handleSingleChoice = (questionId: string, index: number) => {
-    setSelectedAnswers(prev => ({
+  const handleSingleChoice = (quizId: string, questionId: string, index: number) => {
+    setQuizState(prev => ({
       ...prev,
-      [questionId]:{
-        uuid: questionId,
-        selectedIndex: index
+      [quizId]:{
+        ...prev[quizId],
+        answers:{
+          ...prev[quizId].answers,
+          [questionId]: {
+            uuid: questionId,
+            selectedIndex: index
+          } 
+        }
       }
         
     }))
   }
 
-  const handleMultipleChoice = (questionId: string, index: number) => {
-    setSelectedAnswers(prev => {
-      const current = prev[questionId].selectedIndices;
+  const handleMultipleChoice = (quizId: string, questionId: string, index: number) => {
+    setQuizState(prev => {
+      const current = prev[quizId]?.answers[questionId]?.selectedIndices ?? [];
 
-      const updated = current?.includes(index)?
-        current.filter(i => i !== index) :
-        [...(current ?? []), index];
+      const updated = current.includes(index)
+        ? current.filter(i => i !== index)
+        : [...current, index];
 
       return {
-        ...prev,
-        [questionId]: {
-          uuid: questionId,
-          selectedIndices: updated
+      ...prev,
+      [quizId]:{
+        ...prev[quizId],
+        answers:{
+          ...prev[quizId].answers, 
+          [questionId]: {
+            uuid: questionId,
+            selectedIndices: updated
+          } 
         }
       }
-    })
+      };
+    });
   }
 
   const handleSubmit = async (courseId: string, quizId: string) => {
-    setQuizResults(prev => ({
-      ...prev,
-      [quizId]: {
-        ...(prev[quizId] ?? { submitted: false, answers: {} }),
-        submitted: true,
-      },
-    }));
-    const answers = Object.values(selectedAnswers);
+
+    const answers = Object.values(quizState[quizId].answers);
     const raw = await submitQuiz(courseId, quizId ?? '', {answers});
 
     if (!raw) {
@@ -99,13 +104,20 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
         throw new Error("Invalid data to submit");
     }
 
-
+    setQuizState (prev => ({
+      ...prev,
+      [quizId]: {
+        ...prev[quizId],
+        status: 'submitted',
+        results: parsed.data
+      }
+    }))
   }
 
   return (
         <section>
 
-          <Label size="lg">Kvízy</Label>
+          <Label size="xl">Kvízy</Label>
 
           <div className='space-y-4'>
             {courseData?.quizzes?.map((quiz) => {
@@ -117,8 +129,8 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
 
                   <div
                     className='p-5 cursor-pointer hover:bg-gray-50 transition-colors'
-                    onClick={() => quiz.uuid && toggleQuiz(quiz.uuid)}
-                  >
+                    onClick={() => quiz.uuid && toggleQuiz(quiz.uuid)}>
+
                     <div className='flex items-center justify-between gap-4'>
                       <div className='flex items-center gap-4 flex-1'>
 
@@ -135,7 +147,9 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                             </span>
                           </div>
                         </div>
+
                       </div>
+
                       <button className='p-2 hover:bg-gray-200 rounded-full transition-colors'>
                         {isExpanded ? 
                           <ChevronUp size={24} className='text-accent-teal' /> : 
@@ -156,50 +170,51 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                             <span className='font-bold text-background text-base bg-primary min-w-8 h-8 rounded-full flex items-center justify-center shrink-0'>
                               {qIndex + 1}
                             </span>
-                            <p className='font-semibold text-foreground text-base'>{question.question}</p>
+                            <Label size={'md'}>{question.question}</Label>
                           </div>
 
                           <div className='space-y-2.5 pl-11'>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5'>
                               {question.options.map((option, optIndex) => {
-                                const answer = selectedAnswers[question.uuid!];
+                                const answer = quizState[quiz.uuid!].answers[question.uuid!];
 
-                                const isSelected = question.type === 'singleChoice'?
-                                answer.selectedIndex === optIndex:
-                                (answer.selectedIndices as number[] || []).includes(optIndex);
-                                const isQuizSubmitted = quizResults[quiz.uuid!]?.submitted;
-                                const isCorrectOption = isQuizSubmitted && (question.type ==='singleChoice' ? 
-                                        quizResults[quiz.uuid!].answers[question.uuid!].correctAnswer === optIndex : 
-                                        (quizResults[quiz.uuid!].answers[question.uuid!].correctAnswer as number[]).includes(optIndex)
+                                const isSelected = question.type === 'singleChoice'
+                                  ? answer?.selectedIndex === optIndex
+                                  : (answer?.selectedIndices ?? []).includes(optIndex);
+                                const isSubmitted = quizState[quiz.uuid!].status === 'submitted';
+                                const isCorrectOption = isSubmitted && (question.type ==='singleChoice' ? 
+                                        question.correctIndex === optIndex : 
+                                        (question.correctIndices as number[]).includes(optIndex)
                                       )
                                 return (
                                   <Label
                                     key={optIndex}
                                     className={cn(
                                       'flex items-center gap-3 p-3.5 rounded-lg transition-all border border-gray-200',
-                                      !isQuizSubmitted && 'cursor-pointer hover:bg-primary/20 hover:border-gray-300',
+                                      !isSubmitted && 'cursor-pointer hover:bg-primary/20 hover:border-gray-300',
                                       isSelected ? 'bg-primary/10' : 'bg-gray-100',
                                       isSelected && isCorrectOption && 'bg-secondary/40',
-                                      isSelected && !isCorrectOption && isQuizSubmitted && 'bg-destructive/40',
+                                      isSelected && !isCorrectOption && isSubmitted && 'bg-destructive/30',
                                       !isSelected && isCorrectOption && 'border-secondary border-2'
                                     )}
                                   >
                                     <input
                                       type={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
                                       name={question.uuid}
+                                      checked={isSelected}
+                                      disabled={isSubmitted}
                                       className='w-5 h-5 text-primary accent-primary'
                                       onChange={() => {
                                         if (question.uuid){
                                         if (question.type === 'singleChoice') {
-                                          handleSingleChoice(question.uuid, optIndex);
+                                          handleSingleChoice(quiz.uuid!, question.uuid, optIndex);
                                         } else {
-                                          handleMultipleChoice(question.uuid, optIndex);
+                                          handleMultipleChoice(quiz.uuid!, question.uuid, optIndex);
                                           }
-                                        
                                         }
-
                                       }}
                                     />
+
                                     <div className='flex justify-between w-full'>
                                     <span className='text-sm font-medium text-foreground'>{option}</span>
                                     {!isSelected && isCorrectOption && <Check className='text-secondary self-end' size={20}/>}
@@ -214,7 +229,9 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                         </Fragment>
                       ))}
 
-                      <Button variant='primary' size='primary' className='ml-11' 
+                      <Button variant='primary' size='primary' 
+                      className='ml-11' 
+                      disabled={quizState[quiz.uuid!].status === 'submitted' || quizState[quiz.uuid!].status === 'submitting'}
                       onClick={() =>{handleSubmit(courseData.uuid, quiz.uuid!)}
                     }>
                         <Play size={20} />

@@ -23,7 +23,7 @@ const FeedSection = ({feed}: FeedSection) => {
 
   return (
         <section>
-            <Label size="lg">Oznámení a novinky</Label>
+            <Label size="xl">Oznámení a novinky</Label>
 
           <div className='space-y-3'>
             {feed?.map((item) => {

@@ -26,8 +26,11 @@ const CoursesPage = () => {
   const {data: courses = [], isLoading, isError, refetch} = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
     queryFn: getCourses,
-    }
-  )
+  });
+
+  if (isLoading) {
+    return <LoadingSceleton />
+  }
 
   const filteredCourses = courses.filter(course => 
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,7 +83,6 @@ const CoursesPage = () => {
       {/* Kurzy Grid */}
       <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 py-6 relative'>
         
-        {isLoading ? <LoadingSceleton /> : (
           <>
             {/* Grid kurzů */}
             { displayedCourses &&
@@ -136,7 +138,6 @@ const CoursesPage = () => {
               </div>
             )}
           </>
-        )}
       </div>
     </div>
   )

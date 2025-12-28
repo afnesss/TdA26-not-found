@@ -9,6 +9,7 @@ import SummarySection from './components/SummarySection';
 import MaterialsSection from './components/MaterialsSection';
 import FeedSection from './components/FeedSection';
 import { useQuery } from '@tanstack/react-query';
+import CourseSkeleton from './components/CoursePageSkeleton'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
@@ -16,6 +17,7 @@ const CoursePage = () => {
 
   const fetchCourse = async (id: string): Promise<CourseDetail> => {
       try {
+        setTimeout(() => {}, 3000)
     const raw = await getCourseById(id!);
     if (!raw) {
       throw new Error("Course not found");
@@ -39,6 +41,10 @@ const CoursePage = () => {
     enabled: Boolean(id),
   });
 
+  if (isLoading){
+    
+    return <CourseSkeleton/>
+  }
 
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>

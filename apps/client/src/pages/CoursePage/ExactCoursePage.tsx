@@ -8,35 +8,36 @@ import QuizesSection from './components/QuizesSection';
 import SummarySection from './components/SummarySection';
 import MaterialsSection from './components/MaterialsSection';
 import FeedSection from './components/FeedSection';
+import { useQuery } from '@tanstack/react-query';
 
 const CoursePage = () => {
-  const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
+  // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
+   const {id} = useParams<{ id: string }>();
 
-  const {id} = useParams<{ id: string }>();
+  const fetchCourse = async (id: string): Promise<CourseDetail> => {
+      try {
+    const raw = await getCourseById(id!);
+    if (!raw) {
+      throw new Error("Course not found");
+    }
+    const parsed = CourseDetailSchema.safeParse(raw);
 
-  useEffect ( () => {
+    if (!parsed.success) {
+      console.error("Course schema validation failed", parsed.error);
+      throw new Error("Invalid course data");
+    }
 
-  const load = async () => {
-    try {
-        const raw = await getCourseById(id!);
-        if (!raw) {
-          throw new Error("Course not found");
-        }
-        const parsed = CourseDetailSchema.safeParse(raw);
-
-        if (!parsed.success) {
-          console.error("Course schema validation failed", parsed.error);
-          throw new Error("Invalid course data");
-        }
-
-        setCourseData(parsed.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-  load();
-  }, [id])
+    return parsed.data;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+  }
+  const {data: courseData, isLoading, isError, refetch} = useQuery<CourseDetail, Error>({
+    queryKey: ['course', id],
+    queryFn: () => fetchCourse(id!),
+    enabled: Boolean(id),
+  });
 
 
   return (

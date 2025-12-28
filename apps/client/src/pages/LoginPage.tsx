@@ -107,9 +107,9 @@ const LoginPage = () => {
                 )}/>
 
                   {errors.password && 
-                  <p className='text-destructive'>{errors.password.message as string}</p>}
+                  <Label size='md' variant={'error'}>{errors.password.message as string}</Label>}
                   {errors.root && 
-                  <p className='text-destructive'>{errors.root.message as string}</p>}
+                  <Label size='md' variant={'error'}>{errors.root.message as string}</Label>}
 
                 {/* {isLogin && (
                   <div className="flex items-center justify-between text-sm">

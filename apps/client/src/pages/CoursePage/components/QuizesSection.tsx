@@ -1,15 +1,15 @@
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { type CourseDetail, type QuizResults, type QuizAnswer, QuizSubmitResponseSchema, type QuizSubmitResponse } from "@/lib/schemas";
+import { type CourseDetail, type QuizResults, type QuizAnswer, QuizSubmitResponseSchema, type QuizSubmitResponse, QuizAnswerSchema } from "@/lib/schemas";
 import { useState, useEffect, startTransition, Fragment } from "react";
 import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitQuiz } from "@/api/queries";
-// import {useQuery}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
 type QuizesSectionProps ={
-  courseData: CourseDetail  | null,
+  courseData?: CourseDetail  | null,
 }
 type QuizState = {
     answers: Record<string, QuizAnswer>,
@@ -88,23 +88,22 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
     });
   }
 
-  const handleSubmit = async (courseId: string, quizId: string) => {
+  const queryClient = useQueryClient();
 
-    const answers = Object.values(quizState[quizId].answers);
-    const raw = await submitQuiz(courseId, quizId ?? '', {answers});
+  const queryMutation = useMutation<QuizSubmitResponse, Error, { courseId: string; quizId: string; answers: QuizAnswer[] }, { previousData?: CourseDetail | undefined }>({
 
-    if (!raw) {
-      throw new Error("quiz to submit not found");
-    }
+    mutationFn: async ({ courseId, quizId, answers }) => {
+      
+      const raw = await submitQuiz(courseId, quizId , {answers});
 
-    const parsed = QuizSubmitResponseSchema.safeParse(raw);
+      const parsed = QuizSubmitResponseSchema.safeParse(raw);
 
-    if (!parsed.success){
-        console.error("quizResponseSubmit schema validation failed", parsed.error);
-        throw new Error("Invalid data to submit");
-    }
+      if (!parsed.success){
+          console.error("quizResponseSubmit schema validation failed", parsed.error);
+          throw new Error("Invalid data to submit");
+      }
 
-    setQuizState (prev => ({
+      setQuizState (prev => ({
       ...prev,
       [quizId]: {
         ...prev[quizId],
@@ -112,6 +111,45 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
         results: parsed.data
       }
     }))
+      return parsed.data;
+    },
+    onMutate: ({courseId, quizId}) => {
+      const previousData = queryClient.getQueryData<CourseDetail | undefined>(['course', courseId]);
+
+      queryClient.setQueryData<CourseDetail | undefined>(['course', courseId], (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          quizzes: oldData.quizzes.map(q =>
+            q.uuid === quizId
+              ? { ...q, attemptsCount: (q.attemptsCount ?? 0) + 1 }
+              : q
+          ),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      console.log('error submiting quiz ', err);
+      queryClient.setQueryData(['course', variables.courseId], context?.previousData)
+    },
+    onSuccess: (data, variables) => {
+      console.log('quiz submitted', data)
+      queryClient.invalidateQueries({ queryKey: ['course', variables.courseId] })
+    },
+
+  })
+
+
+  const handleSubmit = async (quizId: string) => {
+
+    const answers = Object.values(quizState[quizId].answers);
+
+    queryMutation.mutate({
+      courseId: courseData!.uuid, 
+      quizId, 
+      answers})
   }
 
   return (
@@ -225,18 +263,19 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                               })}
                           </div>
                         </div>
-                          <hr className='border-b border my-6 border-gray-100'></hr>
+                          <hr className='border-b border mt-6 mb-4 border-gray-100'></hr>
                         </Fragment>
                       ))}
-
-                      <Button variant='primary' size='primary' 
-                      className='ml-11' 
-                      disabled={quizState[quiz.uuid!].status === 'submitted' || quizState[quiz.uuid!].status === 'submitting'}
-                      onClick={() =>{handleSubmit(courseData.uuid, quiz.uuid!)}
+                      <div className="flex flex-col ml-11">
+                      {queryMutation.isError && <Label size={'md'} variant={'error'} className="mb-3">{queryMutation.error.message as string}</Label>}
+                      <Button variant='primary' size='primary' className="w-fit"
+                      disabled={queryMutation.variables?.quizId === quiz.uuid && (queryMutation.isPending || queryMutation.isSuccess)}
+                      onClick={() =>{handleSubmit(quiz.uuid!)}
                     }>
                         <Play size={20} />
                         Odeslat odpovědi
                       </Button>
+                    </div>
                     </div>
                   )}
                 </div>

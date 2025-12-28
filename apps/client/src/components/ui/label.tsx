@@ -16,7 +16,8 @@ const labelVariants = cva('', {
         formTitle:
         "relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-5",
         emptyState:
-        'text-xl md:text-2xl font-bold text-neutral-black mb-7'
+        'text-xl md:text-2xl font-bold text-neutral-black mb-7',
+        error: 'text-destructive font-normal'
       },
       size: {
         primary: "max-sm:text-2xl text-3xl lg:text-4xl", 

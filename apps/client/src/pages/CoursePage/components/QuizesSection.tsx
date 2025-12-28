@@ -14,7 +14,7 @@ type QuizesSectionProps ={
 type QuizState = {
     answers: Record<string, QuizAnswer>,
     status: 'idle' | 'submitting' | 'submitted' | 'error',
-    result?: QuizSubmitResponse,
+    results?: QuizSubmitResponse,
     error?: string
 }
 type QuizStateById = Record<string, QuizState>;
@@ -266,15 +266,24 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                           <hr className='border-b border mt-6 mb-4 border-gray-100'></hr>
                         </Fragment>
                       ))}
-                      <div className="flex flex-col ml-11">
+                      <div className="flex flex-col mx-11">
                       {queryMutation.isError && <Label size={'md'} variant={'error'} className="mb-3">{queryMutation.error.message as string}</Label>}
+                      <div className="flex flex-row items-center justify-between">
                       <Button variant='primary' size='primary' className="w-fit"
-                      disabled={queryMutation.variables?.quizId === quiz.uuid && (queryMutation.isPending || queryMutation.isSuccess)}
+                      disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted'}
                       onClick={() =>{handleSubmit(quiz.uuid!)}
                     }>
                         <Play size={20} />
                         Odeslat odpovědi
                       </Button>
+
+                      {quizState[quiz.uuid!]?.status === 'submitted' && 
+                      <Label className="text-primary flex items-center gap-3" size={'lg'}>
+                        <CheckCircle size={20} />
+                        {quizState[quiz.uuid!].results?.score}/
+                        {quizState[quiz.uuid!].results?.maxScore}
+                      </Label>}
+                      </div>
                     </div>
                     </div>
                   )}

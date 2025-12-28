@@ -32,7 +32,7 @@ export const QuizAnswerSchema = z.object({
   uuid: z.string().uuid(),
   selectedIndex: z.number().int().optional(),
   selectedIndices: z.array(z.number().int()).optional(),
-  comment: z.string().optional(),
+  // comment: z.string().optional(),
 });
 
 export const QuizSubmitRequestSchema = z.object({

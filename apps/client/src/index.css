@@ -14,6 +14,7 @@
   --primary: oklch(53.28% 0.144 248.22); /* #0070BB */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(89.03% 0.138 151.75); /* #91F5AD */
+  /* --secondary: oklch(66.847% 0.1451 150.143); */
   --secondary-foreground: oklch(0.1 0 0);
   --accent-teal-light: oklch(79.81% 0.110 169.04); /* #6DD4B1 */
   --accent-teal: oklch(70.64% 0.096 196.06); /* #49B3B4 */
@@ -143,7 +144,7 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
  }
- 
+
 @layer components{
 .center-box{
     @apply fixed inset-0 flex items-center justify-center;

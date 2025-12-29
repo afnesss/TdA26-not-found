@@ -12,7 +12,7 @@ const FormField = ({icon:Icon, label, children}: FormFieldProps) => {
 
   return (
       <div>
-        <Label>{label}</Label>
+        <Label size={'sm'} className="pb-2">{label}</Label>
         <div className="relative">
           <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
             {children}

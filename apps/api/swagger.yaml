@@ -635,9 +635,6 @@ components:
           type: array
           items:
             type: integer
-        comment:
-          type: string
-          description: Optional comment or explanation for the answer
 
     QuizSubmitResponse:
       type: object

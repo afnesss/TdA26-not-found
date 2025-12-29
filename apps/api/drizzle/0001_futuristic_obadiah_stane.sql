@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS "course_materials" (
 	"file_url" text,
 	"mime_type" varchar(256),
 	"size_bytes" integer,
-	"original_filename" text,
 	"url" text,
 	"favicon_url" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,

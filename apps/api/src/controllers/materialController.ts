@@ -122,7 +122,7 @@ export const createMaterial = async (req: Request, res: Response) => {
           fileUrl,
           mimeType: file.mimetype,
           sizeBytes: file.size,
-          originalFilename: file.originalname,
+          // originalFilename: file.originalname,
         })
         .returning();
 
@@ -227,7 +227,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
         if (req.file) {
             // Delete old file
-            if (existing.originalFilename && existing.fileUrl) {
+            if (existing.fileUrl) {
                 const oldFilename = existing.fileUrl.split('/').pop();
                 if (oldFilename) {
                     await fs.unlink(path.join(UPLOAD_DIR, oldFilename)).catch(console.error);
@@ -249,7 +249,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
             updates.fileUrl = fileUrl;
             updates.mimeType = file.mimetype;
             updates.sizeBytes = file.size;
-            updates.originalFilename = file.originalname;
+            // updates.originalFilename = file.originalname;
         }
 
         const [updated] = await db

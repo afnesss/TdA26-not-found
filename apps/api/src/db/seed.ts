@@ -86,7 +86,7 @@ export async function seed() {
         fileUrl: "https://www.africau.edu/images/default/sample.pdf", // Placeholder PDF
         mimeType: "application/pdf",
         sizeBytes: 1024 * 700,
-        originalFilename: "lecture-slides-week1.pdf",
+        // originalFilename: "lecture-slides-week1.pdf",
       },
       {
         courseId: course.uuid,
@@ -104,7 +104,7 @@ export async function seed() {
         fileUrl: "https://www.orimi.com/pdf-test.pdf", // Another placeholder PDF
         mimeType: "application/pdf",
         sizeBytes: 1024 * 250,
-        originalFilename: "exercise-sheet-module2.pdf",
+        // originalFilename: "exercise-sheet-module2.pdf",
       },
       {
         courseId: course.uuid,
@@ -122,7 +122,7 @@ export async function seed() {
         fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/2pages.pdf", // Another placeholder PDF
         mimeType: "application/pdf",
         sizeBytes: 1024 * 900,
-        originalFilename: "project-guidelines.pdf",
+        // originalFilename: "project-guidelines.pdf",
       },
       {
         courseId: course.uuid,

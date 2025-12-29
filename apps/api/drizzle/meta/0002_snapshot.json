@@ -57,12 +57,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "original_filename": {
-          "name": "original_filename",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "url": {
           "name": "url",
           "type": "text",

@@ -27,7 +27,7 @@ export const courseMaterials = pgTable("course_materials", {
   fileUrl: text("file_url"),
   mimeType: varchar("mime_type", { length: 256 }),
   sizeBytes: integer("size_bytes"),
-  originalFilename: text("original_filename"),
+  // originalFilename: text("original_filename"),
   // For URL
   url: text("url"),
   faviconUrl: text("favicon_url"),

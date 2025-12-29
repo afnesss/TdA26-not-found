@@ -27,6 +27,18 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
+
+//   const downloadFile = async (url: string, filename: string) => {
+//   const res = await fetch(url);
+//   const blob = await res.blob();
+
+//   const a = document.createElement("a");
+//   a.href = URL.createObjectURL(blob);
+//   a.download = filename;
+//   a.click();
+
+//   URL.revokeObjectURL(a.href);
+// };
   return (
         <section>
 
@@ -94,8 +106,10 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                     </div>
 
                     {material.type === 'file' ? (
+                      // <a>
                       <Button 
                           variant={'grid'} size={'grid'}
+                          // onClick={() => downloadFile(material.fileUrl, material.name)}
                           className={cn(
                             'bg-linear-to-br w-25',
                             colorStyles.bg['accent-teal'],
@@ -104,7 +118,11 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                         <Download size={14} />
                         <span>Stáhnout</span>
                       </Button>
+                      // </a>
                     ) : (
+                      <a href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer">
                     <Button
                           variant={'grid'} size={'grid'}
                           className={cn(
@@ -115,6 +133,7 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                         <Link2 size={14} />
                         <span>Otevřít</span>
                       </Button>
+                      </a>
                     )}
                   </div>
 

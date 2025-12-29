@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import TitleText from '@/components/shared/TitleText';
 import FormField from '@/components/shared/FormField';
 import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router';
 
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [show, setShow] = useState(false);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -32,7 +34,8 @@ const LoginPage = () => {
     });
     return;
   }
-    await new Promise ((resolve) => setTimeout(resolve,1000))
+  
+    navigate('/dashboard');
     reset();
   }
 

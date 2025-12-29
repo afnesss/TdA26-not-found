@@ -4,6 +4,7 @@ import MainLayout from './components/layout/MainLayout';
 import CoursesPage from './pages/CoursesPage/CoursesPage';
 import LoginPage from './pages/LoginPage'
 import CoursePage from './pages/CoursePage/ExactCoursePage';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   const router = createBrowserRouter(createRoutesFromElements(
@@ -11,6 +12,7 @@ function App() {
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
+        <Route path='/dashboard' element={<DashboardPage />}></Route>
         <Route path='/courses/:id' element={<CoursePage />}></Route>
     </Route>
   ));

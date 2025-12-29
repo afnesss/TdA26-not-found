@@ -5,20 +5,13 @@ import { useState, useEffect, startTransition, Fragment } from "react";
 import { Clock, CheckCircle, ChevronUp, ChevronDown, Check, Play, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitQuiz } from "@/api/queries";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
+import { useQuery, useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import type { QuizStateById } from "../utils/types";
+import { fetchCourse, handleSingleChoice, handleMultipleChoice, handleSubmit, isQuizComplete } from "../utils/helperFunctions";
 
 type QuizesSectionProps ={
   courseData?: CourseDetail  | null,
 }
-type QuizState = {
-    answers: Record<string, QuizAnswer>,
-    status: 'idle' | 'submitting' | 'submitted' | 'error',
-    results?: QuizSubmitResponse,
-    error?: string
-    showCorrect?: boolean,
-}
-type QuizStateById = Record<string, QuizState>;
 
 const QuizesSection = ({courseData}: QuizesSectionProps) => {
   const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
@@ -45,77 +38,19 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
     });
   }, [courseData]);
 
-    const toggleQuiz = (quizId: string) => {
+  const toggleQuiz = (quizId: string) => {
     setExpandedQuiz(expandedQuiz === quizId ? null : quizId);
   };
 
-  const handleSingleChoice = (quizId: string, questionId: string, index: number) => {
-    setQuizState(prev => ({
-      ...prev,
-      [quizId]:{
-        ...prev[quizId],
-        answers:{
-          ...prev[quizId].answers,
-          [questionId]: {
-            uuid: questionId,
-            selectedIndex: index
-          } 
-        }
-      }
-        
-    }))
-  }
-
-  const handleMultipleChoice = (quizId: string, questionId: string, index: number) => {
-    setQuizState(prev => {
-      const current = prev[quizId]?.answers[questionId]?.selectedIndices ?? [];
-
-      const updated = current.includes(index)
-        ? current.filter(i => i !== index)
-        : [...current, index];
-
-      return {
-      ...prev,
-      [quizId]:{
-        ...prev[quizId],
-        answers:{
-          ...prev[quizId].answers, 
-          [questionId]: {
-            uuid: questionId,
-            selectedIndices: updated
-          } 
-        }
-      }
-      };
-    });
-  }
 
   const queryClient = useQueryClient();
 
-  const queryMutation = useMutation<QuizSubmitResponse, Error, { courseId: string; quizId: string; answers: QuizAnswer[] }, { previousData?: CourseDetail | undefined }>({
+  const queryMutation = useMutation<QuizSubmitResponse, Error, { courseId: string; quizId: string; answers: QuizAnswer[]}, { previousData?: CourseDetail | undefined }>({
 
     mutationFn: async ({ courseId, quizId, answers }) => {
-      
-      const raw = await submitQuiz(courseId, quizId , {answers});
-
-      const parsed = QuizSubmitResponseSchema.safeParse(raw);
-
-      if (!parsed.success){
-          console.error("quizResponseSubmit schema validation failed", parsed.error);
-          throw new Error("Invalid data to submit");
-      }
-
-      setQuizState (prev => ({
-      ...prev,
-      [quizId]: {
-        ...prev[quizId],
-        status: 'submitted',
-        results: parsed.data,
-        showCorrect: false
-      }
-    }))
-      return parsed.data;
+      return await fetchCourse({courseId, quizId, answers, setQuizState});
     },
+
     onMutate: ({courseId, quizId}) => {
       const previousData = queryClient.getQueryData<CourseDetail | undefined>(['course', courseId]);
 
@@ -144,25 +79,6 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
 
   })
 
-  const isQuizComplete = (quizId: string, totalQuestions: number): boolean =>{
-    const answers = quizState[quizId].answers ?? {};
-
-    const answersCount = Object.values(answers).filter(i => i.selectedIndex !== undefined ||
-      Array.isArray(i.selectedIndices) && i.selectedIndices.length > 0
-    ).length;
-
-    return answersCount === totalQuestions;
-  }
-
-  const handleSubmit = async (quizId: string) => {
-
-    const answers = Object.values(quizState[quizId].answers);
-
-    queryMutation.mutate({
-      courseId: courseData!.uuid, 
-      quizId, 
-      answers})
-  }
 
   return (
         <section>
@@ -268,9 +184,9 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                                       onChange={() => {
                                         if (question.uuid){
                                         if (question.type === 'singleChoice') {
-                                          handleSingleChoice(quiz.uuid!, question.uuid, optIndex);
+                                          handleSingleChoice(quiz.uuid!, question.uuid, optIndex, setQuizState);
                                         } else {
-                                          handleMultipleChoice(quiz.uuid!, question.uuid, optIndex);
+                                          handleMultipleChoice(quiz.uuid!, question.uuid, optIndex, setQuizState);
                                           }
                                         }
                                       }}
@@ -291,8 +207,8 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                       <div className="flex flex-row items-center justify-between">
                         <div className="flex items-center gap-3 md:gap-10  flex-col md:flex-row">
                       <Button variant='primary' size='primary' className="w-fit"
-                      disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted' || !isQuizComplete(quiz.uuid!, quiz.questions.length)}
-                      onClick={() =>{handleSubmit(quiz.uuid!)}
+                      disabled={(queryMutation.variables?.quizId === quiz.uuid && queryMutation.isPending) || quizState[quiz.uuid!]?.status === 'submitted' || !isQuizComplete( quiz.uuid!, quiz.questions.length, quizState)}
+                      onClick={() =>{handleSubmit(courseData.uuid, quiz.uuid!, quizState, queryMutation)}
                     }>
                         <Play size={20} />
                         Odeslat odpovědi

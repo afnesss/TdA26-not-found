@@ -16,18 +16,17 @@ const CoursePage = () => {
    const {id} = useParams<{ id: string }>();
 
   const fetchCourse = async (id: string): Promise<CourseDetail> => {
-      try {
-        setTimeout(() => {}, 3000)
-    const raw = await getCourseById(id!);
-    if (!raw) {
-      throw new Error("Course not found");
-    }
-    const parsed = CourseDetailSchema.safeParse(raw);
+    try {
+      const raw = await getCourseById(id!);
+      if (!raw) {
+        throw new Error("Course not found");
+      }
+      const parsed = CourseDetailSchema.safeParse(raw);
 
-    if (!parsed.success) {
-      console.error("Course schema validation failed", parsed.error);
-      throw new Error("Invalid course data");
-    }
+      if (!parsed.success) {
+        console.error("Course schema validation failed", parsed.error);
+        throw new Error("Invalid course data");
+      }
 
     return parsed.data;
   } catch (err) {

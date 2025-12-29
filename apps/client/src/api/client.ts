@@ -16,7 +16,9 @@ export default async function apiFetch<T>(
   const { headers, token } = safeClientOptions
 
 ///api/${input}
-  const response = await fetch(`http://localhost:3000${input}`, {
+//http://localhost:3000${input}
+
+  const response = await fetch(`api/${input}`, {
     ...safeOptions,
     headers: {
       "Content-Type": "application/json",

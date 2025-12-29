@@ -54,7 +54,7 @@ export const handleMultipleChoice = (
   });
 }
 
-export const fetchCourse = async ({ courseId, quizId, answers, setQuizState }: 
+export const submitQuizFun = async ({ courseId, quizId, answers, setQuizState }: 
   {courseId: string; 
   quizId: string; 
   answers: QuizAnswer[],

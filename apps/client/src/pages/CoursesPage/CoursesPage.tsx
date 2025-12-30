@@ -69,19 +69,18 @@ const CoursesPage = () => {
     <div className='h-full'>
       
       {/* Hero */}
-      <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pt-3 pb-6'>
-        <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center'>
+      <div className='max-w-7xl mx-auto px-3 pt-3 '>
+        <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center pb-6'>
 
           <HintPageText text="Dostupné kurzy" icon={BookOpen} spanText={searchQuery && displayedCourses.length.toString() || courses.length.toString()}/>
           
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
         </div>
-      </div>
 
       <Filters selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter}/>
 
       {/* Kurzy Grid */}
-      <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 py-6 relative'>
+      <div className=' relative py-6'>
         
           <>
             {/* Grid kurzů */}
@@ -138,6 +137,7 @@ const CoursesPage = () => {
               </div>
             )}
           </>
+      </div>
       </div>
     </div>
   )

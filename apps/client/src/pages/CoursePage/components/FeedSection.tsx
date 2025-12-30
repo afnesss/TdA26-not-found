@@ -36,7 +36,7 @@ const FeedSection = ({feed}: FeedSection) => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            post.type === 'manual' ? 'bg-accent-blue/10 text-accent-blue' : `bg-secondary/20 ${colorStyles.text['secondary']}`
+                            post.type === 'manual' ? 'bg-primary/10 text-primary' : `bg-secondary/20 ${colorStyles.text['secondary']}`
                           }`}>
                             {post.type === 'manual' ? 'Příspěvek' : 'Událost'}
                           </span>

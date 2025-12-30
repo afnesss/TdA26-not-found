@@ -5,6 +5,7 @@ import CoursesPage from './pages/CoursesPage/CoursesPage';
 import LoginPage from './pages/LoginPage'
 import CoursePage from './pages/CoursePage/ExactCoursePage';
 import DashboardPage from './pages/DashboardPage';
+import ProtectedRoute from './auth/ProtectedRoute';
 
 function App() {
   const router = createBrowserRouter(createRoutesFromElements(
@@ -12,8 +13,9 @@ function App() {
         <Route index element={<HomePage />}/>
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
-        <Route path='/dashboard' element={<DashboardPage />}></Route>
         <Route path='/courses/:id' element={<CoursePage />}></Route>
+
+        <Route path='/dashboard' element={<ProtectedRoute> <DashboardPage/> </ProtectedRoute>}></Route>
     </Route>
   ));
 

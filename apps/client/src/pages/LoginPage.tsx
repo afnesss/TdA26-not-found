@@ -9,6 +9,7 @@ import TitleText from '@/components/shared/TitleText';
 import FormField from '@/components/shared/FormField';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router';
+import auth from '@/auth/fakeAuth';
 
 
 const LoginPage = () => {
@@ -27,14 +28,8 @@ const LoginPage = () => {
   const onSubmit = async (data: FieldValues) => {
     console.log('Form submitted');
 
-    if (data.name!== '' && data.name !== 'Lecturer' || data.password !== 'TdA26!' && data.password !== '') {
-      setError('root', {
-      type: 'manual',
-      message: 'Nesprávné přihlašovací údaje'
-    });
-    return;
-  }
-  
+    auth.login(data.name, data.password, setError);
+
     navigate('/dashboard');
     reset();
   }
@@ -111,8 +106,6 @@ const LoginPage = () => {
 
                   {errors.password && 
                   <Label size='md' variant={'error'}>{errors.password.message as string}</Label>}
-                  {errors.root && 
-                  <Label size='md' variant={'error'}>{errors.root.message as string}</Label>}
 
                 {/* {isLogin && (
                   <div className="flex items-center justify-between text-sm">

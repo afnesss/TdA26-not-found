@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import logo from "../../assets/white_logo.png";
 import { useNavigate, useLocation } from 'react-router';
 import { Button } from '../ui/button';

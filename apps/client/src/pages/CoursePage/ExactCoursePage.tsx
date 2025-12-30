@@ -48,7 +48,7 @@ const CoursePage = () => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
 
-      <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8'>
+      <div className='max-w-7xl mx-auto md:px-6 lg:px-12 pb-8 space-y-8'>
 
       <SummarySection name={courseData?.name} description={courseData?.description ?? undefined}/>
 

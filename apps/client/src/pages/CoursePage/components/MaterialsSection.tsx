@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Download, Link2,Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Material } from "@/lib/schemas/material";
-
+import {useMediaQuery} from 'usehooks-ts';
 
 type MaterialSectionProps ={
   materials?: Material[]
 }
 const MaterialsSection = ({materials}: MaterialSectionProps) => {
+
+  const isMd = useMediaQuery("(min-width: 768px)");
 
   const getFileIcon = (mimeType?: string) => {
     if (!mimeType) return '';
@@ -42,7 +44,7 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
   return (
         <section>
 
-          <Label size='xl'>Studijní materiály</Label>
+          <Label size='xl' className='pl-3 md:pl-5'>Studijní materiály</Label>
 
           <div className='space-y-3'>
             {materials?.map((material) => {
@@ -52,8 +54,8 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                   key={material.uuid}
                   className='bg-background rounded-xl transition-all duration-300 p-4 border border-gray-100 hover:border-gray-200'
                 >
-                  <div className='flex items-center justify-between gap-4'>
-                    <div className='flex items-center gap-3 flex-1 min-w-0'>
+                  <div className='flex gap-3 flex-row items-center justify-between'>
+                      <div className='flex items-center gap-3 flex-1 min-w-0'>
                       <div className={' rounded-lg shrink-0'}>
                         <div className='text-xl'>
                           {material.type === "file" ? (
@@ -83,12 +85,18 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                           {material.description && (
                             <div className='relative w-fit'>
                               <Popover>
-                                <PopoverTrigger>
+                                <PopoverTrigger >
                             {/* <Button variant={'ghost'}> */}
                               <Info className='text-gray-400 hover:text-primary active:text-primary cursor-pointer' size={16} />
                             {/* </Button> */}
                             </PopoverTrigger>
-                            <PopoverContent side="right" align="center" sideOffset={4} alignOffset={0} avoidCollisions>
+                            <PopoverContent 
+                            side={isMd? "right": 'bottom'}
+                            align='center'
+                            sideOffset={isMd ? 4: 8} 
+                            alignOffset={0} 
+                            collisionPadding={16}
+                            avoidCollisions>
                                   {material.description}
                               </PopoverContent>
                               </Popover>

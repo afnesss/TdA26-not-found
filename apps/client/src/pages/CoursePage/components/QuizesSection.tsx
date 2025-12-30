@@ -46,7 +46,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
   return (
     <section>
 
-      <Label size="xl">Kvízy</Label>
+      <Label size="xl" className='pl-3 md:pl-5'>Kvízy</Label>
 
       <div className='space-y-4'>
         {courseData?.quizzes?.map((quiz) => {
@@ -71,7 +71,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                           <span className='font-medium'>{quiz.attemptsCount ?? 0} vyplnění</span>
                         </span>
                         <span className='flex items-center gap-1.5'>
-                          <CheckCircle size={16} className='text-accent-teal' />
+                          <CheckCircle size={16} className='text-secondary' />
                           <span className='font-medium'>{quiz.questions?.length} otázek</span>
                         </span>
                       </div>
@@ -81,8 +81,8 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
 
                   <button className='p-2 hover:bg-gray-200 rounded-full transition-colors'>
                     {isExpanded ? 
-                      <ChevronUp size={24} className='text-accent-teal' /> : 
-                      <ChevronDown size={24} className='text-accent-teal' />
+                      <ChevronUp size={24} strokeWidth={3} className='text-secondary' /> : 
+                      <ChevronDown size={24} strokeWidth={3} className='text-secondary' />
                     }
                   </button>
                 </div>
@@ -126,7 +126,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                               <Label
                                 key={optIndex}
                                 className={cn(
-                                  'flex items-center gap-3 p-3.5 rounded-lg transition-all border border-gray-200 bg-gray-100',
+                                  'flex items-center gap-3 p-2.5 md:p-3.5 rounded-lg transition-all border border-gray-200 bg-gray-100',
                                   !isSubmitted && 'cursor-pointer hover:bg-primary/20 hover:border-gray-300',
                                   
                                   isSelected && !showCorrect && !isSubmitted && 'bg-primary/10',
@@ -143,7 +143,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                                   name={question.uuid}
                                   checked={isSelected}
                                   disabled={isSubmitted}
-                                  className='w-5 h-5 text-primary accent-primary'
+                                  className='shrink-0 w-4 h-4 md:w-5 md:h-5 text-primary accent-primary'
                                   onChange={() => {
                                     if (question.uuid){
                                     if (question.type === 'singleChoice') {

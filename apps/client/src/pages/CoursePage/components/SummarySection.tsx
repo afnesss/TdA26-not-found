@@ -21,7 +21,7 @@ const SummarySection = ({name, description}: SummarySectionProps) => {
 
 
         <div className="px-5 md:px-6 py-5 gap-3 flex flex-col">
-          <div className='flex md:flex-row gap-3 items-center'>
+          <div className='flex flex-col md:flex-row gap-3 items-start md:items-center'>
             <Button variant={'grid'}
            className={cn(
               'bg-linear-to-br px-3 py-1 h-8',

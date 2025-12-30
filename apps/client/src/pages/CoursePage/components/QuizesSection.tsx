@@ -165,7 +165,7 @@ const QuizesSection = ({courseData}: QuizesSectionProps) => {
                       <hr className='border-b border mt-6 mb-4 border-gray-100'></hr>
                     </Fragment>
                   ))}
-                  <div className="flex flex-col mx-10">
+                  <div className="flex flex-col lg:mx-10">
                   {queryMutation.isError && <Label size={'md'} variant={'error'} className="mb-3">{queryMutation.error.message as string}</Label>}
                     <div className="flex flex-row items-center justify-between">
                       <div className="flex items-center gap-3 md:gap-10  flex-col md:flex-row">

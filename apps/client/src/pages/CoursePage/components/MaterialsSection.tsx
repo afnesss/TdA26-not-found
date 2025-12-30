@@ -77,9 +77,9 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                         </div>
                       </div>
                       
-                      <div className='flex-1 group '>
-                        <div className='flex items-center gap-2'>
-                          <Label>
+                      <div className='flex-1 group'>
+                        <div className='flex items-center gap-1 max-w-full'>
+                          <Label className='leading-snug wrap-break-word'>
                             {material.name}
                           </Label>
                           {material.description && (
@@ -87,7 +87,7 @@ const MaterialsSection = ({materials}: MaterialSectionProps) => {
                               <Popover>
                                 <PopoverTrigger >
                             {/* <Button variant={'ghost'}> */}
-                              <Info className='text-gray-400 hover:text-primary active:text-primary cursor-pointer' size={16} />
+                              <Info className='text-gray-400 hover:text-primary active:text-primary cursor-pointer ml-2 mt-2' size={16} />
                             {/* </Button> */}
                             </PopoverTrigger>
                             <PopoverContent 

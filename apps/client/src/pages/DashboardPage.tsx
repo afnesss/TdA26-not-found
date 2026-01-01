@@ -25,8 +25,11 @@ import {
   Upload,
 } from 'lucide-react'
 import { useState } from 'react'
-import CourseComp from './components/CourseComponent'
-import { formatDate, formatFileSize } from './utils/helperFuntions'
+import CourseComponent from '../components/shared/CourseComponent'
+import { formatDate, formatFileSize } from '@/lib/utils'
+import TabButton from '@/components/shared/TabButton'
+import EmptyStateComp from '@/components/shared/EmptyStateComp'
+import Feed from '@/components/shared/Feed'
 
 const DashboardDesign1 = () => {
   const [activeTab, setActiveTab] = useState('courses')
@@ -94,68 +97,52 @@ const DashboardDesign1 = () => {
   return (
     <>
       {/* Main Content */}
-      <div className='max-w-7xl mx-auto px-4 py-8'>
+      <div className='max-w-7xl mx-auto px-4 py-8 '>
         {/* Navigation - Filter Style */}
-        <div className='flex  flex-wrap items-center mb-8'>
-          <Label variant={'title'} size={'primary'} className='self-start'>
+        <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4'>
+          <Label
+            variant='title'
+            size='primary'
+            className='self-startwhitespace-nowrap'
+          >
             Dashboard Lektora
           </Label>
-          <div className='flex gap-3 lg:pl-15 justify-center'>
-            <Button
-              variant={'filter'}
+
+          {/* TABS */}
+          <div
+            className='flex gap-3 flex-wrap sm:flex-nowrap justify-start md:justify-center md:flex-1 
+          lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:flex-nowrap'
+          >
+            <TabButton
+              isActive={activeTab === 'courses'}
               onClick={() => setActiveTab('courses')}
-              className={`
-                       ${
-                         activeTab === 'courses'
-                           ? 'bg-primary text-background shadow-md'
-                           : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
-                       }`}
-            >
-              <BookOpen className='w-4 h-4' />
-              Kurzy
-            </Button>
-            <Button
-              variant={'filter'}
+              title='Kurzy'
+              icon={BookOpen}
+            />
+
+            <TabButton
+              isActive={activeTab === 'materials'}
               onClick={() => setActiveTab('materials')}
-              disabled={!selectedCourse}
-              className={`
-                       ${
-                         activeTab === 'materials'
-                           ? 'bg-primary text-background shadow-md'
-                           : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
-                       }`}
-            >
-              <FileText className='w-4 h-4' />
-              Materiály
-            </Button>
-            <Button
-              variant={'filter'}
-              onClick={() => setActiveTab('feed')}
-              disabled={!selectedCourse}
-              className={`
-                       ${
-                         activeTab === 'feed'
-                           ? 'bg-primary text-background shadow-md'
-                           : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
-                       }`}
-            >
-              <MessageSquare className='w-4 h-4' />
-              Informační kanál
-            </Button>
-            <Button
-              variant={'filter'}
+              title='Materiály'
+              isDisabled={!selectedCourse}
+              icon={FileText}
+            />
+
+            <TabButton
+              isActive={activeTab === 'quizzes'}
               onClick={() => setActiveTab('quizzes')}
-              disabled={!selectedCourse}
-              className={`
-                       ${
-                         activeTab === 'quizzes'
-                           ? 'bg-primary text-background shadow-md'
-                           : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
-                       }`}
-            >
-              <BarChart3 className='w-4 h-4' />
-              Kvízy
-            </Button>
+              title='Kvízy'
+              icon={BarChart3}
+              isDisabled={!selectedCourse}
+            />
+
+            <TabButton
+              isActive={activeTab === 'feed'}
+              onClick={() => setActiveTab('feed')}
+              title='Informační kanál'
+              icon={MessageSquare}
+              isDisabled={!selectedCourse}
+            />
           </div>
         </div>
 
@@ -168,6 +155,7 @@ const DashboardDesign1 = () => {
                 text='Moje kurzy'
                 icon={Sparkles}
                 spanText={courses.length.toString()}
+                className='hidden lg:flex'
               />
               <SearchBar
                 searchQuery={searchQuery}
@@ -182,7 +170,7 @@ const DashboardDesign1 = () => {
             {/* Courses Grid */}
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
               {courses.map((course, index) => (
-                <CourseComp
+                <CourseComponent
                   key={course.uuid ?? (course as CourseSummary).uuid ?? index}
                   course={course}
                   index={index}
@@ -196,24 +184,7 @@ const DashboardDesign1 = () => {
             </div>
 
             {/* Empty State */}
-            {courses.length === 0 && (
-              <div className='text-center py-12'>
-                <BookOpen className='w-16 h-16 text-gray-400 mx-auto mb-4' />
-                <Label variant='title' size='lg' className='text-gray-600 mb-2'>
-                  Žádné kurzy nenalezeny
-                </Label>
-                <p className='text-gray-500 mb-6'>
-                  Zkuste upravit vyhledávání nebo vytvořte nový kurz
-                </p>
-                <Button
-                  variant='secondary'
-                  size='md'
-                  onClick={() => setSearchQuery('')}
-                >
-                  Vymazat vyhledávání
-                </Button>
-              </div>
-            )}
+            {/* {courses.length === 0 && <EmptyStateComp onClick={} />} */}
           </div>
         )}
 
@@ -327,57 +298,7 @@ const DashboardDesign1 = () => {
               </div>
             </div>
 
-            <div className='bg-white rounded-xl shadow-md p-6'>
-              <div className='space-y-4'>
-                {feed?.map((post) => (
-                  <div
-                    key={post.uuid}
-                    className={`p-4 rounded-lg border-l-4 ${
-                      post.type === 'manual'
-                        ? 'bg-blue-50 border-blue-500'
-                        : 'bg-gray-50 border-gray-400'
-                    }`}
-                  >
-                    <div className='flex items-start justify-between'>
-                      <div className='flex-1'>
-                        <div className='flex items-center gap-2 mb-2'>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              post.type === 'manual'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-200 text-gray-700'
-                            }`}
-                          >
-                            {post.type === 'manual'
-                              ? 'Příspěvek lektora'
-                              : 'Automatická událost'}
-                          </span>
-                          <span className='text-sm text-gray-500'>
-                            {formatDate(post.createdAt)}
-                          </span>
-                          {post.edited && post.updatedAt && (
-                            <span className='text-xs text-gray-400 italic'>
-                              (upraveno {formatDate(post.updatedAt)})
-                            </span>
-                          )}
-                        </div>
-                        <p className='text-gray-900'>{post.message}</p>
-                      </div>
-                      {post.type === 'manual' && (
-                        <div className='flex gap-2 ml-4'>
-                          <Button variant='ghost' size='icon'>
-                            <Edit className='w-4 h-4' />
-                          </Button>
-                          <Button variant='ghost' size='icon'>
-                            <Trash2 className='w-4 h-4 text-red-500' />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {feed && <Feed feed={feed} />}
           </div>
         )}
 

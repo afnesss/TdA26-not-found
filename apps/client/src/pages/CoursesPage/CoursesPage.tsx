@@ -16,6 +16,7 @@ import Filters from './components/Filters';
 import EmptyStateComp from './components/EmptyStateComp';
 import SearchBar from '@/components/shared/SearchBar';
 import { useQuery } from '@tanstack/react-query';
+import CourseComp from '../components/CourseComponent';
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,18 +54,6 @@ const CoursesPage = () => {
     refetch();
   }
 
-  const getTimeAgo = (date: string) => {
-    const now = new Date().getTime();
-    const updated = new Date(date).getTime();
-    const diffInDays = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays === 0) return 'Dnes';
-    if (diffInDays === 1) return 'Včera';
-    if (diffInDays < 7) return `Před ${diffInDays} dny`;
-    if (diffInDays < 30) return `Před ${Math.floor(diffInDays / 7)} týdny`;
-    return `Před ${Math.floor(diffInDays / 30)} měsíci`;
-  };
-
   return (
     <div className='h-full'>
       
@@ -87,37 +76,9 @@ const CoursesPage = () => {
             { displayedCourses &&
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
               {displayedCourses.map((course, index) => {
-                const courseColor = colors[index % 3];
 
                 return (
-                  <Card key={course.uuid}>
-                    <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseColor]}`} />
-                    
-                    <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
-                      
-                      <CardContent>
-                          <CardTitle className='mb-4'>{course.name}</CardTitle>
-
-                        <CardDescription className='mb-4'>{course.description}</CardDescription>
-                      </CardContent>
-
-                      <CardFooter>
-                          <CardDate course={course} getTime={getTimeAgo}/>
-
-                          <Button 
-                          variant={'grid'} size={'grid'}
-                          onClick={() => {navigate(`/courses/${course.uuid}`)}}
-                          className={cn(
-                            'bg-linear-to-br',
-                            colorStyles.bg[courseColor],
-                            colorStyles.text[courseColor]
-                          )}>
-                          <span className='font-semibold'>Zobrazit</span>
-                        </Button>
-
-                      </CardFooter>
-                    </div>
-                  </Card>
+                  <CourseComp course={course} index={index} type='classic'/>
                 );
               })}
             </div>}

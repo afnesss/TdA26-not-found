@@ -10,6 +10,7 @@ import MaterialsSection from './components/MaterialsSection';
 import FeedSection from './components/FeedSection';
 import { useQuery } from '@tanstack/react-query';
 import CourseSkeleton from './components/CoursePageSkeleton'
+import { fetchWithValidation } from '@/api/fetchwithValid';
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);

@@ -19,5 +19,6 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle ./drizzle
 # Copy the drizzle config from the 'build' stage
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=base /app/seed_assets ./seed_assets
 EXPOSE 3000
 CMD ["npm", "run", "start"]

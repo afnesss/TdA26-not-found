@@ -32,6 +32,7 @@ const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
       fileUrl: m.fileUrl!,
       mimeType: m.mimeType || undefined,
       sizeBytes: m.sizeBytes || undefined,
+      originalFilename: m.originalFilename || undefined,
     };
   } else {
     return {
@@ -106,13 +107,12 @@ export const createMaterial = async (req: Request, res: Response) => {
       // Move file to final destination
       await moveFile(file.path, newPath);
 
-      // Construct public URL
-      const protocol = req.protocol;
-      const host = req.get("host"); 
-      const fileUrl = `${protocol}://${host}/api/uploads/${newFilename}`;
+      // Construct public URL (Relative path)
+      const fileUrl = `/api/uploads/${newFilename}`;
 
       const [material] = await db
         .insert(courseMaterials)
+
         .values({
           uuid: id,
           courseId,
@@ -122,7 +122,7 @@ export const createMaterial = async (req: Request, res: Response) => {
           fileUrl,
           mimeType: file.mimetype,
           sizeBytes: file.size,
-          // originalFilename: file.originalname,
+          originalFilename: file.originalname,
         })
         .returning();
 
@@ -242,14 +242,12 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
             await moveFile(file.path, newPath);
 
-            const protocol = req.protocol;
-            const host = req.get("host");
-            const fileUrl = `${protocol}://${host}/api/uploads/${newFilename}`;
+            const fileUrl = `/api/uploads/${newFilename}`;
 
             updates.fileUrl = fileUrl;
             updates.mimeType = file.mimetype;
             updates.sizeBytes = file.size;
-            // updates.originalFilename = file.originalname;
+            updates.originalFilename = file.originalname;
         }
 
         const [updated] = await db

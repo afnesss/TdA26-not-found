@@ -57,11 +57,13 @@ app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
 
 async function start() {
-    try {
+  try {
     await seed();
   } catch (error: any) {
     if (error?.code === "42P07" || error?.cause?.code === "42P07") {
-      console.warn("Migration warning: table already exists — continuing startup.");
+      console.warn(
+        "Migration warning: table already exists — continuing startup."
+      );
     } else {
       console.error("Failed to start server:", error);
       process.exit(1);

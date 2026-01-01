@@ -5,9 +5,17 @@ export const FileMaterialSchema = z.object({
   type: z.literal("file"),
   name: z.string(),
   description: z.string().optional(),
-  fileUrl: z.string().url(),
+  fileUrl: z.string().refine((val) => {
+    try {
+        new URL(val);
+        return true;
+    } catch {
+        return val.startsWith("/");
+    }
+  }, { message: "Invalid URL" }),
   mimeType: z.string().optional(),
   sizeBytes: z.number().int().optional(),
+  originalFilename: z.string().optional(),
 });
 
 export const UrlMaterialSchema = z.object({

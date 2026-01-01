@@ -1,6 +1,8 @@
 import { db } from "./index";
 import { courses, courseMaterials, quizzes, feedItems } from "./schema";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs/promises";
+import path from "path";
 
 const sampleCourses = [
   {
@@ -48,6 +50,23 @@ const sampleCourses = [
 export async function seed() {
   console.log("Seeding database...");
 
+  // Copy seed assets to uploads directory
+  try {
+    const seedAssetsDir = path.join(process.cwd(), "seed_assets");
+    const uploadsDir = path.join(process.cwd(), "uploads");
+    
+    // Ensure uploads directory exists
+    await fs.mkdir(uploadsDir, { recursive: true });
+
+    const files = await fs.readdir(seedAssetsDir);
+    for (const file of files) {
+      await fs.copyFile(path.join(seedAssetsDir, file), path.join(uploadsDir, file));
+      console.log(`Copied ${file} to uploads directory`);
+    }
+  } catch (error) {
+    console.warn("Failed to copy seed assets (ignoring if dev environment issue):", error);
+  }
+
   const existingCourses = await db.select().from(courses);
 
   if (existingCourses.length > 0) {
@@ -83,10 +102,10 @@ export async function seed() {
         type: "file" as const,
         name: "Lecture Slides - Week 1: Introduction",
         description: "Downloadable slides from the first introductory lecture. Covers setup and initial concepts.",
-        fileUrl: "https://www.africau.edu/images/default/sample.pdf", // Placeholder PDF
-        mimeType: "application/pdf",
+        fileUrl: "/api/uploads/lecture-slides-week1.txt", // Relative URL to local file
+        mimeType: "text/plain",
         sizeBytes: 1024 * 700,
-        // originalFilename: "lecture-slides-week1.pdf",
+        originalFilename: "lecture-slides-week1.txt",
       },
       {
         courseId: course.uuid,
@@ -101,10 +120,10 @@ export async function seed() {
         type: "file" as const,
         name: "Exercise Sheet - Module 2: Data Structures",
         description: "Problems to solve for homework, focusing on common data structures.",
-        fileUrl: "https://www.orimi.com/pdf-test.pdf", // Another placeholder PDF
-        mimeType: "application/pdf",
+        fileUrl: "/api/uploads/exercise-sheet-module2.txt", // Relative URL to local file
+        mimeType: "text/plain",
         sizeBytes: 1024 * 250,
-        // originalFilename: "exercise-sheet-module2.pdf",
+        originalFilename: "exercise-sheet-module2.txt",
       },
       {
         courseId: course.uuid,
@@ -119,10 +138,10 @@ export async function seed() {
         type: "file" as const,
         name: "Project Guidelines",
         description: "Detailed document outlining the final project requirements, rubrics, and submission process.",
-        fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/2pages.pdf", // Another placeholder PDF
-        mimeType: "application/pdf",
+        fileUrl: "/api/uploads/project-guidelines.txt", // Relative URL to local file
+        mimeType: "text/plain",
         sizeBytes: 1024 * 900,
-        // originalFilename: "project-guidelines.pdf",
+        originalFilename: "project-guidelines.txt",
       },
       {
         courseId: course.uuid,

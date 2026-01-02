@@ -1,5 +1,9 @@
 import type { QuizStateById } from '../../../lib/types'
-import { QuizSubmitResponseSchema, type QuizAnswer } from '@/lib/schemas'
+import {
+  QuizSubmitResponseSchema,
+  type CourseSummary,
+  type QuizAnswer,
+} from '@/lib/schemas'
 import { submitQuiz } from '@/api/queries'
 import type { UseMutationResult } from '@tanstack/react-query'
 import { useCourseMutation } from './courseMutation'
@@ -116,4 +120,15 @@ export const handleSubmit = async (
     quizId,
     answers,
   })
+}
+
+export const filterCourses = (
+  courses: CourseSummary[],
+  searchQuery: string,
+): CourseSummary[] => {
+  return courses.filter(
+    (course) =>
+      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 }

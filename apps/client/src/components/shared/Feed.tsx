@@ -2,8 +2,16 @@ import React from 'react'
 import { colorStyles } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import type { FeedItem } from '@/lib/schemas'
+import { Button } from '../ui/button'
+import { Edit, Trash2 } from 'lucide-react'
 
-const Feed = ({ feed }: { feed: FeedItem[] }) => {
+const Feed = ({
+  feed,
+  type,
+}: {
+  feed: FeedItem[]
+  type: 'classic' | 'edit'
+}) => {
   return (
     <div className='bg-white rounded-xl shadow-md p-3 md:p-6'>
       <div className='space-y-4'>
@@ -39,16 +47,16 @@ const Feed = ({ feed }: { feed: FeedItem[] }) => {
                 </div>
                 <p className='text-gray-900'>{post.message}</p>
               </div>
-              {/* {post.type === 'manual' && (
-                        <div className="flex gap-2 ml-4">
-                          <Button variant="ghost" size="icon">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      )} */}
+              {post.type === 'manual' && type === 'edit' && (
+                <div className='flex gap-2 ml-4'>
+                  <Button variant='ghost' size='icon'>
+                    <Edit className='w-4 h-4' />
+                  </Button>
+                  <Button variant='ghost' size='icon'>
+                    <Trash2 className='w-4 h-4 text-red-500' />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         ))}

@@ -1,30 +1,19 @@
-import { useEffect, useState } from 'react'
-import { Search, Calendar, ArrowRight, BookOpen } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import HintPageText from '../../components/shared/HintPageText'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
-import { colorStyles, colors, type FilterIds } from '@/lib/constants'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import CardDate from './components/CardDate'
-import { Label } from '@/components/ui/label'
 import { getCourses } from '@/api/queries'
-import { useNavigate } from 'react-router'
-import type { CourseSummary } from '@/lib/schemas'
-import LoadingSceleton from './components/LoadingSceleton'
-import Filters from './components/Filters'
-import EmptyStateComp from '../../components/shared/EmptyStateComp'
 import SearchBar from '@/components/shared/SearchBar'
+import { type FilterIds } from '@/lib/constants'
+import type { CourseSummary } from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
+import { BookOpen } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
+import EmptyStateComp from '../../components/shared/StateComp'
+import HintPageText from '../../components/shared/HintPageText'
+import { Button } from '../../components/ui/button'
+import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import Filters from './components/Filters'
+import LoadingSceleton from './components/LoadingSceleton'
+import StateComp from '../../components/shared/StateComp'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -46,11 +35,7 @@ const CoursesPage = () => {
     return <LoadingSceleton />
   }
 
-  const filteredCourses = courses.filter(
-    (course) =>
-      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const filteredCourses = filterCourses(courses, searchQuery)
 
   const sortedCourses = [...filteredCourses].sort((a, b) => {
     const dateKey =
@@ -116,13 +101,30 @@ const CoursesPage = () => {
             )}
 
             {/* Empty state */}
-            {displayedCourses.length === 0 && !isLoading && (
-              <EmptyStateComp
-                onClick={() => {
+            {displayedCourses.length === 0 && !isLoading ? (
+              <StateComp
+                type='empty-search'
+                onAction={() => {
                   setSearchQuery('')
                   setDisplayCount(9)
                 }}
               />
+            ) : isError ? (
+              <StateComp
+                type='error'
+                onAction={() => {
+                  refetch()
+                }}
+              />
+            ) : (
+              !isLoading &&
+              !isError &&
+              courses.length === 0 && (
+                <StateComp
+                  message='Žádné kurzy k zobrazení'
+                  type='no-content'
+                />
+              )
             )}
 
             {/* Load More button */}

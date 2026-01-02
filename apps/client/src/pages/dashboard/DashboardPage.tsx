@@ -4,32 +4,29 @@ import {
   getMaterialsForCourse,
   getQuizzesForCourse,
 } from '@/api/queries'
-import HintPageText from '@/components/shared/HintPageText'
+import Feed from '@/components/shared/Feed'
 import SearchBar from '@/components/shared/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { FilterIds } from '@/lib/constants'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
+import { formatFileSize } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3,
-  BookOpen,
   Edit,
   FileText,
   Link2,
-  MessageSquare,
   Plus,
   Send,
-  Sparkles,
   Trash2,
   Upload,
 } from 'lucide-react'
 import { useState } from 'react'
-import CourseComponent from '../components/shared/CourseComponent'
-import { formatDate, formatFileSize } from '@/lib/utils'
-import TabButton from '@/components/shared/TabButton'
-import EmptyStateComp from '@/components/shared/EmptyStateComp'
-import Feed from '@/components/shared/Feed'
+import CourseComponent from '../../components/shared/CourseComponent'
+import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import EmptyStateComp from '@/components/shared/StateComp'
+import StateComp from '@/components/shared/StateComp'
 
 const DashboardDesign1 = () => {
   const [activeTab, setActiveTab] = useState('courses')
@@ -37,7 +34,6 @@ const DashboardDesign1 = () => {
     null,
   )
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('all')
 
   const {
     data: courses = [],
@@ -46,7 +42,9 @@ const DashboardDesign1 = () => {
     refetch: refetchCourses,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => {
+      throw new Error('Test error')
+    },
   })
 
   const {
@@ -81,42 +79,24 @@ const DashboardDesign1 = () => {
     queryFn: () => getFeedForCourse(selectedCourse!.uuid),
     enabled: Boolean(selectedCourse),
   })
-  const sortedCourses = [...courses].sort((a, b) => {
-    const dateKey =
-      selectedFilter === 'newest'
-        ? 'createdAt'
-        : selectedFilter === 'updated'
-          ? 'updatedAt'
-          : null
 
-    if (!dateKey) return 0
-
-    return new Date(b[dateKey]).getTime() - new Date(a[dateKey]).getTime()
-  })
+  const filteredCourses = filterCourses(courses, searchQuery)
 
   return (
     <>
       {/* Main Content */}
-      <div className='max-w-7xl mx-auto px-4 py-8 '>
+      <div className='max-w-7xl mx-auto px-4  '>
         {/* Navigation - Filter Style */}
         <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4'>
-          <Label
-            variant='title'
-            size='primary'
-            className='self-startwhitespace-nowrap'
-          >
-            Dashboard Lektora
-          </Label>
-
           {/* TABS */}
-          <div
+          {/* <div
             className='flex gap-3 flex-wrap sm:flex-nowrap justify-start md:justify-center md:flex-1 
           lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:flex-nowrap'
           >
             <TabButton
-              isActive={activeTab === 'courses'}
-              onClick={() => setActiveTab('courses')}
-              title='Kurzy'
+              isActive={activeTab === 'details'}
+              onClick={() => setActiveTab('details')}
+              title='Detaily'
               icon={BookOpen}
             />
 
@@ -143,7 +123,7 @@ const DashboardDesign1 = () => {
               icon={MessageSquare}
               isDisabled={!selectedCourse}
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Courses Tab */}
@@ -151,12 +131,13 @@ const DashboardDesign1 = () => {
           <div className='space-y-6'>
             {/* Hero Section */}
             <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-between items-center'>
-              <HintPageText
-                text='Moje kurzy'
-                icon={Sparkles}
-                spanText={courses.length.toString()}
-                className='hidden lg:flex'
-              />
+              <Label
+                variant='title'
+                size='primary'
+                className='self-startwhitespace-nowrap'
+              >
+                Správa kurzů
+              </Label>
               <SearchBar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
@@ -169,7 +150,7 @@ const DashboardDesign1 = () => {
 
             {/* Courses Grid */}
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
-              {courses.map((course, index) => (
+              {filteredCourses.map((course, index) => (
                 <CourseComponent
                   key={course.uuid ?? (course as CourseSummary).uuid ?? index}
                   course={course}
@@ -183,8 +164,26 @@ const DashboardDesign1 = () => {
               ))}
             </div>
 
-            {/* Empty State */}
-            {/* {courses.length === 0 && <EmptyStateComp onClick={} />} */}
+            {!coursesLoading && !coursesError && courses.length === 0 ? (
+              <StateComp
+                type='no-content'
+                onAction={() => console.log('Create course')}
+                message='Začněte vytvořením svého prvního kurzu'
+              />
+            ) : coursesError ? (
+              <StateComp
+                type='error'
+                onAction={() => refetchCourses()}
+                message='Nepodařilo se načíst kurzy'
+              />
+            ) : (
+              filteredCourses.length === 0 && (
+                <StateComp
+                  type='empty-search'
+                  onAction={() => setSearchQuery('')}
+                />
+              )
+            )}
           </div>
         )}
 
@@ -298,7 +297,7 @@ const DashboardDesign1 = () => {
               </div>
             </div>
 
-            {feed && <Feed feed={feed} />}
+            {feed && <Feed feed={feed} type='edit' />}
           </div>
         )}
 

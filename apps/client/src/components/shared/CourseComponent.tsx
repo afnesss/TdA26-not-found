@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { colorStyles, colors } from '@/lib/constants'
 import { Edit, Trash2 } from 'lucide-react'
+import EditBtn from './EditBtn'
 
 type CourseCompProps =
   | {
@@ -71,17 +72,12 @@ const CourseComponent = (props: CourseCompProps) => {
 
           {type === 'edit' && (
             <div className='flex gap-2'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={props.onEdit}
-                className='hover:bg-gray-100'
-              >
-                <Edit className='w-4 h-4' />
-              </Button>
-              <Button variant='ghost' size='icon' className='hover:bg-red-50'>
-                <Trash2 className='w-4 h-4 text-red-500' />
-              </Button>
+              <EditBtn icon={Edit} onClick={props.onEdit} />
+              <EditBtn
+                icon={Trash2}
+                bgColor='destructive'
+                classNameBtn='hover:bg-destructive/10'
+              />
             </div>
           )}
         </CardFooter>

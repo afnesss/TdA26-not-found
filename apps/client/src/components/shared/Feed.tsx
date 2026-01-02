@@ -1,9 +1,8 @@
-import React from 'react'
 import { colorStyles } from '@/lib/constants'
-import { formatDate } from '@/lib/utils'
 import type { FeedItem } from '@/lib/schemas'
-import { Button } from '../ui/button'
+import { formatDate } from '@/lib/utils'
 import { Edit, Trash2 } from 'lucide-react'
+import EditBtn from './EditBtn'
 
 const Feed = ({
   feed,
@@ -49,12 +48,12 @@ const Feed = ({
               </div>
               {post.type === 'manual' && type === 'edit' && (
                 <div className='flex gap-2 ml-4'>
-                  <Button variant='ghost' size='icon'>
-                    <Edit className='w-4 h-4' />
-                  </Button>
-                  <Button variant='ghost' size='icon'>
-                    <Trash2 className='w-4 h-4 text-red-500' />
-                  </Button>
+                  <EditBtn icon={Edit} />
+                  <EditBtn
+                    icon={Trash2}
+                    bgColor='destructive'
+                    classNameBtn='hover:bg-destructive/10'
+                  />
                 </div>
               )}
             </div>

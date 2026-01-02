@@ -60,7 +60,7 @@ const CoursesPage = () => {
   return (
     <div className='h-full'>
       {/* Hero */}
-      <div className='max-w-7xl mx-auto px-3 pt-3 '>
+      <div className='max-w-7xl mx-auto px-4 pt-3 '>
         <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center pb-6'>
           <HintPageText
             text='Dostupné kurzy'

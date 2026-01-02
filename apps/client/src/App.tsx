@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage'
 import CoursePage from './pages/CoursePage/ExactCoursePage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ProtectedRoute from './auth/ProtectedRoute'
+import CourseDetailPage from './pages/dashboard/CourseDetailsPage'
 
 function App() {
   const router = createBrowserRouter(
@@ -25,8 +26,16 @@ function App() {
           path='/dashboard'
           element={
             <ProtectedRoute>
-              {' '}
-              <DashboardPage />{' '}
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+
+        <Route
+          path='/dashboard/:courseId'
+          element={
+            <ProtectedRoute>
+              <CourseDetailPage />
             </ProtectedRoute>
           }
         ></Route>

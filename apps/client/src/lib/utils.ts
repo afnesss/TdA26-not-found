@@ -34,3 +34,11 @@ export const getTimeAgo = (date: string) => {
   if (diffInDays < 30) return `Před ${Math.floor(diffInDays / 7)} týdny`
   return `Před ${Math.floor(diffInDays / 30)} měsíci`
 }
+
+export const getFileIcon = (mimeType?: string) => {
+  if (!mimeType) return ''
+  if (mimeType.includes('pdf')) return '📄'
+  if (mimeType.includes('word') || mimeType.includes('document')) return '📝'
+  if (mimeType.includes('image')) return '🖼️'
+  return '📎'
+}

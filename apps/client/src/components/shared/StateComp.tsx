@@ -25,7 +25,7 @@ const StateComp = ({ type, onAction, message, actionText }: Props) => {
     error: {
       icon: AlertCircle,
       iconBg: 'bg-destructive/20',
-      iconColor: 'text-destructive/60',
+      iconColor: 'text-destructive/70',
       defaultMessage: 'Něco se pokazilo',
       defaultAction: 'Zkusit znovu',
       showButton: true,

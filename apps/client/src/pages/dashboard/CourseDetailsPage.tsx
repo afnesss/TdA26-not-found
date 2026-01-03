@@ -29,6 +29,8 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import StateComp from '@/components/shared/StateComp'
 import EditBtn from '@/components/shared/EditBtn'
 import TabButton from '@/components/shared/TabButton'
+import MaterialCard from '@/components/shared/Material'
+import FormField from '@/components/shared/FormField'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -136,7 +138,7 @@ const CourseDetailPage = () => {
     <div className='max-w-7xl mx-auto px-4'>
       {/* Navigation - Tabs */}
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-6'>
-        <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-start md:justify-center md:flex-1'>
+        <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1 mt-4'>
           <TabButton
             isActive={activeTab === 'details'}
             onClick={() => handleTabChange('details')}
@@ -170,72 +172,67 @@ const CourseDetailPage = () => {
       {/* Details Tab */}
       {activeTab === 'details' && (
         <div className='space-y-6'>
-          <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100'>
+          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
             <Label variant='title' size='lg' className='mb-6'>
               Detaily kurzu
             </Label>
 
-            <div className='space-y-4'>
+            <div className='space-y-4 mt-5'>
               {/* Course Name */}
-              <div>
-                <Label className='mb-2 block text-gray-700 font-medium'>
-                  Název kurzu
-                </Label>
-                <Input
-                  value={courseName}
-                  onChange={(e) => setCourseName(e.target.value)}
-                  placeholder='Zadejte název kurzu'
-                  className='w-full'
-                />
-              </div>
 
+              <FormField
+                label='Název kurzu'
+                inputProps={{
+                  value: courseName,
+                  onChange: (e) => setCourseName(e.target.value),
+                  type: 'text',
+                  placeholder: 'Název kurzi',
+                }}
+              />
               {/* Course Description */}
-              <div>
-                <Label className='mb-2 block text-gray-700 font-medium'>
-                  Popis kurzu
-                </Label>
-                <Input
-                  value={courseDescription}
-                  onChange={(e) => setCourseDescription(e.target.value)}
-                  placeholder='Zadejte popis kurzu'
-                  className='w-full'
-                />
-              </div>
+              <FormField
+                label='Popis kurzu'
+                inputProps={{
+                  value: courseDescription,
+                  onChange: (e) => setCourseDescription(e.target.value),
+                  type: 'text',
+                  placeholder: 'Zadejte popis kurzu',
+                }}
+              />
 
               {/* Metadata (Read-only) */}
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t'>
-                <div>
-                  <Label className='text-sm text-gray-600 mb-1 block'>
-                    Datum vytvoření
-                  </Label>
-                  <p className='text-gray-900 font-medium'>
-                    {selectedCourse.createdAt
-                      ? new Date(selectedCourse.createdAt).toLocaleDateString(
-                          'cs-CZ',
-                        )
-                      : 'N/A'}
-                  </p>
+              <div className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-4 border-t '>
+                <div className='flex flex-row gap-10'>
+                  <div>
+                    <Label size={'sm'} className='mb-2'>
+                      Datum vytvoření
+                    </Label>
+                    <p className='text-gray-900 font-medium'>
+                      {selectedCourse.createdAt
+                        ? new Date(selectedCourse.createdAt).toLocaleDateString(
+                            'cs-CZ',
+                          )
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label size={'sm'} className='mb-2'>
+                      Poslední úprava
+                    </Label>
+                    <p className='text-gray-900 font-medium'>
+                      {selectedCourse.updatedAt
+                        ? new Date(selectedCourse.updatedAt).toLocaleDateString(
+                            'cs-CZ',
+                          )
+                        : 'N/A'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <Label className='text-sm text-gray-600 mb-1 block'>
-                    Poslední úprava
-                  </Label>
-                  <p className='text-gray-900 font-medium'>
-                    {selectedCourse.updatedAt
-                      ? new Date(selectedCourse.updatedAt).toLocaleDateString(
-                          'cs-CZ',
-                        )
-                      : 'N/A'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <div className='flex justify-end pt-4'>
                 <Button
                   variant='primary'
                   size='primary'
                   onClick={handleSaveDetails}
+                  className='w-fit'
                 >
                   Uložit změny
                 </Button>
@@ -248,8 +245,9 @@ const CourseDetailPage = () => {
       {/* Materials Tab */}
       {activeTab === 'materials' && (
         <div className='space-y-6'>
-          <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100'>
-            <div className='flex justify-between items-start mb-2'>
+          <div className='bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100'>
+            <div className='flex flex-col md:flex-row md:justify-between md:items-start gap-4'>
+              {/* Text section */}
               <div>
                 <Label variant='title' size='lg'>
                   Materiály kurzu
@@ -258,13 +256,13 @@ const CourseDetailPage = () => {
                   {selectedCourse.name}
                 </p>
               </div>
-              <div className='flex gap-3'>
+
+              {/* Buttons section */}
+              <div className='flex gap-3 flex-wrap md:flex-nowrap'>
                 <Button variant='primary' size='primary'>
-                  <Upload className='w-5 h-5' />
                   Nahrát soubor
                 </Button>
                 <Button variant='secondary' size='md'>
-                  <Link2 className='w-5 h-5' />
                   Přidat odkaz
                 </Button>
               </div>
@@ -284,63 +282,14 @@ const CourseDetailPage = () => {
           {!materialsError && materials && materials.length > 0 && (
             <div className='grid gap-4'>
               {materials.map((material) => (
-                <div
+                <MaterialCard
                   key={material.uuid}
-                  className='bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow'
-                >
-                  <div className='flex items-start justify-between'>
-                    <div className='flex items-start gap-4 flex-1'>
-                      <div
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          material.type === 'file'
-                            ? 'bg-blue-100'
-                            : 'bg-teal-100'
-                        }`}
-                      >
-                        {material.type === 'file' ? (
-                          <FileText className='w-6 h-6 text-blue-600' />
-                        ) : (
-                          <Link2 className='w-6 h-6 text-teal-600' />
-                        )}
-                      </div>
-                      <div className='flex-1'>
-                        <Label variant='title' size='md' className='mb-1'>
-                          {material.name}
-                        </Label>
-                        <p className='text-gray-600 mb-2'>
-                          {material.description}
-                        </p>
-                        <div className='flex items-center gap-4 text-sm text-gray-500'>
-                          {material.type === 'file' && (
-                            <>
-                              <span>{material.mimeType}</span>
-                              <span>•</span>
-                              <span>{formatFileSize(material.sizeBytes)}</span>
-                            </>
-                          )}
-                          {material.type === 'url' && (
-                            <a
-                              href={material.url}
-                              className='text-blue-600 hover:underline'
-                              target='_blank'
-                              rel='noopener noreferrer'
-                            >
-                              {material.url}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className='flex gap-2'>
-                      <EditBtn icon={Edit} />
-                      <EditBtn
-                        icon={Trash2}
-                        bgColor='destructive'
-                        classNameBtn='hover:bg-destructive/10'
-                      />
-                    </div>
-                  </div>
-                </div>
+                  material={material}
+                  type='edit'
+                  onEdit={() => console.log('Edit', material.uuid)}
+                  onDelete={() => console.log('Delete', material.uuid)}
+                  onUpload={() => console.log('Upload', material.uuid)}
+                />
               ))}
             </div>
           )}
@@ -355,7 +304,7 @@ const CourseDetailPage = () => {
       {/* Feed Tab */}
       {activeTab === 'feed' && (
         <div className='space-y-6'>
-          <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100'>
+          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
             <div className='flex justify-between items-start mb-2'>
               <div>
                 <Label variant='title' size='lg'>
@@ -396,7 +345,7 @@ const CourseDetailPage = () => {
       {/* Quizzes Tab */}
       {activeTab === 'quizzes' && (
         <div className='space-y-6'>
-          <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100'>
+          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
             <div className='flex justify-between items-start mb-2'>
               <div>
                 <Label variant='title' size='lg'>
@@ -428,7 +377,7 @@ const CourseDetailPage = () => {
               {quizzes.map((quiz) => (
                 <div
                   key={quiz.uuid}
-                  className='bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow'
+                  className='bg-background rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow'
                 >
                   <div className='flex items-start justify-between'>
                     <div className='flex-1'>

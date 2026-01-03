@@ -29,7 +29,7 @@ const TabButton = ({
                     : 'bg-background text-gray-700 hover:bg-gray-50 border border-gray-200'
                 }`}
     >
-      {Icon && <Icon className='w-4 h-4' />}
+      {Icon && <Icon className='w-4 h-4 hidden sm:block' />}
       {title}
     </Button>
   )

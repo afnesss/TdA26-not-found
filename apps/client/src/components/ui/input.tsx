@@ -1,23 +1,26 @@
+import { forwardRef } from 'react'
 
-import { forwardRef } from "react"
+import { cn } from '@/lib/utils'
 
-import { cn } from "@/lib/utils"
-
-const Input = forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+const Input = forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
   ({ className, type, ...props }, ref) => {
-  return (
-    <input
-      ref={ref}
-      type={type}
-      data-slot="input"
-      className={cn(
-        "w-full px-4 py-2 rounded-xl text-foreground text-sm md:text-base bg-background/90 border-2 border-gray-200 shadow-sm outline-none transition-all duration-300 hover:shadow-md focus:shadow-lg focus:border-accent-teal-light focus:ring-2 focus:ring-accent-teal/20 placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20",
-        className
-      )}
-      {...props}
-    />
-  )
-})
-
+    return (
+      <input
+        ref={ref}
+        type={type}
+        data-slot='input'
+        className={cn(
+          'w-full px-4 py-2 rounded-xl text-foreground text-sm md:text-base bg-background/90 border-2\
+         border-gray-200 shadow-sm outline-none transition-all duration-300 hover:shadow-md focus:shadow-lg \
+         focus:border-accent-teal-light focus:ring-2 focus:ring-accent-teal/20 placeholder:text-muted-foreground \
+         selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed\
+          disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20',
+          className,
+        )}
+        {...props}
+      />
+    )
+  },
+)
 
 export { Input }

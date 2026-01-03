@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 import { colorStyles, colors } from '@/lib/constants'
 import { Edit, Trash2 } from 'lucide-react'
-import EditBtn from './EditBtn'
+import EditBtn from '../../pages/dashboard/components/EditBtn'
 
 type CourseCompProps =
   | {

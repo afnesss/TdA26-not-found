@@ -1,36 +1,41 @@
 import {
+  getCourses,
   getFeedForCourse,
   getMaterialsForCourse,
   getQuizzesForCourse,
-  getCourses,
 } from '@/api/queries'
+import EditBtn from '@/components/shared/EditBtn'
 import Feed from '@/components/shared/Feed'
+import FormField from '@/components/shared/FormField'
+import MaterialCard from '@/components/shared/Material'
+import StateComp from '@/components/shared/StateComp'
+import TabButton from '@/components/shared/TabButton'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
-import { formatFileSize } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3,
+  BookOpen,
   Edit,
   FileText,
-  Link2,
+  MessageSquare,
   Plus,
   Send,
   Trash2,
-  Upload,
-  BookOpen,
-  MessageSquare,
-  type LucideIcon,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import StateComp from '@/components/shared/StateComp'
-import EditBtn from '@/components/shared/EditBtn'
-import TabButton from '@/components/shared/TabButton'
-import MaterialCard from '@/components/shared/Material'
-import FormField from '@/components/shared/FormField'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { colorStyles } from '@/lib/constants'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import DetailHeader from './components/DetailHeader'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -135,9 +140,9 @@ const CourseDetailPage = () => {
   }
 
   return (
-    <div className='max-w-7xl mx-auto px-4'>
+    <div className='max-w-7xl mx-auto lg:px-4'>
       {/* Navigation - Tabs */}
-      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-6'>
+      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-3 lg:mb-6'>
         <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1 mt-4'>
           <TabButton
             isActive={activeTab === 'details'}
@@ -171,103 +176,96 @@ const CourseDetailPage = () => {
 
       {/* Details Tab */}
       {activeTab === 'details' && (
-        <div className='space-y-6'>
-          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
-            <Label variant='title' size='lg' className='mb-6'>
-              Detaily kurzu
-            </Label>
+        <>
+          <Card className='bg-background rounded-xl shadow-md hover:shadow-md hover:scale-100 hover:translate-0 overflow-hidden'>
+            <div
+              className={`h-2 bg-linear-to-r ${colorStyles.gradient['accent-teal']}`}
+            />
+            <div className='p-4 lg:p-6'>
+              <CardTitle>
+                <Label variant='title' size='lg'>
+                  Detaily kurzu
+                </Label>
+              </CardTitle>
 
-            <div className='space-y-4 mt-5'>
-              {/* Course Name */}
+              <CardContent className='space-y-4 mt-5'>
+                {/* Course Name */}
 
-              <FormField
-                label='Název kurzu'
-                inputProps={{
-                  value: courseName,
-                  onChange: (e) => setCourseName(e.target.value),
-                  type: 'text',
-                  placeholder: 'Název kurzi',
-                }}
-              />
-              {/* Course Description */}
-              <FormField
-                label='Popis kurzu'
-                inputProps={{
-                  value: courseDescription,
-                  onChange: (e) => setCourseDescription(e.target.value),
-                  type: 'text',
-                  placeholder: 'Zadejte popis kurzu',
-                }}
-              />
-
-              {/* Metadata (Read-only) */}
-              <div className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-4 border-t '>
-                <div className='flex flex-row gap-10'>
-                  <div>
-                    <Label size={'sm'} className='mb-2'>
-                      Datum vytvoření
-                    </Label>
-                    <p className='text-gray-900 font-medium'>
-                      {selectedCourse.createdAt
-                        ? new Date(selectedCourse.createdAt).toLocaleDateString(
-                            'cs-CZ',
-                          )
-                        : 'N/A'}
-                    </p>
+                <CardDescription className='flex flex-col gap-2'>
+                  <FormField
+                    label='Název kurzu'
+                    inputProps={{
+                      value: courseName,
+                      onChange: (e) => setCourseName(e.target.value),
+                      type: 'text',
+                      placeholder: 'Název kurzi',
+                    }}
+                  />
+                  {/* Course Description */}
+                  <FormField
+                    label='Popis kurzu'
+                    multiline
+                    textareaProps={{
+                      value: courseDescription,
+                      onChange: (e) => setCourseDescription(e.target.value),
+                      placeholder: 'Zadejte popis kurzu',
+                    }}
+                  />
+                </CardDescription>
+                {/* Metadata (Read-only) */}
+                <CardFooter className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-4 '>
+                  <div className='flex flex-row gap-10'>
+                    <div>
+                      <Label size={'sm'} className='mb-2'>
+                        Datum vytvoření
+                      </Label>
+                      <p className='text-gray-900 font-medium'>
+                        {selectedCourse.createdAt
+                          ? new Date(
+                              selectedCourse.createdAt,
+                            ).toLocaleDateString('cs-CZ')
+                          : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label size={'sm'} className='mb-2'>
+                        Poslední úprava
+                      </Label>
+                      <p className='text-gray-900 font-medium'>
+                        {selectedCourse.updatedAt
+                          ? new Date(
+                              selectedCourse.updatedAt,
+                            ).toLocaleDateString('cs-CZ')
+                          : 'N/A'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <Label size={'sm'} className='mb-2'>
-                      Poslední úprava
-                    </Label>
-                    <p className='text-gray-900 font-medium'>
-                      {selectedCourse.updatedAt
-                        ? new Date(selectedCourse.updatedAt).toLocaleDateString(
-                            'cs-CZ',
-                          )
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant='primary'
-                  size='primary'
-                  onClick={handleSaveDetails}
-                  className='w-fit'
-                >
-                  Uložit změny
-                </Button>
-              </div>
+                  <Button
+                    variant='primary'
+                    size='primary'
+                    onClick={handleSaveDetails}
+                    className='w-fit'
+                  >
+                    Uložit změny
+                  </Button>
+                </CardFooter>
+              </CardContent>
             </div>
-          </div>
-        </div>
+          </Card>
+        </>
       )}
 
       {/* Materials Tab */}
       {activeTab === 'materials' && (
         <div className='space-y-6'>
-          <div className='bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-gray-100'>
-            <div className='flex flex-col md:flex-row md:justify-between md:items-start gap-4'>
-              {/* Text section */}
-              <div>
-                <Label variant='title' size='lg'>
-                  Materiály kurzu
-                </Label>
-                <p className='text-gray-600 mt-1 font-medium'>
-                  {selectedCourse.name}
-                </p>
-              </div>
-
-              {/* Buttons section */}
-              <div className='flex gap-3 flex-wrap md:flex-nowrap'>
-                <Button variant='primary' size='primary'>
-                  Nahrát soubor
-                </Button>
-                <Button variant='secondary' size='md'>
-                  Přidat odkaz
-                </Button>
-              </div>
-            </div>
-          </div>
+          <DetailHeader
+            onButtonClick={() => {
+              console.log('зробити матеріал')
+            }}
+            title='Materiály kurzu'
+            gradient='accent-teal'
+            buttonText='Přidat podklad'
+          />
 
           {/* Error State */}
           {materialsError && (
@@ -304,22 +302,14 @@ const CourseDetailPage = () => {
       {/* Feed Tab */}
       {activeTab === 'feed' && (
         <div className='space-y-6'>
-          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
-            <div className='flex justify-between items-start mb-2'>
-              <div>
-                <Label variant='title' size='lg'>
-                  Informační kanál
-                </Label>
-                <p className='text-gray-600 mt-1 font-medium'>
-                  {selectedCourse.name}
-                </p>
-              </div>
-              <Button variant='primary' size='primary'>
-                <Send className='w-5 h-5' />
-                Nový příspěvek
-              </Button>
-            </div>
-          </div>
+          <DetailHeader
+            onButtonClick={() => {
+              console.log('зробити feed')
+            }}
+            title=' Informační kanál'
+            gradient='accent-teal'
+            buttonText='Nový příspěvek'
+          />
 
           {/* Error State */}
           {feedError && (
@@ -345,22 +335,14 @@ const CourseDetailPage = () => {
       {/* Quizzes Tab */}
       {activeTab === 'quizzes' && (
         <div className='space-y-6'>
-          <div className='bg-background rounded-xl shadow-sm p-6 border border-gray-100'>
-            <div className='flex justify-between items-start mb-2'>
-              <div>
-                <Label variant='title' size='lg'>
-                  Kvízy kurzu
-                </Label>
-                <p className='text-gray-600 mt-1 font-medium'>
-                  {selectedCourse.name}
-                </p>
-              </div>
-              <Button variant='primary' size='primary'>
-                <Plus className='w-5 h-5' />
-                Vytvořit kvíz
-              </Button>
-            </div>
-          </div>
+          <DetailHeader
+            onButtonClick={() => {
+              console.log('зробити kviz')
+            }}
+            title='Kvízy kurzu'
+            gradient='accent-teal'
+            buttonText='Vytvořit kvíz'
+          />
 
           {/* Error State */}
           {quizzesError && (

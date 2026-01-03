@@ -22,7 +22,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
   return (
     <Button
       variant='ghost'
-      size='icon'
+      size='icon-sm'
       className={cn(hoverStyle, classNameBtn)}
       onClick={onClick}
     >

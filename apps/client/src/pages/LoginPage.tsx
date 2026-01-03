@@ -65,7 +65,7 @@ const LoginPage = () => {
             <div className='px-6 lg:px-8 py-8 bg-background/95'>
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className='flex flex-col gap-5'
+                className='flex flex-col gap-2'
               >
                 <FormField
                   label='Jméno'

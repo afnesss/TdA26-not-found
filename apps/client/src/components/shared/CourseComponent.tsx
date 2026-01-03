@@ -46,7 +46,7 @@ const CourseComponent = (props: CourseCompProps) => {
         <CardContent>
           <CardTitle className='mb-4'>{course.name}</CardTitle>
 
-          <CardDescription className='mb-4'>
+          <CardDescription className='mb-4 line-clamp-3'>
             {course.description}
           </CardDescription>
         </CardContent>

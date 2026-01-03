@@ -25,52 +25,65 @@ type MaterialCardProps =
       onUpload?: () => void
     }
 
+const MaterialIcon = ({
+  material,
+  className,
+}: {
+  material: Material
+  className?: string
+}) => {
+  return (
+    <div className={cn('rounded-lg shrink-0 text-xl', className)}>
+      {material.type === 'file' ? (
+        getFileIcon(material.mimeType ?? 'application/pdf')
+      ) : material.faviconUrl ? (
+        <img
+          src={material.faviconUrl}
+          alt=''
+          className='w-4 h-4 md:w-6 md:h-6 rounded'
+          loading='lazy'
+          referrerPolicy='no-referrer'
+          onError={(e) => {
+            ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+          }}
+        />
+      ) : (
+        '🔗'
+      )}
+    </div>
+  )
+}
+
 const MaterialCard = (props: MaterialCardProps) => {
   const { material, type } = props
   const isMd = useMediaQuery('(min-width: 768px)')
 
   return (
     <div className='bg-background rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow'>
-      <div className='flex items-start justify-between'>
-        <div className='flex items-start gap-4 flex-1'>
-          {/* Icon */}
-          <div className='rounded-lg shrink-0'>
-            <div className='text-xl'>
-              {material.type === 'file' ? (
-                getFileIcon(material.mimeType ?? 'application/pdf')
-              ) : material.faviconUrl ? (
-                <img
-                  src={material.faviconUrl}
-                  alt=''
-                  className='w-6 h-6 rounded'
-                  loading='lazy'
-                  referrerPolicy='no-referrer'
-                  onError={(e) => {
-                    ;(e.currentTarget as HTMLImageElement).style.display =
-                      'none'
-                  }}
-                />
-              ) : (
-                '🔗'
-              )}
-            </div>
-          </div>
+      <div className='flex items-start gap-4'>
+        {/* Icon */}
+        <MaterialIcon material={material} className='hidden md:block mt-1' />
+        {/* Content */}
+        <div className='flex-1 min-w-0'>
+          {/* Title row with buttons */}
+          <div className='flex items-center justify-between gap-2 mb-1'>
+            <div className='flex items-center gap-1 flex-1 min-w-0'>
+              <MaterialIcon
+                material={material}
+                className='md:hidden block mr-1'
+              />
 
-          {/* Content */}
-          <div className='flex-1'>
-            {/* Title */}
-            <div className='flex items-center gap-1'>
-              <Label variant='title' size='md' className='mb-1'>
+              <Label variant='title' size='md' className='flex-wrap'>
                 {material.name}
               </Label>
 
               {/* Popover for classic type */}
               {type === 'classic' && material.description && (
-                <div className='relative w-fit'>
+                <div className='relative shrink-0'>
                   <Popover>
                     <PopoverTrigger>
                       <Info
-                        className='text-gray-400 hover:text-primary active:text-primary cursor-pointer ml-2'
+                        className='text-gray-400 hover:text-primary active:text-primary cursor-pointer'
                         size={16}
                       />
                     </PopoverTrigger>
@@ -89,87 +102,92 @@ const MaterialCard = (props: MaterialCardProps) => {
               )}
             </div>
 
-            {/* Description for edit type */}
-            {type === 'edit' && material.description && (
-              <p className='text-gray-600 mb-2'>{material.description}</p>
+            {/* Buttons for edit type - same row as title */}
+            {type === 'edit' && (
+              <div className='flex gap-2 shrink-0'>
+                {material.type === 'file' && props.onUpload && (
+                  <EditBtn icon={Upload} onClick={props.onUpload} />
+                )}
+                {material.type === 'url' && props.onUpload && (
+                  <EditBtn icon={Link2} onClick={props.onUpload} />
+                )}
+                <EditBtn icon={Edit} onClick={props.onEdit} />
+                <EditBtn
+                  icon={Trash2}
+                  bgColor='destructive'
+                  classNameBtn='hover:bg-destructive/10'
+                  onClick={props.onDelete}
+                />
+              </div>
             )}
+          </div>
 
-            {/* File size or URL */}
-            <div className='flex items-center gap-4 text-sm text-gray-500'>
-              {material.type === 'file' && (
-                <span className='font-medium'>
-                  {formatFileSize(material.sizeBytes)}
-                </span>
-              )}
-              {material.type === 'url' && type === 'edit' && (
-                <a
-                  href={material.url}
-                  className='text-blue-600 hover:underline'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {material.url}
-                </a>
-              )}
-            </div>
+          {/* Description for edit type */}
+          {type === 'edit' && material.description && (
+            <p className='text-sm md:text-md text-gray-600 mb-2'>
+              {material.description}
+            </p>
+          )}
+
+          {/* File size or URL */}
+          <div className='flex items-center gap-4 text-sm text-gray-500'>
+            {material.type === 'file' && (
+              <span className='font-medium'>
+                {formatFileSize(material.sizeBytes)}
+              </span>
+            )}
+            {material.type === 'url' && type === 'edit' && (
+              <a
+                href={material.url}
+                className='text-primary hover:underline truncate'
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                {material.url}
+              </a>
+            )}
           </div>
         </div>
 
-        {/* Actions */}
-        {type === 'classic' ? (
-          // Download/Open button for classic
-          material.type === 'file' ? (
-            <a
-              href={material.fileUrl}
-              download={material.originalFilename || material.name}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              <Button
-                variant={'grid'}
-                size={'grid'}
-                className={cn(
-                  'bg-linear-to-br w-25',
-                  colorStyles.bg['accent-teal'],
-                  colorStyles.text['accent-teal'],
-                )}
+        {/* Download/Open button for classic type */}
+        {type === 'classic' && (
+          <div className='shrink-0'>
+            {material.type === 'file' ? (
+              <a
+                href={material.fileUrl}
+                download={material.originalFilename || material.name}
+                target='_blank'
+                rel='noopener noreferrer'
               >
-                <Download size={14} />
-                <span>Stáhnout</span>
-              </Button>
-            </a>
-          ) : (
-            <a href={material.url} target='_blank' rel='noopener noreferrer'>
-              <Button
-                variant={'grid'}
-                size={'grid'}
-                className={cn(
-                  'bg-linear-to-br w-25',
-                  colorStyles.bg['accent-teal-light'],
-                  colorStyles.text['accent-teal-light'],
-                )}
-              >
-                <Link2 size={14} />
-                <span>Otevřít</span>
-              </Button>
-            </a>
-          )
-        ) : (
-          // Edit buttons for dashboard
-          <div className='flex gap-2'>
-            {material.type === 'file' && props.onUpload && (
-              <EditBtn icon={Upload} />
+                <Button
+                  variant={'grid'}
+                  size={'grid'}
+                  className={cn(
+                    'bg-linear-to-br w-25',
+                    colorStyles.bg['accent-teal'],
+                    colorStyles.text['accent-teal'],
+                  )}
+                >
+                  <Download size={14} />
+                  <span>Stáhnout</span>
+                </Button>
+              </a>
+            ) : (
+              <a href={material.url} target='_blank' rel='noopener noreferrer'>
+                <Button
+                  variant={'grid'}
+                  size={'grid'}
+                  className={cn(
+                    'bg-linear-to-br w-25',
+                    colorStyles.bg['accent-teal-light'],
+                    colorStyles.text['accent-teal-light'],
+                  )}
+                >
+                  <Link2 size={14} />
+                  <span>Otevřít</span>
+                </Button>
+              </a>
             )}
-            {material.type === 'url' && props.onUpload && (
-              <EditBtn icon={Link2} />
-            )}
-            <EditBtn icon={Edit} onClick={props.onEdit} />
-            <EditBtn
-              icon={Trash2}
-              bgColor='destructive'
-              classNameBtn='hover:bg-destructive/10'
-              onClick={props.onDelete}
-            />
           </div>
         )}
       </div>

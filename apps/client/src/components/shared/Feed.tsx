@@ -2,7 +2,7 @@ import { colorStyles } from '@/lib/constants'
 import type { FeedItem } from '@/lib/schemas'
 import { formatDate } from '@/lib/utils'
 import { Edit, Trash2 } from 'lucide-react'
-import EditBtn from './EditBtn'
+import EditBtn from '../../pages/dashboard/components/EditBtn'
 
 const Feed = ({
   feed,
@@ -23,7 +23,6 @@ const Feed = ({
                 : 'bg-secondary/5 border-secondary'
             }`}
           >
-            {/* Header row: Badge + Date + Buttons */}
             <div className='flex items-center justify-between mb-2 gap-2'>
               <div className='flex items-center gap-2 flex-wrap'>
                 <span

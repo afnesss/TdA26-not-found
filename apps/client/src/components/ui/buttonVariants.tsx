@@ -12,7 +12,7 @@ const buttonVariants = cva(
           shadow-lg hover:shadow-xl hover:scale-102 text-base max-sm:text-md sm:text-md \
           disabled:pointer-events-none disabled:opacity-60',
         outline:
-          'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border bg-background rounded-xl shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         secondary:
           'bg-background cursor-pointer shadow-md text-accent-blue transition-colors \
           duration-200 rounded-xl px-4 py-2 hover:bg-secondary \

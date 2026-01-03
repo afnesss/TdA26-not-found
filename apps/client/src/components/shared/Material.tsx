@@ -10,7 +10,7 @@ import type { Material } from '@/lib/schemas'
 import { cn, formatFileSize, getFileIcon } from '@/lib/utils'
 import { Download, Edit, Info, Link2, Trash2, Upload } from 'lucide-react'
 import { useMediaQuery } from 'usehooks-ts'
-import EditBtn from './EditBtn'
+import EditBtn from '../../pages/dashboard/components/EditBtn'
 
 type MaterialCardProps =
   | {

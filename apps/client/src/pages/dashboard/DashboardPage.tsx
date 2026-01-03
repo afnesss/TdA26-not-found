@@ -96,7 +96,7 @@ const DashboardDesign1 = () => {
 
         <div className='space-y-6 pt-2'>
           {/* Hero Section */}
-          <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-between items-center'>
+          <div className='flex  gap-3 md:gap-6 justify-between items-center'>
             <Label
               variant='title'
               size='primary'
@@ -110,7 +110,7 @@ const DashboardDesign1 = () => {
             />
             <Button variant='primary' size='primary'>
               <Plus className='w-5 h-5' />
-              Vytvořit kurz
+              <span className='hidden md:block'>Vytvořit kurz</span>
             </Button>
           </div>
 

@@ -7,19 +7,17 @@ import { BookOpen } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
-import EmptyStateComp from '../../components/shared/StateComp'
 import HintPageText from '../../components/shared/HintPageText'
+import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import Filters from './components/Filters'
 import LoadingSceleton from './components/LoadingSceleton'
-import StateComp from '../../components/shared/StateComp'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<FilterIds>('all')
   const [displayCount, setDisplayCount] = useState(9)
-  const navigate = useNavigate()
 
   const {
     data: courses = [],
@@ -101,7 +99,7 @@ const CoursesPage = () => {
             )}
 
             {/* Empty state */}
-            {displayedCourses.length === 0 && !isLoading ? (
+            {displayedCourses.length === 0 && !isLoading && !isError ? (
               <StateComp
                 type='empty-search'
                 onAction={() => {

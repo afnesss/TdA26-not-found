@@ -1,111 +1,117 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Lock, User, Sparkles } from 'lucide-react'
-import HintPageText from '@/components/shared/HintPageText';
-import { Input } from '@/components/ui/input';
-import LogoAnim from '@/components/shared/LogoAnim';
-import {useForm, type FieldValues} from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import TitleText from '@/components/shared/TitleText';
-import FormField from '@/components/shared/FormField';
-import { Label } from '@/components/ui/label';
-import { useNavigate } from 'react-router';
-import auth from '@/auth/fakeAuth';
-
+import HintPageText from '@/components/shared/HintPageText'
+import { Input } from '@/components/ui/input'
+import LogoAnim from '@/components/shared/LogoAnim'
+import { useForm, type FieldValues } from 'react-hook-form'
+import { Button } from '@/components/ui/button'
+import TitleText from '@/components/shared/TitleText'
+import FormField from '@/components/shared/FormField'
+import { Label } from '@/components/ui/label'
+import { useNavigate } from 'react-router'
+import auth from '@/auth/fakeAuth'
 
 const LoginPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [show, setShow] = useState(false);
-  const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true)
+  const [show, setShow] = useState(false)
+  const navigate = useNavigate()
 
   const {
     register,
     handleSubmit,
-    formState: {errors, isSubmitting},
+    formState: { errors, isSubmitting },
     reset,
-    setError
-  } = useForm();
+    setError,
+  } = useForm()
 
   const onSubmit = async (data: FieldValues) => {
-    console.log('Form submitted');
+    console.log('Form submitted')
 
-    auth.login(data.name, data.password, setError);
+    auth.login(data.name, data.password, setError)
 
-    navigate('/dashboard');
-    reset();
+    navigate('/dashboard')
+    reset()
   }
 
   return (
-    <div className="max-w-6xl mx-auto overflow-hidden grid h-full md:grid-cols-2 lg:grid-cols-2">
+    <div className='max-w-6xl mx-auto overflow-hidden grid h-full md:grid-cols-2 lg:grid-cols-2'>
       {/* Left side - Welcome content */}
       <div className='relative justify-center h-full hidden md:flex items-center px-4 md:pl-6 lg:pl-10 lg:pr-20'>
-        <div className="space-y-8 text-left">
-
-          <HintPageText icon={Sparkles} text='Začněte svou cestu'/>
-          <TitleText underlinedText='Vítejte zpět v' highlightedText='Think Different Academy'/>
+        <div className='space-y-8 text-left'>
+          <HintPageText icon={Sparkles} text='Začněte svou cestu' />
+          <TitleText
+            underlinedText='Vítejte zpět v'
+            highlightedText='Think Different Academy'
+          />
 
           {/* Animated logo section */}
-          <div className="relative flex items-center justify-center pt-8">
-            <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48'/>
+          <div className='relative flex items-center justify-center pt-8'>
+            <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48' />
           </div>
         </div>
       </div>
 
       {/* Right side - Login form */}
-      <div className="px-2 md:px-6 lg:px-10 flex justify-center items-center">
-        <div className="w-full max-w-md">
-          <div className="bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10">
+      <div className='px-2 md:px-6 lg:px-10 flex justify-center items-center'>
+        <div className='w-full max-w-md'>
+          <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
             {/* Header with linear */}
-            <Label variant={'formTitle'}>{/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
+            <Label variant={'formTitle'}>
+              {/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
               Přihlášení
             </Label>
 
             {/* Form content */}
-            <div className="px-6 lg:px-8 py-8 bg-background/95">
-              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+            <div className='px-6 lg:px-8 py-8 bg-background/95'>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className='flex flex-col gap-5'
+              >
+                <FormField
+                  label='Jméno'
+                  icon={User}
+                  inputProps={{
+                    ...register('name', { required: 'Jméno je povinné' }),
+                    type: 'text',
+                    placeholder: 'Vaše jméno',
+                  }}
+                />
+                {errors.name && (
+                  <p className='text-destructive'>
+                    {errors.name.message as string}
+                  </p>
+                )}
 
-                  <FormField label='Jméno' icon={User} children={(
-                      <Input
-                        {...register('name', 
-                          {required: 'Jméno je povinné'
-                          }
-                        )}
-                        type="text"
-                        placeholder="lecturer123"
-                        className=" pl-11 pr-4"
-                      />
-                  )}/>
-                  {errors.name && 
-                  <p className='text-destructive'>{errors.name.message as string}</p>}
-                
-                <FormField label='Heslo' icon={Lock} children={(
-                  <>
-                    <Input
-                      {...register('password', 
-                        {required: 'Heslo je povinné'
-                        })
-                      }
-                      placeholder="••••••••"
-                      className="pl-11 pr-12"
-                      type={show ? 'text' : 'password'}
-                    />
+                <FormField
+                  label='Heslo'
+                  icon={Lock}
+                  inputProps={{
+                    ...register('password', { required: 'Heslo je povinné' }),
+                    type: show ? 'text' : 'password',
+                    placeholder: '••••••••',
+                  }}
+                  rightElement={
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setShow((s) => !s)}
-                      className="bg-transparent absolute right-3 top-1/2 -translate-y-1/2 flex items-center cursor-pointer"
+                      className='bg-transparent cursor-pointer'
                       aria-pressed={show}
-                      aria-label={show ? "Skrýt heslo" : "Zobrazit heslo"}
+                      aria-label={show ? 'Skrýt heslo' : 'Zobrazit heslo'}
                     >
                       {show ? (
-                        <Eye className="w-5 h-5 text-gray-800/50" />
+                        <Eye className='w-5 h-5 text-gray-800/50' />
                       ) : (
-                        <EyeOff className="w-5 h-5 text-gray-800/50" />
+                        <EyeOff className='w-5 h-5 text-gray-800/50' />
                       )}
                     </button>
-                  </>
-                )}/>
+                  }
+                />
 
-                  {errors.password && 
-                  <Label size='md' variant={'error'}>{errors.password.message as string}</Label>}
+                {errors.password && (
+                  <Label size='md' variant={'error'}>
+                    {errors.password.message as string}
+                  </Label>
+                )}
 
                 {/* {isLogin && (
                   <div className="flex items-center justify-between text-sm">
@@ -128,7 +134,7 @@ const LoginPage = () => {
                   variant='primary'
                   size='primary'
                 >
-                  {isLogin ? "Přihlásit se" : "Zaregistrovat se"}
+                  {isLogin ? 'Přihlásit se' : 'Zaregistrovat se'}
                 </Button>
 
                 {/* For future registration */}
@@ -148,7 +154,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoginPage;
+export default LoginPage

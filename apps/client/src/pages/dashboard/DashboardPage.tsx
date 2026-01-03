@@ -124,7 +124,7 @@ const DashboardDesign1 = () => {
                 type='edit'
                 onEdit={() => {
                   setSelectedCourse(course)
-                  handleEditCourse(selectedCourse!)
+                  handleEditCourse(course!)
                 }}
               />
             ))}

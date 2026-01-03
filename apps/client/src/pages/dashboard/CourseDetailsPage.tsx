@@ -4,7 +4,7 @@ import {
   getMaterialsForCourse,
   getQuizzesForCourse,
 } from '@/api/queries'
-import EditBtn from '@/components/shared/EditBtn'
+import EditBtn from '@/pages/dashboard/components/EditBtn'
 import Feed from '@/components/shared/Feed'
 import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
@@ -36,6 +36,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import DetailHeader from './components/DetailHeader'
+import QuizComponent from '@/components/shared/QuizComponent'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -191,7 +192,7 @@ const CourseDetailPage = () => {
               <CardContent className='space-y-4 mt-5'>
                 {/* Course Name */}
 
-                <CardDescription className='flex flex-col gap-2'>
+                <div className='flex flex-col gap-2'>
                   <FormField
                     label='Název kurzu'
                     inputProps={{
@@ -211,7 +212,7 @@ const CourseDetailPage = () => {
                       placeholder: 'Zadejte popis kurzu',
                     }}
                   />
-                </CardDescription>
+                </div>
                 {/* Metadata (Read-only) */}
                 <CardFooter className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-4 '>
                   <div className='flex flex-row gap-10'>
@@ -357,45 +358,19 @@ const CourseDetailPage = () => {
           {!quizzesError && quizzes && quizzes.length > 0 && (
             <div className='grid gap-4'>
               {quizzes.map((quiz) => (
-                <div
+                <QuizComponent
                   key={quiz.uuid}
-                  className='bg-background rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow'
-                >
-                  <div className='flex items-start justify-between'>
-                    <div className='flex-1'>
-                      <Label variant='title' size='md' className='mb-3'>
-                        {quiz.title}
-                      </Label>
-                      <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-                        <div className='bg-gray-50 rounded-lg p-3'>
-                          <div className='text-sm text-gray-600 mb-1'>
-                            Otázky
-                          </div>
-                          <div className='text-2xl font-bold text-gray-900'>
-                            {quiz.questions.length}
-                          </div>
-                        </div>
-                        <div className='bg-gray-50 rounded-lg p-3'>
-                          <div className='text-sm text-gray-600 mb-1'>
-                            Pokusy
-                          </div>
-                          <div className='text-2xl font-bold text-blue-600'>
-                            {quiz.attemptsCount}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className='flex gap-2 ml-4'>
-                      <EditBtn icon={Edit} />
-                      <EditBtn icon={BarChart3} />
-                      <EditBtn
-                        icon={Trash2}
-                        bgColor='destructive'
-                        classNameBtn='hover:bg-destructive/10'
-                      />
-                    </div>
-                  </div>
-                </div>
+                  quiz={quiz}
+                  mode='lecturer'
+                  onSave={(updatedQuiz) => {
+                    console.log('Save:', updatedQuiz)
+                    // API call zde
+                  }}
+                  onDelete={() => {
+                    console.log('Delete:', quiz.uuid)
+                    // API call zde
+                  }}
+                />
               ))}
             </div>
           )}

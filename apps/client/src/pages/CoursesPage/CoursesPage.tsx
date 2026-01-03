@@ -89,6 +89,7 @@ const CoursesPage = () => {
                 {displayedCourses.map((course, index) => {
                   return (
                     <CourseComponent
+                      key={course.uuid}
                       course={course}
                       index={index}
                       type='classic'

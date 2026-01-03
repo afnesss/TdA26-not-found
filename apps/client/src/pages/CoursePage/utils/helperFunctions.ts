@@ -95,8 +95,10 @@ export const isQuizComplete = (
   totalQuestions: number,
   quizState: QuizStateById,
 ): boolean => {
-  const answers = quizState[quizId].answers ?? {}
+  const quizStateEntry = quizState[quizId]
 
+  if (!quizStateEntry) return false
+  const answers = quizState[quizId].answers ?? {}
   const answersCount = Object.values(answers).filter(
     (i) =>
       i.selectedIndex !== undefined ||

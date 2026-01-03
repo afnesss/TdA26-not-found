@@ -17,7 +17,13 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
 
       <div className='space-y-3'>
         {materials?.map((material) => {
-          return <MaterialCard material={material} type='classic' />
+          return (
+            <MaterialCard
+              key={material.uuid}
+              material={material}
+              type='classic'
+            />
+          )
         })}
       </div>
     </section>

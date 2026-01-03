@@ -11,7 +11,7 @@ const inputVariants = cva('w-full rounded-xl', {
           focus:border-accent-teal-light focus:ring-2 focus:ring-accent-teal/20 placeholder:text-muted-foreground \
           selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed\
             disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20',
-      ghost: 'border-none py-2 px-4',
+      ghost: 'focus:outline-none focus:ring-0 focus:bg-gray-100 py-2 px-4',
     },
   },
 })

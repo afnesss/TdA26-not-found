@@ -27,6 +27,7 @@ import {
 import type { Quiz, Question, QuizAnswer } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { Textarea } from '../ui/textarea'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -221,20 +222,20 @@ const QuizComponent = ({
     <div className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
       {/* Header */}
       <div
-        className='p-5 cursor-pointer hover:bg-gray-50 transition-colors'
+        className='p-3.5 md:px-5 md:py-4 cursor-pointer hover:bg-gray-50 transition-colors'
         onClick={toggleExpand}
       >
         <div className='flex items-center justify-between gap-4'>
           <div className='flex items-center gap-4 flex-1'>
             <div className='flex-1'>
               {mode === 'lecturer' ? (
-                <Input
+                <Textarea
                   className='mb-3 text-md md:text-xl font-bold pl-0'
                   variant={'ghost'}
                   value={displayQuiz.title}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => updateTitle(e.target.value)}
-                ></Input>
+                ></Textarea>
               ) : (
                 <Label className='mb-3' variant={'name'}>
                   {quiz.title}
@@ -265,15 +266,13 @@ const QuizComponent = ({
               </span>
             )}
             {mode === 'lecturer' && (
-              <button
-                className='p-2 hover:bg-destructive/10 rounded-full transition-colors'
+              <EditBtn
+                type='delete'
                 onClick={(e) => {
-                  e.stopPropagation()
+                  e?.stopPropagation()
                   onDelete?.()
                 }}
-              >
-                <Trash2 size={20} className='text-destructive' />
-              </button>
+              ></EditBtn>
             )}
             <button className='p-2 hover:bg-gray-200 rounded-full transition-colors'>
               {isExpanded ? (
@@ -304,59 +303,61 @@ const QuizComponent = ({
               <Fragment key={question.uuid ?? qIndex}>
                 <div>
                   {/* Question Header */}
-                  <div className='flex items-center gap-3 mb-4'>
-                    <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
-                      {qIndex + 1}
-                    </span>
+                  {/* Question Header */}
+                  <div className='flex flex-col md:flex-row md:items-center gap-3 mb-4'>
+                    {/* První řádek (mobile) / Levá část (desktop) */}
+                    <div className='flex items-center gap-3 flex-1'>
+                      <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
+                        {qIndex + 1}
+                      </span>
 
-                    {mode === 'lecturer' ? (
-                      <div className='flex-1 space-y-3'>
-                        <Input
+                      {mode === 'lecturer' ? (
+                        <Textarea
                           variant={'ghost'}
                           value={question.question}
                           onChange={(e) => {
                             e.preventDefault()
                             updateQuestionText(qIndex, e.target.value)
                           }}
-                          className='text-base font-medium'
+                          className='text-base font-medium flex-1'
                           placeholder='Zadejte otázku'
                         />
-                      </div>
-                    ) : (
-                      <Label size={'md'}>{question.question}</Label>
-                    )}
+                      ) : (
+                        <Label size={'md'} className='flex-1'>
+                          {question.question}
+                        </Label>
+                      )}
+                    </div>
 
+                    {/* Druhý řádek (mobile) / Pravá část (desktop) */}
                     {mode === 'lecturer' && (
-                      <>
-                        <div className='flex items-center gap-3 '>
-                          <Label size='sm' className='text-gray-600'>
-                            Typ:
-                          </Label>
-                          <Select
-                            value={question.type}
-                            onValueChange={(value: QuestionType) =>
-                              updateQuestionType(qIndex, value)
-                            }
-                          >
-                            <SelectTrigger className='w-40'>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='singleChoice'>
-                                Jedna správná
-                              </SelectItem>
-                              <SelectItem value='multipleChoice'>
-                                Více správných
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      <div className='flex items-center gap-3 pl-9 md:pl-0'>
+                        <Label size='sm' className='text-gray-600 shrink-0'>
+                          Typ:
+                        </Label>
+                        <Select
+                          value={question.type}
+                          onValueChange={(value: QuestionType) =>
+                            updateQuestionType(qIndex, value)
+                          }
+                        >
+                          <SelectTrigger className='w-full md:w-40'>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value='singleChoice'>
+                              Jedna správná
+                            </SelectItem>
+                            <SelectItem value='multipleChoice'>
+                              Více správných
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                         <EditBtn
                           onClick={() => removeQuestion(qIndex)}
-                          bgColor='desrtuckive'
-                          icon={Trash2}
+                          type='delete'
                         />
-                      </>
+                      </div>
                     )}
 
                     {mode === 'user' &&
@@ -430,13 +431,14 @@ const QuizComponent = ({
                                 />
                               </button>
 
-                              <Input
+                              <Textarea
                                 variant={'ghost'}
                                 value={option}
                                 onChange={(e) =>
                                   updateOption(qIndex, optIndex, e.target.value)
                                 }
                                 placeholder='Zadejte možnost'
+                                className='text-sm md:text-md'
                               />
 
                               {question.options.length > 2 && (

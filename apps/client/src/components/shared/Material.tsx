@@ -59,25 +59,29 @@ const MaterialCard = (props: MaterialCardProps) => {
   const isMd = useMediaQuery('(min-width: 768px)')
 
   return (
-    <div className='bg-background rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow'>
-      <div className='flex items-start gap-4'>
+    <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow '>
+      <div className='flex flex-col sm:flex-row items-start gap-2 md:gap-4'>
         {/* Icon */}
         <MaterialIcon material={material} className='hidden md:block mt-1' />
         {/* Content */}
-        <div className='flex-1 min-w-0'>
+        <div className='w-full'>
           {/* Title row with buttons */}
-          <div className='flex items-center justify-between gap-2 mb-1'>
+          <div className='flex items-start justify-between gap-2 sm:gap-4'>
+            {/* Levá část - ikona, název, info */}
             <div className='flex items-center gap-1 flex-1 min-w-0'>
               <MaterialIcon
                 material={material}
-                className='md:hidden block mr-1'
+                className='md:hidden block mr-1 shrink-0'
               />
 
-              <Label variant='title' size='md' className='flex-wrap'>
+              <Label
+                variant='title'
+                size='md'
+                className='wrap-break-word line-clamp-3 leading-snug'
+              >
                 {material.name}
               </Label>
 
-              {/* Popover for classic type */}
               {type === 'classic' && material.description && (
                 <div className='relative shrink-0'>
                   <Popover>
@@ -104,7 +108,7 @@ const MaterialCard = (props: MaterialCardProps) => {
 
             {/* Buttons for edit type - same row as title */}
             {type === 'edit' && (
-              <div className='flex gap-2 shrink-0'>
+              <div className='flex items-center gap-1 '>
                 {material.type === 'file' && props.onUpload && (
                   <EditBtn icon={Upload} onClick={props.onUpload} />
                 )}
@@ -112,29 +116,22 @@ const MaterialCard = (props: MaterialCardProps) => {
                   <EditBtn icon={Link2} onClick={props.onUpload} />
                 )}
                 <EditBtn icon={Edit} onClick={props.onEdit} />
-                <EditBtn
-                  icon={Trash2}
-                  bgColor='destructive'
-                  classNameBtn='hover:bg-destructive/10'
-                  onClick={props.onDelete}
-                />
+                <EditBtn type='delete' onClick={props.onDelete} />
               </div>
             )}
           </div>
 
           {/* Description for edit type */}
           {type === 'edit' && material.description && (
-            <p className='text-sm md:text-md text-gray-600 mb-2'>
+            <p className='text-xs sm:text-sm block line-clamp-3 text-gray-600 leading-relaxed wrap-break-word mb-2'>
               {material.description}
             </p>
           )}
 
           {/* File size or URL */}
-          <div className='flex items-center gap-4 text-sm text-gray-500'>
+          <div className='flex items-center gap-4 text-xs sm:text-sm text-gray-500'>
             {material.type === 'file' && (
-              <span className='font-medium'>
-                {formatFileSize(material.sizeBytes)}
-              </span>
+              <span className=''>{formatFileSize(material.sizeBytes)}</span>
             )}
             {material.type === 'url' && type === 'edit' && (
               <a
@@ -163,12 +160,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                   variant={'grid'}
                   size={'grid'}
                   className={cn(
-                    'bg-linear-to-br w-25',
+                    'bg-linear-to-br w-22 sm:w-25',
                     colorStyles.bg['accent-teal'],
                     colorStyles.text['accent-teal'],
                   )}
                 >
-                  <Download size={14} />
+                  <Download size={13} />
                   <span>Stáhnout</span>
                 </Button>
               </a>
@@ -178,12 +175,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                   variant={'grid'}
                   size={'grid'}
                   className={cn(
-                    'bg-linear-to-br w-25',
+                    'bg-linear-to-br w-22 sm:w-25',
                     colorStyles.bg['accent-teal-light'],
                     colorStyles.text['accent-teal-light'],
                   )}
                 >
-                  <Link2 size={14} />
+                  <Link2 size={13} />
                   <span>Otevřít</span>
                 </Button>
               </a>

@@ -73,11 +73,7 @@ const CourseComponent = (props: CourseCompProps) => {
           {type === 'edit' && (
             <div className='flex gap-2'>
               <EditBtn icon={Edit} onClick={props.onEdit} />
-              <EditBtn
-                icon={Trash2}
-                bgColor='destructive'
-                classNameBtn='hover:bg-destructive/10'
-              />
+              <EditBtn type='delete' />
             </div>
           )}
         </CardFooter>

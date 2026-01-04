@@ -27,9 +27,9 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline font-semibold cursor-pointer',
       },
       size: {
-        primary: 'px-5 md:px-7 py-2 md:py-3.5',
+        primary: 'px-5 lg:px-7 py-2 md:py-3.5',
         default: '',
-        grid: 'px-6 py-2 md:py-2.5',
+        grid: 'px-3 md:px-6 py-2 md:py-2.5',
         md: 'px-5 py-2 gap-2',
         sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-md px-7 has-[>svg]:px-4 py-3.5',
@@ -46,3 +46,17 @@ const buttonVariants = cva(
 )
 
 export default buttonVariants
+
+export const inputVariants = cva('w-full rounded-xl', {
+  variants: {
+    variant: {
+      default:
+        'px-4 py-2 text-foreground text-sm md:text-base bg-background/90 border-2\
+          border-gray-200 shadow-sm outline-none transition-all duration-300 hover:shadow-md focus:shadow-lg \
+          focus:border-accent-teal-light focus:ring-2 focus:ring-accent-teal/20 placeholder:text-muted-foreground \
+          selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed\
+            disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20',
+      ghost: 'focus:outline-none focus:ring-0 focus:bg-gray-100 py-2 px-4',
+    },
+  },
+})

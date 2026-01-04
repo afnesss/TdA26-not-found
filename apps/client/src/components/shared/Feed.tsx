@@ -48,11 +48,7 @@ const Feed = ({
               {post.type === 'manual' && type === 'edit' && (
                 <div className='flex gap-2 shrink-0'>
                   <EditBtn icon={Edit} />
-                  <EditBtn
-                    icon={Trash2}
-                    bgColor='destructive'
-                    classNameBtn='hover:bg-destructive/10'
-                  />
+                  <EditBtn type='delete' />
                 </div>
               )}
             </div>

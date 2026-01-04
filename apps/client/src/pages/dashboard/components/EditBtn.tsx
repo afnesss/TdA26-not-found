@@ -1,13 +1,14 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import type { LucideIcon } from 'lucide-react'
+import { Trash2, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type EditBtnProps = {
   bgColor?: string
-  icon: LucideIcon
-  onClick?: () => void
+  icon?: LucideIcon
+  onClick?: (e?: React.MouseEvent) => void
   classNameBtn?: string
+  type?: 'delete'
 }
 
 const EditBtn: React.FC<EditBtnProps> = ({
@@ -15,18 +16,24 @@ const EditBtn: React.FC<EditBtnProps> = ({
   icon: Icon,
   onClick,
   classNameBtn,
+  type,
 }) => {
-  const hoverStyle = `hover:bg-${bgColor}-100`
-  const textStyle = `text-${bgColor}`
+  let hoverStyle = `hover:bg-${bgColor}-100`
+  let textStyle = `text-${bgColor}`
+  if (type === 'delete') {
+    Icon = Trash2
+    textStyle = 'text-destructive'
+    hoverStyle = 'hover:bg-destructive/10'
+  }
 
   return (
     <Button
       variant='ghost'
       size='icon-sm'
-      className={cn(hoverStyle, classNameBtn)}
+      className={cn(hoverStyle, 'size-6 min-[400px]:size-7', classNameBtn)}
       onClick={onClick}
     >
-      <Icon className={`w-4 h-4 ${textStyle}`} />
+      {Icon && <Icon className={`w-4 h-4 ${textStyle}`} />}
     </Button>
   )
 }

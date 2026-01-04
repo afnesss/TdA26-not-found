@@ -58,8 +58,8 @@ const CoursesPage = () => {
   return (
     <div className='h-full'>
       {/* Hero */}
-      <div className='max-w-7xl mx-auto px-4 pt-3 '>
-        <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center pb-6'>
+      <div className='max-w-7xl mx-auto lg:px-4 pt-3 '>
+        <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center pb-4 lg:pb-6'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpen}
@@ -81,7 +81,7 @@ const CoursesPage = () => {
         />
 
         {/* Kurzy Grid */}
-        <div className=' relative py-6'>
+        <div className=' relative py-4 md:py-6'>
           <>
             {/* Grid kurzů */}
             {displayedCourses && (

@@ -1,39 +1,17 @@
-import {
-  getCourses,
-  getFeedForCourse,
-  getMaterialsForCourse,
-  getQuizzesForCourse,
-} from '@/api/queries'
-import Feed from '@/components/shared/Feed'
+import { getCourses } from '@/api/queries'
 import SearchBar from '@/components/shared/SearchBar'
+import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { FilterIds } from '@/lib/constants'
-import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
-import { formatFileSize } from '@/lib/utils'
+import type { CourseSummary } from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  Edit,
-  FileText,
-  Link2,
-  Plus,
-  Send,
-  Trash2,
-  Upload,
-} from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
-import EmptyStateComp from '@/components/shared/StateComp'
-import StateComp from '@/components/shared/StateComp'
-import { useNavigate } from 'react-router'
 
 const DashboardDesign1 = () => {
-  const [activeTab, setActiveTab] = useState('courses')
-  const [selectedCourse, setSelectedCourse] = useState<CourseSummary | null>(
-    null,
-  )
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
@@ -47,39 +25,6 @@ const DashboardDesign1 = () => {
     queryFn: getCourses,
   })
 
-  const {
-    data: materials = [],
-    isLoading: materialsLoading,
-    isError: materialsError,
-    refetch: refetchMaterials,
-  } = useQuery<Material[] | null>({
-    queryKey: ['materials', selectedCourse?.uuid],
-    queryFn: () => getMaterialsForCourse(selectedCourse!.uuid),
-    enabled: Boolean(selectedCourse),
-  })
-
-  const {
-    data: quizzes = [],
-    isLoading: quizzesLoading,
-    isError: quizzesError,
-    refetch: refetchQuizzes,
-  } = useQuery<Quiz[] | null>({
-    queryKey: ['quizzes', selectedCourse?.uuid],
-    queryFn: () => getQuizzesForCourse(selectedCourse!.uuid),
-    enabled: Boolean(selectedCourse),
-  })
-
-  const {
-    data: feed = [],
-    isLoading: feedLoading,
-    isError: feedError,
-    refetch: refetchFeed,
-  } = useQuery<FeedItem[] | null>({
-    queryKey: ['feed', selectedCourse?.uuid],
-    queryFn: () => getFeedForCourse(selectedCourse!.uuid),
-    enabled: Boolean(selectedCourse),
-  })
-
   const filteredCourses = filterCourses(courses, searchQuery)
 
   const handleEditCourse = (course: CourseSummary) => {
@@ -90,27 +35,48 @@ const DashboardDesign1 = () => {
     <>
       {/* Main Content */}
       <div className='max-w-7xl mx-auto px-4  '>
-        {/* Navigation - Filter Style */}
-
-        {/* Courses Tab */}
-
         <div className='space-y-6 pt-2'>
           {/* Hero Section */}
-          <div className='flex  gap-3 md:gap-6 justify-between items-center'>
+          <div className='flex flex-col md:flex-row gap-3 md:gap-6 md:justify-between md:items-center'>
             <Label
               variant='title'
               size='primary'
-              className='self-startwhitespace-nowrap'
+              className='whitespace-nowrap md:shrink-0'
             >
               Správa kurzů
             </Label>
-            <SearchBar
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
-            <Button variant='primary' size='primary'>
+
+            {/* Mobile: Search + Button v řádku */}
+            <div className='flex md:hidden flex-row gap-2 items-center'>
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+              <Button
+                variant='primary'
+                size='primary'
+                className='px-3 shrink-0'
+              >
+                <Plus className='w-5 h-5' />
+              </Button>
+            </div>
+
+            {/* Desktop: Search uprostřed */}
+            <div className='hidden md:flex md:flex-1 md:justify-center md:px-6'>
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+            </div>
+
+            {/* Desktop: Button vpravo */}
+            <Button
+              variant='primary'
+              size='primary'
+              className='hidden md:flex px-4'
+            >
               <Plus className='w-5 h-5' />
-              <span className='hidden md:block'>Vytvořit kurz</span>
+              <span>Vytvořit kurz</span>
             </Button>
           </div>
 
@@ -123,7 +89,6 @@ const DashboardDesign1 = () => {
                 index={index}
                 type='edit'
                 onEdit={() => {
-                  setSelectedCourse(course)
                   handleEditCourse(course!)
                 }}
               />

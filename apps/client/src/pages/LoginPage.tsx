@@ -27,10 +27,12 @@ const LoginPage = () => {
   const onSubmit = async (data: FieldValues) => {
     console.log('Form submitted')
 
-    auth.login(data.name, data.password, setError)
-
-    navigate('/dashboard')
-    reset()
+    const isSuccess = auth.login(data.name, data.password, setError)
+    console.log(isSuccess)
+    if (isSuccess) {
+      navigate('/dashboard')
+      reset()
+    }
   }
 
   return (

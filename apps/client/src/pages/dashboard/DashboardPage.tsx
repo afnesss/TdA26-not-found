@@ -34,7 +34,7 @@ const DashboardDesign1 = () => {
   return (
     <>
       {/* Main Content */}
-      <div className='max-w-7xl mx-auto px-4  '>
+      <div className='max-w-7xl mx-auto md:px-4  '>
         <div className='space-y-6 pt-2'>
           {/* Hero Section */}
           <div className='flex flex-col md:flex-row gap-3 md:gap-6 md:justify-between md:items-center'>

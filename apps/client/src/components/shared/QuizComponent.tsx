@@ -15,6 +15,7 @@ import {
   Check,
   Play,
   Edit,
+  HelpCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -28,6 +29,7 @@ import type { Quiz, Question, QuizAnswer } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
+import { Checkbox } from '../ui/checkbox'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -228,9 +230,9 @@ const QuizComponent = ({
         <div className='flex items-center justify-between gap-4'>
           <div className='flex items-center gap-4 flex-1'>
             <div className='flex-1'>
-              {mode === 'lecturer' ? (
+              {mode === 'lecturer' && isExpanded ? (
                 <Textarea
-                  className='mb-3 text-md md:text-xl font-bold pl-0'
+                  className=' text-md md:text-xl font-bold'
                   variant={'ghost'}
                   value={displayQuiz.title}
                   onClick={(e) => e.stopPropagation()}
@@ -241,17 +243,23 @@ const QuizComponent = ({
                   {quiz.title}
                 </Label>
               )}
-
-              <div className='flex items-center gap-4 text-sm text-gray-600'>
-                <span className='flex items-center gap-1.5'>
-                  <Clock size={16} className='text-primary' />
-                  <span className='font-medium'>
+              <div
+                className='
+                flex flex-wrap
+                gap-x-4 gap-y-1
+                text-sm text-gray-600
+              '
+              >
+                <span className='flex items-center gap-1.5 whitespace-nowrap'>
+                  <CheckCircle size={15} className='text-primary' />
+                  <span className='text-xs sm:text-sm'>
                     {displayQuiz.attemptsCount} vyplnění
                   </span>
                 </span>
-                <span className='flex items-center gap-1.5'>
-                  <CheckCircle size={16} className='text-secondary' />
-                  <span className='font-medium'>
+
+                <span className='flex items-center gap-1.5 whitespace-nowrap'>
+                  <HelpCircle size={15} className='text-secondary' />
+                  <span className='text-xs sm:text-sm'>
                     {displayQuiz.questions.length} otázek
                   </span>
                 </span>
@@ -259,7 +267,7 @@ const QuizComponent = ({
             </div>
           </div>
 
-          <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-2 shrink-0'>
             {mode === 'lecturer' && hasChanges && (
               <span className='text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full'>
                 Neuloženo
@@ -272,18 +280,19 @@ const QuizComponent = ({
                   e?.stopPropagation()
                   onDelete?.()
                 }}
-              ></EditBtn>
+              />
             )}
+
             <button className='p-2 hover:bg-gray-200 rounded-full transition-colors'>
               {isExpanded ? (
                 <ChevronUp
-                  size={24}
+                  size={22}
                   strokeWidth={3}
                   className='text-secondary'
                 />
               ) : (
                 <ChevronDown
-                  size={24}
+                  size={22}
                   strokeWidth={3}
                   className='text-secondary'
                 />
@@ -319,7 +328,7 @@ const QuizComponent = ({
                             e.preventDefault()
                             updateQuestionText(qIndex, e.target.value)
                           }}
-                          className='text-base font-medium flex-1'
+                          className='text-sm sm:text-base font-medium flex-1'
                           placeholder='Zadejte otázku'
                         />
                       ) : (
@@ -407,29 +416,23 @@ const QuizComponent = ({
                             <div
                               key={optIndex}
                               className={cn(
-                                'flex items-center gap-2 px-2 md:px-3 md:py-1 rounded-lg transition-all border-2',
+                                'flex items-center gap-2 px-2 md:px-3 py-1 rounded-lg transition-all border-2',
                                 isCorrect
                                   ? 'border-secondary bg-secondary/10'
                                   : 'border-gray-200 bg-gray-50',
                               )}
                             >
-                              <button
-                                onClick={() =>
+                              <Checkbox
+                                variant={
+                                  question.type === 'singleChoice'
+                                    ? 'radio'
+                                    : 'checkbox'
+                                }
+                                checked={isCorrect}
+                                onCheckedChange={() =>
                                   toggleCorrectAnswer(qIndex, optIndex)
                                 }
-                                className={cn(
-                                  'shrink-0 p-1 rounded transition-colors',
-                                  isCorrect
-                                    ? 'text-secondary hover:bg-secondary/20'
-                                    : 'text-gray-400 hover:bg-gray-200',
-                                )}
-                                title='Označit jako správnou odpověď'
-                              >
-                                <Star
-                                  size={20}
-                                  fill={isCorrect ? 'currentColor' : 'none'}
-                                />
-                              </button>
+                              />
 
                               <Textarea
                                 variant={'ghost'}
@@ -438,7 +441,7 @@ const QuizComponent = ({
                                   updateOption(qIndex, optIndex, e.target.value)
                                 }
                                 placeholder='Zadejte možnost'
-                                className='text-sm md:text-md'
+                                className='text-xs md:text-sm'
                               />
 
                               {question.options.length > 2 && (
@@ -483,17 +486,15 @@ const QuizComponent = ({
                                   'border-secondary border-2',
                               )}
                             >
-                              <input
-                                type={
+                              <Checkbox
+                                variant={
                                   question.type === 'singleChoice'
                                     ? 'radio'
                                     : 'checkbox'
                                 }
-                                name={question.uuid}
                                 checked={isSelected}
                                 disabled={isSubmitted}
-                                className='shrink-0 w-4 h-4 md:w-5 md:h-5 text-primary accent-primary'
-                                onChange={() => {
+                                onCheckedChange={() => {
                                   if (question.uuid && onAnswerChange) {
                                     if (question.type === 'singleChoice') {
                                       onAnswerChange(question.uuid, {

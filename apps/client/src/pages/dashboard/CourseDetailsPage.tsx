@@ -4,39 +4,22 @@ import {
   getMaterialsForCourse,
   getQuizzesForCourse,
 } from '@/api/queries'
-import EditBtn from '@/pages/dashboard/components/EditBtn'
 import Feed from '@/components/shared/Feed'
 import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
+import QuizComponent from '@/components/shared/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import TabButton from '@/components/shared/TabButton'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { colorStyles } from '@/lib/constants'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  BookOpen,
-  Edit,
-  FileText,
-  MessageSquare,
-  Plus,
-  Send,
-  Trash2,
-} from 'lucide-react'
+import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { colorStyles } from '@/lib/constants'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import DetailHeader from './components/DetailHeader'
-import QuizComponent from '@/components/shared/QuizComponent'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -143,7 +126,7 @@ const CourseDetailPage = () => {
   return (
     <div className='max-w-7xl mx-auto lg:px-4'>
       {/* Navigation - Tabs */}
-      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-3 lg:mb-6'>
+      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4 lg:mb-6'>
         <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1 mt-4'>
           <TabButton
             isActive={activeTab === 'details'}

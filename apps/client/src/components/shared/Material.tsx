@@ -60,19 +60,26 @@ const MaterialCard = (props: MaterialCardProps) => {
 
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow '>
-      <div className='flex flex-col sm:flex-row items-start gap-2 md:gap-4'>
+      <div className='flex  items-start gap-2 md:gap-4'>
         {/* Icon */}
-        <MaterialIcon material={material} className='hidden md:block mt-1' />
+        <MaterialIcon
+          material={material}
+          className={cn(
+            `mt-1 ${type === 'classic' ? 'block' : 'hidden sm:block'} `,
+          )}
+        />
         {/* Content */}
-        <div className='w-full'>
+        <div className='w-full flex-col sm:flex-row'>
           {/* Title row with buttons */}
-          <div className='flex items-start justify-between gap-2 sm:gap-4'>
+          <div className='flex justify-between gap-2 sm:gap-4'>
             {/* Levá část - ikona, název, info */}
             <div className='flex items-center gap-1 flex-1 min-w-0'>
-              <MaterialIcon
-                material={material}
-                className='md:hidden block mr-1 shrink-0'
-              />
+              {type === 'edit' && (
+                <MaterialIcon
+                  material={material}
+                  className='sm:hidden block mr-1 shrink-0'
+                />
+              )}
 
               <Label
                 variant='title'
@@ -87,7 +94,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                   <Popover>
                     <PopoverTrigger>
                       <Info
-                        className='text-gray-400 hover:text-primary active:text-primary cursor-pointer'
+                        className='text-gray-400 hover:text-primary active:text-primary cursor-pointer mt-1'
                         size={16}
                       />
                     </PopoverTrigger>
@@ -123,7 +130,7 @@ const MaterialCard = (props: MaterialCardProps) => {
 
           {/* Description for edit type */}
           {type === 'edit' && material.description && (
-            <p className='text-xs sm:text-sm block line-clamp-3 text-gray-600 leading-relaxed wrap-break-word mb-2'>
+            <p className='text-xs sm:text-sm block line-clamp-3 text-gray-600 leading-relaxed wrap-break-word mt-2 sm:mt-0 mb-2'>
               {material.description}
             </p>
           )}

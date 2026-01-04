@@ -34,7 +34,7 @@ const Feed = ({
                 >
                   {post.type === 'manual' ? 'Příspěvek' : 'Událost'}
                 </span>
-                <span className='text-sm text-gray-500'>
+                <span className='text-xs sm:text-sm text-gray-500'>
                   {formatDate(post.createdAt)}
                 </span>
                 {post.edited && post.updatedAt && (
@@ -46,7 +46,7 @@ const Feed = ({
 
               {/* Buttons */}
               {post.type === 'manual' && type === 'edit' && (
-                <div className='flex gap-2 shrink-0'>
+                <div className='flex gap-1 shrink-0'>
                   <EditBtn icon={Edit} />
                   <EditBtn type='delete' />
                 </div>

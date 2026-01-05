@@ -28,6 +28,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import DetailHeader from './components/DetailHeader'
+import Breadcrumb from '@/components/shared/Breadcrumb'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -135,22 +136,6 @@ const CourseDetailPage = () => {
     <div className='max-w-7xl mx-auto lg:px-4'>
       {/* Navigation - Tabs */}
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4 lg:mb-5 mt-2'>
-        <div className='flex items-center'>
-          <Button
-            variant={'link'}
-            className={cn('bg-linear-to-br py-1 h-8 w-fit')}
-            onClick={() => navigate('/courses')}
-          >
-            <span>Sprava kurzů</span>
-          </Button>
-          <ChevronRight className='text-accent-blue size-3 md:size-4 md:mt-1' />
-          <Button
-            variant={'link'}
-            className={cn('bg-linear-to-br py-1 h-8 w-fit')}
-          >
-            <span>Detaily kurzu</span>
-          </Button>
-        </div>
         <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1'>
           <TabButton
             isActive={activeTab === 'details'}
@@ -189,7 +174,15 @@ const CourseDetailPage = () => {
             <div
               className={`h-2 bg-linear-to-r ${colorStyles.gradient['accent-teal']}`}
             />
-            <div className='p-4 lg:p-6'>
+
+            <div className='p-4 lg:p-6 -mt-2'>
+              <Breadcrumb
+                items={[
+                  { label: 'Sprava kurzů', path: '/dashboard' },
+                  { label: 'Detaily kurzu' },
+                ]}
+                className='mb-2'
+              />
               <CardTitle>
                 <Label variant='title' size='lg'>
                   Detaily kurzu

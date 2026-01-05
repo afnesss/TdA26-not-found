@@ -19,7 +19,7 @@ const labelVariants = cva('', {
     size: {
       primary: 'max-sm:text-2xl text-3xl lg:text-4xl',
       default: 'text-base md:text-xl',
-      xl: 'text-2xl md:text-3xl font-bold mb-3',
+      xl: 'text-xl sm:text-2xl md:text-3xl font-bold mb-3',
       lg: 'text-xl md:text-2xl',
       md: 'text-sm sm:text-base',
       sm: 'text-xs sm:text-sm',

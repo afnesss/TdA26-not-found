@@ -4,7 +4,8 @@ import {
   getMaterialsForCourse,
   getQuizzesForCourse,
 } from '@/api/queries'
-import Feed from '@/components/shared/Feed'
+// import Feed from '@/components/shared/Feed'
+import FeedItemComp from '@/components/shared/FeedItemComp'
 import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
 import QuizComponent from '@/components/shared/QuizComponent'
@@ -15,8 +16,15 @@ import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { colorStyles } from '@/lib/constants'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
+import {
+  BarChart3,
+  BookOpen,
+  ChevronRight,
+  FileText,
+  MessageSquare,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import DetailHeader from './components/DetailHeader'
@@ -126,8 +134,24 @@ const CourseDetailPage = () => {
   return (
     <div className='max-w-7xl mx-auto lg:px-4'>
       {/* Navigation - Tabs */}
-      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4 lg:mb-6'>
-        <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1 mt-4'>
+      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4 lg:mb-5 mt-2'>
+        <div className='flex items-center'>
+          <Button
+            variant={'link'}
+            className={cn('bg-linear-to-br py-1 h-8 w-fit')}
+            onClick={() => navigate('/courses')}
+          >
+            <span>Sprava kurzů</span>
+          </Button>
+          <ChevronRight className='text-accent-blue size-3 md:size-4 md:mt-1' />
+          <Button
+            variant={'link'}
+            className={cn('bg-linear-to-br py-1 h-8 w-fit')}
+          >
+            <span>Detaily kurzu</span>
+          </Button>
+        </div>
+        <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1'>
           <TabButton
             isActive={activeTab === 'details'}
             onClick={() => handleTabChange('details')}
@@ -306,7 +330,17 @@ const CourseDetailPage = () => {
 
           {/* Feed List */}
           {!feedError && feed && feed.length > 0 && (
-            <Feed feed={feed} type='edit' />
+            <div className='bg-background rounded-xl shadow-md p-3 md:p-6'>
+              <div className='space-y-4'>
+                {feed.map((feedItem) => (
+                  <FeedItemComp
+                    feedItem={feedItem}
+                    key={feedItem.uuid}
+                    type='edit'
+                  />
+                ))}
+              </div>
+            </div>
           )}
 
           {/* Empty State */}

@@ -9,6 +9,7 @@ type EditBtnProps = {
   onClick?: (e?: React.MouseEvent) => void
   classNameBtn?: string
   type?: 'delete'
+  iconClassName?: string
 }
 
 const EditBtn: React.FC<EditBtnProps> = ({
@@ -17,6 +18,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
   onClick,
   classNameBtn,
   type,
+  iconClassName,
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
@@ -33,7 +35,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
       className={cn(hoverStyle, 'size-6 min-[400px]:size-7', classNameBtn)}
       onClick={onClick}
     >
-      {Icon && <Icon className={`w-4 h-4 ${textStyle}`} />}
+      {Icon && <Icon className={cn(`w-4 h-4 ${textStyle}`, iconClassName)} />}
     </Button>
   )
 }

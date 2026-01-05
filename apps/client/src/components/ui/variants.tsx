@@ -23,8 +23,8 @@ const buttonVariants = cva(
         grid: 'flex items-center rounded-xl font-bold text-sm hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer',
         ghost:
           'hover:text-primary active-text-primary cursor-pointer text-gray-400 transition-colors',
-        tab: 'text-xs md:text-base text-background hover:text-secondary active:text-secondary font-semibold cursor-pointer',
-        link: 'text-primary underline-offset-4 hover:underline font-semibold cursor-pointer',
+        tab: 'text-sm md:text-base text-background hover:text-secondary active:text-secondary font-semibold cursor-pointer',
+        link: 'text-xs md:text-sm text-accent-blue underline-offset-2 hover:underline font-semibold cursor-pointer',
       },
       size: {
         primary: 'px-5 lg:px-7 py-2 md:py-3.5',

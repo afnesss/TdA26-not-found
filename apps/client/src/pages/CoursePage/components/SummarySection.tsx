@@ -2,7 +2,7 @@ import React from 'react'
 import { colorStyles } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { cn } from '@/lib/utils'
 
@@ -19,20 +19,24 @@ const SummarySection = ({ name, description }: SummarySectionProps) => {
       <div className='bg-background rounded-xl border border-gray-100 overflow-hidden relative'>
         <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
 
-        <div className='px-3 md:px-5 py-5 gap-3 flex flex-col'>
-          <div className='flex flex-col md:flex-row gap-3 items-start md:items-center'>
+        <div className='px-3 md:px-6 py-5 gap-2 flex flex-col'>
+          <div className='flex items-center'>
             <Button
-              variant={'grid'}
-              className={cn(
-                'bg-linear-to-br px-3 py-1 h-8',
-                colorStyles.bg['accent-teal-light'],
-                colorStyles.text['accent-teal-light'],
-              )}
-              onClick={() => navigate(-1)}
+              variant={'link'}
+              className={cn('bg-linear-to-br py-1 h-8 w-fit')}
+              onClick={() => navigate('/courses')}
             >
-              <ChevronLeft size={16} />
-              <span>Zpět</span>
+              <span>Kurzy</span>
             </Button>
+            <ChevronRight className='text-accent-blue size-4 mt-1' />
+            <Button
+              variant={'link'}
+              className={cn('bg-linear-to-br py-1 h-8 w-fit')}
+            >
+              <span>Detaily kurzu</span>
+            </Button>
+          </div>
+          <div className='flex flex-col md:flex-row gap-3 items-start md:items-center'>
             <Label className='mb-0' size='xl'>
               {name}
             </Label>

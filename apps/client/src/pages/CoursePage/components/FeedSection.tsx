@@ -1,4 +1,4 @@
-import Feed from '@/components/shared/Feed'
+import FeedItemComp from '@/components/shared/FeedItemComp'
 import { Label } from '@/components/ui/label'
 import type { FeedItem } from '@/lib/schemas'
 
@@ -13,7 +13,14 @@ const FeedSection = ({ feed }: FeedSectionProps) => {
         Oznámení a novinky
       </Label>
 
-      <Feed feed={feed} type='classic' />
+      {/* <Feed feed={feed} type='classic' /> */}
+      <div className='bg-background rounded-xl shadow-md p-3 md:p-6'>
+        <div className='space-y-4'>
+          {feed.map((post) => (
+            <FeedItemComp feedItem={post} key={post.uuid} type='classic' />
+          ))}
+        </div>
+      </div>
     </section>
   )
 }

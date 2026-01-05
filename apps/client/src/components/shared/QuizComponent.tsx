@@ -237,7 +237,7 @@ const QuizComponent = ({
                   value={displayQuiz.title}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) => updateTitle(e.target.value)}
-                ></Textarea>
+                />
               ) : (
                 <Label className='mb-3' variant={'name'}>
                   {quiz.title}
@@ -304,7 +304,7 @@ const QuizComponent = ({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className='px-5 pb-5 space-y-4 border-t border-gray-100 pt-5 bg-gray-50/50'>
+        <div className='p-3 md:p-5 space-y-4 border-t border-gray-100 bg-gray-50/50'>
           {/* Questions */}
           {displayQuiz.questions.map((origQuestion, qIndex) => {
             const question = origQuestion as Question
@@ -559,7 +559,7 @@ const QuizComponent = ({
           )}
 
           {/* Footer Actions */}
-          <div className='flex flex-col lg:mx-10 pt-4 border-t border-gray-100'>
+          <div className='flex flex-col lg:mx-10 pt-4 border-t-2 border-gray-100'>
             {mode === 'user' ? (
               <div className='flex flex-row items-center justify-between'>
                 <div className='flex items-center gap-3 md:gap-10 flex-col md:flex-row'>

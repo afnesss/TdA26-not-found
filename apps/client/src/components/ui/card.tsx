@@ -46,7 +46,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
     <p
       data-slot='card-description'
       className={cn(
-        'text-sm text-gray-600 relative z-10 leading-relaxed',
+        'text-xs sm:text-sm text-gray-600 relative z-10 leading-relaxed',
         className,
       )}
       {...props}
@@ -82,7 +82,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot='card-footer'
       className={cn(
-        'flex items-center gap-2 text-xs md:text-sm text-gray-500 relative z-10 justify-between pt-4 border-t border-gray-200',
+        'flex items-center gap-2 text-xs md:text-sm text-gray-500 relative z-10 justify-between pt-2 md:pt-4 border-t border-gray-200',
         className,
       )}
       {...props}

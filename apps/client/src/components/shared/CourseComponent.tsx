@@ -44,9 +44,9 @@ const CourseComponent = (props: CourseCompProps) => {
 
       <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
         <CardContent>
-          <CardTitle className='mb-4'>{course.name}</CardTitle>
+          <CardTitle className='mb-2 md:mb-4'>{course.name}</CardTitle>
 
-          <CardDescription className='mb-4 line-clamp-3'>
+          <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
             {course.description}
           </CardDescription>
         </CardContent>

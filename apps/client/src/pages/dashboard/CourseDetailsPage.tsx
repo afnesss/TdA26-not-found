@@ -1,9 +1,9 @@
+import { getCourses } from '@/api/queries/courseQueries'
 import {
-  getCourses,
   getFeedForCourse,
   getMaterialsForCourse,
   getQuizzesForCourse,
-} from '@/api/queries'
+} from '@/api/queries/queries'
 // import Feed from '@/components/shared/Feed'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import FormField from '@/components/shared/FormField'

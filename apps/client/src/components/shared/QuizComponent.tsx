@@ -603,9 +603,7 @@ const QuizComponent = ({
                   size='primary'
                   onClick={handleSave}
                   disabled={!hasChanges}
-                  className='min-w-50'
                 >
-                  <Save size={20} />
                   Uložit změny
                 </Button>
               </div>

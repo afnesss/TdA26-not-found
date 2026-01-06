@@ -1,4 +1,4 @@
-import { getCourses } from '@/api/queries'
+import { getCourses } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import { type FilterIds } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'

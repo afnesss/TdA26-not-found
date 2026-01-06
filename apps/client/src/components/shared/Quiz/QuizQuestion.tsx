@@ -1,0 +1,196 @@
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import type { Question, QuizAnswer } from '@/lib/schemas'
+import type { QuizState } from '@/lib/types'
+import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { Check, Plus, X } from 'lucide-react'
+import QuizOption from './QuizOption'
+
+type QuestionType = 'singleChoice' | 'multipleChoice'
+
+type QuizQuestionProps = {
+  question: Question
+  qIndex: number
+  mode: 'user' | 'lecturer'
+
+  // Lecturer mode
+  onQuestionTextUpdate?: (text: string) => void
+  onQuestionTypeChange?: (type: QuestionType) => void
+  onQuestionRemove?: () => void
+  onOptionUpdate?: (optIndex: number, value: string) => void
+  onOptionRemove?: (optIndex: number) => void
+  onCorrectToggle?: (optIndex: number) => void
+  onAddOption?: () => void
+
+  // User mode
+  userState?: QuizState
+  onAnswerChange?: (
+    questionId: string,
+    answer: { selectedIndex?: number; selectedIndices?: number[] },
+  ) => void
+}
+
+const QuizQuestion = ({
+  question,
+  qIndex,
+  mode,
+  onQuestionTextUpdate,
+  onQuestionTypeChange,
+  onQuestionRemove,
+  onOptionUpdate,
+  onOptionRemove,
+  onCorrectToggle,
+  onAddOption,
+  userState,
+  onAnswerChange,
+}: QuizQuestionProps) => {
+  // User mode answer logic
+  const answer = question.uuid
+    ? (userState?.answers as unknown as Record<string, QuizAnswer>)?.[
+        question.uuid
+      ]
+    : undefined
+
+  const isSubmitted = userState?.status === 'submitted'
+  const showCorrect = userState?.showCorrect
+
+  return (
+    <div>
+      {/* Question Header */}
+      <div className='flex flex-col md:flex-row md:items-center gap-3 mb-4'>
+        {/* Question number and text */}
+        <div className='flex items-center gap-3 flex-1'>
+          <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
+            {qIndex + 1}
+          </span>
+
+          {mode === 'lecturer' ? (
+            <Textarea
+              variant='ghost'
+              value={question.question}
+              onChange={(e) => {
+                e.preventDefault()
+                onQuestionTextUpdate?.(e.target.value)
+              }}
+              className='text-xs sm:text-base font-medium flex-1'
+              placeholder='Zadejte otázku'
+            />
+          ) : (
+            <Label size='md' className='flex-1 text-xs sm:text-base'>
+              {question.question}
+            </Label>
+          )}
+        </div>
+
+        {/* Lecturer controls */}
+        {mode === 'lecturer' && (
+          <div className='flex items-center gap-3 pl-9 md:pl-0'>
+            <Label size='sm' className='text-gray-600 shrink-0'>
+              Typ:
+            </Label>
+            <Select
+              value={question.type}
+              onValueChange={(value: QuestionType) =>
+                onQuestionTypeChange?.(value)
+              }
+            >
+              <SelectTrigger className='w-fit md:w-40'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='singleChoice'>Jedna správná</SelectItem>
+                <SelectItem value='multipleChoice'>Více správných</SelectItem>
+              </SelectContent>
+            </Select>
+            <EditBtn onClick={onQuestionRemove} type='delete' />
+          </div>
+        )}
+
+        {/* User result indicator */}
+        {mode === 'user' &&
+          isSubmitted &&
+          (userState.results?.correctPerQuestion[qIndex] ? (
+            <Check className='text-secondary' size={22} strokeWidth={3} />
+          ) : (
+            <X className='text-destructive' size={22} strokeWidth={3} />
+          ))}
+      </div>
+
+      {/* Options */}
+      <div className='space-y-2.5 lg:pl-10'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-4'>
+          {question.options.map((option, optIndex) => {
+            const isCorrect =
+              question.type === 'singleChoice'
+                ? question.correctIndex === optIndex
+                : (question.correctIndices || []).includes(optIndex)
+
+            const isSelected =
+              question.type === 'singleChoice'
+                ? answer?.selectedIndex === optIndex
+                : (answer?.selectedIndices ?? []).includes(optIndex)
+
+            return (
+              <QuizOption
+                key={optIndex}
+                option={option}
+                optIndex={optIndex}
+                question={question}
+                mode={mode}
+                // Lecturer props
+                isCorrect={isCorrect}
+                onCorrectToggle={() => onCorrectToggle?.(optIndex)}
+                onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
+                onOptionRemove={() => onOptionRemove?.(optIndex)}
+                canRemove={question.options.length > 2}
+                // User props
+                isSelected={isSelected}
+                isSubmitted={isSubmitted}
+                showCorrect={showCorrect}
+                onAnswerChange={() => {
+                  if (question.uuid && onAnswerChange) {
+                    if (question.type === 'singleChoice') {
+                      onAnswerChange(question.uuid, {
+                        selectedIndex: optIndex,
+                      })
+                    } else {
+                      const current = answer?.selectedIndices || []
+                      const newIndices = current.includes(optIndex)
+                        ? current.filter((i) => i !== optIndex)
+                        : [...current, optIndex]
+                      onAnswerChange(question.uuid, {
+                        selectedIndices: newIndices,
+                      })
+                    }
+                  }
+                }}
+              />
+            )
+          })}
+        </div>
+
+        {mode === 'lecturer' && (
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={onAddOption}
+            className='w-full md:w-auto'
+          >
+            <Plus size={16} />
+            Přidat možnost
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default QuizQuestion

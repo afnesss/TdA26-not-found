@@ -20,7 +20,7 @@ import {
   isQuizComplete,
 } from '../utils/helperFunctions'
 import { useCourseMutation } from '../utils/courseMutation'
-import QuizComponent from '@/components/shared/QuizComponent'
+import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 
 type QuizesSectionProps = {
   courseData?: CourseDetail | null

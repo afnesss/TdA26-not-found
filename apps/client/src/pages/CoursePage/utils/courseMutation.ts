@@ -1,4 +1,4 @@
-import { submitQuiz } from '@/api/queries'
+import { submitQuiz } from '@/api/queries/queries'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   type CourseDetail,

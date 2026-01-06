@@ -1,12 +1,12 @@
-import { getCourses } from '@/api/queries/courseQueries'
-import { getFeedForCourse } from '@/api/queries/queries'
+import { getCourses, updateCourse } from '@/api/queries/courseQueries'
+import { getFeed } from '@/api/queries/feedQueries'
 import { getMaterials } from '@/api/queries/materialQueries'
 import { getQuizzes } from '@/api/queries/quizQueries'
 // import Feed from '@/components/shared/Feed'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
-import QuizComponent from '@/components/shared/QuizComponent'
+import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import TabButton from '@/components/shared/TabButton'
 import { Button } from '@/components/ui/button'
@@ -33,14 +33,8 @@ const CourseDetailPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Active tab derived from URL hash (no local state to avoid synchronous setState in effects)
   const activeTab = location.hash.replace('#', '') || 'details'
 
-  // Form state for details
-  const [courseName, setCourseName] = useState('')
-  const [courseDescription, setCourseDescription] = useState('')
-
-  // Fetch the specific course
   const {
     data: courses = [],
     isError: courseError,
@@ -49,27 +43,11 @@ const CourseDetailPage = () => {
     queryKey: ['courses'],
     queryFn: getCourses,
   })
-
   const selectedCourse = courses.find((c) => c.uuid === courseId) || null
-
-  // Update form when course loads
-  useEffect(() => {
-    if (!selectedCourse) return
-
-    // Defer updates to avoid calling setState synchronously inside the effect
-    let cancelled = false
-    Promise.resolve().then(() => {
-      if (cancelled) return
-      setCourseName(selectedCourse.name || '')
-      setCourseDescription(selectedCourse.description || '')
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [selectedCourse])
-
-  // activeTab is derived from location.hash so no effect is required to keep it in sync
+  const [courseDetails, setCourseDetails] = useState({
+    name: selectedCourse?.name || '',
+    description: selectedCourse?.description || '',
+  })
 
   const {
     data: materials = [],
@@ -97,17 +75,12 @@ const CourseDetailPage = () => {
     refetch: refetchFeed,
   } = useQuery<FeedItem[] | null>({
     queryKey: ['feed', courseId],
-    queryFn: () => getFeedForCourse(courseId!),
+    queryFn: () => getFeed(courseId!),
     enabled: Boolean(courseId) && activeTab === 'feed',
   })
 
   const handleTabChange = (tab: string) => {
     navigate(`/dashboard/${courseId}#${tab}`)
-  }
-
-  const handleSaveDetails = () => {
-    // TODO: Implement save logic
-    console.log('Saving:', { courseName, courseDescription })
   }
 
   if (courseError) {
@@ -194,10 +167,14 @@ const CourseDetailPage = () => {
                   <FormField
                     label='Název kurzu'
                     inputProps={{
-                      value: courseName,
-                      onChange: (e) => setCourseName(e.target.value),
+                      value: courseDetails.name,
+                      onChange: (e) =>
+                        setCourseDetails((prev) => ({
+                          name: e.target.value,
+                          description: prev.description,
+                        })),
                       type: 'text',
-                      placeholder: 'Název kurzi',
+                      placeholder: 'Název kurzu',
                     }}
                   />
                   {/* Course Description */}
@@ -205,8 +182,12 @@ const CourseDetailPage = () => {
                     label='Popis kurzu'
                     multiline
                     textareaProps={{
-                      value: courseDescription,
-                      onChange: (e) => setCourseDescription(e.target.value),
+                      value: courseDetails.description,
+                      onChange: (e) =>
+                        setCourseDetails((prev) => ({
+                          name: prev.name,
+                          description: e.target.value,
+                        })),
                       placeholder: 'Zadejte popis kurzu',
                     }}
                   />
@@ -242,7 +223,9 @@ const CourseDetailPage = () => {
                   <Button
                     variant='primary'
                     size='primary'
-                    onClick={handleSaveDetails}
+                    onClick={() => {
+                      updateCourse(selectedCourse.uuid, courseDetails)
+                    }}
                     className='w-fit'
                   >
                     Uložit změny

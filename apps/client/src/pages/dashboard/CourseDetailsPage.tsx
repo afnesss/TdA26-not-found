@@ -1,9 +1,7 @@
 import { getCourses } from '@/api/queries/courseQueries'
-import {
-  getFeedForCourse,
-  getMaterialsForCourse,
-  getQuizzesForCourse,
-} from '@/api/queries/queries'
+import { getFeedForCourse } from '@/api/queries/queries'
+import { getMaterials } from '@/api/queries/materialQueries'
+import { getQuizzes } from '@/api/queries/quizQueries'
 // import Feed from '@/components/shared/Feed'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import FormField from '@/components/shared/FormField'
@@ -79,7 +77,7 @@ const CourseDetailPage = () => {
     refetch: refetchMaterials,
   } = useQuery<Material[] | null>({
     queryKey: ['materials', courseId],
-    queryFn: () => getMaterialsForCourse(courseId!),
+    queryFn: () => getMaterials(courseId!),
     enabled: Boolean(courseId) && activeTab === 'materials',
   })
 
@@ -89,7 +87,7 @@ const CourseDetailPage = () => {
     refetch: refetchQuizzes,
   } = useQuery<Quiz[] | null>({
     queryKey: ['quizzes', courseId],
-    queryFn: () => getQuizzesForCourse(courseId!),
+    queryFn: () => getQuizzes(courseId!),
     enabled: Boolean(courseId) && activeTab === 'quizzes',
   })
 

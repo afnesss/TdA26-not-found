@@ -1,16 +1,14 @@
-import { useEffect, useState } from 'react'
 // import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
 // import type { Course } from '@/lib/types';
-import { CourseDetailSchema, type CourseDetail, type Quiz } from '@/lib/schemas'
 import { getCourseById } from '@/api/queries/courseQueries'
+import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
+import CourseSkeleton from './components/CoursePageSkeleton'
+import FeedSection from './components/FeedSection'
+import MaterialsSection from './components/MaterialsSection'
 import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
-import MaterialsSection from './components/MaterialsSection'
-import FeedSection from './components/FeedSection'
-import { useQuery } from '@tanstack/react-query'
-import CourseSkeleton from './components/CoursePageSkeleton'
-import { fetchWithValidation } from '@/api/fetchwithValid'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);

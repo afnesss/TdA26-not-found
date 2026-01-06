@@ -4,7 +4,7 @@ import {
   type CourseSummary,
   type QuizAnswer,
 } from '@/lib/schemas'
-import { submitQuiz } from '@/api/queries/queries'
+import { submitQuiz } from '@/api/queries/quizQueries'
 import type { UseMutationResult } from '@tanstack/react-query'
 import { useCourseMutation } from './courseMutation'
 

@@ -1,50 +1,50 @@
-import { getCourses, updateCourse } from '@/api/queries/courseQueries'
-import { getFeed } from '@/api/queries/feedQueries'
+import { getCourses } from '@/api/queries/courseQueries'
+import { getFeed, updatePost } from '@/api/queries/feedQueries'
 import { getMaterials } from '@/api/queries/materialQueries'
-import { getQuizzes } from '@/api/queries/quizQueries'
-// import Feed from '@/components/shared/Feed'
-import Breadcrumb from '@/components/shared/Breadcrumb'
+import { getQuizzes, updateQuiz } from '@/api/queries/quizQueries'
 import FeedItemComp from '@/components/shared/FeedItemComp'
-import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import TabButton from '@/components/shared/TabButton'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { colorStyles } from '@/lib/constants'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
-import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import CourseDetailsForm from './components/CourseDetailsForm'
 import DetailHeader from './components/DetailHeader'
+import {
+  DetailsContentSkeleton,
+  FeedContentSkeleton,
+  MaterialsContentSkeleton,
+  QuizzesContentSkeleton,
+} from './components/DetailsSkeleton'
+import { useCourseMutation } from '../CoursePage/utils/courseMutation'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const activeTab = location.hash.replace('#', '') || 'details'
 
   const {
     data: courses = [],
     isError: courseError,
+    isLoading: courseLoading,
     refetch: refetchCourse,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
     queryFn: getCourses,
   })
+
   const selectedCourse = courses.find((c) => c.uuid === courseId) || null
-  const [courseDetails, setCourseDetails] = useState({
-    name: selectedCourse?.name || '',
-    description: selectedCourse?.description || '',
-  })
 
   const {
     data: materials = [],
     isError: materialsError,
+    isLoading: materialsLoading,
     refetch: refetchMaterials,
   } = useQuery<Material[] | null>({
     queryKey: ['materials', courseId],
@@ -55,6 +55,7 @@ const CourseDetailPage = () => {
   const {
     data: quizzes = [],
     isError: quizzesError,
+    isLoading: quizzesLoading,
     refetch: refetchQuizzes,
   } = useQuery<Quiz[] | null>({
     queryKey: ['quizzes', courseId],
@@ -65,6 +66,7 @@ const CourseDetailPage = () => {
   const {
     data: feed = [],
     isError: feedError,
+    isLoading: feedLoading,
     refetch: refetchFeed,
   } = useQuery<FeedItem[] | null>({
     queryKey: ['feed', courseId],
@@ -88,7 +90,13 @@ const CourseDetailPage = () => {
     )
   }
 
-  if (!selectedCourse) {
+  if (
+    !selectedCourse &&
+    !materialsLoading &&
+    !quizzesLoading &&
+    !feedLoading &&
+    !courseLoading
+  ) {
     return (
       <div className='max-w-7xl mx-auto px-4'>
         <StateComp type='no-content' message='Kurz nebyl nalezen' />
@@ -107,21 +115,18 @@ const CourseDetailPage = () => {
             title='Detaily'
             icon={BookOpen}
           />
-
           <TabButton
             isActive={activeTab === 'materials'}
             onClick={() => handleTabChange('materials')}
             title='Materiály'
             icon={FileText}
           />
-
           <TabButton
             isActive={activeTab === 'quizzes'}
             onClick={() => handleTabChange('quizzes')}
             title='Kvízy'
             icon={BarChart3}
           />
-
           <TabButton
             isActive={activeTab === 'feed'}
             onClick={() => handleTabChange('feed')}
@@ -134,103 +139,16 @@ const CourseDetailPage = () => {
       {/* Details Tab */}
       {activeTab === 'details' && (
         <>
-          <Card className='bg-background rounded-xl shadow-md hover:shadow-md hover:scale-100 hover:translate-0 overflow-hidden'>
-            <div
-              className={`h-2 bg-linear-to-r ${colorStyles.gradient['accent-teal']}`}
-            />
-
-            <div className='p-4 lg:p-6 -mt-2'>
-              <Breadcrumb
-                items={[
-                  { label: 'Sprava kurzů', path: '/dashboard' },
-                  { label: 'Detaily kurzu' },
-                ]}
-                className='mb-2'
-              />
-              <CardTitle>
-                <Label variant='title' size='lg'>
-                  Detaily kurzu
-                </Label>
-              </CardTitle>
-
-              <CardContent className='space-y-4 mt-5'>
-                {/* Course Name */}
-
-                <div className='flex flex-col gap-2'>
-                  <FormField
-                    label='Název kurzu'
-                    inputProps={{
-                      value: courseDetails.name,
-                      onChange: (e) =>
-                        setCourseDetails((prev) => ({
-                          name: e.target.value,
-                          description: prev.description,
-                        })),
-                      type: 'text',
-                      placeholder: 'Název kurzu',
-                    }}
-                  />
-                  {/* Course Description */}
-                  <FormField
-                    label='Popis kurzu'
-                    multiline
-                    textareaProps={{
-                      value: courseDetails.description,
-                      onChange: (e) =>
-                        setCourseDetails((prev) => ({
-                          name: prev.name,
-                          description: e.target.value,
-                        })),
-                      placeholder: 'Zadejte popis kurzu',
-                    }}
-                  />
-                </div>
-                {/* Metadata (Read-only) */}
-                <CardFooter className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-4 '>
-                  <div className='flex flex-row gap-10'>
-                    <div>
-                      <Label size={'sm'} className='mb-2'>
-                        Datum vytvoření
-                      </Label>
-                      <p className='text-gray-900 font-medium'>
-                        {selectedCourse.createdAt
-                          ? new Date(
-                              selectedCourse.createdAt,
-                            ).toLocaleDateString('cs-CZ')
-                          : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label size={'sm'} className='mb-2'>
-                        Poslední úprava
-                      </Label>
-                      <p className='text-gray-900 font-medium'>
-                        {selectedCourse.updatedAt
-                          ? new Date(
-                              selectedCourse.updatedAt,
-                            ).toLocaleDateString('cs-CZ')
-                          : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant='primary'
-                    size='primary'
-                    onClick={() => {
-                      updateCourse(selectedCourse.uuid, courseDetails)
-                    }}
-                    className='w-fit'
-                  >
-                    Uložit změny
-                  </Button>
-                </CardFooter>
-              </CardContent>
-            </div>
-          </Card>
+          {courseLoading ? (
+            <DetailsContentSkeleton />
+          ) : (
+            selectedCourse && (
+              <CourseDetailsForm selectedCourse={selectedCourse} />
+            )
+          )}
         </>
       )}
 
-      {/* Materials Tab */}
       {activeTab === 'materials' && (
         <div className='space-y-6'>
           <DetailHeader
@@ -242,17 +160,15 @@ const CourseDetailPage = () => {
             buttonText='Přidat podklad'
           />
 
-          {/* Error State */}
-          {materialsError && (
+          {materialsLoading ? (
+            <MaterialsContentSkeleton />
+          ) : materialsError ? (
             <StateComp
               type='error'
               onAction={() => refetchMaterials()}
               message='Nepodařilo se načíst materiály'
             />
-          )}
-
-          {/* Materials List */}
-          {!materialsError && materials && materials.length > 0 && (
+          ) : materials && materials.length > 0 ? (
             <div className='grid gap-4'>
               {materials.map((material) => (
                 <MaterialCard
@@ -265,10 +181,7 @@ const CourseDetailPage = () => {
                 />
               ))}
             </div>
-          )}
-
-          {/* Empty State */}
-          {!materialsError && (!materials || materials.length === 0) && (
+          ) : (
             <StateComp type='no-content' message='Zatím žádné materiály' />
           )}
         </div>
@@ -286,17 +199,15 @@ const CourseDetailPage = () => {
             buttonText='Nový příspěvek'
           />
 
-          {/* Error State */}
-          {feedError && (
+          {feedLoading ? (
+            <FeedContentSkeleton />
+          ) : feedError ? (
             <StateComp
               type='error'
               onAction={() => refetchFeed()}
               message='Nepodařilo se načíst informační kanál'
             />
-          )}
-
-          {/* Feed List */}
-          {!feedError && feed && feed.length > 0 && (
+          ) : feed && feed.length > 0 ? (
             <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-6'>
               <div className='space-y-4'>
                 {feed.map((feedItem) => (
@@ -304,14 +215,19 @@ const CourseDetailPage = () => {
                     feedItem={feedItem}
                     key={feedItem.uuid}
                     type='edit'
+                    onSave={async (editedFeed) => {
+                      if (courseId) {
+                        await updatePost(courseId, feedItem.uuid, editedFeed)
+                        queryClient.invalidateQueries({
+                          queryKey: ['feed', courseId],
+                        })
+                      }
+                    }}
                   />
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Empty State */}
-          {!feedError && (!feed || feed.length === 0) && (
+          ) : (
             <StateComp type='no-content' message='Zatím žádné příspěvky' />
           )}
         </div>
@@ -329,38 +245,36 @@ const CourseDetailPage = () => {
             buttonText='Vytvořit kvíz'
           />
 
-          {/* Error State */}
-          {quizzesError && (
+          {quizzesLoading ? (
+            <QuizzesContentSkeleton />
+          ) : quizzesError ? (
             <StateComp
               type='error'
               onAction={() => refetchQuizzes()}
               message='Nepodařilo se načíst kvízy'
             />
-          )}
-
-          {/* Quizzes List */}
-          {!quizzesError && quizzes && quizzes.length > 0 && (
+          ) : quizzes && quizzes.length > 0 ? (
             <div className='grid gap-4'>
               {quizzes.map((quiz) => (
                 <QuizComponent
                   key={quiz.uuid}
                   quiz={quiz}
                   mode='lecturer'
-                  onSave={(updatedQuiz) => {
-                    console.log('Save:', updatedQuiz)
-                    // API call zde
+                  onSave={async (updatedQuiz) => {
+                    if (courseId) {
+                      await updateQuiz(courseId, quiz.uuid!, updatedQuiz)
+                      queryClient.invalidateQueries({
+                        queryKey: ['quizzes', courseId],
+                      })
+                    }
                   }}
                   onDelete={() => {
                     console.log('Delete:', quiz.uuid)
-                    // API call zde
                   }}
                 />
               ))}
             </div>
-          )}
-
-          {/* Empty State */}
-          {!quizzesError && (!quizzes || quizzes.length === 0) && (
+          ) : (
             <StateComp type='no-content' message='Zatím žádné kvízy' />
           )}
         </div>

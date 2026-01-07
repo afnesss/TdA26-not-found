@@ -3,6 +3,7 @@ import { getFeed } from '@/api/queries/feedQueries'
 import { getMaterials } from '@/api/queries/materialQueries'
 import { getQuizzes } from '@/api/queries/quizQueries'
 // import Feed from '@/components/shared/Feed'
+import Breadcrumb from '@/components/shared/Breadcrumb'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import FormField from '@/components/shared/FormField'
 import MaterialCard from '@/components/shared/Material'
@@ -14,19 +15,11 @@ import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { colorStyles } from '@/lib/constants'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
-import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  BookOpen,
-  ChevronRight,
-  FileText,
-  MessageSquare,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
+import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import DetailHeader from './components/DetailHeader'
-import Breadcrumb from '@/components/shared/Breadcrumb'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -107,7 +100,7 @@ const CourseDetailPage = () => {
     <div className='max-w-7xl mx-auto lg:px-4'>
       {/* Navigation - Tabs */}
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-4 lg:mb-5 mt-2'>
-        <div className='flex gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1'>
+        <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap justify-center md:flex-1'>
           <TabButton
             isActive={activeTab === 'details'}
             onClick={() => handleTabChange('details')}
@@ -304,7 +297,7 @@ const CourseDetailPage = () => {
 
           {/* Feed List */}
           {!feedError && feed && feed.length > 0 && (
-            <div className='bg-background rounded-xl shadow-md p-3 md:p-6'>
+            <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-6'>
               <div className='space-y-4'>
                 {feed.map((feedItem) => (
                   <FeedItemComp

@@ -81,7 +81,7 @@ const QuizOption = ({
   return (
     <Label
       className={cn(
-        'flex items-center gap-3 p-2.5 md:p-3.5 rounded-lg transition-all border border-gray-200 bg-gray-100',
+        'flex items-center gap-3 p-1.5 sm:p-2.5 md:p-3.5 rounded-lg transition-all border border-gray-200 bg-gray-100',
         !isSubmitted &&
           'cursor-pointer hover:bg-primary/20 hover:border-gray-300',
         isSelected && !showCorrect && !isSubmitted && 'bg-primary/10',
@@ -101,7 +101,9 @@ const QuizOption = ({
         disabled={isSubmitted}
         onCheckedChange={onAnswerChange}
       />
-      <span className='text-sm font-medium text-foreground'>{option}</span>
+      <span className='text-xs sm:text-sm font-medium text-foreground'>
+        {option}
+      </span>
     </Label>
   )
 }

@@ -45,8 +45,8 @@ export const colorStyles = {
 }
 
 export const filters = [
-  { id: 'all', label: 'Vše' },
-  { id: 'newest', label: 'Nové' },
+  { id: 'all', label: 'Všechny' },
+  { id: 'newest', label: 'Nejnovější' },
   { id: 'updated', label: 'Upravené' },
 ] as const
 

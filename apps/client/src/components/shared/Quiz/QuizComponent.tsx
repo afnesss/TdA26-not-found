@@ -367,12 +367,11 @@ const QuizComponent = ({
                 <div className='flex items-center gap-3 md:gap-10 flex-col md:flex-row'>
                   <Button
                     variant='primary'
-                    size='primary'
+                    size='grid'
                     className='w-fit'
                     disabled={isSubmitDisabled || isSubmitting}
                     onClick={onSubmit}
                   >
-                    <Play size={20} />
                     Odeslat odpovědi
                   </Button>
 

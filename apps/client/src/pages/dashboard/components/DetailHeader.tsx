@@ -1,8 +1,9 @@
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { colorStyles } from '@/lib/constants'
-import type { LucideIcon } from 'lucide-react'
+import { Plus, type LucideIcon } from 'lucide-react'
 import Breadcrumb from '@/components/shared/Breadcrumb'
+import { cn } from '@/lib/utils'
 
 type DetailHeaderProps = {
   title: string
@@ -35,9 +36,13 @@ const DetailHeader = ({
             {title}
           </Label>
         </div>
-        <Button variant='primary' size='primary' onClick={onButtonClick}>
-          {Icon && <Icon className='w-5 h-5' />}
-          {buttonText}
+        <Button variant='primary' size='grid' onClick={onButtonClick}>
+          {Icon ? (
+            <Icon className='w-5 h-5 block md:hidden' />
+          ) : (
+            <Plus className='w-5 h-5 block md:hidden' />
+          )}
+          <span className={cn(`hidden md:block`)}>{buttonText}</span>
         </Button>
       </div>
     </div>

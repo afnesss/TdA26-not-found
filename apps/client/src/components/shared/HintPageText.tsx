@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils'
 
 type HintPageTextProps = {
   text: string
@@ -18,9 +18,9 @@ const HintPageText = ({
       <span
         className={cn(
           'bg-linear-to-r from-secondary/40 to-accent-teal-light/30 ' +
-            'text-primary px-3 py-2 rounded-full max-sm:text-xs sm:text-sm text-md font-bold ' +
+            'text-primary px-2 sm:px-3 py-1.5 sm:py-2 rounded-full max-sm:text-xs sm:text-sm text-md font-bold ' +
             'inline-flex items-center gap-2 border-2 border-secondary/50 shadow-sm',
-          className
+          className,
         )}
       >
         {<Icon className='w-4 h-4 shrink-0 ' />}

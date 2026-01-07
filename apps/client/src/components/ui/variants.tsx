@@ -18,7 +18,7 @@ const buttonVariants = cva(
           duration-200 rounded-xl px-4 py-2 hover:bg-secondary \
         font-semibold',
         filter:
-          'px-4 py-1.5 h-8 rounded-xl max-sm:text-xs text-sm font-medium \
+          'px-2 md:px-4 py-1 sm:py-1.5 h-8 rounded-xl max-sm:text-xs text-sm font-medium \
         transition-all duration-300 flex items-center gap-2 cursor-pointer',
         grid: 'flex items-center rounded-xl font-bold text-sm hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer',
         ghost:

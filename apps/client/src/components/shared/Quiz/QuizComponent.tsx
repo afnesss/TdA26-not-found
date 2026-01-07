@@ -1,35 +1,17 @@
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useState, Fragment } from 'react'
-import {
-  Clock,
-  CheckCircle,
-  ChevronUp,
-  ChevronDown,
-  Star,
-  Plus,
-  X,
-  Save,
-  Trash2,
-  Check,
-  Play,
-  Edit,
-  HelpCircle,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import type { Quiz, Question, QuizAnswer } from '@/lib/schemas'
+import { Label } from '@/components/ui/label'
+import type { Question, Quiz } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Plus,
+} from 'lucide-react'
+import { Fragment, useState } from 'react'
 import { Textarea } from '../../ui/textarea'
-import { Checkbox } from '../../ui/checkbox'
 import QuizQuestion from './QuizQuestion'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
@@ -228,7 +210,7 @@ const QuizComponent = ({
         className='p-3.5 md:px-5 md:py-4 cursor-pointer hover:bg-gray-50 transition-colors'
         onClick={toggleExpand}
       >
-        <div className='flex items-start sm:items-center justify-between gap-2 sm:gap-4'>
+        <div className='flex items-center justify-between gap-2 sm:gap-4'>
           {/* Ліва частина - контент */}
           <div className='flex-1 min-w-0'>
             {/* Badge над назвою - тільки на малих екранах */}
@@ -241,7 +223,7 @@ const QuizComponent = ({
             {/* Назва квізу */}
             {mode === 'lecturer' && isExpanded ? (
               <Textarea
-                className='text-sm sm:text-md md:text-xl font-bold p-1'
+                className='text-sm sm:text-md md:text-lg font-bold p-1'
                 variant={'ghost'}
                 value={displayQuiz.title}
                 onClick={(e) => e.stopPropagation()}
@@ -270,9 +252,7 @@ const QuizComponent = ({
             </div>
           </div>
 
-          {/* Права частина - кнопки */}
-          <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-start sm:self-center'>
-            {/* Badge перед кнопками - тільки на великих екранах */}
+          <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
             {mode === 'lecturer' && hasChanges && (
               <span className='hidden sm:inline-block text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
                 Neuloženo
@@ -401,7 +381,7 @@ const QuizComponent = ({
               <div className='flex justify-end'>
                 <Button
                   variant='primary'
-                  size='primary'
+                  size='grid'
                   onClick={handleSave}
                   disabled={!hasChanges}
                 >

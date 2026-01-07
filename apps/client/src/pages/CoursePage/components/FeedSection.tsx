@@ -9,9 +9,7 @@ type FeedSectionProps = {
 const FeedSection = ({ feed }: FeedSectionProps) => {
   return (
     <section>
-      <Label size='xl' className='pl-3 md:pl-5'>
-        Oznámení a novinky
-      </Label>
+      <Label size='xl'>Oznámení a novinky</Label>
 
       {/* <Feed feed={feed} type='classic' /> */}
       <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-6'>

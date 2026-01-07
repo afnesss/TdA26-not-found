@@ -11,9 +11,7 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
 
   return (
     <section>
-      <Label size='xl' className='pl-3 md:pl-5'>
-        Studijní materiály
-      </Label>
+      <Label size='xl'>Studijní materiály</Label>
 
       <div className='space-y-3'>
         {materials?.map((material) => {

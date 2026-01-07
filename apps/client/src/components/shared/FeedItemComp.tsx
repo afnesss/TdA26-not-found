@@ -1,34 +1,27 @@
-import { colorStyles } from '@/lib/constants'
 import type { FeedItem } from '@/lib/schemas'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { Check, Edit } from 'lucide-react'
-import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { useState } from 'react'
+import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
-import { updatePost } from '@/api/queries/feedQueries'
-import { useParams } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
 
 const FeedItemComp = ({
   feedItem,
   type,
+  onSave,
 }: {
   feedItem: FeedItem
   type: 'classic' | 'edit'
+  onSave?: (post: FeedItem) => void
 }) => {
-  const queryClient = useQueryClient()
   const [editName, setEditName] = useState(false)
   const [editedFeed, setEditedFeed] = useState<FeedItem>(feedItem)
-  const { courseId } = useParams<{ courseId: string }>()
 
   const displayFeed = type === 'edit' ? editedFeed : feedItem
 
   const handleSave = async () => {
     setEditName(false)
-    if (courseId) {
-      await updatePost(courseId, displayFeed.uuid, editedFeed)
-      queryClient.invalidateQueries({ queryKey: ['feed', courseId] })
-    }
+    onSave?.(editedFeed)
     //else - error toast?
   }
 
@@ -43,29 +36,31 @@ const FeedItemComp = ({
       {/* Header */}
       <div className='flex items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2'>
         {/* Badges and dates */}
-        <div className='flex flex-row sm:items-center gap-1.5 sm:gap-2 flex-1 min-w-0'>
+        <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-1 min-w-0'>
           {/* Badge */}
-          <span
-            className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-semibold shrink-0 w-fit ${
-              displayFeed.type === 'manual'
-                ? 'bg-primary/10 text-primary'
-                : `bg-secondary/20 ${colorStyles.text['secondary']}`
-            }`}
-          >
-            {displayFeed.type === 'manual' ? 'Příspěvek' : 'Událost'}
-          </span>
+          <div className='flex gap-1.5 sm:gap-2 items-center'>
+            <span
+              className={cn(
+                'px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-normal sm:font-medium self-start shrink-0 w-fit',
+                displayFeed.type === 'manual'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-secondary/20 text-accent-teal-light',
+              )}
+            >
+              {displayFeed.type === 'manual' ? 'Příspěvek' : 'Událost'}
+            </span>
 
-          {/* Dates */}
-          <div className='flex items-center gap-1.5 sm:gap-2 flex-wrap text-[10px] sm:text-xs md:text-sm text-gray-500'>
-            <span className='whitespace-nowrap'>
+            {/* Dates */}
+
+            <span className='whitespace-nowrap text-[10px] sm:text-xs md:text-sm text-gray-500'>
               {formatDate(displayFeed.createdAt)}
             </span>
-            {displayFeed.edited && displayFeed.updatedAt && (
-              <span className='text-gray-400 italic whitespace-nowrap'>
-                (upraveno {formatDate(displayFeed.updatedAt)})
-              </span>
-            )}
           </div>
+          {displayFeed.edited && displayFeed.updatedAt && (
+            <span className='text-[10px] sm:text-xs md:text-sm text-gray-400 italic whitespace-nowrap'>
+              (upraveno {formatDate(displayFeed.updatedAt)})
+            </span>
+          )}
         </div>
 
         {/* Action Buttons */}

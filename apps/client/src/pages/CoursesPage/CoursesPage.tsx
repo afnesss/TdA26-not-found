@@ -29,10 +29,6 @@ const CoursesPage = () => {
     queryFn: getCourses,
   })
 
-  if (isLoading) {
-    return <LoadingSceleton />
-  }
-
   const filteredCourses = filterCourses(courses, searchQuery)
 
   const sortedCourses = [...filteredCourses].sort((a, b) => {
@@ -82,65 +78,69 @@ const CoursesPage = () => {
 
         {/* Kurzy Grid */}
         <div className=' relative py-4 md:py-6'>
-          <>
-            {/* Grid kurzů */}
-            {displayedCourses && (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
-                {displayedCourses.map((course, index) => {
-                  return (
-                    <CourseComponent
-                      key={course.uuid}
-                      course={course}
-                      index={index}
-                      type='classic'
-                    />
-                  )
-                })}
-              </div>
-            )}
+          {isLoading ? (
+            <LoadingSceleton />
+          ) : (
+            <>
+              {/* Grid kurzů */}
+              {displayedCourses && (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
+                  {displayedCourses.map((course, index) => {
+                    return (
+                      <CourseComponent
+                        key={course.uuid}
+                        course={course}
+                        index={index}
+                        type='classic'
+                      />
+                    )
+                  })}
+                </div>
+              )}
 
-            {/* Empty state */}
-            {displayedCourses.length === 0 && !isLoading && !isError ? (
-              <StateComp
-                type='empty-search'
-                onAction={() => {
-                  setSearchQuery('')
-                  setDisplayCount(9)
-                }}
-              />
-            ) : isError ? (
-              <StateComp
-                type='error'
-                onAction={() => {
-                  refetch()
-                }}
-              />
-            ) : (
-              !isLoading &&
-              !isError &&
-              courses.length === 0 && (
+              {/* Empty state */}
+              {displayedCourses.length === 0 && !isLoading && !isError ? (
                 <StateComp
-                  message='Žádné kurzy k zobrazení'
-                  type='no-content'
-                />
-              )
-            )}
-
-            {/* Load More button */}
-            {hasMoreCourses && (
-              <div className='mt-8 text-center'>
-                <Button
-                  variant='primary'
-                  size='primary'
-                  onClick={() => {
-                    loadMoreCourses()
+                  type='empty-search'
+                  onAction={() => {
+                    setSearchQuery('')
+                    setDisplayCount(9)
                   }}
-                >
-                  Načíst další kurzy
-                </Button>
-              </div>
-            )}
-          </>
+                />
+              ) : isError ? (
+                <StateComp
+                  type='error'
+                  onAction={() => {
+                    refetch()
+                  }}
+                />
+              ) : (
+                !isLoading &&
+                !isError &&
+                courses.length === 0 && (
+                  <StateComp
+                    message='Žádné kurzy k zobrazení'
+                    type='no-content'
+                  />
+                )
+              )}
+
+              {/* Load More button */}
+              {hasMoreCourses && (
+                <div className='mt-8 text-center'>
+                  <Button
+                    variant='primary'
+                    size='primary'
+                    onClick={() => {
+                      loadMoreCourses()
+                    }}
+                  >
+                    Načíst další kurzy
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

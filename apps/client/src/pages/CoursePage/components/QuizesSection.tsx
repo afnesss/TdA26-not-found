@@ -52,9 +52,7 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
 
   return (
     <section>
-      <Label size='xl' className='pl-3 md:pl-5'>
-        Kvízy
-      </Label>
+      <Label size='xl'>Kvízy</Label>
 
       <div className='space-y-4'>
         {courseData?.quizzes?.map((quiz: Quiz) => (

@@ -39,13 +39,13 @@ const FormField = (props: FormFieldProps) => {
             minRows={1}
             maxRows={10}
             {...props.textareaProps}
-            className={`${Icon ? 'pl-11' : 'pl-4'} ${props.textareaProps?.className || ''}pb-2`}
+            className={`${Icon ? 'pl-11!' : 'pl-4!'} ${props.textareaProps?.className || ''}pb-2`}
           />
         ) : (
           <>
             <Input
               {...props.inputProps}
-              className={`${Icon ? 'pl-11' : 'pl-4'} ${props.rightElement ? 'pr-12' : 'pr-4'} ${props.inputProps?.className || ''}`}
+              className={`${Icon ? 'pl-11!' : 'pl-4!'} ${props.rightElement ? 'pr-12' : 'pr-4'} ${props.inputProps?.className || ''}`}
             />
             {props.rightElement && (
               <div className='absolute right-3 top-1/2 -translate-y-1/2 flex items-center'>

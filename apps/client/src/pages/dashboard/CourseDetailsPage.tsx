@@ -18,7 +18,7 @@ import {
   FeedContentSkeleton,
   MaterialsContentSkeleton,
   QuizzesContentSkeleton,
-} from './components/DetailsSkeleton'
+} from '../../components/shared/loadingskeleton/DetailsSkeleton'
 import { useCourseMutation } from '../CoursePage/utils/courseMutation'
 
 const CourseDetailPage = () => {

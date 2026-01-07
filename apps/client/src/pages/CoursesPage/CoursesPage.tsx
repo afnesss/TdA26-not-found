@@ -12,7 +12,7 @@ import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import Filters from './components/Filters'
-import LoadingSceleton from './components/LoadingSceleton'
+import LoadingSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')

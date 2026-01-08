@@ -101,9 +101,9 @@ const LoginPage = () => {
                       aria-label={show ? 'Skrýt heslo' : 'Zobrazit heslo'}
                     >
                       {show ? (
-                        <Eye className='w-5 h-5 text-gray-800/50' />
+                        <Eye className='w-4 sm:w-5 h-4 sm:h-5 text-gray-800/50' />
                       ) : (
-                        <EyeOff className='w-5 h-5 text-gray-800/50' />
+                        <EyeOff className='w-4 sm:w-5 h-4 sm:h-5 text-gray-800/50' />
                       )}
                     </button>
                   }

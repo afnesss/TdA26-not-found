@@ -5,14 +5,13 @@ import type { CourseSummary } from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
 import { BookOpen } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
 import HintPageText from '../../components/shared/HintPageText'
+import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import Filters from './components/Filters'
-import LoadingSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -79,7 +78,7 @@ const CoursesPage = () => {
         {/* Kurzy Grid */}
         <div className=' relative py-4 md:py-6'>
           {isLoading ? (
-            <LoadingSceleton />
+            <CoursesPageSceleton />
           ) : (
             <>
               {/* Grid kurzů */}

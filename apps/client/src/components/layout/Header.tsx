@@ -50,7 +50,11 @@ export default function Header() {
                   <ChevronDown size={16} className='opacity-60' />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className='w-25 bg-background rounded-xl shadow-lg border border-gray-200 p-1.5 sm:p-2 z-100'>
+              <DropdownMenuContent
+                sideOffset={5}
+                align='end'
+                className='w-25 bg-background rounded-xl shadow-lg border border-gray-200 p-1.5 sm:p-2 z-100'
+              >
                 <div className='space-y-0.5 sm:space-y-1'>
                   <DropdownMenuItem
                     className={cn(

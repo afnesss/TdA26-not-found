@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md font-medium transition-all gap-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+  'inline-flex items-center justify-center rounded-md font-medium transition-all gap-2 disabled:pointer-events-none disabled:opacity-60 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
   {
     variants: {
       variant: {
@@ -12,7 +12,8 @@ const buttonVariants = cva(
           shadow-lg hover:shadow-xl hover:scale-102 text-base max-sm:text-md sm:text-md \
           disabled:pointer-events-none disabled:opacity-60',
         outline:
-          'border bg-background rounded-xl shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'text-xs sm:text-sm border bg-background rounded-xl shadow-xs hover:bg-accent hover:text-accent-foreground \
+          dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         secondary:
           'bg-background cursor-pointer shadow-md text-accent-blue transition-colors \
           duration-200 rounded-xl px-4 py-2 hover:bg-secondary \
@@ -31,7 +32,7 @@ const buttonVariants = cva(
         default: '',
         grid: 'px-3 md:px-6 py-2 md:py-2.5',
         md: 'px-5 py-2 gap-2',
-        sm: 'h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5',
+        sm: 'h-8 rounded-md gap-1.5 py-0 sm:py-2 px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-md px-7 has-[>svg]:px-4 py-3.5',
         icon: 'size-8',
         'icon-sm': 'size-7',
@@ -57,7 +58,7 @@ export const inputVariants = cva('w-full rounded-xl', {
           selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed\
             disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 placeholder:text-xs sm:placeholder:text-sm',
       ghost:
-        'focus:outline-none focus:ring-0 bg-gray-100 py-1 md:py-2 px-2 md:px-4 border border-gray-200',
+        'focus:outline-none focus:ring-0 bg-gray-100 py-1 md:py-1.5 px-2 md:px-4 border border-gray-200',
     },
   },
 })

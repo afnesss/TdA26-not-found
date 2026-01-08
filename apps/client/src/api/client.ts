@@ -13,10 +13,15 @@ export default async function apiFetch<T>(
 
   const { headers, token } = safeClientOptions
 
+  const defaultHeaders: HeadersInit = {}
+  if (!(safeOptions.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json'
+  }
+
   const response = await fetch(`/api${input}`, {
     ...safeOptions,
     headers: {
-      'Content-Type': 'application/json',
+      ...defaultHeaders,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
       ...safeOptions?.headers,

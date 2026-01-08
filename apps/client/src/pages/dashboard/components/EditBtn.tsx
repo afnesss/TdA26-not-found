@@ -10,6 +10,7 @@ type EditBtnProps = {
   classNameBtn?: string
   type?: 'delete'
   iconClassName?: string
+  disabled?: boolean
 }
 
 const EditBtn: React.FC<EditBtnProps> = ({
@@ -19,6 +20,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
   classNameBtn,
   type,
   iconClassName,
+  disabled,
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
@@ -32,6 +34,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
     <Button
       variant='ghost'
       size='icon-sm'
+      disabled={disabled}
       className={cn(hoverStyle, 'size-6 min-[400px]:size-7', classNameBtn)}
       onClick={onClick}
     >

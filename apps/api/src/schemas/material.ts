@@ -5,14 +5,17 @@ export const FileMaterialSchema = z.object({
   type: z.literal("file"),
   name: z.string(),
   description: z.string().optional(),
-  fileUrl: z.string().refine((val) => {
-    try {
+  fileUrl: z.string().refine(
+    (val) => {
+      try {
         new URL(val);
         return true;
-    } catch {
+      } catch {
         return val.startsWith("/");
-    }
-  }, { message: "Invalid URL" }),
+      }
+    },
+    { message: "Invalid URL" }
+  ),
   mimeType: z.string().optional(),
   sizeBytes: z.number().int().optional(),
   originalFilename: z.string().optional(),
@@ -61,7 +64,15 @@ export const UrlMaterialUpdateRequestSchema = z.object({
 export type FileMaterial = z.infer<typeof FileMaterialSchema>;
 export type UrlMaterial = z.infer<typeof UrlMaterialSchema>;
 export type Material = z.infer<typeof MaterialSchema>;
-export type FileMaterialCreateRequest = z.infer<typeof FileMaterialCreateRequestSchema>;
-export type UrlMaterialCreateRequest = z.infer<typeof UrlMaterialCreateRequestSchema>;
-export type FileMaterialUpdateRequest = z.infer<typeof FileMaterialUpdateRequestSchema>;
-export type UrlMaterialUpdateRequest = z.infer<typeof UrlMaterialUpdateRequestSchema>;
+export type FileMaterialCreateRequest = z.infer<
+  typeof FileMaterialCreateRequestSchema
+>;
+export type UrlMaterialCreateRequest = z.infer<
+  typeof UrlMaterialCreateRequestSchema
+>;
+export type FileMaterialUpdateRequest = z.infer<
+  typeof FileMaterialUpdateRequestSchema
+>;
+export type UrlMaterialUpdateRequest = z.infer<
+  typeof UrlMaterialUpdateRequestSchema
+>;

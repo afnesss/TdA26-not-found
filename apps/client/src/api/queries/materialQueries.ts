@@ -29,12 +29,6 @@ export const updateMaterial = async (
       {
         method: 'PUT',
         body: formData,
-        headers: {},
-      },
-      {
-        headers: {
-          'Content-Type': undefined as unknown as string,
-        },
       },
     )
   }
@@ -72,19 +66,10 @@ export const createMaterial = async (
     }
     formData.append('file', body.file)
 
-    return await apiFetch<Material>(
-      `/courses/${courseId}/materials`,
-      {
-        method: 'POST',
-        body: formData,
-        headers: {},
-      },
-      {
-        headers: {
-          'Content-Type': undefined as unknown as string,
-        },
-      },
-    )
+    return await apiFetch<Material>(`/courses/${courseId}/materials`, {
+      method: 'POST',
+      body: formData,
+    })
   }
 
   return await apiFetch<Material>(`/courses/${courseId}/materials`, {

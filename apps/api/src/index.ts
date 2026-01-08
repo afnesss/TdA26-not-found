@@ -27,7 +27,14 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+
+// Skip body parsing for multipart requests (handled by multer)
+app.use((req, res, next) => {
+  if (req.headers['content-type']?.startsWith('multipart/form-data')) {
+    return next();
+  }
+  express.json({ limit: '50mb' })(req, res, next);
+});
 
 // app.use(
 //   session({

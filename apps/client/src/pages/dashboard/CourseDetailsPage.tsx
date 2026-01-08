@@ -1,6 +1,10 @@
 import { getCourses } from '@/api/queries/courseQueries'
 import { getFeed, updatePost } from '@/api/queries/feedQueries'
-import { getMaterials } from '@/api/queries/materialQueries'
+import {
+  createMaterial,
+  getMaterials,
+  updateMaterial,
+} from '@/api/queries/materialQueries'
 import { getQuizzes, updateQuiz } from '@/api/queries/quizQueries'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import MaterialCard from '@/components/shared/Material'
@@ -10,23 +14,23 @@ import TabButton from '@/components/shared/TabButton'
 import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
+import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import CourseDetailsForm from './components/CourseDetailsForm'
-import DetailHeader from './components/DetailHeader'
 import {
   DetailsContentSkeleton,
   FeedContentSkeleton,
   MaterialsContentSkeleton,
   QuizzesContentSkeleton,
 } from '../../components/shared/loadingskeleton/DetailsSkeleton'
-import { useCourseMutation } from '../CoursePage/utils/courseMutation'
+import CourseDetailsForm from './components/CourseDetailsForm'
+import DetailHeader from './components/DetailHeader'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-
+  const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
   const activeTab = location.hash.replace('#', '') || 'details'
 
   const {
@@ -76,6 +80,48 @@ const CourseDetailPage = () => {
 
   const handleTabChange = (tab: string) => {
     navigate(`/dashboard/${courseId}#${tab}`)
+  }
+
+  const handleAddMaterial = () => {
+    const newDraft: Material = {
+      uuid: `temp-${Date.now()}`,
+      name: '',
+      description: '',
+      type: 'file',
+      fileUrl: '',
+    }
+    setDraftMaterial(newDraft)
+  }
+  const onSaveDraft = async (data: {
+    name?: string
+    description?: string
+    file?: File
+    url?: string
+  }) => {
+    if (!draftMaterial || !courseId) return
+
+    setDraftMaterial(null)
+
+    const payload =
+      draftMaterial.type === 'file'
+        ? {
+            type: 'file' as const,
+            name: data.name || draftMaterial.name,
+            file: data.file!,
+            description: data.description,
+          }
+        : {
+            type: 'url' as const,
+            name: data.name || draftMaterial.name,
+            url: data.url!,
+            description: data.description,
+          }
+
+    await createMaterial(courseId, payload)
+
+    queryClient.invalidateQueries({
+      queryKey: ['materials', courseId],
+    })
   }
 
   if (courseError) {
@@ -154,6 +200,7 @@ const CourseDetailPage = () => {
           <DetailHeader
             onButtonClick={() => {
               console.log('зробити матеріал')
+              handleAddMaterial()
             }}
             title='Materiály kurzu'
             gradient='accent-teal'
@@ -168,18 +215,41 @@ const CourseDetailPage = () => {
               onAction={() => refetchMaterials()}
               message='Nepodařilo se načíst materiály'
             />
-          ) : materials && materials.length > 0 ? (
+          ) : (materials && materials.length > 0) || draftMaterial ? (
             <div className='grid gap-4'>
-              {materials.map((material) => (
+              {draftMaterial && (
                 <MaterialCard
-                  key={material.uuid}
-                  material={material}
+                  material={draftMaterial as Material}
                   type='edit'
-                  onEdit={() => console.log('Edit', material.uuid)}
-                  onDelete={() => console.log('Delete', material.uuid)}
-                  onUpload={() => console.log('Upload', material.uuid)}
+                  isDraft={true}
+                  onSave={onSaveDraft}
+                  onCancel={() => setDraftMaterial(null)}
                 />
-              ))}
+              )}
+              {materials && materials.length > 0 && (
+                <>
+                  {materials.map((material) => (
+                    <MaterialCard
+                      key={material.uuid}
+                      material={material}
+                      type='edit'
+                      onSave={async (editedMaterial) => {
+                        if (courseId) {
+                          await updateMaterial(
+                            courseId,
+                            material.uuid,
+                            editedMaterial,
+                          )
+                          queryClient.invalidateQueries({
+                            queryKey: ['materials', courseId],
+                          })
+                        }
+                      }}
+                      onDelete={() => console.log('Delete', material.uuid)}
+                    />
+                  ))}
+                </>
+              )}
             </div>
           ) : (
             <StateComp type='no-content' message='Zatím žádné materiály' />

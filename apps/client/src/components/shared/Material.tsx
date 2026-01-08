@@ -83,6 +83,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     tempDescription: '',
     tempUrl: '',
     tempFile: null as File | null,
+    nameError: '', // ← Додано
     urlError: '',
     copied: false,
     saving: false,
@@ -106,6 +107,7 @@ const MaterialCard = (props: MaterialCardProps) => {
       tempDescription: material.description || '',
       tempUrl: material.type === 'url' ? material.url : '',
       tempFile: null,
+      nameError: '', // ← Додано
       urlError: '',
       copied: false,
       saving: false,
@@ -113,16 +115,34 @@ const MaterialCard = (props: MaterialCardProps) => {
   }
 
   const cancelEdit = () => {
-    setState({
-      isEditing: false,
-      tempName: '',
-      tempDescription: '',
-      tempUrl: '',
-      tempFile: null,
-      urlError: '',
-      copied: false,
-      saving: false,
-    })
+    if (
+      type === 'edit' &&
+      'isDraft' in props &&
+      props.isDraft &&
+      props.onCancel
+    ) {
+      props.onCancel()
+    } else {
+      setState({
+        isEditing: false,
+        tempName: '',
+        tempDescription: '',
+        tempUrl: '',
+        tempFile: null,
+        nameError: '',
+        urlError: '',
+        copied: false,
+        saving: false,
+      })
+    }
+  }
+
+  const handleNameChange = (name: string) => {
+    setState((prev) => ({
+      ...prev,
+      tempName: name,
+      nameError: !name.trim() ? 'Název je povinný' : '',
+    }))
   }
 
   const handleUrlChange = (url: string) => {
@@ -142,7 +162,7 @@ const MaterialCard = (props: MaterialCardProps) => {
 
   const saveEdit = async () => {
     if (!state.tempName.trim()) {
-      toast.error('Název nemůže být prázdný')
+      setState((prev) => ({ ...prev, nameError: 'Název je povinný' }))
       return
     }
 
@@ -207,17 +227,27 @@ const MaterialCard = (props: MaterialCardProps) => {
               />
 
               {state.isEditing ? (
-                <Textarea
-                  variant='ghost'
-                  value={state.tempName}
-                  onChange={(e) =>
-                    setState((prev) => ({ ...prev, tempName: e.target.value }))
-                  }
-                  className='flex-1 min-h-0 text-sm sm:text-base font-semibold'
-                  minRows={1}
-                  maxRows={3}
-                  placeholder='Název materiálu'
-                />
+                <div className='flex-1 space-y-1'>
+                  {' '}
+                  {/* ← Обгортка для помилки */}
+                  <Textarea
+                    variant='ghost'
+                    value={state.tempName}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    className={cn(
+                      'flex-1 min-h-0 text-sm sm:text-base font-semibold',
+                      state.nameError && 'border-destructive', // ← Червона рамка
+                    )}
+                    minRows={1}
+                    maxRows={3}
+                    placeholder='Název materiálu'
+                  />
+                  {state.nameError && ( // ← Показати помилку
+                    <p className='text-xs text-destructive'>
+                      {state.nameError}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <Label
                   variant='title'
@@ -239,7 +269,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                       onClick={saveEdit}
                       classNameBtn='hover:bg-secondary/20'
                       iconClassName='text-secondary'
-                      disabled={state.saving || !!state.urlError}
+                      disabled={
+                        state.saving || !!state.urlError || !!state.nameError
+                      }
                     />
                     <EditBtn
                       icon={X}
@@ -329,8 +361,11 @@ const MaterialCard = (props: MaterialCardProps) => {
                     <Button
                       variant={'outline'}
                       size={'sm'}
-                      disabled={state.saving || !!state.urlError}
+                      disabled={
+                        state.saving || !!state.urlError || !!state.nameError
+                      }
                       onClick={() => fileInputRef.current?.click()}
+                      className='py-0'
                     >
                       <Upload className='text-primary size-3 sm:size-4' />
                       {state.tempFile ? 'Změnit soubor' : 'Nahrát nový soubor'}
@@ -351,12 +386,15 @@ const MaterialCard = (props: MaterialCardProps) => {
                   )}
                 </div>
               ) : (
-                <div className='space-y-1'>
+                <div className='mb-1'>
                   <Textarea
                     variant='ghost'
                     value={state.tempUrl}
                     onChange={(e) => handleUrlChange(e.target.value)}
-                    className='w-full text-xs sm:text-sm'
+                    className={cn(
+                      'w-full text-xs sm:text-sm mb-0',
+                      state.urlError && 'border-destructive',
+                    )}
                     minRows={1}
                     maxRows={3}
                     placeholder='https://example.com'

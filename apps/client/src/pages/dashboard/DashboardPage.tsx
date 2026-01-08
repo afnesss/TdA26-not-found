@@ -10,9 +10,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
+
+type CourseRequest = {
+  name: string
+  description: string
+}
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const navigate = useNavigate()
 
   const {
@@ -29,6 +36,17 @@ const DashboardDesign1 = () => {
 
   const handleEditCourse = (course: CourseSummary) => {
     navigate(`/dashboard/${course.uuid}#details`)
+  }
+
+  const handleAddMaterial = () => {
+    const newDraft: CourseSummary = {
+      uuid: 'testid',
+      name: '',
+      description: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    setCourseDraft(newDraft)
   }
 
   return (
@@ -74,6 +92,7 @@ const DashboardDesign1 = () => {
               variant='primary'
               size='primary'
               className='hidden md:flex px-4'
+              onClick={handleAddMaterial}
             >
               <Plus className='w-5 h-5' />
               <span>Vytvořit kurz</span>
@@ -81,19 +100,36 @@ const DashboardDesign1 = () => {
           </div>
 
           {/* Courses Grid */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
-            {filteredCourses.map((course, index) => (
-              <CourseComponent
-                key={course.uuid ?? (course as CourseSummary).uuid ?? index}
-                course={course}
-                index={index}
-                type='edit'
-                onEdit={() => {
-                  handleEditCourse(course!)
-                }}
-              />
-            ))}
-          </div>
+          {coursesLoading ? (
+            <CoursesPageSceleton />
+          ) : (
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
+              {courseDraft && (
+                <CourseComponent
+                  key={courseDraft.uuid}
+                  course={courseDraft}
+                  index={0}
+                  type='edit'
+                  isDraft
+                  onEdit={() => {
+                    handleEditCourse(courseDraft!)
+                  }}
+                  onCancelDraft={() => setCourseDraft(null)}
+                />
+              )}
+              {filteredCourses.map((course, index) => (
+                <CourseComponent
+                  key={course.uuid ?? (course as CourseSummary).uuid ?? index}
+                  course={course}
+                  index={courseDraft ? index + 1 : index}
+                  type='edit'
+                  onEdit={() => {
+                    handleEditCourse(course!)
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {!coursesLoading && !coursesError && courses.length === 0 ? (
             <StateComp
@@ -108,7 +144,8 @@ const DashboardDesign1 = () => {
               message='Nepodařilo se načíst kurzy'
             />
           ) : (
-            filteredCourses.length === 0 && (
+            filteredCourses.length === 0 &&
+            !coursesLoading && (
               <StateComp
                 type='empty-search'
                 onAction={() => setSearchQuery('')}

@@ -1,6 +1,6 @@
 import type { FeedItem } from '@/lib/schemas'
 import { cn, formatDate } from '@/lib/utils'
-import { Check, Edit } from 'lucide-react'
+import { Check, Edit, X } from 'lucide-react'
 import { useState } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
@@ -23,6 +23,11 @@ const FeedItemComp = ({
     setEditName(false)
     onSave?.(editedFeed)
     //else - error toast?
+  }
+
+  const cancelEdit = () => {
+    setEditName(false)
+    setEditedFeed(feedItem)
   }
 
   return (
@@ -67,16 +72,27 @@ const FeedItemComp = ({
         {displayFeed.type === 'manual' && type === 'edit' && (
           <div className='flex gap-0.5 sm:gap-1 shrink-0'>
             {editName ? (
-              <EditBtn
-                icon={Check}
-                classNameBtn='hover:bg-secondary/20'
-                iconClassName='text-secondary size-5 stroke-[2.5]'
-                onClick={handleSave}
-              />
+              <>
+                <EditBtn
+                  icon={Check}
+                  classNameBtn='hover:bg-secondary/20'
+                  iconClassName='text-secondary size-5 stroke-[2.5]'
+                  onClick={handleSave}
+                />
+                <EditBtn
+                  icon={X}
+                  onClick={cancelEdit}
+                  classNameBtn='hover:bg-destructive/20'
+                  iconClassName='text-destructive'
+                  // disabled={saving}
+                />
+              </>
             ) : (
-              <EditBtn icon={Edit} onClick={() => setEditName(true)} />
+              <>
+                <EditBtn icon={Edit} onClick={() => setEditName(true)} />
+                <EditBtn type='delete' />
+              </>
             )}
-            <EditBtn type='delete' />
           </div>
         )}
       </div>

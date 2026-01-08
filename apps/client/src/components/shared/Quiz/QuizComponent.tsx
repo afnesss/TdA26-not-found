@@ -333,7 +333,7 @@ const QuizComponent = ({
               variant='outline'
               size='default'
               onClick={addQuestion}
-              className='w-full border-dashed border-2 py-1 hover:border-primary hover:bg-primary/5'
+              className='w-full border-dashed border-2 py-1 text-sm sm:text-base hover:border-primary hover:bg-primary/5'
             >
               <Plus size={20} />
               Přidat otázku

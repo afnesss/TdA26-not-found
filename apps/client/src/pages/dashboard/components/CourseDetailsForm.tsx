@@ -16,6 +16,7 @@ const CourseDetailsForm = ({
   const [courseEdits, setCourseEdits] = useState<
     Partial<{ name: string; description: string }>
   >({})
+  const [hasChanges, setHasChanges] = useState(false)
 
   return (
     <Card
@@ -45,8 +46,10 @@ const CourseDetailsForm = ({
               label='Název kurzu'
               inputProps={{
                 value: courseEdits.name ?? selectedCourse?.name ?? '',
-                onChange: (e) =>
-                  setCourseEdits((prev) => ({ ...prev, name: e.target.value })),
+                onChange: (e) => {
+                  setCourseEdits((prev) => ({ ...prev, name: e.target.value }))
+                  setHasChanges(true)
+                },
                 type: 'text',
                 placeholder: 'Název kurzu',
               }}
@@ -57,11 +60,13 @@ const CourseDetailsForm = ({
               textareaProps={{
                 value:
                   courseEdits.description ?? selectedCourse?.description ?? '',
-                onChange: (e) =>
+                onChange: (e) => {
+                  setHasChanges(true)
                   setCourseEdits((prev) => ({
                     ...prev,
                     description: e.target.value,
-                  })),
+                  }))
+                },
                 placeholder: 'Zadejte popis kurzu',
               }}
             />
@@ -97,6 +102,7 @@ const CourseDetailsForm = ({
               variant='primary'
               size='primary'
               onClick={() => {
+                setHasChanges(false)
                 updateCourse(selectedCourse.uuid, {
                   name: courseEdits.name ?? selectedCourse.name,
                   description:
@@ -105,6 +111,7 @@ const CourseDetailsForm = ({
                     undefined,
                 })
               }}
+              disabled={!hasChanges}
               className='w-fit'
             >
               Uložit změny

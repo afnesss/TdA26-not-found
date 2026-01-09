@@ -1,10 +1,10 @@
-import { getCourses } from '@/api/queries/courseQueries'
+import { createCourse, getCourses } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { CourseSummary } from '@/lib/schemas'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -20,6 +20,8 @@ type CourseRequest = {
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
+  const queryClient = useQueryClient()
+
   const navigate = useNavigate()
 
   const {
@@ -111,6 +113,13 @@ const DashboardDesign1 = () => {
                   index={0}
                   type='edit'
                   isDraft
+                  onSaveDraft={async (data) => {
+                    await createCourse(data)
+                    setCourseDraft(null)
+                    queryClient.invalidateQueries({
+                      queryKey: ['courses'],
+                    })
+                  }}
                   onEdit={() => {
                     handleEditCourse(courseDraft!)
                   }}

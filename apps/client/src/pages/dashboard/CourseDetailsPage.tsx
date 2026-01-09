@@ -1,23 +1,16 @@
 import { getCourses } from '@/api/queries/courseQueries'
-import { getFeed, updatePost } from '@/api/queries/feedQueries'
-import { getQuizzes, updateQuiz } from '@/api/queries/quizQueries'
-import FeedItemComp from '@/components/shared/FeedItemComp'
-import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import TabButton from '@/components/shared/TabButton'
-import type { CourseSummary, FeedItem, Material, Quiz } from '@/lib/schemas'
+import type { CourseSummary, Material } from '@/lib/schemas'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import {
-  DetailsContentSkeleton,
-  FeedContentSkeleton,
-  QuizzesContentSkeleton,
-} from '../../components/shared/loadingskeleton/DetailsSkeleton'
+import { DetailsContentSkeleton } from '../../components/shared/loadingskeleton/DetailsSkeleton'
 import CourseDetailsForm from './components/CourseDetailsForm'
-import DetailHeader from './components/DetailHeader'
+import FeedTab from './components/FeedTab'
 import MaterialsTab from './components/MaterialsTab'
+import QuizzesTab from './components/QuizzesTab'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -38,28 +31,6 @@ const CourseDetailPage = () => {
   })
 
   const selectedCourse = courses.find((c) => c.uuid === courseId) || null
-
-  const {
-    data: quizzes = [],
-    isError: quizzesError,
-    isLoading: quizzesLoading,
-    refetch: refetchQuizzes,
-  } = useQuery<Quiz[] | null>({
-    queryKey: ['quizzes', courseId],
-    queryFn: () => getQuizzes(courseId!),
-    enabled: Boolean(courseId) && activeTab === 'quizzes',
-  })
-
-  const {
-    data: feed = [],
-    isError: feedError,
-    isLoading: feedLoading,
-    refetch: refetchFeed,
-  } = useQuery<FeedItem[] | null>({
-    queryKey: ['feed', courseId],
-    queryFn: () => getFeed(courseId!),
-    enabled: Boolean(courseId) && activeTab === 'feed',
-  })
 
   const handleTabChange = (tab: string) => {
     navigate(`/dashboard/${courseId}#${tab}`)
@@ -130,99 +101,18 @@ const CourseDetailPage = () => {
         </>
       )}
 
-      {activeTab === 'materials' && <MaterialsTab activeTab={activeTab} />}
+      {activeTab === 'materials' && (
+        <MaterialsTab courseId={courseId!} activeTab={activeTab} />
+      )}
 
       {/* Feed Tab */}
       {activeTab === 'feed' && (
-        <div className='space-y-6'>
-          <DetailHeader
-            onButtonClick={() => {
-              console.log('зробити feed')
-            }}
-            title=' Informační kanál'
-            gradient='accent-teal'
-            buttonText='Nový příspěvek'
-          />
-
-          {feedLoading ? (
-            <FeedContentSkeleton />
-          ) : feedError ? (
-            <StateComp
-              type='error'
-              onAction={() => refetchFeed()}
-              message='Nepodařilo se načíst informační kanál'
-            />
-          ) : feed && feed.length > 0 ? (
-            <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-6'>
-              <div className='space-y-4'>
-                {feed.map((feedItem) => (
-                  <FeedItemComp
-                    feedItem={feedItem}
-                    key={feedItem.uuid}
-                    type='edit'
-                    onSave={async (editedFeed) => {
-                      if (courseId) {
-                        await updatePost(courseId, feedItem.uuid, editedFeed)
-                        queryClient.invalidateQueries({
-                          queryKey: ['feed', courseId],
-                        })
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <StateComp type='no-content' message='Zatím žádné příspěvky' />
-          )}
-        </div>
+        <FeedTab courseId={courseId!} activeTab={activeTab} />
       )}
 
       {/* Quizzes Tab */}
       {activeTab === 'quizzes' && (
-        <div className='space-y-6'>
-          <DetailHeader
-            onButtonClick={() => {
-              console.log('зробити kviz')
-            }}
-            title='Kvízy kurzu'
-            gradient='accent-teal'
-            buttonText='Vytvořit kvíz'
-          />
-
-          {quizzesLoading ? (
-            <QuizzesContentSkeleton />
-          ) : quizzesError ? (
-            <StateComp
-              type='error'
-              onAction={() => refetchQuizzes()}
-              message='Nepodařilo se načíst kvízy'
-            />
-          ) : quizzes && quizzes.length > 0 ? (
-            <div className='grid gap-4'>
-              {quizzes.map((quiz) => (
-                <QuizComponent
-                  key={quiz.uuid}
-                  quiz={quiz}
-                  mode='lecturer'
-                  onSave={async (updatedQuiz) => {
-                    if (courseId) {
-                      await updateQuiz(courseId, quiz.uuid!, updatedQuiz)
-                      queryClient.invalidateQueries({
-                        queryKey: ['quizzes', courseId],
-                      })
-                    }
-                  }}
-                  onDelete={() => {
-                    console.log('Delete:', quiz.uuid)
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <StateComp type='no-content' message='Zatím žádné kvízy' />
-          )}
-        </div>
+        <QuizzesTab courseId={courseId!} activeTab={activeTab} />
       )}
     </div>
   )

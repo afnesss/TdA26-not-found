@@ -4,30 +4,44 @@ import { Check, Edit, X } from 'lucide-react'
 import { useState } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
+import { toast } from 'sonner'
 
 const FeedItemComp = ({
   feedItem,
   type,
   onSave,
+  isDraft,
+  onCancelDraft,
 }: {
   feedItem: FeedItem
   type: 'classic' | 'edit'
   onSave?: (post: FeedItem) => void
+  onCancelDraft?: () => void
+  isDraft?: true
 }) => {
-  const [editName, setEditName] = useState(false)
+  const [editName, setEditName] = useState(isDraft ? true : false)
   const [editedFeed, setEditedFeed] = useState<FeedItem>(feedItem)
+  const [messageError, setMessageError] = useState<string | null>(null)
 
   const displayFeed = type === 'edit' ? editedFeed : feedItem
 
   const handleSave = async () => {
+    if (editedFeed.message === '') {
+      setMessageError('Příspěvek nesmí být prázdný')
+      return
+    }
     setEditName(false)
     onSave?.(editedFeed)
+    toast.success('Příspěvek uložen')
     //else - error toast?
   }
 
   const cancelEdit = () => {
     setEditName(false)
     setEditedFeed(feedItem)
+    if (isDraft && onCancelDraft) {
+      onCancelDraft()
+    }
   }
 
   return (
@@ -76,7 +90,7 @@ const FeedItemComp = ({
                 <EditBtn
                   icon={Check}
                   classNameBtn='hover:bg-secondary/20'
-                  iconClassName='text-secondary size-5 stroke-[2.5]'
+                  iconClassName='text-secondary md:size-5 stroke-[2.5]'
                   onClick={handleSave}
                 />
                 <EditBtn
@@ -99,19 +113,28 @@ const FeedItemComp = ({
 
       {/* Content */}
       {editName && type === 'edit' ? (
-        <Textarea
-          className='text-xs sm:text-sm md:text-base p-2'
-          variant={'ghost'}
-          value={displayFeed.message}
-          onClick={(e) => e.stopPropagation()}
-          onChange={(e) =>
-            setEditedFeed({
-              ...editedFeed,
-              message: (e.target as HTMLTextAreaElement).value,
-            })
-          }
-          rows={3}
-        />
+        <>
+          <Textarea
+            className='text-xs sm:text-sm md:text-base p-2 sm:placeholder:text-sm md:placeholder:pt-0.5'
+            variant={'ghost'}
+            value={displayFeed.message}
+            placeholder='Text příspěvku'
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              setEditedFeed({
+                ...editedFeed,
+                message: (e.target as HTMLTextAreaElement).value,
+              })
+              if (editedFeed.message) {
+                setMessageError(null)
+              }
+            }}
+            rows={3}
+          />
+          {messageError && (
+            <p className='text-xs text-destructive'>{messageError}</p>
+          )}
+        </>
       ) : (
         <p className='text-gray-900 text-xs sm:text-sm md:text-base leading-relaxed wrap-break-word'>
           {displayFeed.message}

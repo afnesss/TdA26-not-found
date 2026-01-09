@@ -1,16 +1,25 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courses, quizzes, quizSubmissions, courseMaterials, feedItems } from "../db/schema";
+import {
+  courses,
+  quizzes,
+  quizSubmissions,
+  courseMaterials,
+  feedItems,
+} from "../db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 
 export async function getAllCourses(_req: Request, res: Response) {
-  const allCourses = await db.select({
-    uuid: courses.uuid,
-    name: courses.name,
-    description: courses.description,
-    createdAt: courses.createdAt,
-    updatedAt: courses.updatedAt,
-  }).from(courses);
+  const allCourses = await db
+    .select({
+      uuid: courses.uuid,
+      name: courses.name,
+      description: courses.description,
+      createdAt: courses.createdAt,
+      updatedAt: courses.updatedAt,
+    })
+    .from(courses)
+    .orderBy(desc(courses.createdAt));
 
   res.json(allCourses);
 }
@@ -18,13 +27,16 @@ export async function getAllCourses(_req: Request, res: Response) {
 export async function getCourseByUuid(req: Request, res: Response) {
   const { uuid } = req.params;
 
-  const course = await db.select({
-    uuid: courses.uuid,
-    name: courses.name,
-    description: courses.description,
-    createdAt: courses.createdAt,
-    updatedAt: courses.updatedAt,
-  }).from(courses).where(eq(courses.uuid, uuid));
+  const course = await db
+    .select({
+      uuid: courses.uuid,
+      name: courses.name,
+      description: courses.description,
+      createdAt: courses.createdAt,
+      updatedAt: courses.updatedAt,
+    })
+    .from(courses)
+    .where(eq(courses.uuid, uuid));
 
   if (course.length === 0) {
     res.status(404).json({ error: "Course not found" });
@@ -39,7 +51,9 @@ export async function getCourseByUuid(req: Request, res: Response) {
       questions: quizzes.questions,
       createdAt: quizzes.createdAt,
       updatedAt: quizzes.updatedAt,
-      attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+      attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
+        Number
+      ),
     })
     .from(quizzes)
     .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
@@ -75,16 +89,19 @@ export async function createCourse(req: Request, res: Response) {
     return;
   }
 
-  const newCourse = await db.insert(courses).values({
-    name,
-    description: description || null,
-  }).returning({
-    uuid: courses.uuid,
-    name: courses.name,
-    description: courses.description,
-    createdAt: courses.createdAt,
-    updatedAt: courses.updatedAt,
-  });
+  const newCourse = await db
+    .insert(courses)
+    .values({
+      name,
+      description: description || null,
+    })
+    .returning({
+      uuid: courses.uuid,
+      name: courses.name,
+      description: courses.description,
+      createdAt: courses.createdAt,
+      updatedAt: courses.updatedAt,
+    });
 
   res.status(201).json(newCourse[0]);
 }
@@ -93,17 +110,22 @@ export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
   const { name, description } = req.body;
 
-  const existing = await db.select().from(courses).where(eq(courses.uuid, uuid));
+  const existing = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.uuid, uuid));
 
   if (existing.length === 0) {
     res.status(404).json({ error: "Course not found" });
     return;
   }
 
-  const updated = await db.update(courses)
+  const updated = await db
+    .update(courses)
     .set({
       name: name ?? existing[0].name,
-      description: description !== undefined ? description : existing[0].description,
+      description:
+        description !== undefined ? description : existing[0].description,
       updatedAt: new Date(),
     })
     .where(eq(courses.uuid, uuid))
@@ -121,7 +143,10 @@ export async function updateCourse(req: Request, res: Response) {
 export async function deleteCourse(req: Request, res: Response) {
   const { uuid } = req.params;
 
-  const existing = await db.select().from(courses).where(eq(courses.uuid, uuid));
+  const existing = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.uuid, uuid));
 
   if (existing.length === 0) {
     res.status(404).json({ error: "Course not found" });

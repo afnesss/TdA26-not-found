@@ -64,10 +64,10 @@ const LoginPage = () => {
             </Label>
 
             {/* Form content */}
-            <div className='px-6 lg:px-8 py-8 bg-background/95'>
+            <div className='px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className='flex flex-col gap-2'
+                className='flex flex-col gap-3'
               >
                 <FormField
                   label='Jméno'
@@ -135,6 +135,7 @@ const LoginPage = () => {
                   type='submit'
                   variant='primary'
                   size='primary'
+                  className='mt-3'
                 >
                   {isLogin ? 'Přihlásit se' : 'Zaregistrovat se'}
                 </Button>

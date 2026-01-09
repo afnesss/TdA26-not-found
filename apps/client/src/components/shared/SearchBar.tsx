@@ -18,7 +18,7 @@ const SearchBar = ({ searchQuery, setSearchQuery }: SearchBarProps) => {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder='Vyhledat kurz...'
-        className='pl-12! pr-12'
+        className='pl-12! pr-12 '
       />
     </div>
   )

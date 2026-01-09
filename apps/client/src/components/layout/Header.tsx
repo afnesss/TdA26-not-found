@@ -39,7 +39,8 @@ export default function Header() {
                 Kurzy
               </Button>
             </div>
-          ) : (
+          ) : // {auth.isAutenticated()
+          auth.isAutenticated() ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -80,6 +81,10 @@ export default function Header() {
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            <Button variant={'tab'} onClick={() => navigate('/courses')}>
+              Kurzy
+            </Button>
           )}
           <Button
             variant={'secondary'}

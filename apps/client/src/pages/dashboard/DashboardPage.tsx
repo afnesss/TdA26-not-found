@@ -12,11 +12,6 @@ import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 
-type CourseRequest = {
-  name: string
-  description: string
-}
-
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
@@ -40,7 +35,7 @@ const DashboardDesign1 = () => {
     navigate(`/dashboard/${course.uuid}#details`)
   }
 
-  const handleAddMaterial = () => {
+  const handleAddCourse = () => {
     const newDraft: CourseSummary = {
       uuid: 'testid',
       name: '',
@@ -94,7 +89,7 @@ const DashboardDesign1 = () => {
               variant='primary'
               size='primary'
               className='hidden md:flex px-4'
-              onClick={handleAddMaterial}
+              onClick={handleAddCourse}
             >
               <Plus className='w-5 h-5' />
               <span>Vytvořit kurz</span>

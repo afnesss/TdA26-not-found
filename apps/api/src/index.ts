@@ -30,10 +30,10 @@ app.use(
 
 // Skip body parsing for multipart requests (handled by multer)
 app.use((req, res, next) => {
-  if (req.headers['content-type']?.startsWith('multipart/form-data')) {
+  if (req.headers["content-type"]?.startsWith("multipart/form-data")) {
     return next();
   }
-  express.json({ limit: '50mb' })(req, res, next);
+  express.json({ limit: "50mb" })(req, res, next);
 });
 
 // app.use(
@@ -62,6 +62,19 @@ app.use("/courses/:courseId/materials", materialRoutes);
 app.use("/courses/:courseId/quizzes", quizRoutes);
 app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
+
+// Error handling middleware
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+);
 
 async function start() {
   try {

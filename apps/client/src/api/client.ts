@@ -31,9 +31,9 @@ export default async function apiFetch<T>(
     let errorBody: unknown = null
 
     try {
-      errorBody = response.json()
+      errorBody = await response.json()
     } catch (error) {
-      throw new Error(`API ${response.status}: ${JSON.stringify(errorBody)}`)
+      throw new Error(`API ${response.status}: ${response.statusText}`)
     }
 
     throw {

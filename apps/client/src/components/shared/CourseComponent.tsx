@@ -20,21 +20,23 @@ import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
 
-type CourseCompProps =
-  | {
-      type: 'classic'
-      course: CourseSummary
-      index: number
-    }
-  | {
-      type: 'edit'
-      course: CourseSummary
-      index: number
-      isDraft?: true
-      onEdit: () => void
-      onSaveDraft?: (data: { name: string; description?: string }) => void
-      onCancelDraft?: () => void
-    }
+interface CourseClassic {
+  type: 'classic'
+  course: CourseSummary
+  index: number
+}
+
+interface CourseEdit {
+  type: 'edit'
+  course: CourseSummary
+  index: number
+  isDraft?: true
+  onEdit: () => void
+  onSaveDraft?: (data: { name: string; description?: string }) => void
+  onCancelDraft?: () => void
+}
+
+type CourseCompProps = CourseClassic | CourseEdit
 
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
@@ -118,7 +120,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 value={state.tempName}
                 onChange={(e) => handleNameChange(e.target.value)} // ← Змінено
                 className={cn(
-                  'font-semibold text-base sm:text-lg lg:text-xl md:placeholder:text-lg overflow-hidden flex items-center sm:py-1.8',
+                  'font-semibold text-base sm:text-lg lg:text-xl overflow-hidden flex items-center sm:py-1.8 placeholder:pt-1',
                   state.nameError && 'border-destructive', // ← Червона рамка
                 )}
                 minRows={1}

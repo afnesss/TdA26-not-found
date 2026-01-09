@@ -7,16 +7,46 @@ import { Label } from '@/components/ui/label'
 import { colorStyles } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 const CourseDetailsForm = ({
   selectedCourse,
 }: {
   selectedCourse: CourseSummary
 }) => {
+  const queryClient = useQueryClient()
   const [courseEdits, setCourseEdits] = useState<
     Partial<{ name: string; description: string }>
   >({})
   const [hasChanges, setHasChanges] = useState(false)
+
+  const updateCourseMutation = useMutation({
+    mutationFn: (data: { name: string; description?: string }) =>
+      updateCourse(selectedCourse.uuid, data),
+    onSuccess: (updatedCourse) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+
+      setHasChanges(false)
+      setCourseEdits({})
+
+      toast.success('Kurz byl aktualizovan')
+
+      console.log('Course updated:', updatedCourse)
+    },
+    onError: (error) => {
+      console.error('Update failed:', error)
+      toast.error('Chyba při aktualizaci kurzu')
+    },
+  })
+
+  const handleSave = () => {
+    updateCourseMutation.mutate({
+      name: courseEdits.name ?? selectedCourse.name,
+      description:
+        courseEdits.description ?? selectedCourse.description ?? undefined,
+    })
+  }
 
   return (
     <Card
@@ -52,6 +82,7 @@ const CourseDetailsForm = ({
                 },
                 type: 'text',
                 placeholder: 'Název kurzu',
+                disabled: updateCourseMutation.isPending, // ← Disabled під час завантаження
               }}
             />
             <FormField
@@ -68,6 +99,7 @@ const CourseDetailsForm = ({
                   }))
                 },
                 placeholder: 'Zadejte popis kurzu',
+                disabled: updateCourseMutation.isPending, // ← Disabled під час завантаження
               }}
             />
           </div>
@@ -101,20 +133,14 @@ const CourseDetailsForm = ({
             <Button
               variant='primary'
               size='primary'
-              onClick={() => {
-                setHasChanges(false)
-                updateCourse(selectedCourse.uuid, {
-                  name: courseEdits.name ?? selectedCourse.name,
-                  description:
-                    courseEdits.description ??
-                    selectedCourse.description ??
-                    undefined,
-                })
-              }}
-              disabled={!hasChanges}
+              onClick={handleSave}
+              disabled={!hasChanges || updateCourseMutation.isPending}
               className='w-fit'
             >
               Uložit změny
+              {/* {updateCourseMutation.isPending
+                ? 'Ukládání...'
+                : 'Uložit změny'}{' '} */}
             </Button>
           </CardFooter>
         </CardContent>

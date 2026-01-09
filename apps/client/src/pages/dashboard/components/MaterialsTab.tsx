@@ -12,10 +12,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 
-const MaterialsTab = ({ activeTab }: { activeTab: string }) => {
+const MaterialsTab = ({
+  courseId,
+  activeTab,
+}: {
+  courseId: string
+  activeTab: string
+}) => {
   const queryClient = useQueryClient()
   const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
-  const { courseId } = useParams<{ courseId: string }>()
 
   const {
     data: materials = [],

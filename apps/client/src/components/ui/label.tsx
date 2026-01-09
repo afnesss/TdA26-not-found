@@ -12,7 +12,7 @@ const labelVariants = cva('', {
         'text-md md:text-lg text-foreground text-left max-w-full md:max-w-xl lg:max-w-2xl',
       name: 'font-bold text-neutral-black group-hover:text-primary transition-colors duration-300 relative z-10 line-clamp-2 leading-snug flex-1 pr-2',
       formTitle:
-        'relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-5',
+        'relative bg-linear-to-r from-primary to-accent-blue text-xl font-semibold text-background flex items-center justify-center py-3 md:py-5',
       emptyState: 'text-xl md:text-2xl font-bold text-neutral-black mb-7',
       error: 'text-destructive font-normal',
     },

@@ -33,7 +33,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
     <h3
       data-slot='card-title'
       className={cn(
-        ' flex items-start justify-between text-lg lg:text-xl font-bold text-neutral-black group-hover:text-primary transition-colors duration-300 relative z-10 line-clamp-2 leading-snug flex-1 pr-2',
+        ' flex items-start justify-between text-base sm:text-lg lg:text-xl font-bold text-neutral-black group-hover:text-primary transition-colors duration-300 relative z-10 line-clamp-2 leading-snug flex-1 pr-2',
         className,
       )}
       {...props}

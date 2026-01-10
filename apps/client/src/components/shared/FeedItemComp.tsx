@@ -115,7 +115,10 @@ const FeedItemComp = ({
       {editName && type === 'edit' ? (
         <>
           <Textarea
-            className='text-xs sm:text-sm md:text-base p-2 sm:placeholder:text-sm md:placeholder:pt-0.5'
+            className={cn(
+              'text-xs sm:text-sm md:text-base p-2 sm:placeholder:text-sm md:placeholder:pt-0.5',
+              messageError && 'border-destructive',
+            )}
             variant={'ghost'}
             value={displayFeed.message}
             placeholder='Text příspěvku'

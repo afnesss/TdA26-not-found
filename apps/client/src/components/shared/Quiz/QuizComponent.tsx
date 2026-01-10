@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { Question, Quiz } from '@/lib/schemas'
+import { QuizValidationSchema, type Question, type Quiz } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import {
@@ -9,10 +9,14 @@ import {
   ChevronUp,
   HelpCircle,
   Plus,
+  X,
 } from 'lucide-react'
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
+import { useForm, useWatch, type FieldValue } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { cn } from '@/lib/utils'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -34,6 +38,8 @@ type QuizComponentProps = {
   // Lecturer mode props
   onSave?: (quiz: Quiz) => void
   onDelete?: () => void
+  isDraft?: boolean
+  onCancelDraft?: () => void
 }
 
 const QuizComponent = ({
@@ -47,43 +53,46 @@ const QuizComponent = ({
   isSubmitDisabled,
   onSave,
   onDelete,
+  isDraft,
+  onCancelDraft,
 }: QuizComponentProps) => {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [editedQuiz, setEditedQuiz] = useState<Quiz>(quiz)
-  const [hasChanges, setHasChanges] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
 
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting: isSubmittingNew, isDirty },
+    setValue,
+    getValues,
+    reset,
+  } = useForm<Quiz>({
+    resolver: zodResolver(QuizValidationSchema),
+    defaultValues: quiz,
+    mode: 'onSubmit',
+  })
+  const formValues = useWatch({ control, defaultValue: quiz })
   // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {
-    if (!isExpanded && mode === 'lecturer') {
-      setEditedQuiz(JSON.parse(JSON.stringify(quiz)))
-      setHasChanges(false)
-    }
     setIsExpanded(!isExpanded)
   }
-
-  const markAsChanged = () => {
-    if (mode === 'lecturer') {
-      setHasChanges(true)
-    }
-  }
-
+  useEffect(() => {
+    reset(quiz)
+  }, [quiz, reset])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
-    setEditedQuiz({ ...editedQuiz, title })
-    markAsChanged()
+    setValue(`title`, title, { shouldDirty: true, shouldValidate: true })
   }
 
   const updateQuestionText = (qIndex: number, text: string) => {
-    const newQuestions = [...editedQuiz.questions]
-    newQuestions[qIndex] = { ...newQuestions[qIndex], question: text }
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
+    setValue(`questions.${qIndex}.question`, text, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   const updateQuestionType = (qIndex: number, type: QuestionType) => {
-    const newQuestions = [...editedQuiz.questions] as Question[]
-    const oldQuestion = newQuestions[qIndex]
-
+    const oldQuestion = getValues(`questions.${qIndex}`)
     const newQuestion: Question =
       type === 'singleChoice'
         ? {
@@ -100,108 +109,118 @@ const QuizComponent = ({
             options: oldQuestion.options,
             correctIndices: [0],
           }
-
-    newQuestions[qIndex] = newQuestion
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
+    setValue(`questions.${qIndex}`, newQuestion, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   const updateOption = (qIndex: number, optIndex: number, value: string) => {
-    const newQuestions = [...editedQuiz.questions]
-    newQuestions[qIndex] = {
-      ...newQuestions[qIndex],
-      options: newQuestions[qIndex].options.map((opt, i) =>
-        i === optIndex ? value : opt,
-      ),
-    }
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
+    setValue(`questions.${qIndex}.options.${optIndex}`, value, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   const toggleCorrectAnswer = (qIndex: number, optIndex: number) => {
-    const newQuestions = [...editedQuiz.questions] as Question[]
-    const question = { ...newQuestions[qIndex] } as Question
+    const question = getValues(`questions.${qIndex}`) as Question
 
     if (question.type === 'singleChoice') {
       question.correctIndex = optIndex
+      setValue(`questions.${qIndex}.correctIndex`, optIndex, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
     } else {
       const indices = question.correctIndices || []
-      question.correctIndices = indices.includes(optIndex)
+      const newIndices = indices.includes(optIndex)
         ? indices.filter((i) => i !== optIndex)
         : [...indices, optIndex]
-    }
 
-    newQuestions[qIndex] = question
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
+      setValue(`questions.${qIndex}.correctIndices`, newIndices, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    }
   }
 
   const addOption = (qIndex: number) => {
-    const newQuestions = [...editedQuiz.questions]
-    newQuestions[qIndex] = {
-      ...newQuestions[qIndex],
-      options: [...newQuestions[qIndex].options, 'Nová možnost'],
-    }
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
+    const currentOptions = getValues(`questions.${qIndex}.options`)
+    setValue(`questions.${qIndex}.options`, [...currentOptions, ''], {
+      shouldDirty: true,
+      shouldValidate: false,
+    })
   }
 
   const removeOption = (qIndex: number, optIndex: number) => {
-    const newQuestions = [...editedQuiz.questions]
-    const question = { ...newQuestions[qIndex] }
-
-    question.options = question.options.filter((_, i) => i !== optIndex)
+    const question = getValues(`questions.${qIndex}`)
+    const newOptions = question.options.filter((item, i) => i !== optIndex)
+    setValue(`questions.${qIndex}.options`, newOptions, { shouldDirty: true })
 
     if (question.type === 'singleChoice') {
       if (question.correctIndex === optIndex) {
-        question.correctIndex = 0
+        setValue(`questions.${qIndex}.correctIndex`, 0, {
+          shouldDirty: true,
+          shouldValidate: false,
+        })
       } else if (question.correctIndex! > optIndex) {
-        question.correctIndex! -= 1
+        setValue(
+          `questions.${qIndex}.correctIndex`,
+          question.correctIndex! - 1,
+          {
+            shouldDirty: true,
+            shouldValidate: false,
+          },
+        )
       }
     } else {
-      question.correctIndices = (question.correctIndices || [])
+      const newIndices = (question.correctIndices || [])
         .filter((i) => i !== optIndex)
         .map((i) => (i > optIndex ? i - 1 : i))
+      setValue(`questions.${qIndex}.correctIndices`, newIndices, {
+        shouldDirty: true,
+        shouldValidate: false,
+      })
     }
-
-    newQuestions[qIndex] = question
-    setEditedQuiz({ ...editedQuiz, questions: newQuestions })
-    markAsChanged()
   }
 
   const addQuestion = () => {
-    setEditedQuiz({
-      ...editedQuiz,
-      questions: [
-        ...editedQuiz.questions,
+    const currentQuestions = getValues(`questions`)
+
+    setValue(
+      `questions`,
+      [
+        ...currentQuestions,
         {
           uuid: `temp-${Date.now()}`,
           type: 'singleChoice',
-          question: 'Nová otázka',
-          options: ['Možnost 1', 'Možnost 2'],
+          question: '',
+          options: ['', ''],
           correctIndex: 0,
         },
       ],
-    })
-    markAsChanged()
+      {
+        shouldDirty: true,
+        shouldValidate: false,
+      },
+    )
   }
 
   const removeQuestion = (qIndex: number) => {
-    setEditedQuiz({
-      ...editedQuiz,
-      questions: editedQuiz.questions.filter((_, i) => i !== qIndex),
-    })
-    markAsChanged()
+    const currentQuestions = getValues(`questions`)
+    setValue(
+      `questions`,
+      currentQuestions.filter((item, i) => i !== qIndex),
+      { shouldDirty: true, shouldValidate: false },
+    )
   }
 
-  const handleSave = () => {
-    if (onSave) {
-      onSave(editedQuiz)
-      setHasChanges(false)
-    }
-  }
+  const handleSave = handleSubmit((data: Quiz) => {
+    onSave?.(data)
+    reset()
+  })
 
-  const displayQuiz = mode === 'lecturer' ? editedQuiz : quiz
+  const displayQuiz = mode === 'lecturer' ? formValues : quiz
 
   return (
     <div className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
@@ -212,7 +231,7 @@ const QuizComponent = ({
       >
         <div className='flex items-center justify-between gap-2 sm:gap-4'>
           <div className='flex-1 min-w-0'>
-            {mode === 'lecturer' && hasChanges && (
+            {mode === 'lecturer' && isDirty && (
               <span className='sm:hidden inline-block text-[10px] font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded-full mb-1.5'>
                 Neuloženo
               </span>
@@ -220,20 +239,37 @@ const QuizComponent = ({
 
             {/* quiz name */}
             {mode === 'lecturer' && isExpanded ? (
-              <Textarea
-                className='text-sm sm:text-md md:text-lg font-bold p-1'
-                variant={'ghost'}
-                value={displayQuiz.title}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => updateTitle(e.target.value)}
-              />
+              <>
+                {' '}
+                <Textarea
+                  className={cn(
+                    'text-sm sm:text-md md:text-lg font-bold p-1',
+                    errors.title && 'border-destructive',
+                  )}
+                  variant={'ghost'}
+                  value={displayQuiz.title}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => updateTitle(e.target.value)}
+                  placeholder='Zadejte název kvízu'
+                />
+                {errors.title?.message && (
+                  <p className='error-text'>{errors.title.message}</p>
+                )}
+                {errors.questions && !errors.title?.message && (
+                  <p className='error-text'>{errors.questions.message}</p>
+                )}
+              </>
             ) : (
-              <Label
-                className='text-sm sm:text-base md:text-lg font-bold leading-tight mb-1.5 sm:mb-3 block'
-                variant={'name'}
-              >
-                {quiz.title}
-              </Label>
+              <>
+                <Label
+                  className={cn(
+                    'text-sm sm:text-base md:text-lg font-bold leading-tight mb-1.5 sm:mb-3 block',
+                  )}
+                  variant={'name'}
+                >
+                  {quiz.title}
+                </Label>
+              </>
             )}
 
             {/* Статистика */}
@@ -245,29 +281,41 @@ const QuizComponent = ({
 
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <HelpCircle size={14} className='text-secondary shrink-0' />
-                <span>{displayQuiz.questions.length} otázek</span>
+                <span>{displayQuiz.questions?.length ?? 0} otázek</span>
               </span>
             </div>
           </div>
 
           <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
-            {mode === 'lecturer' && hasChanges && (
+            {mode === 'lecturer' && isDirty && (
               <span className='hidden sm:inline-block text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
                 Neuloženo
               </span>
             )}
 
-            {mode === 'lecturer' && (
+            {mode === 'lecturer' && isDraft ? (
               <EditBtn
                 type='delete'
+                icon={X}
+                iconClassName='size-5 [stroke-width:2.5]'
                 onClick={(e) => {
                   e?.stopPropagation()
-                  onDelete?.()
+                  onCancelDraft?.()
                 }}
               />
+            ) : (
+              mode === 'lecturer' && (
+                <EditBtn
+                  type='delete'
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    onDelete?.()
+                  }}
+                />
+              )
             )}
 
-            <button className='p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition-colors shrink-0'>
+            <button className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'>
               {isExpanded ? (
                 <ChevronUp
                   size={20}
@@ -290,7 +338,7 @@ const QuizComponent = ({
       {isExpanded && (
         <div className='p-3 md:p-5 space-y-4 border-t border-gray-100 bg-gray-50/50'>
           {/* Questions */}
-          {displayQuiz.questions.map((origQuestion, qIndex) => {
+          {displayQuiz.questions?.map((origQuestion, qIndex) => {
             const question = origQuestion as Question
             return (
               <Fragment key={question.uuid ?? qIndex}>
@@ -298,6 +346,7 @@ const QuizComponent = ({
                   question={question}
                   qIndex={qIndex}
                   mode={mode}
+                  questionError={errors.questions?.[qIndex] as object}
                   // lecturer props
                   onQuestionTextUpdate={(text) =>
                     updateQuestionText(qIndex, text)
@@ -319,7 +368,7 @@ const QuizComponent = ({
                   onAnswerChange={onAnswerChange}
                 />
 
-                {qIndex < displayQuiz.questions.length - 1 && (
+                {qIndex < (displayQuiz.questions?.length ?? 0) - 1 && (
                   <hr className='border-b border mt-2 border-gray-100' />
                 )}
               </Fragment>
@@ -331,7 +380,12 @@ const QuizComponent = ({
               variant='outline'
               size='default'
               onClick={addQuestion}
-              className='w-full border-dashed border-2 py-1 text-sm sm:text-base hover:border-primary hover:bg-primary/5'
+              className={cn(
+                'w-full border-dashed border-2 py-1 text-sm sm:text-base hover:border-primary hover:bg-primary/5',
+                errors.questions &&
+                  !Array.isArray(errors.questions) &&
+                  'border-destructive',
+              )}
             >
               <Plus size={20} />
               Přidat otázku
@@ -347,7 +401,9 @@ const QuizComponent = ({
                     variant='primary'
                     size='grid'
                     className='w-fit'
-                    disabled={isSubmitDisabled || isSubmitting}
+                    disabled={
+                      isSubmitDisabled || isSubmitting || isSubmittingNew
+                    }
                     onClick={onSubmit}
                   >
                     Odeslat odpovědi
@@ -380,8 +436,15 @@ const QuizComponent = ({
                 <Button
                   variant='primary'
                   size='grid'
-                  onClick={handleSave}
-                  disabled={!hasChanges}
+                  onClick={() => {
+                    handleSave()
+                  }}
+                  disabled={
+                    isSubmitDisabled ||
+                    isSubmitting ||
+                    isSubmittingNew ||
+                    !isDirty
+                  }
                 >
                   Uložit změny
                 </Button>

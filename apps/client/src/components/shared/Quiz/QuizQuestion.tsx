@@ -14,6 +14,7 @@ import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { Check, Plus, X } from 'lucide-react'
 import QuizOption from './QuizOption'
 import { cn } from '@/lib/utils'
+import type { FieldError } from 'react-hook-form'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -30,6 +31,12 @@ type QuizQuestionProps = {
   onOptionRemove?: (optIndex: number) => void
   onCorrectToggle?: (optIndex: number) => void
   onAddOption?: () => void
+  questionError?: {
+    question?: FieldError
+    options?: FieldError[]
+    correctIndex?: FieldError
+    correctIndices?: FieldError
+  }
 
   // User mode
   userState?: QuizState
@@ -52,6 +59,7 @@ const QuizQuestion = ({
   onAddOption,
   userState,
   onAnswerChange,
+  questionError,
 }: QuizQuestionProps) => {
   // User mode answer logic
   const answer = question.uuid
@@ -62,6 +70,9 @@ const QuizQuestion = ({
 
   const isSubmitted = userState?.status === 'submitted'
   const showCorrect = userState?.showCorrect
+  const hasOptionErrors = questionError?.options?.some(
+    (error) => error !== undefined,
+  )
 
   return (
     <div>
@@ -84,13 +95,18 @@ const QuizQuestion = ({
                 e.preventDefault()
                 onQuestionTextUpdate?.(e.target.value)
               }}
-              className='text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2'
+              className={cn(
+                'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2',
+                questionError?.question && 'border-destructive',
+              )}
               placeholder='Zadejte otázku'
             />
           ) : (
-            <Label size='md' className='flex-1 text-xs sm:text-sm'>
-              {question.question}
-            </Label>
+            <>
+              <Label size='md' className='flex-1 text-xs sm:text-sm'>
+                {question.question}
+              </Label>
+            </>
           )}
         </div>
 
@@ -198,7 +214,20 @@ const QuizQuestion = ({
             )
           })}
         </div>
-
+        {questionError?.question && (
+          <p className='error-text'>{questionError?.question?.message}</p>
+        )}
+        {mode === 'lecturer' && hasOptionErrors && !questionError?.question && (
+          <p className='error-text mt-2'>Všechny možnosti musí být vyplněné</p>
+        )}
+        {mode === 'lecturer' &&
+          questionError?.correctIndices &&
+          !hasOptionErrors &&
+          !questionError?.question && (
+            <p className='error-text mt-2'>
+              {questionError.correctIndices.message}
+            </p>
+          )}
         {mode === 'lecturer' && (
           <Button
             variant='outline'

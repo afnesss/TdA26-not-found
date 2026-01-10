@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import type { Question } from '@/lib/schemas'
 import { X } from 'lucide-react'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import type { FieldError } from 'react-hook-form'
 
 type QuizOptionProps = {
   option: string
@@ -18,7 +19,6 @@ type QuizOptionProps = {
   onOptionUpdate?: (value: string) => void
   onOptionRemove?: () => void
   canRemove?: boolean
-
   // User mode
   isSelected?: boolean
   isSubmitted?: boolean

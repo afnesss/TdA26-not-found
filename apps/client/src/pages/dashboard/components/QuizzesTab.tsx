@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Quiz } from '@/lib/schemas'
 import { toast } from 'sonner'
 import { useState } from 'react'
+import { useForm, type FieldValues } from 'react-hook-form'
 
 const QuizzesTab = ({
   courseId,
@@ -45,14 +46,15 @@ const QuizzesTab = ({
     mutationFn: (data: Quiz) => createQuiz(courseId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
-      toast.success('Kvíz byl uložen')
+      setDraftQuiz(null)
+      toast.success('Kvíz byl vytvořen')
     },
     onError: () => {
       toast.error('Chyba při ukládání')
     },
   })
 
-  const handleSave = (quizId: string, editedQuiz: Quiz) => {
+  const handleUpdate = (quizId: string, editedQuiz: Quiz) => {
     const cleanedQuiz: Quiz = {
       ...editedQuiz,
       questions: editedQuiz.questions.map((q) => {
@@ -68,11 +70,40 @@ const QuizzesTab = ({
       data: cleanedQuiz,
     })
   }
+  const handleCreateQuiz = (editedQuiz: Quiz) => {
+    const cleanedQuiz: Quiz = {
+      ...editedQuiz,
+      // Видалити uuid з квізу та питань для створення
+      uuid: undefined,
+      questions: editedQuiz.questions.map((q) => {
+        const { uuid, ...questionWithoutUuid } = q
+        return questionWithoutUuid
+      }),
+    }
+    createQuizMutation.mutate(cleanedQuiz)
+  }
+  const handleAddQuiz = () => {
+    const newDraft: Quiz = {
+      uuid: `temp-${Date.now()}`,
+      title: '',
+      attemptsCount: 0,
+      questions: [
+        {
+          uuid: `temp-${Date.now()}`,
+          type: 'singleChoice',
+          question: '',
+          options: ['', ''],
+          correctIndex: 0,
+        },
+      ],
+    }
+    setDraftQuiz(newDraft)
+  }
 
   return (
     <div className='space-y-6'>
       <DetailHeader
-        onButtonClick={() => {}}
+        onButtonClick={handleAddQuiz}
         title='Kvízy kurzu'
         gradient='accent-teal'
         buttonText='Vytvořit kvíz'
@@ -86,22 +117,40 @@ const QuizzesTab = ({
           onAction={() => refetchQuizzes()}
           message='Nepodařilo se načíst kvízy'
         />
-      ) : quizzes && quizzes.length > 0 ? (
+      ) : (quizzes && quizzes.length > 0) || draftQuiz ? (
         <div className='grid gap-4'>
-          {quizzes.map((quiz) => (
+          {draftQuiz && (
             <QuizComponent
-              key={quiz.uuid}
-              quiz={quiz}
+              key={draftQuiz.uuid}
+              quiz={draftQuiz}
               mode='lecturer'
+              isDraft={true}
+              onCancelDraft={() => setDraftQuiz(null)}
               onSave={async (updatedQuiz) => {
-                handleSave(quiz.uuid!, updatedQuiz)
+                handleCreateQuiz(updatedQuiz)
               }}
-              isSubmitting={updateQuizMutation.isPending}
+              isSubmitting={createQuizMutation.isPending}
               onDelete={() => {
-                console.log('Delete:', quiz.uuid)
+                console.log('Delete:', draftQuiz.uuid)
               }}
             />
-          ))}
+          )}
+          {quizzes &&
+            quizzes.length > 0 &&
+            quizzes.map((quiz) => (
+              <QuizComponent
+                key={quiz.uuid}
+                quiz={quiz}
+                mode='lecturer'
+                onSave={async (updatedQuiz) => {
+                  handleUpdate(quiz.uuid!, updatedQuiz)
+                }}
+                isSubmitting={updateQuizMutation.isPending}
+                onDelete={() => {
+                  console.log('Delete:', quiz.uuid)
+                }}
+              />
+            ))}
         </div>
       ) : (
         <StateComp type='no-content' message='Zatím žádné kvízy' />

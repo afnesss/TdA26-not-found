@@ -372,7 +372,7 @@ const QuizComponent = ({
                     className='text-primary flex items-center gap-3'
                     size={'lg'}
                   >
-                    <CheckCircle size={20} />
+                    <CheckCircle size={20} className='hidden sm:block' />
                     {userState.results.score} / {userState.results.maxScore}
                   </Label>
                 )}

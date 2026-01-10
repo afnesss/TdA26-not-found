@@ -24,8 +24,9 @@ const EditBtn: React.FC<EditBtnProps> = ({
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
+  let IconToRender = Icon
   if (type === 'delete') {
-    Icon = Trash2
+    if (!IconToRender) IconToRender = Trash2
     textStyle = 'text-destructive'
     hoverStyle = 'hover:bg-destructive/10'
   }
@@ -38,8 +39,8 @@ const EditBtn: React.FC<EditBtnProps> = ({
       className={cn(hoverStyle, 'size-6 min-[400px]:size-7', classNameBtn)}
       onClick={onClick}
     >
-      {Icon && (
-        <Icon className={cn(`sm:w-4 h-4 ${textStyle}`, iconClassName)} />
+      {IconToRender && (
+        <IconToRender className={cn(`sm:w-4 h-4 ${textStyle}`, iconClassName)} />
       )}
     </Button>
   )

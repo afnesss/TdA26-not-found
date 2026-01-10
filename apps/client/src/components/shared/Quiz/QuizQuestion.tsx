@@ -13,6 +13,7 @@ import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { Check, Plus, X } from 'lucide-react'
 import QuizOption from './QuizOption'
+import { cn } from '@/lib/utils'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -65,10 +66,13 @@ const QuizQuestion = ({
   return (
     <div>
       {/* Question Header */}
-      <div className='flex items-center gap-3 mb-4'>
+      <div className='flex flex-wrap items-center gap-1.5 md:gap-3 mb-4'>
         {/* Question number and text */}
-        <div className='flex items-center gap-3'>
-          <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
+        <div className='flex items-center gap-1.5 md:gap-3 flex-1 min-w-0'>
+          <span
+            className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6
+          md:h-8 rounded-full flex items-center justify-center shrink-0'
+          >
             {qIndex + 1}
           </span>
 
@@ -80,20 +84,43 @@ const QuizQuestion = ({
                 e.preventDefault()
                 onQuestionTextUpdate?.(e.target.value)
               }}
-              className='text-xs sm:text-base font-medium flex-1'
+              className='text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2'
               placeholder='Zadejte otázku'
             />
           ) : (
-            <Label size='md' className='flex-1 text-xs sm:text-base'>
+            <Label size='md' className='flex-1 text-xs sm:text-sm'>
               {question.question}
             </Label>
           )}
         </div>
 
-        {/* Lecturer controls */}
         {mode === 'lecturer' && (
-          <div className='flex items-center gap-3 pl-9 md:pl-0'>
-            <Label size='sm' className='text-gray-600 shrink-0'>
+          <EditBtn
+            onClick={onQuestionRemove}
+            type='delete'
+            classNameBtn='shrink-0 md:hidden'
+          />
+        )}
+
+        {mode === 'user' && isSubmitted && (
+          <div className='shrink-0'>
+            {userState.results?.correctPerQuestion[qIndex] ? (
+              <Check
+                className='text-secondary size-4 md:size-5'
+                strokeWidth={3}
+              />
+            ) : (
+              <X
+                className='text-destructive size-4 md:size-5'
+                strokeWidth={3}
+              />
+            )}
+          </div>
+        )}
+
+        {mode === 'lecturer' && (
+          <div className='flex items-center gap-3 w-full md:w-auto md:shrink-0'>
+            <Label size='sm' className='text-gray-600 shrink-0 hidden md:block'>
               Typ:
             </Label>
             <Select
@@ -102,7 +129,7 @@ const QuizQuestion = ({
                 onQuestionTypeChange?.(value)
               }
             >
-              <SelectTrigger className='w-fit md:w-40'>
+              <SelectTrigger className=' md:w-40'>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -110,24 +137,13 @@ const QuizQuestion = ({
                 <SelectItem value='multipleChoice'>Více správných</SelectItem>
               </SelectContent>
             </Select>
-            <EditBtn onClick={onQuestionRemove} type='delete' />
+            <EditBtn
+              onClick={onQuestionRemove}
+              type='delete'
+              classNameBtn='hidden md:flex shrink-0'
+            />
           </div>
         )}
-
-        {/* User result indicator */}
-        {mode === 'user' &&
-          isSubmitted &&
-          (userState.results?.correctPerQuestion[qIndex] ? (
-            <Check
-              className='text-secondary size-4 md:size-5 shrink-0'
-              strokeWidth={3}
-            />
-          ) : (
-            <X
-              className='text-destructive size-4 md:size-5 shrink-0'
-              strokeWidth={3}
-            />
-          ))}
       </div>
 
       {/* Options */}

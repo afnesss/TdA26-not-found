@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import type { Question } from '@/lib/schemas'
 import { X } from 'lucide-react'
+import EditBtn from '@/pages/dashboard/components/EditBtn'
 
 type QuizOptionProps = {
   option: string
@@ -65,13 +66,14 @@ const QuizOption = ({
         />
 
         {canRemove && (
-          <button
-            onClick={onOptionRemove}
-            className='shrink-0 p-1 hover:bg-destructive/10 rounded transition-colors'
-            title='Smazat možnost'
-          >
-            <X size={18} className='text-destructive' />
-          </button>
+          <EditBtn
+            type='delete'
+            icon={X}
+            onClick={(e) => {
+              e?.stopPropagation()
+              onOptionRemove?.()
+            }}
+          />
         )}
       </div>
     )

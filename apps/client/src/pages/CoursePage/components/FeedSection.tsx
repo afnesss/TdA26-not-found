@@ -12,7 +12,7 @@ const FeedSection = ({ feed }: FeedSectionProps) => {
       <Label size='xl'>Oznámení a novinky</Label>
 
       {/* <Feed feed={feed} type='classic' /> */}
-      <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-6'>
+      <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-5'>
         <div className='space-y-4'>
           {feed.map((post) => (
             <FeedItemComp feedItem={post} key={post.uuid} type='classic' />

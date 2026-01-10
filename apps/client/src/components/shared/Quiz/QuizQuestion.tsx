@@ -65,9 +65,9 @@ const QuizQuestion = ({
   return (
     <div>
       {/* Question Header */}
-      <div className='flex flex-col md:flex-row md:items-center gap-3 mb-4'>
+      <div className='flex items-center gap-3 mb-4'>
         {/* Question number and text */}
-        <div className='flex items-center gap-3 flex-1'>
+        <div className='flex items-center gap-3'>
           <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
             {qIndex + 1}
           </span>
@@ -118,9 +118,15 @@ const QuizQuestion = ({
         {mode === 'user' &&
           isSubmitted &&
           (userState.results?.correctPerQuestion[qIndex] ? (
-            <Check className='text-secondary' size={22} strokeWidth={3} />
+            <Check
+              className='text-secondary size-4 md:size-5 shrink-0'
+              strokeWidth={3}
+            />
           ) : (
-            <X className='text-destructive' size={22} strokeWidth={3} />
+            <X
+              className='text-destructive size-4 md:size-5 shrink-0'
+              strokeWidth={3}
+            />
           ))}
       </div>
 

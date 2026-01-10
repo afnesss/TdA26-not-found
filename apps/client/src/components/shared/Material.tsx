@@ -229,20 +229,19 @@ const MaterialCard = (props: MaterialCardProps) => {
               {state.isEditing ? (
                 <div className='flex-1 space-y-1'>
                   {' '}
-                  {/* ← Обгортка для помилки */}
                   <Textarea
                     variant='ghost'
                     value={state.tempName}
                     onChange={(e) => handleNameChange(e.target.value)}
                     className={cn(
                       'flex-1 min-h-0 text-sm sm:text-base font-semibold',
-                      state.nameError && 'border-destructive', // ← Червона рамка
+                      state.nameError && 'border-destructive',
                     )}
                     minRows={1}
                     maxRows={3}
                     placeholder='Název materiálu'
                   />
-                  {state.nameError && ( // ← Показати помилку
+                  {state.nameError && (
                     <p className='text-xs text-destructive'>
                       {state.nameError}
                     </p>

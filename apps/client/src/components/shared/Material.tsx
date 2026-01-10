@@ -9,12 +9,15 @@ import {
   Check,
   X,
   Upload,
+  FileUp,
+  Link2,
 } from 'lucide-react'
 import { useState, useRef } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
 import { Button } from '../ui/button'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 type MaterialCardProps =
   | {
@@ -27,6 +30,7 @@ type MaterialCardProps =
       isDraft?: true
       onCancel?: () => void
       onSave?: (data: {
+        type: 'file' | 'url'
         name?: string
         description?: string
         file?: File
@@ -83,7 +87,8 @@ const MaterialCard = (props: MaterialCardProps) => {
     tempDescription: '',
     tempUrl: '',
     tempFile: null as File | null,
-    nameError: '', // ← Додано
+    tempType: material.type,
+    nameError: '',
     urlError: '',
     copied: false,
     saving: false,
@@ -99,6 +104,16 @@ const MaterialCard = (props: MaterialCardProps) => {
       toast.error('Nepodařilo se zkopírovat')
     }
   }
+  const handleTypeChange = (newType: 'file' | 'url') => {
+    console.log(material.type)
+    setState((prev) => ({
+      ...prev,
+      tempType: newType,
+      tempFile: null,
+      tempUrl: '',
+      urlError: '',
+    }))
+  }
 
   const startEdit = () => {
     setState({
@@ -107,7 +122,8 @@ const MaterialCard = (props: MaterialCardProps) => {
       tempDescription: material.description || '',
       tempUrl: material.type === 'url' ? material.url : '',
       tempFile: null,
-      nameError: '', // ← Додано
+      tempType: material.type,
+      nameError: '',
       urlError: '',
       copied: false,
       saving: false,
@@ -128,6 +144,7 @@ const MaterialCard = (props: MaterialCardProps) => {
         tempName: '',
         tempDescription: '',
         tempUrl: '',
+        tempType: material.type,
         tempFile: null,
         nameError: '',
         urlError: '',
@@ -176,11 +193,22 @@ const MaterialCard = (props: MaterialCardProps) => {
         return
       }
     }
+    if ('isDraft' in props && props.isDraft) {
+      if (state.tempType === 'file' && !state.tempFile) {
+        toast.error('Vyberte soubor')
+        return
+      }
+      if (state.tempType === 'url' && !state.tempUrl) {
+        toast.error('Vyberte odkaz')
+        return
+      }
+    }
 
     if (type === 'edit' && props.onSave) {
       setState((prev) => ({ ...prev, saving: true }))
       try {
         const updates: {
+          type: 'file' | 'url'
           name: string
           description: string
           file?: File
@@ -188,13 +216,14 @@ const MaterialCard = (props: MaterialCardProps) => {
         } = {
           name: state.tempName,
           description: state.tempDescription,
+          type: state.tempType,
         }
 
-        if (material.type === 'file' && state.tempFile) {
+        if (displayType === 'file' && state.tempFile) {
           updates.file = state.tempFile
         }
 
-        if (material.type === 'url') {
+        if (displayType === 'url') {
           updates.url = state.tempUrl
         }
 
@@ -206,7 +235,8 @@ const MaterialCard = (props: MaterialCardProps) => {
       }
     }
   }
-
+  const displayType =
+    'isDraft' in props && props.isDraft ? state.tempType : material.type
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
@@ -225,7 +255,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               />
 
               {state.isEditing ? (
-                <div className='flex-1 space-y-1'>
+                <div className='flex-1'>
                   {' '}
                   <Textarea
                     variant='ghost'
@@ -240,7 +270,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     placeholder='Název materiálu'
                   />
                   {state.nameError && (
-                    <p className='text-xs text-destructive'>
+                    <p className='text-xs text-destructive mb-1'>
                       {state.nameError}
                     </p>
                   )}
@@ -345,49 +375,86 @@ const MaterialCard = (props: MaterialCardProps) => {
 
           {/* File/URL section */}
           {state.isEditing ? (
-            <div className='space-y-2'>
-              {material.type === 'file' ? (
-                <div className='space-y-2'>
-                  <div className='flex items-center gap-2'>
+            <div
+              className={cn(
+                'flex flex-wrap flex-col sm:flex-row gap-1 sm:gap-2 w-full',
+                displayType === 'file' ? 'sm:items-center' : 'sm:items-start',
+              )}
+            >
+              {' '}
+              <div className={cn('flex gap-2 items-center')}>
+                {'isDraft' in props && props.isDraft && (
+                  <ToggleGroup
+                    type='single'
+                    value={state.tempType}
+                    onValueChange={(value) => {
+                      if (value) handleTypeChange(value as 'file' | 'url')
+                    }}
+                    className='justify-start border border-gray-200 shrink-0 self-start mt-0.5'
+                  >
+                    <ToggleGroupItem
+                      value='file'
+                      aria-label='Soubor'
+                      className='gap-2'
+                    >
+                      <span>Soubor</span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value='url'
+                      aria-label='Odkaz'
+                      className='gap-2'
+                    >
+                      <span>Odkaz</span>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                )}
+
+                {displayType === 'file' && (
+                  <>
                     <input
                       ref={fileInputRef}
                       type='file'
                       onChange={handleFileSelect}
                       className='hidden'
                     />
-                    <Button
-                      variant={'outline'}
-                      size={'sm'}
+                    <EditBtn
                       disabled={
                         state.saving || !!state.urlError || !!state.nameError
                       }
-                      onClick={() => fileInputRef.current?.click()}
-                      className='py-1'
-                    >
-                      <Upload className='text-primary size-3 sm:size-4' />
-                      {state.tempFile ? 'Změnit soubor' : 'Nový soubor'}
-                    </Button>
+                      onClick={() => {
+                        fileInputRef.current?.click()
+                      }}
+                      icon={Upload}
+                      iconClassName='size-4'
+                    />
+                  </>
+                )}
+              </div>
+              {displayType === 'file' ? (
+                state.tempFile ? (
+                  <div className='text-xs sm:text-sm text-gray-600 flex items-center gap-2'>
+                    <span className='font-medium'>Nový soubor:</span>
+                    <span className='truncate'>{state.tempFile.name}</span>
+                    <span className='text-gray-400'>
+                      ({formatFileSize(state.tempFile.size)})
+                    </span>
                   </div>
-                  {state.tempFile ? (
-                    <div className='text-xs sm:text-sm text-gray-600 flex items-center gap-2'>
-                      <span className='font-medium'>Nový soubor:</span>
-                      <span className='truncate'>{state.tempFile.name}</span>
-                      <span className='text-gray-400'>
-                        ({formatFileSize(state.tempFile.size)})
-                      </span>
-                    </div>
-                  ) : (
-                    <div className='text-xs sm:text-sm text-gray-500'>
-                      Současný: {formatFileSize(material.sizeBytes)}
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <div className='text-xs sm:text-sm text-gray-500'>
+                    Současný:{' '}
+                    {formatFileSize(
+                      material.type === 'file' ? (material.sizeBytes ?? 0) : 0,
+                    )}{' '}
+                  </div>
+                )
               ) : (
-                <div className='mb-1'>
+                <div className='flex-1'>
                   <Textarea
                     variant='ghost'
                     value={state.tempUrl}
-                    onChange={(e) => handleUrlChange(e.target.value)}
+                    onChange={(e) => {
+                      handleUrlChange(e.target.value)
+                    }}
                     className={cn(
                       'w-full text-xs sm:text-sm mb-0',
                       state.urlError && 'border-destructive',

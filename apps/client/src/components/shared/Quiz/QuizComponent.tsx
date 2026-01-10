@@ -211,16 +211,14 @@ const QuizComponent = ({
         onClick={toggleExpand}
       >
         <div className='flex items-center justify-between gap-2 sm:gap-4'>
-          {/* Ліва частина - контент */}
           <div className='flex-1 min-w-0'>
-            {/* Badge над назвою - тільки на малих екранах */}
             {mode === 'lecturer' && hasChanges && (
               <span className='sm:hidden inline-block text-[10px] font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded-full mb-1.5'>
                 Neuloženo
               </span>
             )}
 
-            {/* Назва квізу */}
+            {/* quiz name */}
             {mode === 'lecturer' && isExpanded ? (
               <Textarea
                 className='text-sm sm:text-md md:text-lg font-bold p-1'

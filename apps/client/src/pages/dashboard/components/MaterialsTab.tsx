@@ -8,10 +8,32 @@ import StateComp from '@/components/shared/StateComp'
 import type { Material } from '@/lib/schemas'
 import { MaterialsContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import DetailHeader from './DetailHeader'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams } from 'react-router'
+import { toast } from 'sonner'
 
+type MaterialDraft = {
+  name?: string
+  description?: string
+  type: 'file' | 'url'
+  file?: File
+  url?: string
+}
+
+type CreateMaterialPayload =
+  | {
+      type: 'file'
+      name: string
+      file: File
+      description?: string
+    }
+  | {
+      type: 'url'
+      name: string
+      url: string
+      description?: string
+    }
 const MaterialsTab = ({
   courseId,
   activeTab,
@@ -32,6 +54,70 @@ const MaterialsTab = ({
     queryFn: () => getMaterials(courseId!),
     enabled: Boolean(courseId) && activeTab === 'materials',
   })
+
+  const updateMaterialMutation = useMutation({
+    mutationFn: ({
+      materialId,
+      data,
+    }: {
+      materialId: string
+      data: MaterialDraft
+    }) => updateMaterial(courseId, materialId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
+      toast.success('Materiál aktualizován')
+    },
+    onError: (error) => {
+      console.error('Update error:', error)
+      toast.error('Chyba při aktualizaci materiálu')
+    },
+  })
+
+  const createMaterialMutation = useMutation({
+    mutationFn: (payload: CreateMaterialPayload) =>
+      createMaterial(courseId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
+      setDraftMaterial(null)
+      toast.success('Materiál vytvořen')
+    },
+    onError: (error) => {
+      console.error('Update error:', error)
+      toast.error('Chyba při vytváření  materiálu')
+    },
+  })
+
+  const handleSaveDraft = async (data: MaterialDraft) => {
+    if (!draftMaterial) return
+
+    const payload: CreateMaterialPayload =
+      data.type === 'file'
+        ? {
+            type: 'file',
+            name: data.name || draftMaterial.name || '',
+            file: data.file!,
+            description: data.description || '',
+          }
+        : {
+            type: 'url',
+            name: data.name || draftMaterial.name || '',
+            url: data.url!,
+            description: data.description || '',
+          }
+
+    await createMaterialMutation.mutateAsync(payload)
+  }
+
+  const handleCancelDraft = () => {
+    setDraftMaterial(null)
+  }
+
+  const handleUpdateMaterial = async (
+    materialId: string,
+    data: MaterialDraft,
+  ) => {
+    await updateMaterialMutation.mutateAsync({ materialId, data })
+  }
   const handleAddMaterial = () => {
     const newDraft: Material = {
       uuid: `temp-${Date.now()}`,
@@ -42,37 +128,7 @@ const MaterialsTab = ({
     }
     setDraftMaterial(newDraft)
   }
-  const onSaveDraft = async (data: {
-    name?: string
-    description?: string
-    file?: File
-    url?: string
-  }) => {
-    if (!draftMaterial || !courseId) return
 
-    setDraftMaterial(null)
-
-    const payload =
-      draftMaterial.type === 'file'
-        ? {
-            type: 'file' as const,
-            name: data.name || draftMaterial.name,
-            file: data.file!,
-            description: data.description,
-          }
-        : {
-            type: 'url' as const,
-            name: data.name || draftMaterial.name,
-            url: data.url!,
-            description: data.description,
-          }
-
-    await createMaterial(courseId, payload)
-
-    queryClient.invalidateQueries({
-      queryKey: ['materials', courseId],
-    })
-  }
   return (
     <div className='space-y-6'>
       <DetailHeader
@@ -100,8 +156,8 @@ const MaterialsTab = ({
               material={draftMaterial as Material}
               type='edit'
               isDraft={true}
-              onSave={onSaveDraft}
-              onCancel={() => setDraftMaterial(null)}
+              onSave={handleSaveDraft}
+              onCancel={handleCancelDraft}
             />
           )}
           {materials && materials.length > 0 && (
@@ -112,16 +168,7 @@ const MaterialsTab = ({
                   material={material}
                   type='edit'
                   onSave={async (editedMaterial) => {
-                    if (courseId) {
-                      await updateMaterial(
-                        courseId,
-                        material.uuid,
-                        editedMaterial,
-                      )
-                      queryClient.invalidateQueries({
-                        queryKey: ['materials', courseId],
-                      })
-                    }
+                    handleUpdateMaterial(material.uuid, editedMaterial)
                   }}
                   onDelete={() => console.log('Delete', material.uuid)}
                 />

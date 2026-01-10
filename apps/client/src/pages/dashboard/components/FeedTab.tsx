@@ -71,7 +71,7 @@ const FeedTab = ({
           message='Nepodařilo se načíst informační kanál'
         />
       ) : (feed && feed.length > 0) || draftPost ? (
-        <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-6'>
+        <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-5'>
           <div className='space-y-4'>
             {draftPost && (
               <FeedItemComp

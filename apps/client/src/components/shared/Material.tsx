@@ -219,7 +219,7 @@ const MaterialCard = (props: MaterialCardProps) => {
 
         <div className='flex-1 min-w-0'>
           {/* Title row */}
-          <div className='flex items-center justify-between gap-2 sm:gap-4 mb-1'>
+          <div className='flex items-center justify-between gap-2 sm:gap-4'>
             <div className='flex items-center gap-1 min-w-0 flex-1'>
               <MaterialIcon
                 material={material}
@@ -364,10 +364,10 @@ const MaterialCard = (props: MaterialCardProps) => {
                         state.saving || !!state.urlError || !!state.nameError
                       }
                       onClick={() => fileInputRef.current?.click()}
-                      className='py-0'
+                      className='py-1'
                     >
                       <Upload className='text-primary size-3 sm:size-4' />
-                      {state.tempFile ? 'Změnit soubor' : 'Nahrát nový soubor'}
+                      {state.tempFile ? 'Změnit soubor' : 'Nový soubor'}
                     </Button>
                   </div>
                   {state.tempFile ? (

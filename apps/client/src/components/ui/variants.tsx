@@ -13,7 +13,7 @@ const buttonVariants = cva(
           disabled:pointer-events-none disabled:opacity-60',
         outline:
           'text-xs sm:text-sm border bg-background rounded-xl shadow-xs hover:bg-accent hover:text-accent-foreground \
-          dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          dark:bg-input/30 dark:border-input dark:hover:bg-input/50 cursor-pointer',
         secondary:
           'bg-background cursor-pointer shadow-md text-accent-blue transition-colors \
           duration-200 rounded-xl px-4 py-2 hover:bg-secondary \
@@ -32,7 +32,7 @@ const buttonVariants = cva(
         default: '',
         grid: 'px-3 md:px-6 py-2 md:py-2.5',
         md: 'px-5 py-2 gap-2',
-        sm: ' rounded-md gap-1.5 py-1 sm:py-2 px-3 has-[>svg]:px-2.5',
+        sm: ' rounded-md gap-1.5 py-1 md:py-1.5 px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-md px-7 has-[>svg]:px-4 py-3.5',
         icon: 'size-8',
         'icon-sm': 'size-7',

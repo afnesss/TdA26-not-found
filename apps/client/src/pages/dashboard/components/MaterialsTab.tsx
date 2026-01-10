@@ -132,10 +132,7 @@ const MaterialsTab = ({
   return (
     <div className='space-y-6'>
       <DetailHeader
-        onButtonClick={() => {
-          console.log('зробити матеріал')
-          handleAddMaterial()
-        }}
+        onButtonClick={handleAddMaterial}
         title='Materiály kurzu'
         gradient='accent-teal'
         buttonText='Přidat podklad'

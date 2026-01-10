@@ -1,23 +1,27 @@
 import { Label } from '@/components/ui/label'
-import type { Material } from '@/lib/schemas'
-import { cn, formatFileSize, getFileIcon } from '@/lib/utils'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
+  MaterialValidationSchema,
+  type Material,
+  type MaterialValidation,
+} from '@/lib/schemas'
+import { cn, formatFileSize, getFileIcon } from '@/lib/utils'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Check,
+  Copy,
   Download,
   Edit,
   ExternalLink,
-  Copy,
-  Check,
-  X,
   Upload,
-  FileUp,
-  Link2,
+  X,
 } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
-import { toast } from 'sonner'
-import { Button } from '../ui/button'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import MaterialIcon from './MaterialIcon'
 
 type MaterialCardProps =
   | {
@@ -27,7 +31,7 @@ type MaterialCardProps =
   | {
       material: Material
       type: 'edit'
-      isDraft?: true
+      isDraft?: boolean
       onCancel?: () => void
       onSave?: (data: {
         type: 'file' | 'url'
@@ -38,35 +42,6 @@ type MaterialCardProps =
       }) => Promise<void>
       onDelete?: () => void
     }
-
-const MaterialIcon = ({
-  material,
-  className,
-}: {
-  material: Material
-  className?: string
-}) => {
-  return (
-    <div className={cn('rounded-lg shrink-0 text-xl', className)}>
-      {material.type === 'file' ? (
-        getFileIcon(material.mimeType ?? 'application/pdf')
-      ) : material.faviconUrl ? (
-        <img
-          src={material.faviconUrl}
-          alt=''
-          className='w-4 h-4 md:w-6 md:h-6 rounded'
-          loading='lazy'
-          referrerPolicy='no-referrer'
-          onError={(e) => {
-            ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-          }}
-        />
-      ) : (
-        '🔗'
-      )}
-    </div>
-  )
-}
 
 const isValidUrl = (url: string): boolean => {
   try {
@@ -80,163 +55,122 @@ const isValidUrl = (url: string): boolean => {
 const MaterialCard = (props: MaterialCardProps) => {
   const { material, type } = props
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isEditing, setEditing] = useState(
+    'isDraft' in props ? props.isDraft : false,
+  )
+  const [copied, setCopied] = useState(false)
+  const [tempFile, setTempFile] = useState<File | null>(null)
 
-  const [state, setState] = useState({
-    isEditing: type === 'edit' && 'isDraft' in props ? props.isDraft : false,
-    tempName: '',
-    tempDescription: '',
-    tempUrl: '',
-    tempFile: null as File | null,
-    tempType: material.type,
-    nameError: '',
-    urlError: '',
-    copied: false,
-    saving: false,
+  const {
+    handleSubmit,
+    setError,
+    clearErrors,
+    control,
+    formState: { errors, isSubmitting },
+    setValue,
+    register,
+    reset,
+    watch,
+  } = useForm<MaterialValidation>({
+    resolver: zodResolver(MaterialValidationSchema),
+    defaultValues: material,
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
   })
+  const formValues = useWatch({
+    control,
+    defaultValue: material,
+  }) as MaterialValidation
 
   const handleCopyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url)
-      setState((prev) => ({ ...prev, copied: true }))
+      setCopied(true)
       toast.success('Odkaz zkopírován')
-      setTimeout(() => setState((prev) => ({ ...prev, copied: false })), 1500)
+      setTimeout(() => setCopied(false), 1500)
     } catch (err) {
       toast.error('Nepodařilo se zkopírovat')
     }
   }
   const handleTypeChange = (newType: 'file' | 'url') => {
     console.log(material.type)
-    setState((prev) => ({
-      ...prev,
-      tempType: newType,
-      tempFile: null,
-      tempUrl: '',
-      urlError: '',
-    }))
+    setValue(`type`, newType, { shouldValidate: true })
+    setTempFile(null)
+    clearErrors('root.file')
+    setValue('url', '')
   }
 
   const startEdit = () => {
-    setState({
-      isEditing: true,
-      tempName: material.name,
-      tempDescription: material.description || '',
-      tempUrl: material.type === 'url' ? material.url : '',
-      tempFile: null,
-      tempType: material.type,
-      nameError: '',
-      urlError: '',
-      copied: false,
-      saving: false,
-    })
+    reset(material)
+    setEditing(true)
   }
 
   const cancelEdit = () => {
-    if (
-      type === 'edit' &&
-      'isDraft' in props &&
-      props.isDraft &&
-      props.onCancel
-    ) {
+    if (type === 'edit' && props.isDraft && props.onCancel) {
       props.onCancel()
     } else {
-      setState({
-        isEditing: false,
-        tempName: '',
-        tempDescription: '',
-        tempUrl: '',
-        tempType: material.type,
-        tempFile: null,
-        nameError: '',
-        urlError: '',
-        copied: false,
-        saving: false,
-      })
+      reset(material)
+      setEditing(false)
+      setTempFile(null)
     }
   }
 
   const handleNameChange = (name: string) => {
-    setState((prev) => ({
-      ...prev,
-      tempName: name,
-      nameError: !name.trim() ? 'Název je povinný' : '',
-    }))
+    setValue('name', name, { shouldValidate: true })
   }
 
   const handleUrlChange = (url: string) => {
-    setState((prev) => ({
-      ...prev,
-      tempUrl: url,
-      urlError: url.trim() && !isValidUrl(url) ? 'Neplatný formát URL' : '',
-    }))
+    setValue('url', url, { shouldValidate: true })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setState((prev) => ({ ...prev, tempFile: file }))
+      setTempFile(file)
     }
   }
 
-  const saveEdit = async () => {
-    if (!state.tempName.trim()) {
-      setState((prev) => ({ ...prev, nameError: 'Název je povinný' }))
-      return
-    }
-
-    if (material.type === 'url' && state.tempUrl !== material.url) {
-      if (!state.tempUrl.trim()) {
-        setState((prev) => ({ ...prev, urlError: 'URL nemůže být prázdné' }))
-        return
-      }
-      if (!isValidUrl(state.tempUrl)) {
-        setState((prev) => ({ ...prev, urlError: 'Neplatný formát URL' }))
-        return
-      }
-    }
+  const saveEdit = handleSubmit(async (data: MaterialValidation) => {
     if ('isDraft' in props && props.isDraft) {
-      if (state.tempType === 'file' && !state.tempFile) {
-        toast.error('Vyberte soubor')
-        return
-      }
-      if (state.tempType === 'url' && !state.tempUrl) {
-        toast.error('Vyberte odkaz')
+      if (data.type === 'file' && !tempFile) {
+        setError('root.file', {
+          type: 'manual',
+          message: 'Vyberte soubor',
+        })
         return
       }
     }
+    try {
+      const updates: {
+        type: 'file' | 'url'
+        name: string
+        description: string
+        file?: File
+        url?: string
+      } = {
+        name: data.name,
+        description: data.description ?? '',
+        type: data.type,
+      }
 
-    if (type === 'edit' && props.onSave) {
-      setState((prev) => ({ ...prev, saving: true }))
-      try {
-        const updates: {
-          type: 'file' | 'url'
-          name: string
-          description: string
-          file?: File
-          url?: string
-        } = {
-          name: state.tempName,
-          description: state.tempDescription,
-          type: state.tempType,
-        }
+      if (data.type === 'file' && tempFile) {
+        updates.file = tempFile
+      }
 
-        if (displayType === 'file' && state.tempFile) {
-          updates.file = state.tempFile
-        }
+      if (data.type === 'url') {
+        updates.url = data.url ?? ''
+      }
 
-        if (displayType === 'url') {
-          updates.url = state.tempUrl
-        }
-
+      if ('onSave' in props && props.onSave) {
         await props.onSave(updates)
-        setState((prev) => ({ ...prev, isEditing: false, saving: false }))
-      } catch (err) {
-        console.error('Save error:', err)
-        setState((prev) => ({ ...prev, saving: false }))
       }
+      setEditing(false)
+    } catch (err) {
+      console.error('Save error:', err)
     }
-  }
+  })
   const displayType =
-    'isDraft' in props && props.isDraft ? state.tempType : material.type
+    'isDraft' in props && props.isDraft ? formValues.type : material.type
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
@@ -254,23 +188,23 @@ const MaterialCard = (props: MaterialCardProps) => {
                 className='sm:hidden block mr-1 shrink-0'
               />
 
-              {state.isEditing ? (
+              {isEditing ? (
                 <div className='flex-1'>
                   {' '}
                   <Textarea
                     variant='ghost'
-                    value={state.tempName}
+                    value={formValues.name}
                     onChange={(e) => handleNameChange(e.target.value)}
                     className={cn(
                       'flex-1 min-h-0 text-sm sm:text-base font-semibold',
-                      state.nameError && 'border-destructive',
+                      errors.name && 'border-destructive',
                     )}
                     minRows={1}
                     maxRows={3}
                     placeholder='Název materiálu'
                   />
-                  {state.nameError && (
-                    <p className='error-text  mb-1'>{state.nameError}</p>
+                  {errors.name && (
+                    <p className='error-text mb-1'>{errors.name.message}</p>
                   )}
                 </div>
               ) : (
@@ -287,7 +221,7 @@ const MaterialCard = (props: MaterialCardProps) => {
             {/* Buttons */}
             {type === 'edit' ? (
               <div className='flex items-center gap-1 shrink-0'>
-                {state.isEditing ? (
+                {isEditing ? (
                   <>
                     <EditBtn
                       icon={Check}
@@ -295,7 +229,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                       classNameBtn='hover:bg-secondary/20'
                       iconClassName='text-secondary'
                       disabled={
-                        state.saving || !!state.urlError || !!state.nameError
+                        isSubmitting ||
+                        !!errors.name ||
+                        ('url' in errors && !!errors.url)
                       }
                     />
                     <EditBtn
@@ -303,7 +239,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       onClick={cancelEdit}
                       classNameBtn='hover:bg-destructive/20'
                       iconClassName='text-destructive'
-                      disabled={state.saving}
+                      disabled={isSubmitting}
                     />
                   </>
                 ) : (
@@ -327,11 +263,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                 ) : (
                   <div className='flex items-center'>
                     <EditBtn
-                      icon={state.copied ? Check : Copy}
+                      icon={copied ? Check : Copy}
                       classNameBtn='mr-1 hover:bg-gray-100'
-                      iconClassName={
-                        state.copied ? 'text-secondary size-4' : ''
-                      }
+                      iconClassName={copied ? 'text-secondary size-4' : ''}
                       onClick={() => handleCopyLink(material.url)}
                     />
                     <a
@@ -348,16 +282,11 @@ const MaterialCard = (props: MaterialCardProps) => {
           </div>
 
           {/* Description */}
-          {state.isEditing ? (
+          {isEditing ? (
             <Textarea
               variant='ghost'
-              value={state.tempDescription}
-              onChange={(e) =>
-                setState((prev) => ({
-                  ...prev,
-                  tempDescription: e.target.value,
-                }))
-              }
+              value={formValues.description}
+              onChange={(e) => setValue('description', e.target.value)}
               className='w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
@@ -372,11 +301,12 @@ const MaterialCard = (props: MaterialCardProps) => {
           )}
 
           {/* File/URL section */}
-          {state.isEditing ? (
+          {isEditing ? (
             <div
               className={cn(
-                'flex flex-wrap flex-col sm:flex-row gap-1 sm:gap-2 w-full',
+                'flex flex-wrap flex-col sm:flex-row w-full',
                 displayType === 'file' ? 'sm:items-center' : 'sm:items-start',
+                'isDraft' in props && props.isDraft ? ' gap-1 sm:gap-2' : '',
               )}
             >
               {' '}
@@ -384,11 +314,14 @@ const MaterialCard = (props: MaterialCardProps) => {
                 {'isDraft' in props && props.isDraft && (
                   <ToggleGroup
                     type='single'
-                    value={state.tempType}
+                    value={formValues.type}
                     onValueChange={(value) => {
                       if (value) handleTypeChange(value as 'file' | 'url')
                     }}
-                    className='justify-start border border-gray-200 shrink-0 self-start mt-0.5'
+                    className={cn(
+                      'justify-start border border-gray-200 shrink-0 self-start',
+                      formValues.type === 'url' && 'mt-1',
+                    )}
                   >
                     <ToggleGroupItem
                       value='file'
@@ -410,35 +343,44 @@ const MaterialCard = (props: MaterialCardProps) => {
                 {displayType === 'file' && (
                   <>
                     <input
-                      ref={fileInputRef}
                       type='file'
+                      ref={fileInputRef}
                       onChange={handleFileSelect}
                       className='hidden'
                     />
                     <EditBtn
                       disabled={
-                        state.saving || !!state.urlError || !!state.nameError
+                        isSubmitting ||
+                        !!errors.name ||
+                        ('url' in errors && !!errors.url)
                       }
                       onClick={() => {
                         fileInputRef.current?.click()
+                        clearErrors('root.file')
                       }}
                       icon={Upload}
-                      iconClassName='size-4'
+                      iconClassName={cn(
+                        'size-4',
+                        errors.root?.file &&
+                          'text-destructive animate-pulse duration-200',
+                      )}
                     />
                   </>
                 )}
               </div>
               {displayType === 'file' ? (
-                state.tempFile ? (
+                tempFile ? (
                   <div className='text-xs sm:text-sm text-gray-600 flex items-center gap-2'>
                     <span className='font-medium'>Nový soubor:</span>
-                    <span className='truncate'>{state.tempFile.name}</span>
+                    <span className='truncate'>{tempFile.name}</span>
                     <span className='text-gray-400'>
-                      ({formatFileSize(state.tempFile.size)})
+                      ({formatFileSize(tempFile.size)})
                     </span>
                   </div>
+                ) : errors.root?.file ? (
+                  <p className='error-text'>{errors.root.file.message}</p>
                 ) : (
-                  <div className='text-xs sm:text-sm text-gray-500'>
+                  <div className='flex gap-2 text-xs flex-row items-end sm:text-sm text-gray-500'>
                     Současný:{' '}
                     {formatFileSize(
                       material.type === 'file' ? (material.sizeBytes ?? 0) : 0,
@@ -449,20 +391,22 @@ const MaterialCard = (props: MaterialCardProps) => {
                 <div className='flex-1'>
                   <Textarea
                     variant='ghost'
-                    value={state.tempUrl}
+                    value={
+                      formValues.type === 'url' ? formValues.url || '' : ''
+                    }
                     onChange={(e) => {
                       handleUrlChange(e.target.value)
                     }}
                     className={cn(
                       'w-full text-xs sm:text-sm mb-0',
-                      state.urlError && 'border-destructive',
+                      'url' in errors && !!errors.url && 'border-destructive',
                     )}
                     minRows={1}
                     maxRows={3}
                     placeholder='https://example.com'
                   />
-                  {state.urlError && (
-                    <p className='error-text'>{state.urlError}</p>
+                  {'url' in errors && !!errors.url && (
+                    <p className='error-text'>{errors.url.message}</p>
                   )}
                 </div>
               )}

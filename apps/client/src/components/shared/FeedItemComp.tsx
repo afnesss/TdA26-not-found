@@ -134,9 +134,7 @@ const FeedItemComp = ({
             }}
             rows={3}
           />
-          {messageError && (
-            <p className='text-xs text-destructive'>{messageError}</p>
-          )}
+          {messageError && <p className='error-text'>{messageError}</p>}
         </>
       ) : (
         <p className='text-gray-900 text-xs sm:text-sm md:text-base leading-relaxed wrap-break-word'>

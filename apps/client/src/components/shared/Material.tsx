@@ -270,9 +270,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     placeholder='Název materiálu'
                   />
                   {state.nameError && (
-                    <p className='text-xs text-destructive mb-1'>
-                      {state.nameError}
-                    </p>
+                    <p className='error-text  mb-1'>{state.nameError}</p>
                   )}
                 </div>
               ) : (
@@ -464,7 +462,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     placeholder='https://example.com'
                   />
                   {state.urlError && (
-                    <p className='text-xs text-destructive'>{state.urlError}</p>
+                    <p className='error-text'>{state.urlError}</p>
                   )}
                 </div>
               )}

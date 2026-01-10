@@ -46,6 +46,21 @@ const DashboardDesign1 = () => {
     setCourseDraft(newDraft)
   }
 
+  const searchBar = (
+    <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+  )
+
+  const createButton = (mobile?: boolean) => (
+    <Button
+      variant='primary'
+      size='primary'
+      className={mobile ? 'px-3 shrink-0' : 'px-4'}
+      onClick={handleAddCourse}
+    >
+      <Plus className='w-5 h-5' />
+      {!mobile && <span>Vytvořit kurz</span>}
+    </Button>
+  )
   return (
     <>
       {/* Main Content */}
@@ -63,37 +78,17 @@ const DashboardDesign1 = () => {
 
             {/* Mobile: Search + Button v řádku */}
             <div className='flex md:hidden flex-row gap-2 items-center'>
-              <SearchBar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
-              <Button
-                variant='primary'
-                size='primary'
-                className='px-3 shrink-0'
-              >
-                <Plus className='w-5 h-5' />
-              </Button>
+              {searchBar}
+              {createButton(true)}
             </div>
 
             {/* Desktop: Search uprostřed */}
             <div className='hidden md:flex md:flex-1 md:justify-center md:px-6'>
-              <SearchBar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
+              {searchBar}
             </div>
 
             {/* Desktop: Button vpravo */}
-            <Button
-              variant='primary'
-              size='primary'
-              className='hidden md:flex px-4'
-              onClick={handleAddCourse}
-            >
-              <Plus className='w-5 h-5' />
-              <span>Vytvořit kurz</span>
-            </Button>
+            <div className='hidden md:flex'>{createButton(false)}</div>
           </div>
 
           {/* Courses Grid */}
@@ -134,7 +129,6 @@ const DashboardDesign1 = () => {
               ))}
             </div>
           )}
-
           {!coursesLoading && !coursesError && courses.length === 0 ? (
             <StateComp
               type='no-content'

@@ -15,7 +15,7 @@ import Filters from './components/Filters'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('all')
+  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
   const [displayCount, setDisplayCount] = useState(9)
 
   const {
@@ -31,16 +31,19 @@ const CoursesPage = () => {
   const filteredCourses = filterCourses(courses, searchQuery)
 
   const sortedCourses = [...filteredCourses].sort((a, b) => {
-    const dateKey =
-      selectedFilter === 'newest'
-        ? 'createdAt'
-        : selectedFilter === 'updated'
-          ? 'updatedAt'
-          : null
+    if (selectedFilter === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    }
 
-    if (!dateKey) return 0
+    if (selectedFilter === 'oldest') {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    }
 
-    return new Date(b[dateKey]).getTime() - new Date(a[dateKey]).getTime()
+    if (selectedFilter === 'updated') {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    }
+
+    return 0
   })
 
   const hasMoreCourses = sortedCourses.length > displayCount

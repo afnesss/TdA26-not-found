@@ -200,10 +200,8 @@ const MaterialCard = (props: MaterialCardProps) => {
 
         await props.onSave(updates)
         setState((prev) => ({ ...prev, isEditing: false, saving: false }))
-        toast.success('Materiál uložen')
       } catch (err) {
         console.error('Save error:', err)
-        toast.error('Chyba při ukládání')
         setState((prev) => ({ ...prev, saving: false }))
       }
     }

@@ -1,5 +1,6 @@
 import {
   createMaterial,
+  deleteMaterial,
   getMaterials,
   updateMaterial,
 } from '@/api/queries/materialQueries'
@@ -87,6 +88,20 @@ const MaterialsTab = ({
     },
   })
 
+  const deleteMaterialMutation = useMutation({
+    mutationFn: (variables: { courseId: string; materialId: string }) =>
+      deleteMaterial(variables.courseId, variables.materialId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['materials', variables.courseId],
+      })
+      toast.success('Material byl smazán')
+    },
+    onError: () => {
+      toast.error('Chyba při mazání materialu')
+    },
+  })
+
   const handleSaveDraft = async (data: MaterialDraft) => {
     if (!draftMaterial) return
 
@@ -167,7 +182,12 @@ const MaterialsTab = ({
                   onSave={async (editedMaterial) => {
                     handleUpdateMaterial(material.uuid, editedMaterial)
                   }}
-                  onDelete={() => console.log('Delete', material.uuid)}
+                  onDelete={() =>
+                    deleteMaterialMutation.mutateAsync({
+                      courseId,
+                      materialId: material.uuid,
+                    })
+                  }
                 />
               ))}
             </>

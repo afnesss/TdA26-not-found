@@ -14,6 +14,7 @@ import {
   Edit,
   ExternalLink,
   Upload,
+  Variable,
   X,
 } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -22,6 +23,10 @@ import { toast } from 'sonner'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import MaterialIcon from './MaterialIcon'
+import DeleteConfirmDialog from '../ui/AlertDialog'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { deleteMaterial } from '@/api/queries/materialQueries'
+import { useParams } from 'react-router'
 
 type MaterialCardProps =
   | {
@@ -32,6 +37,7 @@ type MaterialCardProps =
       material: Material
       type: 'edit'
       isDraft?: boolean
+      onDelete?: () => Promise<void>
       onCancel?: () => void
       onSave?: (data: {
         type: 'file' | 'url'
@@ -40,17 +46,7 @@ type MaterialCardProps =
         file?: File
         url?: string
       }) => Promise<void>
-      onDelete?: () => void
     }
-
-const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url)
-    return true
-  } catch {
-    return false
-  }
-}
 
 const MaterialCard = (props: MaterialCardProps) => {
   const { material, type } = props
@@ -60,6 +56,7 @@ const MaterialCard = (props: MaterialCardProps) => {
   )
   const [copied, setCopied] = useState(false)
   const [tempFile, setTempFile] = useState<File | null>(null)
+  const queryClient = useQueryClient()
 
   const {
     handleSubmit,
@@ -245,7 +242,16 @@ const MaterialCard = (props: MaterialCardProps) => {
                 ) : (
                   <>
                     <EditBtn icon={Edit} onClick={startEdit} />
-                    <EditBtn type='delete' onClick={props.onDelete} />
+                    <DeleteConfirmDialog
+                      trigger={<EditBtn type='delete' />}
+                      itemName={material.name}
+                      itemType='material'
+                      onConfirm={() => {
+                        if (props.onDelete) {
+                          props.onDelete()
+                        }
+                      }}
+                    ></DeleteConfirmDialog>
                   </>
                 )}
               </div>

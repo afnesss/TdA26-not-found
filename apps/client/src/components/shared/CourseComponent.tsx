@@ -1,24 +1,22 @@
-import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import type { CourseSummary } from '@/lib/schemas'
-import CardDate from '../../pages/CoursesPage/components/CardDate'
-import { Button } from '@/components/ui/button'
-import { getTimeAgo } from '@/lib/utils'
-import { useNavigate } from 'react-router'
-import { cn } from '@/lib/utils'
 import { colorStyles, colors } from '@/lib/constants'
-import { Check, Edit, Trash2, X } from 'lucide-react'
+import type { CourseSummary } from '@/lib/schemas'
+import { cn, getTimeAgo } from '@/lib/utils'
+import { Check, Edit, X } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
-import { toast } from 'sonner'
+import DeleteConfirmDialog from '../ui/AlertDialog'
 
 interface CourseClassic {
   type: 'classic'
@@ -34,6 +32,7 @@ interface CourseEdit {
   onEdit: () => void
   onSaveDraft?: (data: { name: string; description?: string }) => void
   onCancelDraft?: () => void
+  onDelete?: () => void
 }
 
 type CourseCompProps = CourseClassic | CourseEdit
@@ -204,7 +203,16 @@ const CourseComponent = (props: CourseCompProps) => {
             ) : (
               <div className='flex gap-2'>
                 <EditBtn icon={Edit} onClick={props.onEdit} />
-                <EditBtn type='delete' />
+                <DeleteConfirmDialog
+                  trigger={<EditBtn type='delete' />}
+                  itemName={course.name}
+                  itemType='kurz'
+                  onConfirm={() => {
+                    if (props.onDelete) {
+                      props.onDelete()
+                    }
+                  }}
+                ></DeleteConfirmDialog>
               </div>
             ))}
         </CardFooter>

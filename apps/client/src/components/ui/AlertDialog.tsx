@@ -14,29 +14,15 @@ import buttonVariants from './variants'
 import { cn } from '@/lib/utils'
 
 type DeleteConfirmDialogProps = {
-  // Тригер (кнопка видалення)
   trigger: ReactNode
-
-  // Назва об'єкта що видаляється
   itemName?: string
-
-  // Тип об'єкта (квіз, матеріал, курс...)
   itemType?: string
-
-  // Кастомний заголовок
   title?: string
-
-  // Кастомний опис
   description?: string
-
-  // Функція видалення
   onConfirm: () => void | Promise<void>
-
-  // Текст кнопок
   cancelText?: string
   confirmText?: string
 
-  // Чи показувати loading стан
   isLoading?: boolean
 }
 

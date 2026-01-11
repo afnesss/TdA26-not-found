@@ -24,10 +24,6 @@ const CourseDetailsForm = ({
   selectedCourse: CourseSummary
 }) => {
   const queryClient = useQueryClient()
-  // const [courseEdits, setCourseEdits] = useState<
-  //   Partial<{ name: string; description: string }>
-  // >({})
-  // const [hasChanges, setHasChanges] = useState(false)
 
   const updateCourseMutation = useMutation({
     mutationFn: (data: { name: string; description?: string }) =>

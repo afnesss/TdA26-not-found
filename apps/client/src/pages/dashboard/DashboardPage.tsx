@@ -1,16 +1,21 @@
-import { createCourse, getCourses } from '@/api/queries/courseQueries'
+import {
+  createCourse,
+  deleteCourse,
+  getCourses,
+} from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { CourseSummary } from '@/lib/schemas'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
+import { toast } from 'sonner'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -29,6 +34,16 @@ const DashboardDesign1 = () => {
     queryFn: getCourses,
   })
 
+  const deleteCourseMutation = useMutation({
+    mutationFn: (courseId: string) => deleteCourse(courseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+      toast.success('Kurz byl smazán')
+    },
+    onError: () => {
+      toast.error('Chyba při mazání kurzu')
+    },
+  })
   const filteredCourses = filterCourses(courses, searchQuery)
 
   const handleEditCourse = (course: CourseSummary) => {
@@ -125,6 +140,7 @@ const DashboardDesign1 = () => {
                   onEdit={() => {
                     handleEditCourse(course!)
                   }}
+                  onDelete={() => deleteCourseMutation.mutateAsync(course.uuid)}
                 />
               ))}
             </div>

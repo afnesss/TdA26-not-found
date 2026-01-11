@@ -148,7 +148,7 @@ const MaterialsTab = ({
     <div className='space-y-6'>
       <DetailHeader
         onButtonClick={handleAddMaterial}
-        title='Materiály kurzu'
+        title='Studijní Materiály'
         gradient='accent-teal'
         buttonText='Přidat podklad'
       />

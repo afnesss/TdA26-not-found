@@ -22,11 +22,11 @@ const SummarySection = ({ name, description }: SummarySectionProps) => {
                   { label: 'Detaily kurzu' },
                 ]}
               />
-              <Label className='mb-0' size='xl'>
+              <Label className='mb-0 font-bold' size='lg'>
                 {name}
               </Label>
             </div>
-            <img src={iconIdea} className='w-13 h-13 md:w-15 md:h-15 '></img>
+            <img src={iconIdea} className='w-11 h-11 md:w-12 md:h-13 '></img>
           </div>
           {description && (
             <p className='text-gray-600 text-sm md:text-base leading-relaxed '>

@@ -17,6 +17,7 @@ import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import DeleteConfirmDialog from '../ui/AlertDialog'
+import { useMediaQuery } from 'usehooks-ts'
 
 interface CourseClassic {
   type: 'classic'
@@ -39,8 +40,10 @@ type CourseCompProps = CourseClassic | CourseEdit
 
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
+  const isLg = useMediaQuery('(min-width: 1024px)')
+  const isMd = useMediaQuery('(min-width: 768px)')
   const navigate = useNavigate()
-  const courseColor = colors[index % 3]
+  const courseColor = colors[index % (isLg ? 3 : 2)]
 
   const [state, setState] = useState({
     isEditing: type === 'edit' && 'isDraft' in props ? props.isDraft : false,

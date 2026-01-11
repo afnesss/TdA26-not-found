@@ -32,7 +32,7 @@ const FeedTab = ({
   } = useQuery<FeedItem[] | null>({
     queryKey: ['feed', courseId],
     queryFn: () => getFeed(courseId!),
-    enabled: Boolean(courseId) && activeTab === 'feed',
+    enabled: Boolean(courseId),
   })
 
   const deletePostMutation = useMutation({

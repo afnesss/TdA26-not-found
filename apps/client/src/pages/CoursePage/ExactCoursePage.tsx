@@ -9,6 +9,7 @@ import FeedSection from './components/FeedSection'
 import MaterialsSection from './components/MaterialsSection'
 import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
+import StateComp from '@/components/shared/StateComp'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
@@ -50,18 +51,24 @@ const CoursePage = () => {
 
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
-      <div className='max-w-7xl mx-auto md:px-6 lg:px-12 pb-8 space-y-8'>
-        <SummarySection
-          name={courseData?.name}
-          description={courseData?.description ?? undefined}
-        />
+      {isError ? (
+        <div className='flex justify-center items-center h-full'>
+          <StateComp type='error' onAction={() => refetch()} />
+        </div>
+      ) : (
+        <div className='max-w-7xl mx-auto md:px-6 lg:px-12 pb-8 space-y-8'>
+          <SummarySection
+            name={courseData?.name}
+            description={courseData?.description ?? undefined}
+          />
 
-        <MaterialsSection materials={courseData?.materials ?? []} />
+          <MaterialsSection materials={courseData?.materials ?? []} />
 
-        <QuizesSection courseData={courseData} />
+          <QuizesSection courseData={courseData} />
 
-        <FeedSection feed={courseData?.feed ?? []} />
-      </div>
+          <FeedSection feed={courseData?.feed ?? []} />
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import type { FeedItem } from '@/lib/schemas'
 import { cn, formatDate } from '@/lib/utils'
 import { Check, Edit, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
@@ -17,7 +17,7 @@ const FeedItemComp = ({
 }: {
   feedItem: FeedItem
   type: 'classic' | 'edit'
-  onSave?: (post: FeedItem) => void
+  onSave?: (post: FeedItem) => Promise<void>
   onCancelDraft?: () => void
   isDraft?: true
   onDelete?: () => void
@@ -28,13 +28,17 @@ const FeedItemComp = ({
 
   const displayFeed = type === 'edit' ? editedFeed : feedItem
 
+  useEffect(() => {
+    setEditedFeed(feedItem)
+  }, [feedItem])
   const handleSave = async () => {
     if (editedFeed.message === '') {
       setMessageError('Příspěvek nesmí být prázdný')
       return
     }
+    await onSave?.(editedFeed)
     setEditName(false)
-    onSave?.(editedFeed)
+
     toast.success('Příspěvek uložen')
     //else - error toast?
   }

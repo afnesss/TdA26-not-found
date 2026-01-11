@@ -49,7 +49,7 @@ const DeleteConfirmDialog = ({
       <AlertDialogContent className='rounded-2xl'>
         <AlertDialogHeader>
           <AlertDialogTitle>{title || defaultTitle}</AlertDialogTitle>
-          <AlertDialogDescription className='text-gray-600'>
+          <AlertDialogDescription className='text-gray-600 text-xs md:text-sm'>
             {description || defaultDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -59,7 +59,7 @@ const DeleteConfirmDialog = ({
             disabled={isLoading}
             onClick={(e) => e?.stopPropagation()}
             className={cn(
-              'w-18 h-8 font-semibold border hover:bg-gray-200 border-gray-300 shadow-sm',
+              'w-15 h-7 md:w-18 md:h-8 font-semibold border hover:bg-gray-200 border-gray-300 shadow-sm',
             )}
           >
             {cancelText}
@@ -67,7 +67,7 @@ const DeleteConfirmDialog = ({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
-            className='bg-destructive/80 text-destructive-foreground hover:bg-destructive w-18 h-8 rounded-xl cursor-pointer shadow-sm'
+            className='bg-destructive/80 text-destructive-foreground hover:bg-destructive w-15 h-7 md:w-18 md:h-8 rounded-xl cursor-pointer text-xs sm:text-sm shadow-sm'
           >
             {isLoading ? 'Mazání...' : confirmText}
           </AlertDialogAction>

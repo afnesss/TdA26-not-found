@@ -12,7 +12,9 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
 
   return (
     <section>
-      <Label size='xl'>Studijní materiály</Label>
+      <Label size='lg' className='font-bold mb-2'>
+        Studijní Materiály
+      </Label>
 
       <div className='space-y-3'>
         {materials && materials.length > 0 ? (

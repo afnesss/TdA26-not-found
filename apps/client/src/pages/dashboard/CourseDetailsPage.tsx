@@ -11,13 +11,17 @@ import CourseDetailsForm from './components/CourseDetailsForm'
 import FeedTab from './components/FeedTab'
 import MaterialsTab from './components/MaterialsTab'
 import QuizzesTab from './components/QuizzesTab'
+import fileImg from '@/assets/files-blue.svg'
+import fileImgAct from '@/assets/files-white.svg'
+import quizImg from '@/assets/t-play-blue.svg'
+import quizImgAct from '@/assets/t-play-white.svg'
+import feedImg from '@/assets/audiocall-blue.svg'
+import feedImgAct from '@/assets/audiocall-white.svg'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const location = useLocation()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
   const activeTab = location.hash.replace('#', '') || 'details'
 
   const {
@@ -71,19 +75,23 @@ const CourseDetailPage = () => {
             isActive={activeTab === 'materials'}
             onClick={() => handleTabChange('materials')}
             title='Materiály'
-            icon={FileText}
+            icon={fileImg}
+            activeIcon={fileImgAct}
           />
           <TabButton
             isActive={activeTab === 'quizzes'}
             onClick={() => handleTabChange('quizzes')}
             title='Kvízy'
-            icon={BarChart3}
+            icon={quizImg}
+            activeIcon={quizImgAct}
+            imgClassName='w-6 h-6'
           />
           <TabButton
             isActive={activeTab === 'feed'}
             onClick={() => handleTabChange('feed')}
             title='Informační kanál'
-            icon={MessageSquare}
+            icon={feedImg}
+            activeIcon={feedImgAct}
           />
         </div>
       </div>

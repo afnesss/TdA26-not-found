@@ -11,7 +11,9 @@ type FeedSectionProps = {
 const FeedSection = ({ feed }: FeedSectionProps) => {
   return (
     <section>
-      <Label size='xl'>Oznámení a novinky</Label>
+      <Label size='lg' className='font-bold mb-2'>
+        Oznámení
+      </Label>
 
       {feed && feed.length > 0 ? (
         <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-5'>

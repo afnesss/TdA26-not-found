@@ -11,9 +11,11 @@ type DetailHeaderProps = {
   buttonIcon?: LucideIcon
   onButtonClick: () => void
   gradient?: 'accent-teal' | 'accent-teal-light' | 'accent-teal-dark'
+  icon?: string
 }
 
 const DetailHeader = ({
+  icon,
   title,
   buttonText,
   buttonIcon: Icon,
@@ -32,9 +34,17 @@ const DetailHeader = ({
               { label: 'Detaily kurzu' },
             ]}
           />
-          <Label variant='title' size='lg'>
-            {title}
-          </Label>
+          <div className='flex items-center gap-3'>
+            <Label variant='title' size='lg'>
+              {title}
+            </Label>
+            {icon && (
+              <img
+                src={icon}
+                className='w-11 h-11 lg:w-13 lg:h-13 opacity-70'
+              />
+            )}
+          </div>
         </div>
         <Button variant='primary' size='grid' onClick={onButtonClick}>
           {Icon ? (

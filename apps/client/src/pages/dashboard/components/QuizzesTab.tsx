@@ -7,13 +7,12 @@ import {
 import { QuizzesContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
-import DetailHeader from './DetailHeader'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Quiz } from '@/lib/schemas'
-import { toast } from 'sonner'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useForm, type FieldValues } from 'react-hook-form'
-import quizImg from '../../../assets/t-play-blue.svg'
+import { toast } from 'sonner'
+import DetailHeader from './DetailHeader'
+import quizImg from '@/assets/t-play-blue.svg'
 
 const QuizzesTab = ({
   courseId,
@@ -121,7 +120,7 @@ const QuizzesTab = ({
     <div className='space-y-6'>
       <DetailHeader
         onButtonClick={handleAddQuiz}
-        title='Kvízy kurzu'
+        title='Kvízy'
         gradient='accent-teal'
         buttonText='Vytvořit kvíz'
       />

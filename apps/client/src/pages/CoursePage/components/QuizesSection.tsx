@@ -6,7 +6,7 @@ import { startTransition, useEffect, useState } from 'react'
 import type { QuizStateById } from '../../../lib/types'
 import { useCourseMutation } from '../utils/courseMutation'
 import { handleSubmit, isQuizComplete } from '../utils/helperFunctions'
-import quizImg from '../../../assets/t-play-blue.svg'
+import quizImg from '@/assets/t-play-blue.svg'
 
 type QuizesSectionProps = {
   courseData?: CourseDetail | null
@@ -38,7 +38,9 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
 
   return (
     <section>
-      <Label size='xl'>Kvízy</Label>
+      <Label size='lg' className='font-bold mb-2'>
+        Kvízy
+      </Label>
 
       <div className='space-y-4'>
         {courseData?.quizzes && courseData.quizzes.length > 0 ? (

@@ -99,7 +99,7 @@ const CourseDetailsForm = ({
               </Label>
             </CardTitle>
           </div>
-          <img src={icon} className='w-12 h-12 md:w-13 md:h-13 '></img>
+          <img src={icon} className='w-10 h-10 md:w-11 md:h-12 '></img>
         </div>
         <CardContent className='space-y-4 mt-5'>
           <div className='flex flex-col gap-2'>

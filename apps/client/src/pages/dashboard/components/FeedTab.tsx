@@ -1,12 +1,18 @@
-import { createPost, getFeed, updatePost } from '@/api/queries/feedQueries'
+import {
+  createPost,
+  deletePost,
+  getFeed,
+  updatePost,
+} from '@/api/queries/feedQueries'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import { FeedContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import StateComp from '@/components/shared/StateComp'
 import DetailHeader from './DetailHeader'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FeedCreateRequest, FeedItem } from '@/lib/schemas'
 import { useState } from 'react'
 import feedImg from '@/assets/disconnect-blue.svg'
+import { toast } from 'sonner'
 
 const FeedTab = ({
   courseId,
@@ -27,6 +33,20 @@ const FeedTab = ({
     queryKey: ['feed', courseId],
     queryFn: () => getFeed(courseId!),
     enabled: Boolean(courseId) && activeTab === 'feed',
+  })
+
+  const deletePostMutation = useMutation({
+    mutationFn: (variables: { courseId: string; postId: string }) =>
+      deletePost(variables.courseId, variables.postId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['feed', variables.courseId],
+      })
+      toast.success('Přispěvek byl smazán')
+    },
+    onError: () => {
+      toast.error('Chyba při mazání přispěvku')
+    },
   })
 
   const handleAddPost = () => {
@@ -98,6 +118,12 @@ const FeedTab = ({
                           queryKey: ['feed', courseId],
                         })
                       }
+                    }}
+                    onDelete={() => {
+                      deletePostMutation.mutateAsync({
+                        courseId,
+                        postId: feedItem.uuid,
+                      })
                     }}
                   />
                 ))}

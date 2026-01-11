@@ -251,7 +251,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                           props.onDelete()
                         }
                       }}
-                    ></DeleteConfirmDialog>
+                    />
                   </>
                 )}
               </div>

@@ -11,12 +11,13 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState, type MouseEvent } from 'react'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
 import { useForm, useWatch, type FieldValue } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
+import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -37,7 +38,7 @@ type QuizComponentProps = {
 
   // Lecturer mode props
   onSave?: (quiz: Quiz) => void
-  onDelete?: () => void
+  onDelete?: () => void | Promise<void>
   isDraft?: boolean
   onCancelDraft?: () => void
 }
@@ -297,7 +298,7 @@ const QuizComponent = ({
               <EditBtn
                 type='delete'
                 icon={X}
-                iconClassName='size-4 md:size-5 [stroke-width:2.5]'
+                iconClassName='size-4 md:size-5'
                 onClick={(e) => {
                   e?.stopPropagation()
                   onCancelDraft?.()
@@ -305,10 +306,16 @@ const QuizComponent = ({
               />
             ) : (
               mode === 'lecturer' && (
-                <EditBtn
-                  type='delete'
-                  onClick={(e) => {
-                    e?.stopPropagation()
+                <DeleteConfirmDialog
+                  trigger={
+                    <EditBtn
+                      type='delete'
+                      onClick={(e) => e?.stopPropagation()}
+                    />
+                  }
+                  itemName={quiz.title}
+                  itemType='kvíz'
+                  onConfirm={() => {
                     onDelete?.()
                   }}
                 />

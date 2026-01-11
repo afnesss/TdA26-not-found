@@ -1,4 +1,9 @@
-import { createQuiz, getQuizzes, updateQuiz } from '@/api/queries/quizQueries'
+import {
+  createQuiz,
+  deleteQuiz,
+  getQuizzes,
+  updateQuiz,
+} from '@/api/queries/quizQueries'
 import { QuizzesContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
@@ -52,6 +57,17 @@ const QuizzesTab = ({
     },
     onError: () => {
       toast.error('Chyba při ukládání')
+    },
+  })
+
+  const deleteQuizMutation = useMutation({
+    mutationFn: (quizId: string) => deleteQuiz(courseId, quizId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
+      toast.success('Kvíz byl smazán')
+    },
+    onError: () => {
+      toast.error('Chyba při mazání kvízu')
     },
   })
 
@@ -131,9 +147,6 @@ const QuizzesTab = ({
                 handleCreateQuiz(updatedQuiz)
               }}
               isSubmitting={createQuizMutation.isPending}
-              onDelete={() => {
-                console.log('Delete:', draftQuiz.uuid)
-              }}
             />
           )}
           {quizzes &&
@@ -148,7 +161,7 @@ const QuizzesTab = ({
                 }}
                 isSubmitting={updateQuizMutation.isPending}
                 onDelete={() => {
-                  console.log('Delete:', quiz.uuid)
+                  deleteQuizMutation.mutateAsync(quiz.uuid!)
                 }}
               />
             ))}

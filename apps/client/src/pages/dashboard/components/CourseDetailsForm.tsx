@@ -5,11 +5,18 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { colorStyles } from '@/lib/constants'
-import type { CourseSummary } from '@/lib/schemas'
+import {
+  CourseUpdateRequestSchema,
+  type CourseSummary,
+  type CourseUpdateRequest,
+} from '@/lib/schemas'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import icon from '@/assets/t-think-blue.svg'
+import { useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { cn } from '@/lib/utils'
 
 const CourseDetailsForm = ({
   selectedCourse,
@@ -17,19 +24,17 @@ const CourseDetailsForm = ({
   selectedCourse: CourseSummary
 }) => {
   const queryClient = useQueryClient()
-  const [courseEdits, setCourseEdits] = useState<
-    Partial<{ name: string; description: string }>
-  >({})
-  const [hasChanges, setHasChanges] = useState(false)
+  // const [courseEdits, setCourseEdits] = useState<
+  //   Partial<{ name: string; description: string }>
+  // >({})
+  // const [hasChanges, setHasChanges] = useState(false)
 
   const updateCourseMutation = useMutation({
     mutationFn: (data: { name: string; description?: string }) =>
       updateCourse(selectedCourse.uuid, data),
     onSuccess: (updatedCourse) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
-
-      setHasChanges(false)
-      setCourseEdits({})
+      reset()
 
       toast.success('Kurz byl aktualizovan')
 
@@ -41,13 +46,38 @@ const CourseDetailsForm = ({
     },
   })
 
-  const handleSave = () => {
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isDirty, isSubmitting },
+    setValue,
+    reset,
+    setError,
+  } = useForm<CourseUpdateRequest>({
+    resolver: zodResolver(CourseUpdateRequestSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      name: selectedCourse.name,
+      description: selectedCourse.description ?? '',
+    },
+  })
+
+  const formValues = useWatch({
+    control,
+    defaultValue: {
+      name: selectedCourse.name,
+      description: selectedCourse.description ?? '',
+    },
+  })
+
+  const handleSave = handleSubmit((data) => {
     updateCourseMutation.mutate({
-      name: courseEdits.name ?? selectedCourse.name,
-      description:
-        courseEdits.description ?? selectedCourse.description ?? undefined,
+      name: data.name ?? selectedCourse.name,
+      description: data.description ?? selectedCourse.description ?? undefined,
     })
-  }
+  })
 
   return (
     <Card
@@ -80,31 +110,31 @@ const CourseDetailsForm = ({
             <FormField
               label='Název kurzu'
               inputProps={{
-                value: courseEdits.name ?? selectedCourse?.name ?? '',
+                value: formValues.name ?? selectedCourse?.name ?? '',
                 onChange: (e) => {
-                  setCourseEdits((prev) => ({ ...prev, name: e.target.value }))
-                  setHasChanges(true)
+                  setValue('name', e.target.value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
                 },
                 type: 'text',
                 placeholder: 'Název kurzu',
-                disabled: updateCourseMutation.isPending, // ← Disabled під час завантаження
+                disabled: updateCourseMutation.isPending || isSubmitting,
               }}
+              className={cn(errors.name && 'border border-destructive')}
             />
+            {errors.name && <p className='error-text'>{errors.name.message}</p>}
             <FormField
               label='Popis kurzu'
               multiline
               textareaProps={{
                 value:
-                  courseEdits.description ?? selectedCourse?.description ?? '',
+                  formValues.description ?? selectedCourse?.description ?? '',
                 onChange: (e) => {
-                  setHasChanges(true)
-                  setCourseEdits((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
+                  setValue('description', e.target.value, { shouldDirty: true })
                 },
                 placeholder: 'Zadejte popis kurzu',
-                disabled: updateCourseMutation.isPending, // ← Disabled під час завантаження
+                disabled: updateCourseMutation.isPending || isSubmitting,
               }}
             />
           </div>
@@ -139,13 +169,10 @@ const CourseDetailsForm = ({
               variant='primary'
               size='primary'
               onClick={handleSave}
-              disabled={!hasChanges || updateCourseMutation.isPending}
+              disabled={!isDirty || updateCourseMutation.isPending}
               className='w-fit'
             >
               Uložit změny
-              {/* {updateCourseMutation.isPending
-                ? 'Ukládání...'
-                : 'Uložit změny'}{' '} */}
             </Button>
           </CardFooter>
         </CardContent>

@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { InputHTMLAttributes } from 'react'
 import TextareaAutosize from 'react-textarea-autosize'
 import { Textarea } from '../ui/textarea'
+import { cn } from '@/lib/utils'
 
 type FormFieldProps =
   | {
@@ -13,12 +14,14 @@ type FormFieldProps =
       rightElement?: React.ReactNode
       inputProps: InputHTMLAttributes<HTMLInputElement> & { className?: string }
       multiline?: false
+      className?: string
     }
   | {
       label: string
       icon?: LucideIcon
       textareaProps: TextareaAutosizeProps & { className?: string }
       multiline: true
+      className?: string
     }
 
 const FormField = (props: FormFieldProps) => {
@@ -37,13 +40,19 @@ const FormField = (props: FormFieldProps) => {
             minRows={1}
             maxRows={10}
             {...props.textareaProps}
-            className={`${Icon ? 'pl-11!' : 'pl-4!'} ${props.textareaProps?.className || ''}pb-2`}
+            className={cn(
+              `${Icon ? 'pl-11!' : 'pl-4!'} ${props.textareaProps?.className || ''}pb-2`,
+              props.className,
+            )}
           />
         ) : (
           <>
             <Input
               {...props.inputProps}
-              className={`${Icon ? 'pl-11!' : 'pl-4!'} ${props.rightElement ? 'pr-12' : 'pr-4'} ${props.inputProps?.className || ''}`}
+              className={cn(
+                `${Icon ? 'pl-11!' : 'pl-4!'} ${props.rightElement ? 'pr-12' : 'pr-4'} ${props.inputProps?.className || ''}`,
+                props.className,
+              )}
             />
             {props.rightElement && (
               <div className='absolute right-3 top-1/2 -translate-y-1/2 flex items-center'>

@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { MaterialSchema } from "./material";
-import { QuizSchema } from "./quiz";
-import { FeedItemSchema } from "./feed";
+import { z } from 'zod'
+import { MaterialSchema } from './material'
+import { QuizSchema } from './quiz'
+import { FeedItemSchema } from './feed'
 
 export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
@@ -9,17 +9,22 @@ export const CourseSummarySchema = z.object({
   description: z.string().optional().nullable(), // Nullable from DB
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
-});
+})
 
 export const CourseCreateRequestSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-});
+})
 
 export const CourseUpdateRequestSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z
+    .string()
+    .min(1, 'Název kurzu nesmí být prázdný')
+    .refine((val) => val.trim().length > 0, {
+      message: 'Název kurzu nesmí být prázdný',
+    }),
   description: z.string().optional(),
-});
+})
 
 export const CourseDetailSchema = z.object({
   uuid: z.string().uuid(),
@@ -28,9 +33,9 @@ export const CourseDetailSchema = z.object({
   materials: z.array(MaterialSchema),
   quizzes: z.array(QuizSchema),
   feed: z.array(FeedItemSchema),
-});
+})
 
-export type CourseSummary = z.infer<typeof CourseSummarySchema>;
-export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>;
-export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>;
-export type CourseDetail = z.infer<typeof CourseDetailSchema>;
+export type CourseSummary = z.infer<typeof CourseSummarySchema>
+export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>
+export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>
+export type CourseDetail = z.infer<typeof CourseDetailSchema>

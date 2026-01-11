@@ -1,7 +1,9 @@
 import React from 'react'
-import { Search, AlertCircle, BookOpen } from 'lucide-react'
+import { Search, AlertCircle, BookOpen, type LucideIcon } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import fileImg from '../../assets/files-blue.svg'
 
 type StateType = 'empty-search' | 'error' | 'no-content'
 
@@ -10,10 +12,34 @@ type Props = {
   onAction?: () => void
   message?: string
   actionText?: string
+  className?: string
+  icon?: LucideIcon
+  img?: string
+  iconClassName?: string
 }
 
-const StateComp = ({ type, onAction, message, actionText }: Props) => {
-  const stateConfig = {
+const StateComp = ({
+  type,
+  onAction,
+  message,
+  actionText,
+  className,
+  icon,
+  iconClassName,
+  img,
+}: Props) => {
+  const stateConfig: Record<
+    StateType,
+    {
+      icon?: LucideIcon
+      img?: string
+      iconBg: string
+      iconColor: string
+      defaultMessage: string
+      defaultAction: string
+      showButton: boolean
+    }
+  > = {
     'empty-search': {
       icon: Search,
       iconBg: 'bg-secondary/20',
@@ -31,7 +57,7 @@ const StateComp = ({ type, onAction, message, actionText }: Props) => {
       showButton: true,
     },
     'no-content': {
-      icon: BookOpen,
+      img: fileImg,
       iconBg: 'bg-secondary/20',
       iconColor: 'text-primary',
       defaultMessage: 'Zatím nemáte žádné kurzy',
@@ -41,31 +67,42 @@ const StateComp = ({ type, onAction, message, actionText }: Props) => {
   }
 
   const config = stateConfig[type]
-  const Icon = config.icon
+  const finalImg = img ?? config.img
+  const IconComp = icon ?? config.icon
 
   return (
-    <div className='text-center py-16'>
+    <div className={cn('text-center py-16', className)}>
       <div
-        className={`w-22 h-22 ${config.iconBg} rounded-full flex items-center 
+        className={`w-18 h-18 md:w-20 md:h-20 lg:w-22 lg:h-22 ${config.iconBg} rounded-full flex items-center 
                   justify-center mx-auto mb-6`}
       >
-        <Icon size={45} className={config.iconColor} />
+        {finalImg ? (
+          <img
+            src={finalImg}
+            className={cn('w-8 h-8 md:w-9 md:h-9', iconClassName)}
+          />
+        ) : IconComp ? (
+          <IconComp
+            className={cn('size-9 md:size-10 lg:size-11', config.iconColor)}
+          />
+        ) : null}
       </div>
+      <div className='flex flex-col items-center'>
+        <Label variant='emptyState' size='lg'>
+          {message || config.defaultMessage}
+        </Label>
 
-      <Label asChild variant='emptyState' size='xl'>
-        <h3>{message || config.defaultMessage}</h3>
-      </Label>
-
-      {config.showButton && onAction && (
-        <Button
-          variant='primary'
-          size='primary'
-          onClick={onAction}
-          className='mt-6'
-        >
-          {actionText || config.defaultAction}
-        </Button>
-      )}
+        {config.showButton && onAction && (
+          <Button
+            variant='primary'
+            size='primary'
+            onClick={onAction}
+            className=' w-fit'
+          >
+            {actionText || config.defaultAction}
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

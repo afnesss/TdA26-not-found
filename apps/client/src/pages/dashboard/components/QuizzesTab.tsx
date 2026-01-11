@@ -8,6 +8,7 @@ import type { Quiz } from '@/lib/schemas'
 import { toast } from 'sonner'
 import { useState } from 'react'
 import { useForm, type FieldValues } from 'react-hook-form'
+import quizImg from '../../../assets/t-play-blue.svg'
 
 const QuizzesTab = ({
   courseId,
@@ -153,7 +154,12 @@ const QuizzesTab = ({
             ))}
         </div>
       ) : (
-        <StateComp type='no-content' message='Zatím žádné kvízy' />
+        <StateComp
+          img={quizImg}
+          iconClassName='w-12 h-12 md:w-14 h-14'
+          type='no-content'
+          message='Zatím žádné kvízy'
+        />
       )}
     </div>
   )

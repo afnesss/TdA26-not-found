@@ -6,6 +6,7 @@ import DetailHeader from './DetailHeader'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FeedCreateRequest, FeedItem } from '@/lib/schemas'
 import { useState } from 'react'
+import feedImg from '@/assets/disconnect-blue.svg'
 
 const FeedTab = ({
   courseId,
@@ -105,7 +106,12 @@ const FeedTab = ({
           </div>
         </div>
       ) : (
-        <StateComp type='no-content' message='Zatím žádné příspěvky' />
+        <StateComp
+          img={feedImg}
+          iconClassName='w-12 h-12 md:w-13 h-13'
+          type='no-content'
+          message='Zatím žádné přispěvky'
+        />
       )}
     </div>
   )

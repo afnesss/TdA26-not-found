@@ -297,7 +297,7 @@ const QuizComponent = ({
               <EditBtn
                 type='delete'
                 icon={X}
-                iconClassName='size-5 [stroke-width:2.5]'
+                iconClassName='size-4 md:size-5 [stroke-width:2.5]'
                 onClick={(e) => {
                   e?.stopPropagation()
                   onCancelDraft?.()

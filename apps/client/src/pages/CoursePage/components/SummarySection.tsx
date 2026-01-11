@@ -1,11 +1,6 @@
-import React from 'react'
-import { colorStyles } from '@/lib/constants'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useNavigate } from 'react-router'
-import { cn } from '@/lib/utils'
 import Breadcrumb from '@/components/shared/Breadcrumb'
+import { Label } from '@/components/ui/label'
+import iconIdea from '@/assets/t-idea-blue.svg'
 
 interface SummarySectionProps {
   name?: string
@@ -19,19 +14,22 @@ const SummarySection = ({ name, description }: SummarySectionProps) => {
         <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
 
         <div className='px-3 md:px-6 py-4 gap-1 sm:gap-2 flex flex-col'>
-          <Breadcrumb
-            items={[
-              { label: 'Kurzy', path: '/courses' },
-              { label: 'Detaily kurzu' },
-            ]}
-          />
-          <div className='flex flex-col md:flex-row gap-3 items-start md:items-center'>
-            <Label className='mb-0' size='xl'>
-              {name}
-            </Label>
+          <div className='flex justify-between '>
+            <div className='flex flex-col gap-1 sm:gap-2'>
+              <Breadcrumb
+                items={[
+                  { label: 'Kurzy', path: '/courses' },
+                  { label: 'Detaily kurzu' },
+                ]}
+              />
+              <Label className='mb-0' size='xl'>
+                {name}
+              </Label>
+            </div>
+            <img src={iconIdea} className='w-13 h-13 md:w-15 md:h-15 '></img>
           </div>
           {description && (
-            <p className='text-gray-600 text-sm md:text-base leading-relaxed mb-2'>
+            <p className='text-gray-600 text-sm md:text-base leading-relaxed '>
               {description}
             </p>
           )}

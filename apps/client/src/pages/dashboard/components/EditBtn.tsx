@@ -36,11 +36,13 @@ const EditBtn: React.FC<EditBtnProps> = ({
       variant='ghost'
       size='icon-sm'
       disabled={disabled}
-      className={cn(hoverStyle, 'size-6 min-[400px]:size-7', classNameBtn)}
+      className={cn(hoverStyle, 'size-5 min-[400px]:size-6', classNameBtn)}
       onClick={onClick}
     >
       {IconToRender && (
-        <IconToRender className={cn(`sm:w-4 h-4 ${textStyle}`, iconClassName)} />
+        <IconToRender
+          className={cn(`sm:w-4 h-4 ${textStyle}`, iconClassName)}
+        />
       )}
     </Button>
   )

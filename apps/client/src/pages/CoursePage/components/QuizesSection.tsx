@@ -1,26 +1,12 @@
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { type CourseDetail, type Quiz } from '@/lib/schemas'
-import { useState, useEffect, startTransition, Fragment } from 'react'
-import {
-  Clock,
-  CheckCircle,
-  ChevronUp,
-  ChevronDown,
-  Check,
-  Play,
-  X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { QuizStateById } from '../../../lib/types'
-import {
-  handleSingleChoice,
-  handleMultipleChoice,
-  handleSubmit,
-  isQuizComplete,
-} from '../utils/helperFunctions'
-import { useCourseMutation } from '../utils/courseMutation'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
+import StateComp from '@/components/shared/StateComp'
+import { Label } from '@/components/ui/label'
+import { type CourseDetail, type Quiz } from '@/lib/schemas'
+import { startTransition, useEffect, useState } from 'react'
+import type { QuizStateById } from '../../../lib/types'
+import { useCourseMutation } from '../utils/courseMutation'
+import { handleSubmit, isQuizComplete } from '../utils/helperFunctions'
+import quizImg from '../../../assets/t-play-blue.svg'
 
 type QuizesSectionProps = {
   courseData?: CourseDetail | null
@@ -55,51 +41,61 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
       <Label size='xl'>Kvízy</Label>
 
       <div className='space-y-4'>
-        {courseData?.quizzes?.map((quiz: Quiz) => (
-          <QuizComponent
-            key={quiz.uuid}
-            quiz={quiz}
-            mode='user'
-            userState={quizState[quiz.uuid!]}
-            onAnswerChange={(questionId, answer) => {
-              setQuizState((prev) => ({
-                ...prev,
-                [quiz.uuid!]: {
-                  ...prev[quiz.uuid!],
-                  answers: {
-                    ...prev[quiz.uuid!].answers,
-                    [questionId]: { uuid: questionId, ...answer },
+        {courseData?.quizzes && courseData.quizzes.length > 0 ? (
+          courseData?.quizzes?.map((quiz: Quiz) => (
+            <QuizComponent
+              key={quiz.uuid}
+              quiz={quiz}
+              mode='user'
+              userState={quizState[quiz.uuid!]}
+              onAnswerChange={(questionId, answer) => {
+                setQuizState((prev) => ({
+                  ...prev,
+                  [quiz.uuid!]: {
+                    ...prev[quiz.uuid!],
+                    answers: {
+                      ...prev[quiz.uuid!].answers,
+                      [questionId]: { uuid: questionId, ...answer },
+                    },
                   },
-                },
-              }))
-            }}
-            onSubmit={() =>
-              handleSubmit(
-                courseData.uuid,
-                quiz.uuid!,
-                quizState,
-                queryMutation,
-              )
-            }
-            onToggleShowCorrect={() => {
-              setQuizState((prev) => ({
-                ...prev,
-                [quiz.uuid!]: {
-                  ...prev[quiz.uuid!],
-                  showCorrect: !(prev[quiz.uuid!].showCorrect ?? true),
-                },
-              }))
-            }}
-            isSubmitDisabled={
-              !isQuizComplete(quiz.uuid!, quiz.questions.length, quizState) ||
-              quizState[quiz.uuid!]?.status === 'submitted'
-            }
-            isSubmitting={
-              queryMutation.variables?.quizId === quiz.uuid &&
-              queryMutation.isPending
-            }
+                }))
+              }}
+              onSubmit={() =>
+                handleSubmit(
+                  courseData.uuid,
+                  quiz.uuid!,
+                  quizState,
+                  queryMutation,
+                )
+              }
+              onToggleShowCorrect={() => {
+                setQuizState((prev) => ({
+                  ...prev,
+                  [quiz.uuid!]: {
+                    ...prev[quiz.uuid!],
+                    showCorrect: !(prev[quiz.uuid!].showCorrect ?? true),
+                  },
+                }))
+              }}
+              isSubmitDisabled={
+                !isQuizComplete(quiz.uuid!, quiz.questions.length, quizState) ||
+                quizState[quiz.uuid!]?.status === 'submitted'
+              }
+              isSubmitting={
+                queryMutation.variables?.quizId === quiz.uuid &&
+                queryMutation.isPending
+              }
+            />
+          ))
+        ) : (
+          <StateComp
+            img={quizImg}
+            iconClassName='w-12 h-12 md:w-14 h-14'
+            type='no-content'
+            message='Zatím žádné kvízy'
+            className='pt-8 pb-0'
           />
-        ))}
+        )}
       </div>
     </section>
   )

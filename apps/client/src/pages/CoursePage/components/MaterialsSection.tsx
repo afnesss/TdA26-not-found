@@ -1,4 +1,5 @@
 import MaterialCard from '@/components/shared/Material'
+import StateComp from '@/components/shared/StateComp'
 import { Label } from '@/components/ui/label'
 import type { Material } from '@/lib/schemas/material'
 import { useMediaQuery } from 'usehooks-ts'
@@ -14,15 +15,23 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
       <Label size='xl'>Studijní materiály</Label>
 
       <div className='space-y-3'>
-        {materials?.map((material) => {
-          return (
-            <MaterialCard
-              key={material.uuid}
-              material={material}
-              type='classic'
-            />
-          )
-        })}
+        {materials && materials.length > 0 ? (
+          materials.map((material) => {
+            return (
+              <MaterialCard
+                key={material.uuid}
+                material={material}
+                type='classic'
+              />
+            )
+          })
+        ) : (
+          <StateComp
+            type='no-content'
+            message='Zatím žádné materiály'
+            className='pt-8 pb-0'
+          />
+        )}
       </div>
     </section>
   )

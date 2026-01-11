@@ -9,6 +9,7 @@ import type { CourseSummary } from '@/lib/schemas'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import icon from '@/assets/t-think-blue.svg'
 
 const CourseDetailsForm = ({
   selectedCourse,
@@ -51,25 +52,29 @@ const CourseDetailsForm = ({
   return (
     <Card
       key={selectedCourse.uuid}
-      className='bg-background rounded-xl shadow-md hover:shadow-md hover:scale-100 hover:translate-0 overflow-hidden'
+      className='bg-background rounded-xl shadow-md hover:shadow-md hover:scale-100 hover:translate-0 overflow-hidden cursor-auto'
     >
       <div
         className={`h-2 bg-linear-to-r ${colorStyles.gradient['accent-teal']}`}
       />
       <div className='p-4 lg:p-6 -mt-2'>
-        <Breadcrumb
-          items={[
-            { label: 'Sprava kurzů', path: '/dashboard' },
-            { label: 'Detaily kurzu' },
-          ]}
-          className='mb-2'
-        />
-        <CardTitle>
-          <Label variant='title' size='lg'>
-            Detaily kurzu
-          </Label>
-        </CardTitle>
-
+        <div className='flex justify-between'>
+          <div className='flex flex-col'>
+            <Breadcrumb
+              items={[
+                { label: 'Sprava kurzů', path: '/dashboard' },
+                { label: 'Detaily kurzu' },
+              ]}
+              className='mb-2'
+            />
+            <CardTitle>
+              <Label variant='title' size='lg'>
+                Detaily kurzu
+              </Label>
+            </CardTitle>
+          </div>
+          <img src={icon} className='w-12 h-12 md:w-13 md:h-13 '></img>
+        </div>
         <CardContent className='space-y-4 mt-5'>
           <div className='flex flex-col gap-2'>
             <FormField

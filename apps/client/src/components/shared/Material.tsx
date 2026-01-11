@@ -304,9 +304,11 @@ const MaterialCard = (props: MaterialCardProps) => {
           {isEditing ? (
             <div
               className={cn(
-                'flex flex-wrap flex-col sm:flex-row w-full',
+                'flex flex-wrap',
                 displayType === 'file' ? 'sm:items-center' : 'sm:items-start',
-                'isDraft' in props && props.isDraft ? ' gap-1 sm:gap-2' : '',
+                'isDraft' in props && props.isDraft
+                  ? 'gap-1 flex-col sm:gap-0 sm:flex-row'
+                  : 'flex-row',
               )}
             >
               {' '}
@@ -358,6 +360,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         fileInputRef.current?.click()
                         clearErrors('root.file')
                       }}
+                      classNameBtn='mr-2'
                       icon={Upload}
                       iconClassName={cn(
                         'size-4',

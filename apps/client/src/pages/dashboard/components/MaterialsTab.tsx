@@ -4,7 +4,7 @@ import {
   getMaterials,
   updateMaterial,
 } from '@/api/queries/materialQueries'
-import MaterialCard from '@/components/shared/Material'
+import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
 import type { Material } from '@/lib/schemas'
 import { MaterialsContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'

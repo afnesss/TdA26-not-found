@@ -57,6 +57,7 @@ const DeleteConfirmDialog = ({
         <AlertDialogFooter>
           <AlertDialogCancel
             disabled={isLoading}
+            onClick={(e) => e?.stopPropagation()}
             className={cn(
               'w-18 h-8 font-semibold border hover:bg-gray-200 border-gray-300 shadow-sm',
             )}

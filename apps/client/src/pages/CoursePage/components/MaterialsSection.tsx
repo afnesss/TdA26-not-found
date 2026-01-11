@@ -1,4 +1,4 @@
-import MaterialCard from '@/components/shared/Material'
+import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
 import { Label } from '@/components/ui/label'
 import type { Material } from '@/lib/schemas/material'

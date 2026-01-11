@@ -5,6 +5,7 @@ import { useState } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
+import DeleteConfirmDialog from '../ui/AlertDialog'
 
 const FeedItemComp = ({
   feedItem,
@@ -12,12 +13,14 @@ const FeedItemComp = ({
   onSave,
   isDraft,
   onCancelDraft,
+  onDelete,
 }: {
   feedItem: FeedItem
   type: 'classic' | 'edit'
   onSave?: (post: FeedItem) => void
   onCancelDraft?: () => void
   isDraft?: true
+  onDelete?: () => void
 }) => {
   const [editName, setEditName] = useState(isDraft ? true : false)
   const [editedFeed, setEditedFeed] = useState<FeedItem>(feedItem)
@@ -104,7 +107,13 @@ const FeedItemComp = ({
             ) : (
               <>
                 <EditBtn icon={Edit} onClick={() => setEditName(true)} />
-                <EditBtn type='delete' />
+                <DeleteConfirmDialog
+                  trigger={<EditBtn type='delete' />}
+                  itemType='příspěvek'
+                  onConfirm={() => {
+                    onDelete?.()
+                  }}
+                />
               </>
             )}
           </div>

@@ -7,6 +7,14 @@ type FeedEvent = {
 
 class SSEManager {
   private clients: Map<string, Response[]> = new Map();
+  private heartbeatInterval: NodeJS.Timeout;
+
+  constructor() {
+    // Send a heartbeat every 30 seconds to keep connections alive
+    this.heartbeatInterval = setInterval(() => {
+      this.sendHeartbeat();
+    }, 30000);
+  }
 
   addClient(courseId: string, res: Response) {
     if (!this.clients.has(courseId)) {
@@ -14,6 +22,9 @@ class SSEManager {
     }
     const courseClients = this.clients.get(courseId)!;
     courseClients.push(res);
+
+    // Send initial ping to establish connection immediately
+    res.write(": connected\n\n");
 
     // Remove client on close
     res.on("close", () => {
@@ -39,6 +50,14 @@ class SSEManager {
         client.write(message);
       });
     }
+  }
+
+  private sendHeartbeat() {
+    this.clients.forEach((clients, courseId) => {
+      clients.forEach((client) => {
+        client.write(": heartbeat\n\n");
+      });
+    });
   }
 }
 

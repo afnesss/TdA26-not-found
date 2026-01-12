@@ -13,28 +13,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
+import {
+  useCreateMutation,
+  useUpdateMutation,
+  type CreateMaterialPayload,
+  type MaterialDraft,
+} from './useMaterialMutation'
 
-type MaterialDraft = {
-  name?: string
-  description?: string
-  type: 'file' | 'url'
-  file?: File
-  url?: string
-}
-
-type CreateMaterialPayload =
-  | {
-      type: 'file'
-      name: string
-      file: File
-      description?: string
-    }
-  | {
-      type: 'url'
-      name: string
-      url: string
-      description?: string
-    }
 const MaterialsTab = ({
   courseId,
   activeTab,
@@ -56,37 +41,12 @@ const MaterialsTab = ({
     enabled: Boolean(courseId) && activeTab === 'materials',
   })
 
-  const updateMaterialMutation = useMutation({
-    mutationFn: ({
-      materialId,
-      data,
-    }: {
-      materialId: string
-      data: MaterialDraft
-    }) => updateMaterial(courseId, materialId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
-      toast.success('Materiál aktualizován')
-    },
-    onError: (error) => {
-      console.error('Update error:', error)
-      toast.error('Chyba při aktualizaci materiálu')
-    },
-  })
+  const { mutateAsync: updateMaterialMutation } = useUpdateMutation(courseId)
 
-  const createMaterialMutation = useMutation({
-    mutationFn: (payload: CreateMaterialPayload) =>
-      createMaterial(courseId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
-      setDraftMaterial(null)
-      toast.success('Materiál vytvořen')
-    },
-    onError: (error) => {
-      console.error('Update error:', error)
-      toast.error('Chyba při vytváření  materiálu')
-    },
-  })
+  const { mutateAsync: createMaterialMutation } = useCreateMutation(
+    courseId,
+    setDraftMaterial,
+  )
 
   const deleteMaterialMutation = useMutation({
     mutationFn: (variables: { courseId: string; materialId: string }) =>
@@ -120,7 +80,7 @@ const MaterialsTab = ({
             description: data.description || '',
           }
 
-    await createMaterialMutation.mutateAsync(payload)
+    await createMaterialMutation(payload)
   }
 
   const handleCancelDraft = () => {
@@ -131,7 +91,7 @@ const MaterialsTab = ({
     materialId: string,
     data: MaterialDraft,
   ) => {
-    await updateMaterialMutation.mutateAsync({ materialId, data })
+    await updateMaterialMutation({ materialId, data })
   }
   const handleAddMaterial = () => {
     const newDraft: Material = {
@@ -180,7 +140,7 @@ const MaterialsTab = ({
                   material={material}
                   type='edit'
                   onSave={async (editedMaterial) => {
-                    handleUpdateMaterial(material.uuid, editedMaterial)
+                    await handleUpdateMaterial(material.uuid, editedMaterial)
                   }}
                   onDelete={() =>
                     deleteMaterialMutation.mutateAsync({

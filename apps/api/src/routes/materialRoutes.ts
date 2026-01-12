@@ -1,6 +1,11 @@
 import { Router } from "express";
 import multer from "multer";
-import { createMaterial, deleteMaterial, getMaterials, updateMaterial } from "../controllers/materialController";
+import {
+  createMaterial,
+  deleteMaterial,
+  getMaterials,
+  updateMaterial,
+} from "../controllers/materialController";
 import path from "path";
 
 const router = Router({ mergeParams: true });
@@ -22,17 +27,28 @@ const upload = multer({
       "image/gif",
       "video/mp4",
       "audio/mpeg",
-      "audio/mp3" 
+      "audio/mp3",
     ];
-    
+
     // Also check extensions to be sure, as mime types can vary
     const allowedExtensions = [
-        ".pdf", ".docx", ".txt", ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".mp3"
+      ".pdf",
+      ".docx",
+      ".txt",
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".mp4",
+      ".mp3",
     ];
-    
+
     const ext = path.extname(file.originalname).toLowerCase();
 
-    if (allowedMimeTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+    if (
+      allowedMimeTypes.includes(file.mimetype) ||
+      allowedExtensions.includes(ext)
+    ) {
       cb(null, true);
     } else {
       cb(new Error("Unsupported file format"));
@@ -40,20 +56,24 @@ const upload = multer({
   },
 });
 
-const handleMulterError = (err: any, req: any, res: any, next: any) => {
-    if (err instanceof multer.MulterError) {
-        if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ message: "File too large (max 30MB)" });
+const uploadMiddleware = (req: any, res: any, next: any) => {
+  upload.single("file")(req, res, (err: any) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({ message: "File too large (max 30MB)" });
         }
-    } else if (err) {
         return res.status(400).json({ message: err.message });
+      }
+      return res.status(400).json({ message: err.message });
     }
     next();
+  });
 };
 
 router.get("/", getMaterials);
-router.post("/", upload.single("file"), handleMulterError, createMaterial);
-router.put("/:materialId", upload.single("file"), handleMulterError, updateMaterial);
+router.post("/", uploadMiddleware, createMaterial);
+router.put("/:materialId", uploadMiddleware, updateMaterial);
 router.delete("/:materialId", deleteMaterial);
 
 export default router;

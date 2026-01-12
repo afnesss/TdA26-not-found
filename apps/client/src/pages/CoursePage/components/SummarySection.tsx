@@ -14,7 +14,7 @@ const SummarySection = ({ name, description }: SummarySectionProps) => {
         <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
 
         <div className='px-3 md:px-6 py-4 gap-1 sm:gap-2 flex flex-col'>
-          <div className='flex justify-between '>
+          <div className='flex gap-1 justify-between '>
             <div className='flex flex-col gap-1 sm:gap-2'>
               <Breadcrumb
                 items={[

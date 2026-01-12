@@ -1,6 +1,5 @@
-// import { Card, CardContent, CardDescription, CardFooter, CardTitle } from '@/components/ui/card';
-// import type { Course } from '@/lib/types';
 import { getCourseById } from '@/api/queries/courseQueries'
+import StateComp from '@/components/shared/StateComp'
 import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
@@ -9,7 +8,6 @@ import FeedSection from './components/FeedSection'
 import MaterialsSection from './components/MaterialsSection'
 import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
-import StateComp from '@/components/shared/StateComp'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);

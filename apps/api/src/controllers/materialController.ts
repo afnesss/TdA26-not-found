@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courseMaterials, feedItems } from "../db/schema";
+import { courseMaterials } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 import {
   FileMaterialCreateRequestSchema,
@@ -11,7 +11,7 @@ import {
 import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { sseManager } from "../utils/sseManager";
+import { createSystemEvent } from "../utils/systemEvent";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
@@ -66,7 +66,7 @@ const moveFile = async (source: string, destination: string) => {
   try {
     await fs.rename(source, destination);
   } catch (error: any) {
-    if (error.code === 'EXDEV') {
+    if (error.code === "EXDEV") {
       await fs.copyFile(source, destination);
       await fs.unlink(source);
     } else {
@@ -84,7 +84,7 @@ export const createMaterial = async (req: Request, res: Response) => {
       // Validate request body
       // Note: req.body will contain text fields, req.file has the file
       const validation = FileMaterialCreateRequestSchema.safeParse(req.body);
-      
+
       if (!req.file) {
         return res.status(400).json({ message: "File is required" });
       }
@@ -92,7 +92,10 @@ export const createMaterial = async (req: Request, res: Response) => {
       if (!validation.success) {
         // Cleanup uploaded file if validation fails
         await fs.unlink(req.file.path).catch(console.error);
-        return res.status(400).json({ message: "Invalid request data", errors: validation.error.format() });
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validation.error.format(),
+        });
       }
 
       const { name, description } = validation.data;
@@ -126,28 +129,20 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      // System Feed Event
-      const [feedItem] = await db
-        .insert(feedItems)
-        .values({
-          courseId,
-          type: "system",
-          message: `New material added: ${name}`,
-        })
-        .returning();
-
-      sseManager.broadcast(courseId, "new_post", feedItem);
+      await createSystemEvent(courseId, `New material added: ${name}`);
 
       res.status(201).json(mapMaterial(material));
-
     } else if (type === "url") {
       const validation = UrlMaterialCreateRequestSchema.safeParse(req.body);
       if (!validation.success) {
-        return res.status(400).json({ message: "Invalid request data", errors: validation.error.format() });
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validation.error.format(),
+        });
       }
 
       const { name, description, url } = validation.data;
-      
+
       // Fetch favicon
       let faviconUrl = null;
       try {
@@ -169,28 +164,16 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      // System Feed Event
-      const [feedItem] = await db
-        .insert(feedItems)
-        .values({
-          courseId,
-          type: "system",
-          message: `New material added: ${name}`,
-        })
-        .returning();
-
-      sseManager.broadcast(courseId, "new_post", feedItem);
+      await createSystemEvent(courseId, `New material added: ${name}`);
 
       res.status(201).json(mapMaterial(material));
-
     } else {
       return res.status(400).json({ message: "Invalid material type" });
     }
-
   } catch (error) {
     console.error(error);
     if (req.file) {
-        await fs.unlink(req.file.path).catch(() => {});
+      await fs.unlink(req.file.path).catch(() => {});
     }
     res.status(500).json({ message: "Internal server error" });
   }
@@ -199,94 +182,106 @@ export const createMaterial = async (req: Request, res: Response) => {
 export const updateMaterial = async (req: Request, res: Response) => {
   try {
     const { courseId, materialId } = req.params;
-    
+
     // Check if material exists
     const existing = await db.query.courseMaterials.findFirst({
-        where: eq(courseMaterials.uuid, materialId),
+      where: eq(courseMaterials.uuid, materialId),
     });
 
     if (!existing) {
-        if (req.file) await fs.unlink(req.file.path).catch(() => {});
-        return res.status(404).json({ message: "Material not found" });
+      if (req.file) await fs.unlink(req.file.path).catch(() => {});
+      return res.status(404).json({ message: "Material not found" });
     }
-    
+
     if (existing.courseId !== courseId) {
-         if (req.file) await fs.unlink(req.file.path).catch(() => {});
-         return res.status(404).json({ message: "Material not found in this course" });
+      if (req.file) await fs.unlink(req.file.path).catch(() => {});
+      return res
+        .status(404)
+        .json({ message: "Material not found in this course" });
     }
 
-    if (existing.type === 'file') {
-        const validation = FileMaterialUpdateRequestSchema.safeParse(req.body);
-         if (!validation.success) {
-            if (req.file) await fs.unlink(req.file.path).catch(() => {});
-            return res.status(400).json({ message: "Invalid request data", errors: validation.error.format() });
+    if (existing.type === "file") {
+      const validation = FileMaterialUpdateRequestSchema.safeParse(req.body);
+      if (!validation.success) {
+        if (req.file) await fs.unlink(req.file.path).catch(() => {});
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validation.error.format(),
+        });
+      }
+
+      const { name, description } = validation.data;
+      const updates: any = { name, description, updatedAt: new Date() };
+
+      if (req.file) {
+        // Delete old file
+        if (existing.fileUrl) {
+          const oldFilename = existing.fileUrl.split("/").pop();
+          if (oldFilename) {
+            await fs
+              .unlink(path.join(UPLOAD_DIR, oldFilename))
+              .catch(console.error);
+          }
         }
 
-        const { name, description } = validation.data;
-        const updates: any = { name, description, updatedAt: new Date() };
+        // Save new file
+        const file = req.file;
+        const extension = path.extname(file.originalname);
+        const newFilename = `${materialId}${extension}`;
+        const newPath = path.join(UPLOAD_DIR, newFilename);
 
-        if (req.file) {
-            // Delete old file
-            if (existing.fileUrl) {
-                const oldFilename = existing.fileUrl.split('/').pop();
-                if (oldFilename) {
-                    await fs.unlink(path.join(UPLOAD_DIR, oldFilename)).catch(console.error);
-                }
-            }
+        await moveFile(file.path, newPath);
 
-            // Save new file
-            const file = req.file;
-            const extension = path.extname(file.originalname);
-            const newFilename = `${materialId}${extension}`;
-            const newPath = path.join(UPLOAD_DIR, newFilename);
+        const fileUrl = `/api/uploads/${newFilename}`;
 
-            await moveFile(file.path, newPath);
+        updates.fileUrl = fileUrl;
+        updates.mimeType = file.mimetype;
+        updates.sizeBytes = file.size;
+        updates.originalFilename = file.originalname;
+      }
 
-            const fileUrl = `/api/uploads/${newFilename}`;
+      const [updated] = await db
+        .update(courseMaterials)
+        .set(updates)
+        .where(eq(courseMaterials.uuid, materialId))
+        .returning();
 
-            updates.fileUrl = fileUrl;
-            updates.mimeType = file.mimetype;
-            updates.sizeBytes = file.size;
-            updates.originalFilename = file.originalname;
-        }
+      await createSystemEvent(courseId, `Material updated: ${updated.name}`);
 
-        const [updated] = await db
-            .update(courseMaterials)
-            .set(updates)
-            .where(eq(courseMaterials.uuid, materialId))
-            .returning();
-        
-        res.json(mapMaterial(updated));
-
+      res.json(mapMaterial(updated));
     } else {
-        // URL
-        const validation = UrlMaterialUpdateRequestSchema.safeParse(req.body);
-         if (!validation.success) {
-            return res.status(400).json({ message: "Invalid request data", errors: validation.error.format() });
+      // URL
+      const validation = UrlMaterialUpdateRequestSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validation.error.format(),
+        });
+      }
+
+      const { name, description, url } = validation.data;
+      const updates: any = { name, description, updatedAt: new Date() };
+
+      if (url && url !== existing.url) {
+        updates.url = url;
+        try {
+          const urlObj = new URL(url);
+          updates.faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
+        } catch (e) {
+          updates.faviconUrl = null;
         }
-        
-        const { name, description, url } = validation.data;
-        const updates: any = { name, description, updatedAt: new Date() };
+      }
 
-        if (url && url !== existing.url) {
-            updates.url = url;
-            try {
-                const urlObj = new URL(url);
-                updates.faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
-            } catch (e) {
-                updates.faviconUrl = null;
-            }
-        }
+      const [updated] = await db
+        .update(courseMaterials)
+        .set(updates)
+        .where(eq(courseMaterials.uuid, materialId))
+        .returning();
 
-        const [updated] = await db
-            .update(courseMaterials)
-            .set(updates)
-            .where(eq(courseMaterials.uuid, materialId))
-            .returning();
+      await createSystemEvent(courseId, `Material updated: ${updated.name}`);
 
-        res.json(mapMaterial(updated));
+      res.json(mapMaterial(updated));
     }
-
   } catch (error) {
     console.error(error);
     if (req.file) await fs.unlink(req.file.path).catch(() => {});
@@ -298,29 +293,36 @@ export const deleteMaterial = async (req: Request, res: Response) => {
   try {
     const { courseId, materialId } = req.params;
 
-     const existing = await db.query.courseMaterials.findFirst({
-        where: eq(courseMaterials.uuid, materialId),
+    const existing = await db.query.courseMaterials.findFirst({
+      where: eq(courseMaterials.uuid, materialId),
     });
 
     if (!existing) {
-        return res.status(404).json({ message: "Material not found" });
+      return res.status(404).json({ message: "Material not found" });
     }
 
     if (existing.courseId !== courseId) {
-        return res.status(404).json({ message: "Material not found in this course" });
+      return res
+        .status(404)
+        .json({ message: "Material not found in this course" });
     }
 
-    if (existing.type === 'file' && existing.fileUrl) {
-         const oldFilename = existing.fileUrl.split('/').pop();
-         if (oldFilename) {
-             await fs.unlink(path.join(UPLOAD_DIR, oldFilename)).catch(console.error);
-         }
+    if (existing.type === "file" && existing.fileUrl) {
+      const oldFilename = existing.fileUrl.split("/").pop();
+      if (oldFilename) {
+        await fs
+          .unlink(path.join(UPLOAD_DIR, oldFilename))
+          .catch(console.error);
+      }
     }
 
-    await db.delete(courseMaterials).where(eq(courseMaterials.uuid, materialId));
+    await db
+      .delete(courseMaterials)
+      .where(eq(courseMaterials.uuid, materialId));
+
+    await createSystemEvent(courseId, `Material removed: ${existing.name}`);
 
     res.status(204).send();
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });

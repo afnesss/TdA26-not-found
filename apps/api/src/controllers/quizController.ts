@@ -1,10 +1,15 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { quizzes, quizSubmissions, feedItems } from "../db/schema";
+import { quizzes, quizSubmissions } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { Quiz, QuizAnswer, QuizSubmitRequest, QuizSubmitResponse } from "../schemas/quiz";
+import {
+  Quiz,
+  QuizAnswer,
+  QuizSubmitRequest,
+  QuizSubmitResponse,
+} from "../schemas/quiz";
 import { v4 as uuidv4 } from "uuid";
-import { sseManager } from "../utils/sseManager";
+import { createSystemEvent } from "../utils/systemEvent";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
@@ -18,7 +23,9 @@ export const getQuizzes = async (req: Request, res: Response) => {
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
-        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
+          Number
+        ),
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
@@ -53,17 +60,7 @@ export const createQuiz = async (req: Request, res: Response) => {
       })
       .returning();
 
-    // System Feed Event
-    const [feedItem] = await db
-      .insert(feedItems)
-      .values({
-        courseId,
-        type: "system",
-        message: `New quiz added: ${quizData.title}`,
-      })
-      .returning();
-
-    sseManager.broadcast(courseId, "new_post", feedItem);
+    await createSystemEvent(courseId, `New quiz added: ${quizData.title}`);
 
     // Return with attemptsCount 0
     res.status(201).json({ ...newQuiz, attemptsCount: 0 });
@@ -85,7 +82,9 @@ export const getQuiz = async (req: Request, res: Response) => {
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
-        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
+          Number
+        ),
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
@@ -130,10 +129,13 @@ export const updateQuiz = async (req: Request, res: Response) => {
 
     // Get fresh attempts count
     const [stats] = await db
-        .select({ count: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number) })
-        .from(quizSubmissions)
-        .where(eq(quizSubmissions.quizId, quizId));
+      .select({
+        count: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+      })
+      .from(quizSubmissions)
+      .where(eq(quizSubmissions.quizId, quizId));
 
+    await createSystemEvent(courseId, `Quiz updated: ${updatedQuiz.title}`);
 
     res.json({ ...updatedQuiz, attemptsCount: stats.count });
   } catch (error) {
@@ -146,14 +148,21 @@ export const deleteQuiz = async (req: Request, res: Response) => {
   try {
     const { courseId, quizId } = req.params;
 
-    const [deletedQuiz] = await db
-      .delete(quizzes)
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)))
-      .returning();
+    // First check if quiz exists to get its title before deletion
+    const [existingQuiz] = await db
+      .select()
+      .from(quizzes)
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
 
-    if (!deletedQuiz) {
+    if (!existingQuiz) {
       return res.status(404).json({ message: "Quiz not found" });
     }
+
+    await db
+      .delete(quizzes)
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
+
+    await createSystemEvent(courseId, `Quiz removed: ${existingQuiz.title}`);
 
     res.status(204).send();
   } catch (error) {
@@ -183,7 +192,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
 
     // Map answers for easy lookup
     const answerMap = new Map<string, QuizAnswer>();
-    answers.forEach(a => answerMap.set(a.uuid, a));
+    answers.forEach((a) => answerMap.set(a.uuid, a));
 
     questions.forEach((q) => {
       const userAnswer = answerMap.get(q.uuid);
@@ -196,8 +205,12 @@ export const submitQuiz = async (req: Request, res: Response) => {
           }
         } else if (q.type === "multipleChoice") {
           // Compare arrays
-          const correctIndices = (q.correctIndices as number[]).sort((a, b) => a - b);
-          const selectedIndices = (userAnswer.selectedIndices || []).sort((a, b) => a - b);
+          const correctIndices = (q.correctIndices as number[]).sort(
+            (a, b) => a - b
+          );
+          const selectedIndices = (userAnswer.selectedIndices || []).sort(
+            (a, b) => a - b
+          );
 
           if (
             correctIndices.length === selectedIndices.length &&

@@ -8,6 +8,7 @@ import {
   feedItems,
 } from "../db/schema";
 import { eq, sql, desc } from "drizzle-orm";
+import { mapMaterial } from "./materialController";
 
 export async function getAllCourses(_req: Request, res: Response) {
   const allCourses = await db
@@ -75,7 +76,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
 
   res.json({
     ...course[0],
-    materials: fetchedMaterials,
+    materials: fetchedMaterials.map(mapMaterial),
     quizzes: fetchedQuizzes,
     feed: fetchedFeed,
   });

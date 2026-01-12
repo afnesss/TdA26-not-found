@@ -18,11 +18,11 @@ const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploa
 // Ensure upload directory exists
 fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(console.error);
 
-const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
+export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
   const base = {
     uuid: m.uuid,
     name: m.name,
-    description: m.description || undefined,
+    description: m.description ?? undefined,
   };
 
   if (m.type === "file") {
@@ -30,16 +30,16 @@ const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
       ...base,
       type: "file",
       fileUrl: m.fileUrl!,
-      mimeType: m.mimeType || undefined,
-      sizeBytes: m.sizeBytes || undefined,
-      originalFilename: m.originalFilename || undefined,
+      mimeType: m.mimeType ?? undefined,
+      sizeBytes: m.sizeBytes ?? undefined,
+      originalFilename: m.originalFilename ?? undefined,
     };
   } else {
     return {
       ...base,
       type: "url",
       url: m.url!,
-      faviconUrl: m.faviconUrl || undefined,
+      faviconUrl: m.faviconUrl ?? undefined,
     };
   }
 };

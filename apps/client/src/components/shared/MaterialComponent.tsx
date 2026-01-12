@@ -328,7 +328,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     }}
                     className={cn(
                       'justify-start border border-gray-200 shrink-0 self-start',
-                      formValues.type === 'url' && 'mt-1',
+                      formValues.type === 'url' && 'mt-1 mr-1',
                     )}
                   >
                     <ToggleGroupItem

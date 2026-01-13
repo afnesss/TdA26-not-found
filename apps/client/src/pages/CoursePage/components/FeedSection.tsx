@@ -6,15 +6,23 @@ import feedImg from '@/assets/disconnect-blue.svg'
 
 type FeedSectionProps = {
   feed: FeedItem[]
+  isConnected: boolean
 }
 
-const FeedSection = ({ feed }: FeedSectionProps) => {
+const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
   return (
     <section>
       <Label size='lg' className='font-bold mb-2'>
         Oznámení
       </Label>
-
+      <div className='flex items-center gap-2'>
+        <div
+          className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+        />
+        <span className='text-sm'>
+          {isConnected ? 'Připojeno' : 'Odpojeno'}
+        </span>
+      </div>
       {feed && feed.length > 0 ? (
         <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-5'>
           <div className='space-y-4'>

@@ -8,10 +8,14 @@ import FeedSection from './components/FeedSection'
 import MaterialsSection from './components/MaterialsSection'
 import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
+import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
   const { id } = useParams<{ id: string }>()
+
+  // Establish SSE connection
+  const { isConnected } = useCourseFeedSSE({ courseId: id! })
 
   const fetchCourse = async (id: string): Promise<CourseDetail> => {
     try {
@@ -64,7 +68,7 @@ const CoursePage = () => {
 
           <QuizesSection courseData={courseData} />
 
-          <FeedSection feed={courseData?.feed ?? []} />
+          <FeedSection feed={courseData?.feed ?? []} isConnected={isConnected} />
         </div>
       )}
     </div>

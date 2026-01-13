@@ -63,6 +63,8 @@ export const updatePost = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    sseManager.broadcast(courseId, "post_updated", updatedItem);
+
     res.json(updatedItem);
   } catch (error) {
     console.error("Error updating post:", error);
@@ -82,6 +84,8 @@ export const deletePost = async (req: Request, res: Response) => {
     if (deleted.length === 0) {
       return res.status(404).json({ message: "Post not found" });
     }
+
+    sseManager.broadcast(courseId, "post_deleted", { uuid: postId });
 
     res.status(204).send();
   } catch (error) {

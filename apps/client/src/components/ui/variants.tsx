@@ -28,7 +28,7 @@ const buttonVariants = cva(
         link: 'text-xs md:text-sm text-accent-blue underline-offset-2 hover:underline font-semibold cursor-pointer',
       },
       size: {
-        primary: 'px-5 lg:px-7 py-2 md:py-3.5',
+        primary: 'px-5 lg:px-7 py-2 md:py-2.5 lg:py-3.5',
         default: '',
         grid: 'px-3 md:px-6 py-2 md:py-2.5',
         md: 'px-5 py-2 gap-2',

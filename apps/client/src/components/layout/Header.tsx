@@ -1,11 +1,6 @@
 import auth from '@/auth/fakeAuth'
 import { cn } from '@/lib/utils'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu'
+import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { ChevronDown, LogIn, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
@@ -41,8 +36,8 @@ export default function Header() {
             </div>
           ) : // {auth.isAutenticated()
           auth.isAutenticated() ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <DropdownMenuComponent
+              trigger={
                 <Button
                   variant='tab'
                   className='gap-1 text-xs hover:bg-primary/10 transition-colors'
@@ -50,37 +45,23 @@ export default function Header() {
                   {isDashboard ? <span>Dashboard</span> : <span>Kurzy</span>}
                   <ChevronDown size={16} className='opacity-60' />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                sideOffset={5}
-                align='end'
-                className='w-25 bg-background rounded-xl shadow-lg border border-gray-200 p-1.5 sm:p-2 z-100'
-              >
-                <div className='space-y-0.5 sm:space-y-1'>
-                  <DropdownMenuItem
-                    className={cn(
-                      'px-2 sm:px-3 py-1 rounded-lg cursor-pointer transition-all',
-                      'hover:bg-primary/10 hover:text-primary text-xs sm:text-sm font-medium',
-                      !isDashboard && 'bg-primary/5 text-primary',
-                    )}
-                    onClick={() => navigate('/courses')}
-                  >
-                    <span className='flex-1'>Kurzy</span>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className={cn(
-                      'px-2 sm:px-3 py-1 rounded-lg cursor-pointer transition-all',
-                      'hover:bg-primary/10 hover:text-primary text-xs sm:text-sm font-medium',
-                      isDashboard && 'bg-primary/5 text-primary',
-                    )}
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    <span className='flex-1'>Dashboard</span>
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+              items={[
+                {
+                  label: 'Kurzy',
+                  value: 'courses',
+                  onClick: () => navigate('/courses'),
+                },
+                {
+                  label: 'Dashboard',
+                  value: 'dashboard',
+                  onClick: () => navigate('/dashboard'),
+                },
+              ]}
+              selectedValue={isDashboard ? 'dashboard' : 'courses'}
+              align='end'
+              width='w-25'
+            />
           ) : (
             <Button variant={'tab'} onClick={() => navigate('/courses')}>
               Kurzy

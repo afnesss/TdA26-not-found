@@ -5,9 +5,10 @@ import { Input } from '../ui/input'
 type SearchBarProps = {
   searchQuery: string
   setSearchQuery: (value: SetStateAction<string>) => void
+  count?: string
 }
 
-const SearchBar = ({ searchQuery, setSearchQuery }: SearchBarProps) => {
+const SearchBar = ({ searchQuery, setSearchQuery, count }: SearchBarProps) => {
   return (
     <div className='relative group max-w-2xl w-full'>
       <Search
@@ -20,6 +21,11 @@ const SearchBar = ({ searchQuery, setSearchQuery }: SearchBarProps) => {
         placeholder='Vyhledat kurz...'
         className='pl-12! pr-12 '
       />
+      {count && (
+        <span className='lg:hidden absolute right-4 top-1/2 -translate-y-1/2 bg-primary text-background px-2 py-0.5 rounded-full text-xs font-bold'>
+          {count}
+        </span>
+      )}
     </div>
   )
 }

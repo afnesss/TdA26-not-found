@@ -224,7 +224,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       icon={Check}
                       onClick={saveEdit}
                       classNameBtn='hover:bg-secondary/20'
-                      iconClassName='text-secondary'
+                      iconClassName='text-secondary !size-[18px] [stroke-width:2.5]'
                       disabled={
                         isSubmitting ||
                         !!errors.name ||
@@ -235,7 +235,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       icon={X}
                       onClick={cancelEdit}
                       classNameBtn='hover:bg-destructive/20'
-                      iconClassName='text-destructive'
+                      iconClassName='text-destructive !size-[18px] [stroke-width:2.5]'
                       disabled={isSubmitting}
                     />
                   </>

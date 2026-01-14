@@ -68,8 +68,8 @@ const DashboardDesign1 = () => {
   const createButton = (mobile?: boolean) => (
     <Button
       variant='primary'
-      size='primary'
-      className={mobile ? 'px-3 shrink-0' : 'px-4'}
+      size='grid'
+      className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
     >
       <Plus className='w-5 h-5' />
@@ -80,37 +80,19 @@ const DashboardDesign1 = () => {
     <>
       {/* Main Content */}
       <div className='max-w-7xl mx-auto md:px-4  '>
-        <div className='space-y-6 pt-2'>
+        <div className='space-y-6 pt-3'>
           {/* Hero Section */}
-          <div className='flex flex-col md:flex-row gap-3 md:gap-6 md:justify-between md:items-center'>
-            <Label
-              variant='title'
-              size='primary'
-              className='whitespace-nowrap md:shrink-0'
-            >
-              Správa kurzů
-            </Label>
-
-            {/* Mobile: Search + Button v řádku */}
-            <div className='flex md:hidden flex-row gap-2 items-center'>
-              {searchBar}
-              {createButton(true)}
-            </div>
-
-            {/* Desktop: Search uprostřed */}
-            <div className='hidden md:flex md:flex-1 md:justify-center md:px-6'>
-              {searchBar}
-            </div>
-
-            {/* Desktop: Button vpravo */}
-            <div className='hidden md:flex'>{createButton(false)}</div>
+          <div className='flex flex-row gap-3 justify-center items-center '>
+            {searchBar}
+            <span className='lg:hidden'>{createButton(true)}</span>
+            <span className='hidden lg:inline'>{createButton(false)}</span>
           </div>
 
           {/* Courses Grid */}
           {coursesLoading ? (
             <CoursesPageSceleton />
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
               {courseDraft && (
                 <CourseComponent
                   key={courseDraft.uuid}

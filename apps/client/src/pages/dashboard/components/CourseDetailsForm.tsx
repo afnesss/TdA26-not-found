@@ -170,7 +170,7 @@ const CourseDetailsForm = ({
             </div>
             <Button
               variant='primary'
-              size='primary'
+              size='grid'
               onClick={handleSave}
               disabled={!isDirty || updateCourseMutation.isPending}
               className='w-fit'

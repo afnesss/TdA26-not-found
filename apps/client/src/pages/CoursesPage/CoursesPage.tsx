@@ -1,22 +1,25 @@
 import { getCourses } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
+import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { type FilterIds } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Filter } from 'lucide-react'
 import { useState } from 'react'
+import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
 import HintPageText from '../../components/shared/HintPageText'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
-import Filters from './components/Filters'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
   const [displayCount, setDisplayCount] = useState(9)
+  const isMd = useMediaQuery('(min-width: 768px)')
 
   const {
     data: courses = [],
@@ -56,8 +59,8 @@ const CoursesPage = () => {
   return (
     <div className='h-full'>
       {/* Hero */}
-      <div className='max-w-7xl mx-auto lg:px-4 pt-3 '>
-        <div className='flex flex-col lg:flex-row gap-3 md:gap-6 justify-center items-center pb-4 lg:pb-6'>
+      <div className='max-w-7xl mx-auto lg:px-4 pt-3'>
+        <div className='flex flex-row gap-3 justify-center items-center mb-3'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpen}
@@ -65,21 +68,47 @@ const CoursesPage = () => {
               (searchQuery && displayedCourses.length.toString()) ||
               courses.length.toString()
             }
+            className='hidden lg:inline-flex'
+          />
+
+          <DropdownMenuComponent
+            trigger={
+              <Button
+                variant='filter'
+                className='bg-background text-gray-700 h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200'
+              >
+                <Filter size={16} />
+              </Button>
+            }
+            items={[
+              {
+                label: 'Nejnovější',
+                value: 'newest',
+                onClick: () => setSelectedFilter('newest'),
+              },
+              {
+                label: 'Nejstarší',
+                value: 'oldest',
+                onClick: () => setSelectedFilter('oldest'),
+              },
+            ]}
+            selectedValue={selectedFilter}
+            align={isMd ? 'center' : 'start'}
+            width='w-28'
           />
 
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            count={
+              (searchQuery && displayedCourses.length.toString()) ||
+              courses.length.toString()
+            }
           />
         </div>
 
-        <Filters
-          selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
-        />
-
         {/* Kurzy Grid */}
-        <div className=' relative py-4 md:py-6'>
+        <div className=' relative py-4'>
           {isLoading ? (
             <CoursesPageSceleton />
           ) : (

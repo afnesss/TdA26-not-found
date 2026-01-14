@@ -12,7 +12,7 @@ const HomePage = () => {
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-3 items-center h-full justify-center max-w-7xl mx-auto px-3 md:px-6 lg:px-12'>
-      <div className='flex flex-col max-sm:justify-center md:col-span-2 gap-10 w-full'>
+      <div className='flex flex-col max-sm:justify-center md:col-span-2 gap-7 md:gap-10 w-full'>
         <HintPageText text='Učení může být zábava' icon={Trophy} />
 
         <TitleText

@@ -52,7 +52,12 @@ const HomePage = () => {
             icon={ActivitiesIcon}
             text='Interaktivní přístup'
           />
-          <HomeBoxDetail bg='accent-teal-dark' icon={Zap} text='Efektivně' />
+          <HomeBoxDetail
+            bg='accent-teal-dark'
+            icon={Zap}
+            iconClassName='fill-current [stroke-width:1]'
+            text='Efektivně'
+          />
         </div>
       </div>
 

@@ -22,7 +22,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
   type,
   iconClassName,
   disabled,
-  size = 'md',
+  size = 'sm',
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
@@ -55,10 +55,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
     >
       {IconToRender && (
         <IconToRender
-          className={cn(
-            `${iconClasses[size]} ${textStyle}`,
-            iconClassName,
-          )}
+          className={cn(`${iconClasses[size]} ${textStyle}`, iconClassName)}
         />
       )}
     </Button>

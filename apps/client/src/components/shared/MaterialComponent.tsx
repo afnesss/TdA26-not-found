@@ -192,11 +192,10 @@ const MaterialCard = (props: MaterialCardProps) => {
 
                     <div className='flex items-center gap-1 shrink-0'>
                       <EditBtn
-                        size='md'
                         icon={Check}
                         onClick={saveEdit}
                         classNameBtn='hover:bg-secondary/20'
-                        iconClassName='text-secondary'
+                        iconClassName='text-secondary size-4 sm:size-5'
                         disabled={
                           isSubmitting ||
                           !!errors.name ||
@@ -204,11 +203,10 @@ const MaterialCard = (props: MaterialCardProps) => {
                         }
                       />
                       <EditBtn
-                        size='md'
                         icon={X}
                         onClick={cancelEdit}
                         classNameBtn='hover:bg-destructive/20'
-                        iconClassName='text-destructive'
+                        iconClassName='text-destructive size-4 sm:size-5'
                         disabled={isSubmitting}
                       />
                     </div>
@@ -359,7 +357,6 @@ const MaterialCard = (props: MaterialCardProps) => {
                       classNameBtn='mr-2'
                       icon={UploadIcon}
                       iconClassName={cn(
-                        'size-4',
                         errors.root?.file &&
                           'text-destructive animate-pulse duration-200',
                       )}

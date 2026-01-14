@@ -97,14 +97,14 @@ const FeedItemComp = ({
                 <EditBtn
                   icon={Check}
                   classNameBtn='hover:bg-secondary/20'
-                  iconClassName='text-secondary '
+                  iconClassName='text-secondary size-4 sm:size-5'
                   onClick={handleSave}
                 />
                 <EditBtn
                   icon={X}
                   onClick={cancelEdit}
                   classNameBtn='hover:bg-destructive/20'
-                  iconClassName='text-destructive'
+                  iconClassName='text-destructive size-4 sm:size-5'
                   // disabled={saving}
                 />
               </>

@@ -60,7 +60,7 @@ const CoursesPage = () => {
     <div className='h-full'>
       {/* Hero */}
       <div className='max-w-7xl mx-auto lg:px-4 pt-3'>
-        <div className='flex flex-row gap-3 justify-center items-center mb-3'>
+        <div className='flex flex-row lg:justify-center justify-between items-center mb-3 w-full lg:w-auto'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpen}
@@ -75,7 +75,7 @@ const CoursesPage = () => {
             trigger={
               <Button
                 variant='filter'
-                className='bg-background text-primary h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200'
+                className='bg-background text-primary mr-3 md:ml-3 h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
               >
                 <Filter size={16} />
               </Button>
@@ -104,11 +104,12 @@ const CoursesPage = () => {
               (searchQuery && displayedCourses.length.toString()) ||
               courses.length.toString()
             }
+            className='flex-1 lg:flex-initial'
           />
         </div>
 
         {/* Kurzy Grid */}
-        <div className=' relative py-4'>
+        <div className=' relative py-3 md:py-4'>
           {isLoading ? (
             <CoursesPageSceleton />
           ) : (

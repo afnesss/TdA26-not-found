@@ -54,8 +54,17 @@ export const useUpdateMutation = (courseId: string) => {
       validateFileSize(data.file)
       return updateMaterial(courseId, materialId, data)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
+    onSuccess: (updatedMaterial) => {
+      // Update cache directly to preserve order
+      queryClient.setQueryData<Material[]>(
+        ['materials', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return oldData.map((m) =>
+            m.uuid === updatedMaterial.uuid ? updatedMaterial : m,
+          )
+        },
+      )
       toast.success('Materiál aktualizován')
     },
     onError: (error: ApiError) => {

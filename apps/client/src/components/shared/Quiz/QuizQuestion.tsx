@@ -77,89 +77,91 @@ const QuizQuestion = ({
   return (
     <div>
       {/* Question Header */}
-      <div className='flex flex-wrap items-center gap-1.5 md:gap-3 mb-4'>
-        {/* Question number and text */}
-        <div className='flex items-center gap-1.5 md:gap-3 flex-1 min-w-0'>
+      <div className='flex items-start gap-1.5 md:gap-3 mb-4'>
+        {/* Question number and text wrapper */}
+        <div className='flex items-start gap-1.5 md:gap-3 flex-1 min-w-0'>
           <span
             className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6
-          md:h-8 rounded-full flex items-center justify-center shrink-0'
+          md:h-8 rounded-full flex items-center justify-center shrink-0 mt-1'
           >
             {qIndex + 1}
           </span>
 
-          {mode === 'lecturer' ? (
-            <Textarea
-              variant='ghost'
-              value={question.question}
-              onChange={(e) => {
-                e.preventDefault()
-                onQuestionTextUpdate?.(e.target.value)
-              }}
-              className={cn(
-                'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2',
-                questionError?.question && 'border-destructive',
+          <div className='flex-1 min-w-0'>
+            <div className='flex items-center gap-2'>
+              {mode === 'lecturer' ? (
+                <div className='flex-1 flex items-center gap-2'>
+                  <Textarea
+                    variant='ghost'
+                    value={question.question}
+                    onChange={(e) => {
+                      e.preventDefault()
+                      onQuestionTextUpdate?.(e.target.value)
+                    }}
+                    className={cn(
+                      'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
+                      questionError?.question && 'border-destructive',
+                    )}
+                    placeholder='Zadejte otázku'
+                  />
+
+                  <div className='flex items-center gap-2 shrink-0'>
+                    <Label
+                      size='sm'
+                      className='text-gray-600 shrink-0 hidden md:block'
+                    >
+                      Typ:
+                    </Label>
+                    <Select
+                      value={question.type}
+                      onValueChange={(value: QuestionType) =>
+                        onQuestionTypeChange?.(value)
+                      }
+                    >
+                      <SelectTrigger className='w-32 md:w-40'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='singleChoice'>
+                          Jedna správná
+                        </SelectItem>
+                        <SelectItem value='multipleChoice'>
+                          Více správných
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <EditBtn onClick={onQuestionRemove} type='delete' />
+                  </div>
+                </div>
+              ) : (
+                <div className='flex-1 flex items-center justify-between gap-2'>
+                  <Label size='md' className='flex-1 text-xs sm:text-sm'>
+                    {question.question}
+                  </Label>
+
+                  {mode === 'user' && isSubmitted && (
+                    <div className='shrink-0'>
+                      {userState.results?.correctPerQuestion[qIndex] ? (
+                        <Check
+                          className='text-secondary size-4 md:size-5'
+                          strokeWidth={3}
+                        />
+                      ) : (
+                        <X
+                          className='text-destructive size-4 md:size-5'
+                          strokeWidth={3}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-              placeholder='Zadejte otázku'
-            />
-          ) : (
-            <>
-              <Label size='md' className='flex-1 text-xs sm:text-sm'>
-                {question.question}
-              </Label>
-            </>
-          )}
-        </div>
-
-        {mode === 'lecturer' && (
-          <EditBtn
-            onClick={onQuestionRemove}
-            type='delete'
-            classNameBtn='shrink-0 md:hidden'
-          />
-        )}
-
-        {mode === 'user' && isSubmitted && (
-          <div className='shrink-0'>
-            {userState.results?.correctPerQuestion[qIndex] ? (
-              <Check
-                className='text-secondary size-4 md:size-5'
-                strokeWidth={3}
-              />
-            ) : (
-              <X
-                className='text-destructive size-4 md:size-5'
-                strokeWidth={3}
-              />
+            </div>
+            {questionError?.question && (
+              <p className='error-text mt-1'>{questionError?.question?.message}</p>
             )}
           </div>
-        )}
-
-        {mode === 'lecturer' && (
-          <div className='flex items-center gap-3 w-full md:w-auto md:shrink-0'>
-            <Label size='sm' className='text-gray-600 shrink-0 hidden md:block'>
-              Typ:
-            </Label>
-            <Select
-              value={question.type}
-              onValueChange={(value: QuestionType) =>
-                onQuestionTypeChange?.(value)
-              }
-            >
-              <SelectTrigger className=' md:w-40'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='singleChoice'>Jedna správná</SelectItem>
-                <SelectItem value='multipleChoice'>Více správných</SelectItem>
-              </SelectContent>
-            </Select>
-            <EditBtn
-              onClick={onQuestionRemove}
-              type='delete'
-              classNameBtn='hidden md:flex shrink-0'
-            />
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Options */}
@@ -214,9 +216,6 @@ const QuizQuestion = ({
             )
           })}
         </div>
-        {questionError?.question && (
-          <p className='error-text'>{questionError?.question?.message}</p>
-        )}
         {mode === 'lecturer' && hasOptionErrors && !questionError?.question && (
           <p className='error-text mt-2'>Všechny možnosti musí být vyplněné</p>
         )}

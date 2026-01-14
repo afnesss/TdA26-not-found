@@ -161,12 +161,7 @@ const MaterialCard = (props: MaterialCardProps) => {
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
-        <MaterialIcon
-          material={material}
-          className={cn('mt-1', 'hidden sm:block')}
-        />
-
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1 min-w-0 flex flex-col gap-2'>
           {/* Title row */}
           <div className='flex items-center justify-between gap-2 sm:gap-4'>
             <div className='flex items-center gap-1 min-w-0 flex-1'>
@@ -177,104 +172,108 @@ const MaterialCard = (props: MaterialCardProps) => {
 
               {isEditing ? (
                 <div className='flex-1'>
-                  {' '}
-                  <Textarea
-                    variant='ghost'
-                    value={formValues.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    className={cn(
-                      'flex-1 min-h-0 text-sm sm:text-base font-semibold',
-                      errors.name && 'border-destructive',
-                    )}
-                    minRows={1}
-                    maxRows={3}
-                    placeholder='Název materiálu'
-                  />
+                  <div className='flex items-center gap-1'>
+                    <div className='flex-1'>
+                      <Textarea
+                        variant='ghost'
+                        value={formValues.name}
+                        onChange={(e) => handleNameChange(e.target.value)}
+                        className={cn(
+                          'w-full min-h-0 text-sm sm:text-base font-semibold block',
+                          errors.name && 'border-destructive',
+                        )}
+                        minRows={1}
+                        maxRows={3}
+                        placeholder='Název materiálu'
+                      />
+                    </div>
+
+                    <div className='flex items-center gap-1 shrink-0'>
+                      <EditBtn
+                        size='md'
+                        icon={Check}
+                        onClick={saveEdit}
+                        classNameBtn='hover:bg-secondary/20'
+                        iconClassName='text-secondary'
+                        disabled={
+                          isSubmitting ||
+                          !!errors.name ||
+                          ('url' in errors && !!errors.url)
+                        }
+                      />
+                      <EditBtn
+                        size='md'
+                        icon={X}
+                        onClick={cancelEdit}
+                        classNameBtn='hover:bg-destructive/20'
+                        iconClassName='text-destructive'
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
                   {errors.name && (
                     <p className='error-text mb-1'>{errors.name.message}</p>
                   )}
                 </div>
               ) : (
-                <Label
-                  variant='title'
-                  size='md'
-                  className='wrap-break-word line-clamp-3 leading-snug inline-block'
-                >
-                  {material.name}
-                </Label>
+                <div className='flex-1 flex items-center justify-between gap-2 sm:gap-4'>
+                  <Label
+                    variant='title'
+                    size='md'
+                    className='wrap-break-word line-clamp-3 leading-snug inline-block'
+                  >
+                    {material.name}
+                  </Label>
+
+                  {type === 'edit' ? (
+                    <div className='flex items-center gap-1 shrink-0'>
+                      <EditBtn icon={Edit} onClick={startEdit} />
+                      <DeleteConfirmDialog
+                        trigger={<EditBtn type='delete' />}
+                        itemName={material.name}
+                        itemType='material'
+                        onConfirm={() => {
+                          if (props.onDelete) {
+                            props.onDelete()
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className='shrink-0'>
+                      {material.type === 'file' ? (
+                        <a
+                          href={material.fileUrl}
+                          download={material.originalFilename || material.name}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                        >
+                          <EditBtn icon={Download} />
+                        </a>
+                      ) : (
+                        <div className='flex items-center'>
+                          <EditBtn
+                            icon={copied ? Check : Copy}
+                            classNameBtn='mr-1 hover:bg-gray-100'
+                            iconClassName={
+                              copied ? 'text-secondary size-4' : ''
+                            }
+                            onClick={() => handleCopyLink(material.url)}
+                          />
+                          <a
+                            href={material.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                          >
+                            <EditBtn icon={ExternalLink} />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-
-            {/* Buttons */}
-            {type === 'edit' ? (
-              <div className='flex items-center gap-1 shrink-0'>
-                {isEditing ? (
-                  <>
-                    <EditBtn
-                      icon={Check}
-                      onClick={saveEdit}
-                      classNameBtn='hover:bg-secondary/20'
-                      iconClassName='text-secondary !size-[18px] [stroke-width:2.5]'
-                      disabled={
-                        isSubmitting ||
-                        !!errors.name ||
-                        ('url' in errors && !!errors.url)
-                      }
-                    />
-                    <EditBtn
-                      icon={X}
-                      onClick={cancelEdit}
-                      classNameBtn='hover:bg-destructive/20'
-                      iconClassName='text-destructive !size-[18px] [stroke-width:2.5]'
-                      disabled={isSubmitting}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <EditBtn icon={Edit} onClick={startEdit} />
-                    <DeleteConfirmDialog
-                      trigger={<EditBtn type='delete' />}
-                      itemName={material.name}
-                      itemType='material'
-                      onConfirm={() => {
-                        if (props.onDelete) {
-                          props.onDelete()
-                        }
-                      }}
-                    />
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className='shrink-0'>
-                {material.type === 'file' ? (
-                  <a
-                    href={material.fileUrl}
-                    download={material.originalFilename || material.name}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                  >
-                    <EditBtn icon={Download} />
-                  </a>
-                ) : (
-                  <div className='flex items-center'>
-                    <EditBtn
-                      icon={copied ? Check : Copy}
-                      classNameBtn='mr-1 hover:bg-gray-100'
-                      iconClassName={copied ? 'text-secondary size-4' : ''}
-                      onClick={() => handleCopyLink(material.url)}
-                    />
-                    <a
-                      href={material.url}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      <EditBtn icon={ExternalLink} />
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Description */}
@@ -283,7 +282,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               variant='ghost'
               value={formValues.description}
               onChange={(e) => setValue('description', e.target.value)}
-              className='w-full text-xs sm:text-sm'
+              className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
               placeholder='Popis materiálu'
@@ -307,7 +306,6 @@ const MaterialCard = (props: MaterialCardProps) => {
                   : 'flex-row',
               )}
             >
-              {' '}
               <div className={cn('flex gap-2 items-center')}>
                 {'isDraft' in props && props.isDraft && (
                   <ToggleGroup
@@ -397,7 +395,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       handleUrlChange(e.target.value)
                     }}
                     className={cn(
-                      'w-full text-xs sm:text-sm mb-0',
+                      'block w-full text-xs sm:text-sm mb-0',
                       'url' in errors && !!errors.url && 'border-destructive',
                     )}
                     minRows={1}

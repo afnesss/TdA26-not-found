@@ -227,8 +227,11 @@ const QuizComponent = ({
     <div className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
       {/* Header */}
       <div
-        className='p-3.5 md:px-5 md:py-4 cursor-pointer hover:bg-gray-50 transition-colors'
-        onClick={toggleExpand}
+        className={cn(
+          'p-3.5 md:px-5 md:py-4 transition-colors',
+          !isDraft && 'cursor-pointer hover:bg-gray-50',
+        )}
+        onClick={() => !isDraft && toggleExpand()}
       >
         <div className='flex items-center justify-between gap-2 sm:gap-4'>
           <div className='flex-1 min-w-0'>
@@ -240,40 +243,154 @@ const QuizComponent = ({
 
             {/* quiz name */}
             {mode === 'lecturer' && isExpanded ? (
-              <>
-                {' '}
-                <Textarea
-                  className={cn(
-                    'text-sm sm:text-md md:text-lg font-bold p-1',
-                    errors.title && 'border-destructive',
+              <div className='flex items-start gap-1'>
+                <div className='flex-1'>
+                  <Textarea
+                    className={cn(
+                      'text-sm sm:text-md md:text-lg font-bold p-1 block w-full',
+                      errors.title && 'border-destructive',
+                    )}
+                    variant={'ghost'}
+                    value={displayQuiz.title}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => updateTitle(e.target.value)}
+                    placeholder='Zadejte název kvízu'
+                  />
+                  {errors.title?.message && (
+                    <p className='error-text'>{errors.title.message}</p>
                   )}
-                  variant={'ghost'}
-                  value={displayQuiz.title}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => updateTitle(e.target.value)}
-                  placeholder='Zadejte název kvízu'
-                />
-                {errors.title?.message && (
-                  <p className='error-text'>{errors.title.message}</p>
-                )}
-                {errors.questions && !errors.title?.message && (
-                  <p className='error-text'>{errors.questions.message}</p>
-                )}
-              </>
+                  {errors.questions && !errors.title?.message && (
+                    <p className='error-text'>{errors.questions.message}</p>
+                  )}
+                </div>
+
+                <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
+                  {mode === 'lecturer' && isDirty && (
+                    <span className='text-[10px] sm:text-xs font-medium text-primary px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary/10 rounded-full whitespace-nowrap'>
+                      Neuloženo
+                    </span>
+                  )}
+
+                  {mode === 'lecturer' && isDraft ? (
+                    <EditBtn
+                      type='delete'
+                      icon={X}
+                      iconClassName='size-4 md:size-5'
+                      onClick={(e) => {
+                        e?.stopPropagation()
+                        onCancelDraft?.()
+                      }}
+                    />
+                  ) : (
+                    mode === 'lecturer' && (
+                      <DeleteConfirmDialog
+                        trigger={
+                          <EditBtn
+                            type='delete'
+                            onClick={(e) => e?.stopPropagation()}
+                          />
+                        }
+                        itemName={quiz.title}
+                        itemType='kvíz'
+                        onConfirm={() => {
+                          onDelete?.()
+                        }}
+                      />
+                    )
+                  )}
+
+                  {!isDraft && (
+                    <button
+                      className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleExpand()
+                      }}
+                    >
+                      {isExpanded ? (
+                        <ChevronUp
+                          size={20}
+                          strokeWidth={2.5}
+                          className='text-secondary'
+                        />
+                      ) : (
+                        <ChevronDown
+                          size={20}
+                          strokeWidth={2.5}
+                          className='text-secondary'
+                        />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
             ) : (
-              <>
-                <Label
-                  className={cn(
-                    'text-sm sm:text-base md:text-lg font-bold leading-tight mb-1.5 sm:mb-3 block',
+              <div className='flex items-center justify-between gap-2 sm:gap-4'>
+                <div className='flex-1 min-w-0'>
+                  <Label
+                    className={cn(
+                      'text-sm sm:text-base md:text-lg font-bold leading-tight mb-1.5 sm:mb-3 block',
+                    )}
+                    variant={'name'}
+                  >
+                    {quiz.title}
+                  </Label>
+                </div>
+
+                <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
+                  {mode === 'lecturer' && isDirty && (
+                    <span className='text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
+                      Neuloženo
+                    </span>
                   )}
-                  variant={'name'}
-                >
-                  {quiz.title}
-                </Label>
-              </>
+
+                  {mode === 'lecturer' && isDraft ? (
+                    <EditBtn
+                      type='delete'
+                      icon={X}
+                      iconClassName='size-4 md:size-5'
+                      onClick={(e) => {
+                        e?.stopPropagation()
+                        onCancelDraft?.()
+                      }}
+                    />
+                  ) : (
+                    mode === 'lecturer' && (
+                      <DeleteConfirmDialog
+                        trigger={
+                          <EditBtn
+                            type='delete'
+                            onClick={(e) => e?.stopPropagation()}
+                          />
+                        }
+                        itemName={quiz.title}
+                        itemType='kvíz'
+                        onConfirm={() => {
+                          onDelete?.()
+                        }}
+                      />
+                    )
+                  )}
+
+                  <button className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'>
+                    {isExpanded ? (
+                      <ChevronUp
+                        size={20}
+                        strokeWidth={2.5}
+                        className='text-secondary'
+                      />
+                    ) : (
+                      <ChevronDown
+                        size={20}
+                        strokeWidth={2.5}
+                        className='text-secondary'
+                      />
+                    )}
+                  </button>
+                </div>
+              </div>
             )}
 
-            {/* Статистика */}
             <div className='flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1'>
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <CheckCircle size={14} className='text-primary shrink-0' />
@@ -285,58 +402,6 @@ const QuizComponent = ({
                 <span>{displayQuiz.questions?.length ?? 0} otázek</span>
               </span>
             </div>
-          </div>
-
-          <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
-            {mode === 'lecturer' && isDirty && (
-              <span className='hidden sm:inline-block text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
-                Neuloženo
-              </span>
-            )}
-
-            {mode === 'lecturer' && isDraft ? (
-              <EditBtn
-                type='delete'
-                icon={X}
-                iconClassName='size-4 md:size-5'
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  onCancelDraft?.()
-                }}
-              />
-            ) : (
-              mode === 'lecturer' && (
-                <DeleteConfirmDialog
-                  trigger={
-                    <EditBtn
-                      type='delete'
-                      onClick={(e) => e?.stopPropagation()}
-                    />
-                  }
-                  itemName={quiz.title}
-                  itemType='kvíz'
-                  onConfirm={() => {
-                    onDelete?.()
-                  }}
-                />
-              )
-            )}
-
-            <button className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'>
-              {isExpanded ? (
-                <ChevronUp
-                  size={20}
-                  strokeWidth={2.5}
-                  className='text-secondary'
-                />
-              ) : (
-                <ChevronDown
-                  size={20}
-                  strokeWidth={2.5}
-                  className='text-secondary'
-                />
-              )}
-            </button>
           </div>
         </div>
       </div>

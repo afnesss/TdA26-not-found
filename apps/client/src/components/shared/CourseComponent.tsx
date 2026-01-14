@@ -107,8 +107,22 @@ const CourseComponent = (props: CourseCompProps) => {
     }
   }
 
+  const handleCardClick = () => {
+    if (state.isEditing) return
+
+    if (type === 'classic') {
+      navigate(`/courses/${course.uuid}`)
+    } else if (type === 'edit') {
+      props.onEdit()
+    }
+  }
+
   return (
-    <Card key={course.uuid}>
+    <Card
+      key={course.uuid}
+      className={'transition-colors cursor-pointer'}
+      onClick={handleCardClick}
+    >
       <div
         className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseColor]}`}
       />
@@ -120,6 +134,7 @@ const CourseComponent = (props: CourseCompProps) => {
             <div className='space-y-1 mb-2 md:mb-4'>
               <Textarea
                 value={state.tempName}
+                onClick={(e) => e.stopPropagation()}
                 onChange={(e) => handleNameChange(e.target.value)} // ← Змінено
                 className={cn(
                   'font-semibold text-base sm:text-lg lg:text-xl overflow-hidden flex items-center sm:py-1.8 placeholder:pt-1',
@@ -142,6 +157,7 @@ const CourseComponent = (props: CourseCompProps) => {
           {state.isEditing ? (
             <Textarea
               value={state.tempDescription}
+              onClick={(e) => e.stopPropagation()}
               onChange={(e) =>
                 setState((prev) => ({
                   ...prev,
@@ -172,7 +188,8 @@ const CourseComponent = (props: CourseCompProps) => {
             <Button
               variant={'grid'}
               size={'grid'}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
                 navigate(`/courses/${course.uuid}`)
               }}
               className={cn(
@@ -190,14 +207,20 @@ const CourseComponent = (props: CourseCompProps) => {
               <div className='space-x-2'>
                 <EditBtn
                   icon={Check}
-                  onClick={saveEdit}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    saveEdit()
+                  }}
                   classNameBtn='hover:bg-secondary/20'
                   iconClassName='text-secondary size-4 sm:size-5'
                   disabled={state.saving || !!state.nameError}
                 />
                 <EditBtn
                   icon={X}
-                  onClick={cancelEdit}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    cancelEdit()
+                  }}
                   classNameBtn='hover:bg-destructive/20'
                   iconClassName='text-destructive size-4 sm:size-5'
                   disabled={state.saving}
@@ -205,9 +228,20 @@ const CourseComponent = (props: CourseCompProps) => {
               </div>
             ) : (
               <div className='flex gap-2'>
-                <EditBtn icon={Edit} onClick={props.onEdit} />
+                <EditBtn
+                  icon={Edit}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
+                  }}
+                />
                 <DeleteConfirmDialog
-                  trigger={<EditBtn type='delete' />}
+                  trigger={
+                    <EditBtn
+                      type='delete'
+                      onClick={(e) => e?.stopPropagation()}
+                    />
+                  }
                   itemName={course.name}
                   itemType='kurz'
                   onConfirm={() => {

@@ -51,7 +51,7 @@ const upload = multer({
     ) {
       cb(null, true);
     } else {
-      cb(new Error("Unsupported file format"));
+      cb(new Error("Nepodporovaný formát souboru"));
     }
   },
 });
@@ -61,7 +61,9 @@ const uploadMiddleware = (req: any, res: any, next: any) => {
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === "LIMIT_FILE_SIZE") {
-          return res.status(400).json({ message: "File too large (max 30MB)" });
+          return res.status(400).json({
+            message: "Soubor je příliš velký, (max. 30 MB)",
+          });
         }
         return res.status(400).json({ message: err.message });
       }

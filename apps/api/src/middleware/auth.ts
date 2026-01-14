@@ -12,7 +12,7 @@ export function authMiddleware(
   next: NextFunction
 ) {
   // if (!req.session.user) {
-  //   res.status(401).json({ error: "Unauthorized" });
+  //   res.status(401).json({ error: "Nejste oprávněni" });
   //   return;
   // }
   next();

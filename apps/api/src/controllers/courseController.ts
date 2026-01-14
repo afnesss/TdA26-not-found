@@ -43,7 +43,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
     .where(eq(courses.uuid, uuid));
 
   if (course.length === 0) {
-    res.status(404).json({ error: "Course not found" });
+    res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
 
@@ -89,7 +89,7 @@ export async function createCourse(req: Request, res: Response) {
   const { name, description } = req.body;
 
   if (!name) {
-    res.status(400).json({ error: "Name is required" });
+    res.status(400).json({ message: "Zadejte prosím název kurzu" });
     return;
   }
 
@@ -120,7 +120,7 @@ export async function updateCourse(req: Request, res: Response) {
     .where(eq(courses.uuid, uuid));
 
   if (existing.length === 0) {
-    res.status(404).json({ error: "Course not found" });
+    res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
 
@@ -141,7 +141,7 @@ export async function updateCourse(req: Request, res: Response) {
       updatedAt: courses.updatedAt,
     });
 
-  await createSystemEvent(uuid, `Course details updated`);
+  await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
   sseManager.broadcast(uuid, "course_updated", updated[0]);
 
   res.json(updated[0]);
@@ -156,7 +156,7 @@ export async function deleteCourse(req: Request, res: Response) {
     .where(eq(courses.uuid, uuid));
 
   if (existing.length === 0) {
-    res.status(404).json({ error: "Course not found" });
+    res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
 

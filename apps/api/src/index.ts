@@ -72,7 +72,7 @@ app.use(
     next: express.NextFunction
   ) => {
     console.error("Unhandled error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 );
 

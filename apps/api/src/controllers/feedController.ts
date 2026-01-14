@@ -17,7 +17,7 @@ export const getFeed = async (req: Request, res: Response) => {
     res.json(items);
   } catch (error) {
     console.error("Error fetching feed:", error);
-    res.status(500).json({ message: "Failed to fetch feed" });
+    res.status(500).json({ message: "Nepodařilo se načíst příspěvky" });
   }
 };
 
@@ -40,7 +40,7 @@ export const createPost = async (req: Request, res: Response) => {
     res.status(201).json(newItem);
   } catch (error) {
     console.error("Error creating post:", error);
-    res.status(500).json({ message: "Failed to create post" });
+    res.status(500).json({ message: "Nepodařilo se vytvořit příspěvek" });
   }
 };
 
@@ -60,7 +60,7 @@ export const updatePost = async (req: Request, res: Response) => {
       .returning();
 
     if (!updatedItem) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: "Příspěvek nebyl nalezen" });
     }
 
     sseManager.broadcast(courseId, "post_updated", updatedItem);
@@ -68,7 +68,7 @@ export const updatePost = async (req: Request, res: Response) => {
     res.json(updatedItem);
   } catch (error) {
     console.error("Error updating post:", error);
-    res.status(500).json({ message: "Failed to update post" });
+    res.status(500).json({ message: "Nepodařilo se upravit příspěvek" });
   }
 };
 
@@ -82,7 +82,7 @@ export const deletePost = async (req: Request, res: Response) => {
       .returning();
 
     if (deleted.length === 0) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ message: "Příspěvek nebyl nalezen" });
     }
 
     sseManager.broadcast(courseId, "post_deleted", { uuid: postId });
@@ -90,7 +90,7 @@ export const deletePost = async (req: Request, res: Response) => {
     res.status(204).send();
   } catch (error) {
     console.error("Error deleting post:", error);
-    res.status(500).json({ message: "Failed to delete post" });
+    res.status(500).json({ message: "Nepodařilo se smazat příspěvek" });
   }
 };
 

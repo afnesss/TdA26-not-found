@@ -37,7 +37,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -61,7 +61,7 @@ export const createQuiz = async (req: Request, res: Response) => {
       })
       .returning();
 
-    await createSystemEvent(courseId, `New quiz added: ${quizData.title}`);
+    await createSystemEvent(courseId, `Přidán nový kvíz: ${quizData.title}`);
 
     const createdQuiz = { ...newQuiz, attemptsCount: 0 };
     sseManager.broadcast(courseId, "quiz_added", createdQuiz);
@@ -70,7 +70,7 @@ export const createQuiz = async (req: Request, res: Response) => {
     res.status(201).json(createdQuiz);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -96,13 +96,13 @@ export const getQuiz = async (req: Request, res: Response) => {
       .groupBy(quizzes.uuid);
 
     if (!quiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+      return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
     res.json(quiz);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -128,7 +128,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .returning();
 
     if (!updatedQuiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+      return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
     // Get fresh attempts count
@@ -139,7 +139,10 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .from(quizSubmissions)
       .where(eq(quizSubmissions.quizId, quizId));
 
-    await createSystemEvent(courseId, `Quiz updated: ${updatedQuiz.title}`);
+    await createSystemEvent(
+      courseId,
+      `Kvíz aktualizován: ${updatedQuiz.title}`
+    );
 
     const finalQuiz = { ...updatedQuiz, attemptsCount: stats.count };
     sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
@@ -147,7 +150,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
     res.json(finalQuiz);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -162,21 +165,21 @@ export const deleteQuiz = async (req: Request, res: Response) => {
       .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
 
     if (!existingQuiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+      return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
     await db
       .delete(quizzes)
       .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
 
-    await createSystemEvent(courseId, `Quiz removed: ${existingQuiz.title}`);
+    await createSystemEvent(courseId, `Kvíz odebrán: ${existingQuiz.title}`);
 
     sseManager.broadcast(courseId, "quiz_deleted", { uuid: quizId });
 
     res.status(204).send();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -191,7 +194,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
       .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
 
     if (!quiz) {
-      return res.status(404).json({ message: "Quiz not found" });
+      return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
     const questions = quiz.questions as any[];
@@ -270,6 +273,6 @@ export const submitQuiz = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };

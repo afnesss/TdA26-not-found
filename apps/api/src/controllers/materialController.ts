@@ -58,7 +58,7 @@ export const getMaterials = async (req: Request, res: Response) => {
     res.json(materials.map(mapMaterial));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -87,14 +87,14 @@ export const createMaterial = async (req: Request, res: Response) => {
       const validation = FileMaterialCreateRequestSchema.safeParse(req.body);
 
       if (!req.file) {
-        return res.status(400).json({ message: "File is required" });
+        return res.status(400).json({ message: "Soubor je povinný" });
       }
 
       if (!validation.success) {
         // Cleanup uploaded file if validation fails
         await fs.unlink(req.file.path).catch(console.error);
         return res.status(400).json({
-          message: "Invalid request data",
+          message: "Zkontrolujte prosím zadané údaje",
           errors: validation.error.format(),
         });
       }
@@ -130,7 +130,7 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      await createSystemEvent(courseId, `New material added: ${name}`);
+      await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
       const mappedMaterial = mapMaterial(material);
       sseManager.broadcast(courseId, "material_added", mappedMaterial);
@@ -140,7 +140,7 @@ export const createMaterial = async (req: Request, res: Response) => {
       const validation = UrlMaterialCreateRequestSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({
-          message: "Invalid request data",
+          message: "Zkontrolujte prosím zadané údaje",
           errors: validation.error.format(),
         });
       }
@@ -168,21 +168,21 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      await createSystemEvent(courseId, `New material added: ${name}`);
+      await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
       const mappedMaterial = mapMaterial(material);
       sseManager.broadcast(courseId, "material_added", mappedMaterial);
 
       res.status(201).json(mappedMaterial);
     } else {
-      return res.status(400).json({ message: "Invalid material type" });
+      return res.status(400).json({ message: "Neplatný typ materiálu" });
     }
   } catch (error) {
     console.error(error);
     if (req.file) {
       await fs.unlink(req.file.path).catch(() => {});
     }
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -197,14 +197,14 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
     if (!existing) {
       if (req.file) await fs.unlink(req.file.path).catch(() => {});
-      return res.status(404).json({ message: "Material not found" });
+      return res.status(404).json({ message: "Materiál nebyl nalezen" });
     }
 
     if (existing.courseId !== courseId) {
       if (req.file) await fs.unlink(req.file.path).catch(() => {});
       return res
         .status(404)
-        .json({ message: "Material not found in this course" });
+        .json({ message: "Materiál v tomto kurzu neexistuje" });
     }
 
     if (existing.type === "file") {
@@ -212,7 +212,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
       if (!validation.success) {
         if (req.file) await fs.unlink(req.file.path).catch(() => {});
         return res.status(400).json({
-          message: "Invalid request data",
+          message: "Zkontrolujte prosím zadané údaje",
           errors: validation.error.format(),
         });
       }
@@ -253,7 +253,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
         .where(eq(courseMaterials.uuid, materialId))
         .returning();
 
-      await createSystemEvent(courseId, `Material updated: ${updated.name}`);
+      await createSystemEvent(
+        courseId,
+        `Materiál aktualizován: ${updated.name}`
+      );
 
       const mappedUpdated = mapMaterial(updated);
       sseManager.broadcast(courseId, "material_updated", mappedUpdated);
@@ -264,7 +267,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
       const validation = UrlMaterialUpdateRequestSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({
-          message: "Invalid request data",
+          message: "Zkontrolujte prosím zadané údaje",
           errors: validation.error.format(),
         });
       }
@@ -288,7 +291,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
         .where(eq(courseMaterials.uuid, materialId))
         .returning();
 
-      await createSystemEvent(courseId, `Material updated: ${updated.name}`);
+      await createSystemEvent(
+        courseId,
+        `Materiál aktualizován: ${updated.name}`
+      );
 
       const mappedUpdated = mapMaterial(updated);
       sseManager.broadcast(courseId, "material_updated", mappedUpdated);
@@ -298,7 +304,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     if (req.file) await fs.unlink(req.file.path).catch(() => {});
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 
@@ -311,13 +317,13 @@ export const deleteMaterial = async (req: Request, res: Response) => {
     });
 
     if (!existing) {
-      return res.status(404).json({ message: "Material not found" });
+      return res.status(404).json({ message: "Materiál nebyl nalezen" });
     }
 
     if (existing.courseId !== courseId) {
       return res
         .status(404)
-        .json({ message: "Material not found in this course" });
+        .json({ message: "Materiál v tomto kurzu neexistuje" });
     }
 
     if (existing.type === "file" && existing.fileUrl) {
@@ -333,13 +339,13 @@ export const deleteMaterial = async (req: Request, res: Response) => {
       .delete(courseMaterials)
       .where(eq(courseMaterials.uuid, materialId));
 
-    await createSystemEvent(courseId, `Material removed: ${existing.name}`);
+    await createSystemEvent(courseId, `Materiál odebrán: ${existing.name}`);
 
     sseManager.broadcast(courseId, "material_deleted", { uuid: materialId });
 
     res.status(204).send();
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };

@@ -14,7 +14,7 @@ export const FileMaterialSchema = z.object({
         return val.startsWith("/");
       }
     },
-    { message: "Invalid URL" }
+    { message: "Adresa souboru není platná" }
   ),
   mimeType: z.string().optional(),
   sizeBytes: z.number().int().optional(),

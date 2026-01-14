@@ -162,20 +162,13 @@ const MaterialCard = (props: MaterialCardProps) => {
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
         <div className='flex-1 min-w-0 flex flex-col gap-2'>
-          {!('isDraft' in props && props.isDraft) && (
-            <MaterialIcon
-              material={material}
-              className={cn('mt-1', 'hidden sm:block')}
-            />
-          )}
-
           {/* Title row */}
           <div className='flex items-center justify-between gap-2 sm:gap-4'>
             <div className='flex items-center gap-1 min-w-0 flex-1'>
               {!('isDraft' in props && props.isDraft) && (
                 <MaterialIcon
                   material={material}
-                  className='sm:hidden block mr-1 shrink-0'
+                  className='block mr-1 shrink-0'
                 />
               )}
 

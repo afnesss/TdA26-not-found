@@ -1,5 +1,7 @@
 import HomeBoxDetail from '../components/shared/HomeBoxDetail'
-import { Brain, Lightbulb, Zap, Trophy } from 'lucide-react'
+import { Zap, Trophy } from 'lucide-react'
+import ThinkIcon from '@/assets/t-think-blue.svg?react'
+import ActivitiesIcon from '@/assets/activities-blue.svg?react'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HintPageText from '../components/shared/HintPageText'
@@ -42,19 +44,15 @@ const HomePage = () => {
         <div className='grid grid-cols-3 max-w-lg gap-4 sm:gap-5'>
           <HomeBoxDetail
             bg='accent-teal-light'
-            icon={Brain}
+            icon={ThinkIcon}
             text='Chytré řešení'
           />
           <HomeBoxDetail
             bg='accent-teal'
-            icon={Lightbulb}
+            icon={ActivitiesIcon}
             text='Interaktivní přístup'
           />
-          <HomeBoxDetail
-            bg='accent-teal-dark'
-            icon={Zap}
-            text='Jednoduše a rychle'
-          />
+          <HomeBoxDetail bg='accent-teal-dark' icon={Zap} text='Efektivně' />
         </div>
       </div>
 

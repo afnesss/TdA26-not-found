@@ -5,12 +5,13 @@ import { cn } from '@/lib/utils'
 
 type EditBtnProps = {
   bgColor?: string
-  icon?: LucideIcon
+  icon?: LucideIcon | React.FunctionComponent<React.SVGProps<SVGSVGElement>>
   onClick?: (e?: React.MouseEvent) => void
   classNameBtn?: string
   type?: 'delete'
   iconClassName?: string
   disabled?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const EditBtn: React.FC<EditBtnProps> = ({
@@ -21,6 +22,7 @@ const EditBtn: React.FC<EditBtnProps> = ({
   type,
   iconClassName,
   disabled,
+  size = 'md',
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
@@ -31,18 +33,30 @@ const EditBtn: React.FC<EditBtnProps> = ({
     hoverStyle = 'hover:bg-destructive/10'
   }
 
+  const sizeClasses = {
+    sm: 'size-6 lg:size-7',
+    md: 'size-8 lg:size-9',
+    lg: 'size-9 lg:size-10',
+  }
+
+  const iconClasses = {
+    sm: 'w-3.5 h-3.5 sm:w-4 h-4',
+    md: 'w-4 h-4 sm:w-5 h-5',
+    lg: 'w-5 h-5 sm:w-6 h-6',
+  }
+
   return (
     <Button
       variant='ghost'
       size='icon-sm'
       disabled={disabled}
-      className={cn(hoverStyle, 'size-6 lg:size-7', classNameBtn)}
+      className={cn(hoverStyle, sizeClasses[size], classNameBtn)}
       onClick={onClick}
     >
       {IconToRender && (
         <IconToRender
           className={cn(
-            `w-3.5 h-3.5 sm:w-4 sm:h-4 ${textStyle}`,
+            `${iconClasses[size]} ${textStyle}`,
             iconClassName,
           )}
         />

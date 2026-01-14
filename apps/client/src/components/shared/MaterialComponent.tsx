@@ -1,3 +1,4 @@
+import UploadIcon from '@/assets/upload-black.svg?react'
 import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -5,28 +6,17 @@ import {
   type Material,
   type MaterialValidation,
 } from '@/lib/schemas'
-import { cn, formatFileSize, getFileIcon } from '@/lib/utils'
+import { cn, formatFileSize } from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Check,
-  Copy,
-  Download,
-  Edit,
-  ExternalLink,
-  Upload,
-  Variable,
-  X,
-} from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Check, Copy, Download, Edit, ExternalLink, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
+import DeleteConfirmDialog from '../ui/AlertDialog'
 import { Textarea } from '../ui/textarea'
 import MaterialIcon from './MaterialIcon'
-import DeleteConfirmDialog from '../ui/AlertDialog'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteMaterial } from '@/api/queries/materialQueries'
-import { useParams } from 'react-router'
 
 type MaterialCardProps =
   | {
@@ -367,7 +357,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         clearErrors('root.file')
                       }}
                       classNameBtn='mr-2'
-                      icon={Upload}
+                      icon={UploadIcon}
                       iconClassName={cn(
                         'size-4',
                         errors.root?.file &&

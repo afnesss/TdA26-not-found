@@ -13,7 +13,7 @@ import {
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import icon from '@/assets/t-think-blue.svg'
+import ThinkIcon from '@/assets/t-think-blue.svg?react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
@@ -106,7 +106,7 @@ const CourseDetailsForm = ({
               </Label>
             </CardTitle>
           </div>
-          <img src={icon} className='w-10 h-10 md:w-11 md:h-12 '></img>
+          <ThinkIcon className='w-10 h-10 md:w-11 md:h-12 text-primary' />
         </div>
         <CardContent className='space-y-4 mt-5'>
           <div className='flex flex-col gap-2'>

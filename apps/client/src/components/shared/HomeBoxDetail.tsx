@@ -22,7 +22,7 @@ const HomeBoxDetail = ({ bg, icon: Icon, text }: HomeBoxDetailProps) => {
       <div className='h-8 lg:h-12 flex justify-center items-center'>
         <Icon className='w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-10' />
       </div>
-      <p className='text-xs sm:text-sm'>{text}</p>
+      <p className='text-xs sm:text-sm mt-2'>{text}</p>
     </div>
   )
 }

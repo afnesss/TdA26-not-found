@@ -55,6 +55,81 @@ const sampleCourses = [
     description:
       "Objevte principy a aplikace strojového učení pomocí TensorFlow. Zahrnuje neuronové sítě, hluboké učení a nasazení modelů.",
   },
+  {
+    name: "Pokročilé JavaScript a ES6",
+    description:
+      "Prozkoumejte moderní JavaScript, ES6+, asynchronní programování a pokročilé koncepty pro profesionální vývoj.",
+  },
+  {
+    name: "Databázové systémy s PostgreSQL",
+    description:
+      "Naučte se navrhovat a spravovat relační databáze pomocí PostgreSQL, včetně SQL, optimalizace a transakcí.",
+  },
+  {
+    name: "DevOps a CI/CD",
+    description:
+      "Implementujte kontinuální integraci a nasazení pomocí nástrojů jako Docker, Kubernetes a Jenkins.",
+  },
+  {
+    name: "Kybernetická bezpečnost pro vývojáře",
+    description:
+      "Chraňte své aplikace před běžnými zranitelnostmi, naučte se o OWASP a bezpečném kódování.",
+  },
+  {
+    name: "Mobilní vývoj s React Native",
+    description:
+      "Vytvářejte cross-platform mobilní aplikace pomocí React Native a JavaScript.",
+  },
+  {
+    name: "Strojové učení s Pythonem",
+    description:
+      "Základy strojového učení, algoritmy a praktické aplikace pomocí Pythonu a knihoven jako scikit-learn.",
+  },
+  {
+    name: "Blockchain a kryptoměny",
+    description:
+      "Pochopte principy blockchain technologie, smart kontrakty a vývoj decentralizovaných aplikací.",
+  },
+  {
+    name: "Grafický design pro web",
+    description:
+      "Naučte se principy UI/UX designu, nástroje jako Figma a vytváření atraktivních uživatelských rozhraní.",
+  },
+  {
+    name: "Testování softwaru",
+    description:
+      "Zvládněte unit testování, integrace testy a automatizované testování pomocí frameworků jako Jest a Selenium.",
+  },
+  {
+    name: "Mikroslužby a architektura",
+    description:
+      "Naučte se navrhovat škálovatelné aplikace pomocí mikroslužeb, API gateway a distribuovaných systémů.",
+  },
+  {
+    name: "Big Data s Apache Spark",
+    description:
+      "Zpracovávání velkých datových sad pomocí Apache Spark, Hadoop a analytické nástroje.",
+  },
+  {
+    name: "Internet věcí (IoT)",
+    description:
+      "Vývoj aplikací pro IoT zařízení, senzory a cloudové platformy jako AWS IoT.",
+  },
+  {
+    name: "Herní vývoj s Unity",
+    description:
+      "Vytvářejte 2D a 3D hry pomocí Unity engine a C# programování.",
+  },
+  {
+    name: "Umělá inteligence a neuronové sítě",
+    description:
+      "Základy AI, neuronové sítě, deep learning a aplikace v různých doménách.",
+  },
+  {
+    name: "Agilní metodologie a Scrum",
+    description:
+      "Naučte se agilní vývojové procesy, Scrum framework a efektivní týmovou spolupráci.",
+  },
 ];
 
 export async function seed() {
@@ -321,95 +396,95 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: `Welcome to '${course.name}'! Get ready for an exciting learning journey.`, // Use course name
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
+        message: `Vítejte v kurzu '${course.name}'! Připravte se na zajímavou cestu učení.`,
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New material added: Official Course Syllabus. Please review it carefully.`, // Link to material
+        message: `Přidán nový materiál: Oficiální sylabus kurzu`,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Just a reminder: Our first live Q&A session is scheduled for next Tuesday. Bring your questions!",
+          "Připomínka: První živá diskuze je naplánována na příští úterý. Připravte si své otázky!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 25),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New quiz added: Module 1: Foundations Quiz. Test your understanding of basic concepts.`, // Link to quiz
+        message: `Přidán nový kvíz: Modul 1: Kvíz ze základů`,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Office hours for this week: Monday 2-3 PM and Wednesday 11 AM-12 PM. Drop in to discuss anything!",
+          "Konzultační hodiny tento týden: Pondělí 14-15 a Středa 11-12. Přijďte prodiskutovat cokoliv!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New material added: Lecture Slides - Week 1: Introduction. Check out the key takeaways.`, // Another material
+        message: `Přidán nový materiál: Prezentace z přednášky - Týden 1: Úvod`,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Assignment 1 deadline extended by 3 days due to popular demand. New deadline is Friday!",
-        edited: true, // Mark as edited
+          "Termín odevzdání úkolu 1 prodloužen o 3 dny na základě vašich požadavků. Nový termín je v pátek!",
+        edited: true,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8),
         updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New material added: Exercise Sheet - Module 2: Data Structures. Challenge yourself!`, // Another material
+        message: `Přidán nový materiál: Cvičení - Modul 2: Datové struktury`,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Upcoming guest lecture next week: 'The Future of AI in Software Engineering'. Details to follow.",
+          "Příští týden nás čeká hostem přednáška: 'Budoucnost AI v softwarovém inženýrství'. Podrobnosti brzy.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New quiz added: Module 2: Core Concepts Assessment. Sharpen your skills!`, // Another quiz
+        message: `Přidán nový kvíz: Modul 2: Hodnocení klíčových konceptů`,
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Don't forget to submit your Module 2 assignments by end of day. Reach out if you need help!",
+          "Nezapomeňte odevzdat úkoly z modulu 2 do konce dne. Pokud potřebujete pomoc, ozvěte se!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "Great work on the recent assignments! Keep up the excellent effort everyone.",
+          "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `New material added: Project Guidelines. Start planning your final projects!`, // Another material
+        message: `Přidán nový materiál: Pokyny k projektu`,
         createdAt: new Date(Date.now() - 1000 * 60 * 30),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
         message:
-          "A quick poll: What topics would you like to see covered in more depth? Your feedback is valuable!",
-        createdAt: new Date(), // Just now
+          "Krátká anketa: Jaká témata byste rádi probírali podrobněji? Vaše zpětná vazba je cenná!",
+        createdAt: new Date(),
       },
     ];
 

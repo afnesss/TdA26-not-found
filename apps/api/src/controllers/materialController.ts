@@ -12,6 +12,7 @@ import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { createSystemEvent } from "../utils/systemEvent";
+import { sseManager } from "../utils/sseManager";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
@@ -131,7 +132,10 @@ export const createMaterial = async (req: Request, res: Response) => {
 
       await createSystemEvent(courseId, `New material added: ${name}`);
 
-      res.status(201).json(mapMaterial(material));
+      const mappedMaterial = mapMaterial(material);
+      sseManager.broadcast(courseId, "material_added", mappedMaterial);
+
+      res.status(201).json(mappedMaterial);
     } else if (type === "url") {
       const validation = UrlMaterialCreateRequestSchema.safeParse(req.body);
       if (!validation.success) {
@@ -166,7 +170,10 @@ export const createMaterial = async (req: Request, res: Response) => {
 
       await createSystemEvent(courseId, `New material added: ${name}`);
 
-      res.status(201).json(mapMaterial(material));
+      const mappedMaterial = mapMaterial(material);
+      sseManager.broadcast(courseId, "material_added", mappedMaterial);
+
+      res.status(201).json(mappedMaterial);
     } else {
       return res.status(400).json({ message: "Invalid material type" });
     }
@@ -248,7 +255,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
       await createSystemEvent(courseId, `Material updated: ${updated.name}`);
 
-      res.json(mapMaterial(updated));
+      const mappedUpdated = mapMaterial(updated);
+      sseManager.broadcast(courseId, "material_updated", mappedUpdated);
+
+      res.json(mappedUpdated);
     } else {
       // URL
       const validation = UrlMaterialUpdateRequestSchema.safeParse(req.body);
@@ -280,7 +290,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
       await createSystemEvent(courseId, `Material updated: ${updated.name}`);
 
-      res.json(mapMaterial(updated));
+      const mappedUpdated = mapMaterial(updated);
+      sseManager.broadcast(courseId, "material_updated", mappedUpdated);
+
+      res.json(mappedUpdated);
     }
   } catch (error) {
     console.error(error);
@@ -321,6 +334,8 @@ export const deleteMaterial = async (req: Request, res: Response) => {
       .where(eq(courseMaterials.uuid, materialId));
 
     await createSystemEvent(courseId, `Material removed: ${existing.name}`);
+
+    sseManager.broadcast(courseId, "material_deleted", { uuid: materialId });
 
     res.status(204).send();
   } catch (error) {

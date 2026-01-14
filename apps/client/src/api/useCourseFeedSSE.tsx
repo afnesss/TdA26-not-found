@@ -90,6 +90,126 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       })
     })
 
+    // --- Course Updates ---
+    eventSource.addEventListener('course_updated', (event) => {
+      const updatedCourse = JSON.parse(event.data)
+      console.log('Course updated:', updatedCourse)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            name: updatedCourse.name,
+            description: updatedCourse.description,
+          }
+        },
+      )
+    })
+
+    // --- Material Updates ---
+    eventSource.addEventListener('material_added', (event) => {
+      const newMaterial = JSON.parse(event.data)
+      console.log('Material added:', newMaterial)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            materials: [newMaterial, ...oldData.materials],
+          }
+        },
+      )
+    })
+
+    eventSource.addEventListener('material_updated', (event) => {
+      const updatedMaterial = JSON.parse(event.data)
+      console.log('Material updated:', updatedMaterial)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            materials: oldData.materials.map((m) =>
+              m.uuid === updatedMaterial.uuid ? updatedMaterial : m,
+            ),
+          }
+        },
+      )
+    })
+
+    eventSource.addEventListener('material_deleted', (event) => {
+      const { uuid } = JSON.parse(event.data)
+      console.log('Material deleted:', uuid)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            materials: oldData.materials.filter((m) => m.uuid !== uuid),
+          }
+        },
+      )
+    })
+
+    // --- Quiz Updates ---
+    eventSource.addEventListener('quiz_added', (event) => {
+      const newQuiz = JSON.parse(event.data)
+      console.log('Quiz added:', newQuiz)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            quizzes: [newQuiz, ...oldData.quizzes],
+          }
+        },
+      )
+    })
+
+    eventSource.addEventListener('quiz_updated', (event) => {
+      const updatedQuiz = JSON.parse(event.data)
+      console.log('Quiz updated:', updatedQuiz)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            quizzes: oldData.quizzes.map((q) =>
+              q.uuid === updatedQuiz.uuid ? updatedQuiz : q,
+            ),
+          }
+        },
+      )
+    })
+
+    eventSource.addEventListener('quiz_deleted', (event) => {
+      const { uuid } = JSON.parse(event.data)
+      console.log('Quiz deleted:', uuid)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return {
+            ...oldData,
+            quizzes: oldData.quizzes.filter((q) => q.uuid !== uuid),
+          }
+        },
+      )
+    })
+
     return () => {
       console.log('SSE zavirame')
       eventSource.close()

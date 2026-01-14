@@ -47,30 +47,32 @@ const CoursePage = () => {
     enabled: Boolean(id),
   })
 
-  if (isLoading) {
+  if (isLoading || !courseData) {
     return <CourseSkeleton />
+  }
+
+  if (isError) {
+    return (
+      <div className='flex justify-center items-center h-full'>
+        <StateComp type='error' onAction={() => refetch()} />
+      </div>
+    )
   }
 
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
-      {isError ? (
-        <div className='flex justify-center items-center h-full'>
-          <StateComp type='error' onAction={() => refetch()} />
-        </div>
-      ) : (
-        <div className='max-w-7xl mx-auto md:px-6 lg:px-12 pb-8 space-y-8'>
-          <SummarySection
-            name={courseData?.name}
-            description={courseData?.description ?? undefined}
-          />
+      <div className='max-w-7xl mx-auto md:px-6 lg:px-12 pb-8 space-y-8'>
+        <SummarySection
+          name={courseData.name}
+          description={courseData.description ?? undefined}
+        />
 
-          <MaterialsSection materials={courseData?.materials ?? []} />
+        <MaterialsSection materials={courseData.materials ?? []} />
 
-          <QuizesSection courseData={courseData} />
+        <QuizesSection courseData={courseData} />
 
-          <FeedSection feed={courseData?.feed ?? []} isConnected={isConnected} />
-        </div>
-      )}
+        <FeedSection feed={courseData.feed ?? []} isConnected={isConnected} />
+      </div>
     </div>
   )
 }

@@ -403,7 +403,7 @@ const QuizComponent = ({
           <div className='flex flex-col lg:mx-10 pt-4 border-t-2 border-gray-100'>
             {mode === 'user' ? (
               <div className='flex flex-row items-center justify-between'>
-                <div className='flex items-center gap-3 md:gap-10 flex-col md:flex-row'>
+                <div className='flex items-center gap-3 md:gap-10 flex-row'>
                   <Button
                     variant='primary'
                     size='grid'
@@ -413,7 +413,8 @@ const QuizComponent = ({
                     }
                     onClick={onSubmit}
                   >
-                    Odeslat odpovědi
+                    <span className='sm:hidden'>Odeslat</span>
+                    <span className='hidden sm:inline'>Odeslat odpovědi</span>
                   </Button>
 
                   <Button

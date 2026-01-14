@@ -51,16 +51,24 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
               mode='user'
               userState={quizState[quiz.uuid!]}
               onAnswerChange={(questionId, answer) => {
-                setQuizState((prev) => ({
-                  ...prev,
-                  [quiz.uuid!]: {
-                    ...prev[quiz.uuid!],
-                    answers: {
-                      ...prev[quiz.uuid!].answers,
-                      [questionId]: { uuid: questionId, ...answer },
+                setQuizState((prev) => {
+                  const currentQuizState = prev[quiz.uuid!] || {
+                    status: 'idle',
+                    answers: {},
+                    showCorrect: false,
+                  }
+
+                  return {
+                    ...prev,
+                    [quiz.uuid!]: {
+                      ...currentQuizState,
+                      answers: {
+                        ...currentQuizState.answers,
+                        [questionId]: { uuid: questionId, ...answer },
+                      },
                     },
-                  },
-                }))
+                  }
+                })
               }}
               onSubmit={() =>
                 handleSubmit(
@@ -71,13 +79,21 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
                 )
               }
               onToggleShowCorrect={() => {
-                setQuizState((prev) => ({
-                  ...prev,
-                  [quiz.uuid!]: {
-                    ...prev[quiz.uuid!],
-                    showCorrect: !(prev[quiz.uuid!].showCorrect ?? true),
-                  },
-                }))
+                setQuizState((prev) => {
+                  const currentQuizState = prev[quiz.uuid!] || {
+                    status: 'idle',
+                    answers: {},
+                    showCorrect: false,
+                  }
+
+                  return {
+                    ...prev,
+                    [quiz.uuid!]: {
+                      ...currentQuizState,
+                      showCorrect: !currentQuizState.showCorrect,
+                    },
+                  }
+                })
               }}
               isSubmitDisabled={
                 !isQuizComplete(quiz.uuid!, quiz.questions.length, quizState) ||

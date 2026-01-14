@@ -75,7 +75,7 @@ const CoursesPage = () => {
             trigger={
               <Button
                 variant='filter'
-                className='bg-background text-gray-700 h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200'
+                className='bg-background text-primary h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200'
               >
                 <Filter size={16} />
               </Button>

@@ -12,7 +12,7 @@ const SearchBar = ({ searchQuery, setSearchQuery, count }: SearchBarProps) => {
   return (
     <div className='relative group max-w-2xl w-full'>
       <Search
-        className='size-4 sm:size-5 absolute left-4 top-1/2 -translate-y-1/2 text-primary/60 
+        className='size-4 sm:size-5 absolute left-4 top-1/2 -translate-y-1/2 text-primary/80 
                     group-focus-within:text-primary transition-all duration-300'
       />
       <Input

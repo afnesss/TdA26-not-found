@@ -12,7 +12,7 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
 
   return (
     <section>
-      <Label size='lg' className='font-bold mb-2'>
+      <Label size='default' className='font-bold mb-2'>
         Studijní Materiály
       </Label>
 

@@ -1,27 +1,30 @@
-import type{ UseFormSetError, FieldValues } from 'react-hook-form';
+import type { UseFormSetError, FieldValues } from 'react-hook-form'
 
 const auth = {
-  login (login: string, password: string, setError: UseFormSetError<FieldValues>){
-    if (login !== 'Lecturer' || password !== 'TdA26!') {
+  login(
+    login: string,
+    password: string,
+    setError: UseFormSetError<FieldValues>,
+  ) {
+    if (login !== 'lecturer' || password !== 'TdA26!') {
       setError('password', {
         type: 'manual',
-        message: 'Nesprávné přihlašovací údaje'
-      });
-      return false;
+        message: 'Nesprávné přihlašovací údaje',
+      })
+      return false
     }
 
-    localStorage.setItem('isAuth', 'true');
-    return true;
+    localStorage.setItem('isAuth', 'true')
+    return true
   },
 
-  logout () {
-    localStorage.removeItem('isAuth');
+  logout() {
+    localStorage.removeItem('isAuth')
   },
 
-  isAutenticated () {
+  isAutenticated() {
     return localStorage.getItem('isAuth') === 'true'
-  }
-
+  },
 }
 
-export default auth;
+export default auth

@@ -10,6 +10,7 @@ import {
 } from "../schemas/quiz";
 import { v4 as uuidv4 } from "uuid";
 import { createSystemEvent } from "../utils/systemEvent";
+import { sseManager } from "../utils/sseManager";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
@@ -62,8 +63,11 @@ export const createQuiz = async (req: Request, res: Response) => {
 
     await createSystemEvent(courseId, `New quiz added: ${quizData.title}`);
 
+    const createdQuiz = { ...newQuiz, attemptsCount: 0 };
+    sseManager.broadcast(courseId, "quiz_added", createdQuiz);
+
     // Return with attemptsCount 0
-    res.status(201).json({ ...newQuiz, attemptsCount: 0 });
+    res.status(201).json(createdQuiz);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -137,7 +141,10 @@ export const updateQuiz = async (req: Request, res: Response) => {
 
     await createSystemEvent(courseId, `Quiz updated: ${updatedQuiz.title}`);
 
-    res.json({ ...updatedQuiz, attemptsCount: stats.count });
+    const finalQuiz = { ...updatedQuiz, attemptsCount: stats.count };
+    sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
+
+    res.json(finalQuiz);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
@@ -163,6 +170,8 @@ export const deleteQuiz = async (req: Request, res: Response) => {
       .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
 
     await createSystemEvent(courseId, `Quiz removed: ${existingQuiz.title}`);
+
+    sseManager.broadcast(courseId, "quiz_deleted", { uuid: quizId });
 
     res.status(204).send();
   } catch (error) {
@@ -235,6 +244,20 @@ export const submitQuiz = async (req: Request, res: Response) => {
         answers: answers,
       })
       .returning();
+
+    // Get fresh attempts count
+    const [stats] = await db
+      .select({
+        count: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+      })
+      .from(quizSubmissions)
+      .where(eq(quizSubmissions.quizId, quizId));
+
+    const updatedQuiz = {
+      ...quiz,
+      attemptsCount: stats.count,
+    };
+    sseManager.broadcast(courseId, "quiz_updated", updatedQuiz);
 
     const response: QuizSubmitResponse = {
       quizUuid: quizId,

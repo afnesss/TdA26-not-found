@@ -10,6 +10,9 @@ import {
 import { eq, sql, desc } from "drizzle-orm";
 import { mapMaterial } from "./materialController";
 
+import { sseManager } from "../utils/sseManager";
+import { createSystemEvent } from "../utils/systemEvent";
+
 export async function getAllCourses(_req: Request, res: Response) {
   const allCourses = await db
     .select({
@@ -137,6 +140,9 @@ export async function updateCourse(req: Request, res: Response) {
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
     });
+
+  await createSystemEvent(uuid, `Course details updated`);
+  sseManager.broadcast(uuid, "course_updated", updated[0]);
 
   res.json(updated[0]);
 }

@@ -30,7 +30,14 @@ const CourseDetailsForm = ({
       updateCourse(selectedCourse.uuid, data),
     onSuccess: (updatedCourse) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
-      reset()
+      queryClient.invalidateQueries({
+        queryKey: ['course', selectedCourse.uuid],
+      })
+
+      reset({
+        name: updatedCourse?.name,
+        description: updatedCourse?.description ?? '',
+      })
 
       toast.success('Kurz byl aktualizovan')
 

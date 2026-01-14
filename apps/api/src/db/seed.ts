@@ -6,44 +6,54 @@ import path from "path";
 
 const sampleCourses = [
   {
-    name: "Introduction to Python",
-    description: "Master the basics of Python programming, from variables to object-oriented design. Perfect for beginners and aspiring data scientists.",
+    name: "Úvod do Pythonu",
+    description:
+      "Zvládněte základy programování v Pythonu, od proměnných až po objektově orientovaný design. Ideální pro začátečníky a budoucí datové analytiky.",
   },
   {
-    name: "Advanced React Patterns",
-    description: "Deep dive into React hooks, context, performance optimization, and scalable architecture. Learn to build enterprise-grade frontend applications.",
+    name: "Pokročilé vzory v Reactu",
+    description:
+      "Ponořte se do React hooks, kontextu, optimalizace výkonu a škálovatelné architektury. Naučte se vytvářet frontendové aplikace na podnikové úrovni.",
   },
   {
-    name: "System Design 101",
-    description: "Learn how to design scalable, reliable, and maintainable software systems for large-scale applications. Covers microservices, databases, caching, and more.",
+    name: "Návrh systémů 101",
+    description:
+      "Naučte se navrhovat škálovatelné, spolehlivé a udržovatelné softwarové systémy pro rozsáhlé aplikace. Zahrnuje mikroslužby, databáze, cachování a další.",
   },
   {
-    name: "Data Science with R",
-    description: "Explore data analysis, visualization, and machine learning using the R programming language. Focus on practical applications and case studies.",
+    name: "Datová věda s R",
+    description:
+      "Prozkoumejte analýzu dat, vizualizaci a strojové učení pomocí programovacího jazyka R. Zaměření na praktické aplikace a případové studie.",
   },
   {
-    name: "Cloud Computing Fundamentals",
-    description: "Understand the core concepts of cloud platforms like AWS, Azure, and Google Cloud. Learn about IaaS, PaaS, SaaS, and deployment strategies.",
+    name: "Základy cloudových technologií",
+    description:
+      "Pochopte základní koncepty cloudových platform jako AWS, Azure a Google Cloud. Naučte se o IaaS, PaaS, SaaS a strategiích nasazení.",
   },
   {
-    name: "Cybersecurity Essentials",
-    description: "An introduction to network security, common vulnerabilities, and protection strategies. Essential knowledge for anyone handling sensitive data.",
+    name: "Základy kybernetické bezpečnosti",
+    description:
+      "Úvod do síťové bezpečnosti, běžných zranitelností a ochranných strategií. Nezbytné znalosti pro každého, kdo pracuje s citlivými daty.",
   },
   {
-    name: "Frontend Web Development with Vue.js",
-    description: "Build dynamic and responsive user interfaces using the Vue.js framework. Covers components, routing, state management, and API integration.",
+    name: "Frontendový vývoj webu s Vue.js",
+    description:
+      "Vytvářejte dynamická a responzivní uživatelská rozhraní pomocí frameworku Vue.js. Zahrnuje komponenty, routing, správu stavu a API integraci.",
   },
   {
-    name: "Backend API Development with Node.js & Express",
-    description: "Create robust and efficient RESTful APIs using Node.js and Express. Learn about routing, middleware, database integration, and authentication.",
+    name: "Backendový vývoj API s Node.js & Express",
+    description:
+      "Vytvářejte robustní a efektivní RESTful API pomocí Node.js a Express. Naučte se o routingu, middleware, integraci databází a autentizaci.",
   },
   {
-    name: "Mobile App Development with Flutter",
-    description: "Develop beautiful, natively compiled applications for mobile, web, and desktop from a single codebase using Flutter and Dart.",
+    name: "Vývoj mobilních aplikací s Flutter",
+    description:
+      "Vyvíjejte krásné, nativně kompilované aplikace pro mobil, web a desktop z jedné kódové základny pomocí Flutter a Dart.",
   },
   {
-    name: "Machine Learning with TensorFlow",
-    description: "Discover the principles and applications of machine learning using TensorFlow. Covers neural networks, deep learning, and model deployment.",
+    name: "Strojové učení s TensorFlow",
+    description:
+      "Objevte principy a aplikace strojového učení pomocí TensorFlow. Zahrnuje neuronové sítě, hluboké učení a nasazení modelů.",
   },
 ];
 
@@ -54,17 +64,23 @@ export async function seed() {
   try {
     const seedAssetsDir = path.join(process.cwd(), "seed_assets");
     const uploadsDir = path.join(process.cwd(), "uploads");
-    
+
     // Ensure uploads directory exists
     await fs.mkdir(uploadsDir, { recursive: true });
 
     const files = await fs.readdir(seedAssetsDir);
     for (const file of files) {
-      await fs.copyFile(path.join(seedAssetsDir, file), path.join(uploadsDir, file));
+      await fs.copyFile(
+        path.join(seedAssetsDir, file),
+        path.join(uploadsDir, file)
+      );
       console.log(`Copied ${file} to uploads directory`);
     }
   } catch (error) {
-    console.warn("Failed to copy seed assets (ignoring if dev environment issue):", error);
+    console.warn(
+      "Failed to copy seed assets (ignoring if dev environment issue):",
+      error
+    );
   }
 
   const existingCourses = await db.select().from(courses);
@@ -75,7 +91,10 @@ export async function seed() {
   }
 
   // Insert Courses
-  const createdCourses = await db.insert(courses).values(sampleCourses).returning();
+  const createdCourses = await db
+    .insert(courses)
+    .values(sampleCourses)
+    .returning();
   console.log(`Created ${createdCourses.length} courses`);
 
   for (const course of createdCourses) {
@@ -84,25 +103,29 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "url" as const,
-        name: "Official Course Syllabus",
-        description: "Detailed overview of topics, grading, and schedule for the semester.",
+        name: "Oficiální sylabus kurzu",
+        description: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
         url: "https://example.com/syllabus",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=example.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=example.com&sz=64",
       },
       {
         courseId: course.uuid,
         type: "url" as const,
-        name: "Supplementary Readings - Module 1: Foundations",
-        description: "External articles and blog posts to deepen your understanding of core concepts.",
+        name: "Doplňková četba - Modul 1: Základy",
+        description:
+          "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
         url: "https://medium.com/tag/programming-basics",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
       },
       {
         courseId: course.uuid,
         type: "file" as const,
-        name: "Lecture Slides - Week 1: Introduction",
-        description: "Downloadable slides from the first introductory lecture. Covers setup and initial concepts.",
-        fileUrl: "/api/uploads/lecture-slides-week1.txt", // Relative URL to local file
+        name: "Prezentace z přednášky - Týden 1: Úvod",
+        description:
+          "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
+        fileUrl: "/api/uploads/lecture-slides-week1.txt",
         mimeType: "text/plain",
         sizeBytes: 1024 * 700,
         originalFilename: "lecture-slides-week1.txt",
@@ -110,17 +133,19 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "url" as const,
-        name: "Interactive Coding Playground",
-        description: "Practice your skills with live code execution and interactive exercises.",
+        name: "Interaktivní programovací prostředí",
+        description:
+          "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
         url: "https://replit.com/",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
       },
       {
         courseId: course.uuid,
         type: "file" as const,
-        name: "Exercise Sheet - Module 2: Data Structures",
-        description: "Problems to solve for homework, focusing on common data structures.",
-        fileUrl: "/api/uploads/exercise-sheet-module2.txt", // Relative URL to local file
+        name: "Cvičení - Modul 2: Datové struktury",
+        description: "Úkoly k řešení zaměřené na běžné datové struktury.",
+        fileUrl: "/api/uploads/exercise-sheet-module2.txt",
         mimeType: "text/plain",
         sizeBytes: 1024 * 250,
         originalFilename: "exercise-sheet-module2.txt",
@@ -128,17 +153,22 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "url" as const,
-        name: "Advanced Topics Forum",
-        description: "A community forum for discussing advanced topics and getting help.",
-        url: "https://stackoverflow.com/tags/" + course.name.split(" ")[0].toLowerCase(),
-        faviconUrl: "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
+        name: "Fórum pro pokročilá témata",
+        description:
+          "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+        url:
+          "https://stackoverflow.com/tags/" +
+          course.name.split(" ")[0].toLowerCase(),
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
       },
       {
         courseId: course.uuid,
         type: "file" as const,
-        name: "Project Guidelines",
-        description: "Detailed document outlining the final project requirements, rubrics, and submission process.",
-        fileUrl: "/api/uploads/project-guidelines.txt", // Relative URL to local file
+        name: "Pokyny k projektu",
+        description:
+          "Podrobný dokument s požadavky na závěrečný projekt, kritérii hodnocení a procesem odevzdání.",
+        fileUrl: "/api/uploads/project-guidelines.txt",
         mimeType: "text/plain",
         sizeBytes: 1024 * 900,
         originalFilename: "project-guidelines.txt",
@@ -146,10 +176,13 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "url" as const,
-        name: "External Course Resources",
-        description: "Curated list of external books, tutorials, and online courses.",
-        url: "https://www.freecodecamp.org/news/tag/" + course.name.split(" ")[0].toLowerCase(),
-        faviconUrl: "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
+        name: "Externí zdroje kurzu",
+        description: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
+        url:
+          "https://www.freecodecamp.org/news/tag/" +
+          course.name.split(" ")[0].toLowerCase(),
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
       },
     ];
 
@@ -159,53 +192,76 @@ export async function seed() {
     const quizzesData = [
       {
         courseId: course.uuid,
-        title: "Module 1: Foundations Quiz",
+        title: "Modul 1: Kvíz ze základů",
         questions: [
           {
             uuid: uuidv4(),
             type: "singleChoice",
-            question: `What is the primary objective of the introductory module in ${course.name}?`,
-            options: ["To memorize definitions", "To grasp fundamental concepts and terminology", "To build a complete application", "To perform advanced optimizations"],
+            question: `Jaký je hlavní cíl úvodního modulu v ${course.name}?`,
+            options: [
+              "Zapamatovat si definice",
+              "Pochopit základní koncepty a terminologii",
+              "Vytvořit kompletní aplikaci",
+              "Provádět pokročilé optimalizace",
+            ],
             correctIndex: 1,
           },
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Which of these programming paradigms are relevant to this course?",
-            options: ["Object-Oriented", "Functional", "Procedural", "Logic-based"],
+            question:
+              "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
+            options: [
+              "Objektově orientované",
+              "Funkcionální",
+              "Procedurální",
+              "Logické",
+            ],
             correctIndices: [0, 1, 2],
           },
           {
             uuid: uuidv4(),
             type: "singleChoice",
-            question: "What year was the first widely recognized high-level programming language developed?",
-            options: ["1940s", "1950s", "1960s", "1970s"],
+            question:
+              "V kterém roce byl vyvinut první široce uznávaný vysokoúrovňový programovací jazyk?",
+            options: ["1940", "1950", "1960", "1970"],
             correctIndex: 1,
           },
         ],
       },
       {
         courseId: course.uuid,
-        title: "Module 2: Core Concepts Assessment",
+        title: "Modul 2: Hodnocení klíčových konceptů",
         questions: [
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Which of the following are benefits of using version control systems like Git?",
-            options: ["Tracking changes", "Collaborating with others", "Deploying applications automatically", "Creating user interfaces"],
+            question:
+              "Které z následujících jsou výhody použití verzovacích systémů jako Git?",
+            options: [
+              "Sledování změn",
+              "Spolupráce s ostatními",
+              "Automatické nasazování aplikací",
+              "Vytváření uživatelských rozhraní",
+            ],
             correctIndices: [0, 1],
           },
           {
             uuid: uuidv4(),
             type: "singleChoice",
-            question: "What is an algorithm?",
-            options: ["A programming language", "A set of instructions to solve a problem", "A type of database", "A user interface element"],
+            question: "Co je to algoritmus?",
+            options: [
+              "Programovací jazyk",
+              "Sada instrukcí pro řešení problému",
+              "Typ databáze",
+              "Prvek uživatelského rozhraní",
+            ],
             correctIndex: 1,
           },
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Common web technologies include:",
+            question: "Běžné webové technologie zahrnují:",
             options: ["HTML", "CSS", "JavaScript", "SQL"],
             correctIndices: [0, 1, 2],
           },
@@ -213,33 +269,44 @@ export async function seed() {
       },
       {
         courseId: course.uuid,
-        title: "Final Exam Practice Quiz",
+        title: "Zkušební kvíz k závěrečné zkoušce",
         questions: [
           {
             uuid: uuidv4(),
             type: "singleChoice",
-            question: "What is the time complexity of searching an element in a balanced binary search tree?",
+            question:
+              "Jaká je časová složitost vyhledávání prvku ve vyváženém binárním vyhledávacím stromu?",
             options: ["O(n)", "O(log n)", "O(1)", "O(n^2)"],
             correctIndex: 1,
           },
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Which of these are principles of clean code?",
-            options: ["Readability", "Maintainability", "Scalability", "Obfuscation"],
+            question: "Které z těchto jsou principy čistého kódu?",
+            options: [
+              "Čitelnost",
+              "Udržovatelnost",
+              "Škálovatelnost",
+              "Obfuskace",
+            ],
             correctIndices: [0, 1, 2],
           },
           {
             uuid: uuidv4(),
             type: "singleChoice",
-            question: "What is the purpose of a foreign key in a relational database?",
-            options: ["To enforce referential integrity", "To uniquely identify a record", "To speed up data retrieval", "To define a primary key"],
-            correctIndex: 1,
+            question: "Jaký je účel cizího klíče v relační databázi?",
+            options: [
+              "Vynucovat referenční integritu",
+              "Jednoznačně identifikovat záznam",
+              "Zrychlit načítání dat",
+              "Definovat primární klíč",
+            ],
+            correctIndex: 0,
           },
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Cloud service models include:",
+            question: "Modely cloudových služeb zahrnují:",
             options: ["IaaS", "PaaS", "SaaS", "DaaS"],
             correctIndices: [0, 1, 2],
           },
@@ -266,7 +333,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Just a reminder: Our first live Q&A session is scheduled for next Tuesday. Bring your questions!",
+        message:
+          "Just a reminder: Our first live Q&A session is scheduled for next Tuesday. Bring your questions!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 25),
       },
       {
@@ -278,7 +346,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Office hours for this week: Monday 2-3 PM and Wednesday 11 AM-12 PM. Drop in to discuss anything!",
+        message:
+          "Office hours for this week: Monday 2-3 PM and Wednesday 11 AM-12 PM. Drop in to discuss anything!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
       },
       {
@@ -290,7 +359,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Assignment 1 deadline extended by 3 days due to popular demand. New deadline is Friday!",
+        message:
+          "Assignment 1 deadline extended by 3 days due to popular demand. New deadline is Friday!",
         edited: true, // Mark as edited
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8),
         updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
@@ -304,7 +374,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Upcoming guest lecture next week: 'The Future of AI in Software Engineering'. Details to follow.",
+        message:
+          "Upcoming guest lecture next week: 'The Future of AI in Software Engineering'. Details to follow.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
       },
       {
@@ -316,13 +387,15 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Don't forget to submit your Module 2 assignments by end of day. Reach out if you need help!",
+        message:
+          "Don't forget to submit your Module 2 assignments by end of day. Reach out if you need help!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
       },
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Great work on the recent assignments! Keep up the excellent effort everyone.",
+        message:
+          "Great work on the recent assignments! Keep up the excellent effort everyone.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
       },
       {
@@ -334,7 +407,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "A quick poll: What topics would you like to see covered in more depth? Your feedback is valuable!",
+        message:
+          "A quick poll: What topics would you like to see covered in more depth? Your feedback is valuable!",
         createdAt: new Date(), // Just now
       },
     ];

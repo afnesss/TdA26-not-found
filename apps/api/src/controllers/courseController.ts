@@ -69,7 +69,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
     .select()
     .from(courseMaterials)
     .where(eq(courseMaterials.courseId, uuid))
-    .orderBy(desc(courseMaterials.createdAt));
+    .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
 
   const fetchedFeed = await db
     .select()

@@ -53,7 +53,7 @@ export const getMaterials = async (req: Request, res: Response) => {
       .select()
       .from(courseMaterials)
       .where(eq(courseMaterials.courseId, courseId))
-      .orderBy(desc(courseMaterials.createdAt));
+      .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
 
     res.json(materials.map(mapMaterial));
   } catch (error) {

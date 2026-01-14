@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export async function fetchWithValidation<T, TArgs extends []>(
   apiFn: (...args: TArgs) => Promise<T>,
@@ -6,22 +6,22 @@ export async function fetchWithValidation<T, TArgs extends []>(
   ...args: TArgs
 ): Promise<T> {
   try {
-    const raw = await apiFn(...args);
-    
+    const raw = await apiFn(...args)
+
     if (!raw) {
-      throw new Error("Data not found");
+      throw new Error('Data not found')
     }
-    
-    const parsed = schema.safeParse(raw);
+
+    const parsed = schema.safeParse(raw)
 
     if (!parsed.success) {
-      console.error("Schema validation failed", parsed.error);
-      throw new Error("Invalid data format");
+      console.error('Schema validation failed', parsed.error)
+      throw new Error('Invalid data format')
     }
 
-    return parsed.data;
+    return parsed.data
   } catch (err) {
-    console.error("Fetch error:", err);
-    throw err;
+    console.error('Fetch error:', err)
+    throw err
   }
 }

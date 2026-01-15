@@ -37,7 +37,6 @@ const LoginPage = () => {
 
   return (
     <div className='max-w-6xl mx-auto overflow-hidden grid h-full md:grid-cols-2 lg:grid-cols-2'>
-      {/* Left side - Welcome content */}
       <div className='relative justify-center h-full hidden md:flex items-center px-4 md:pl-6 lg:pl-10 lg:pr-20'>
         <div className='space-y-8 text-left'>
           <HintPageText icon={Sparkles} text='Začněte svou cestu' />
@@ -46,18 +45,15 @@ const LoginPage = () => {
             highlightedText='Think Different Academy'
           />
 
-          {/* Animated logo section */}
           <div className='relative flex items-center justify-center pt-8'>
             <LogoAnim sizeBlur1='w-40 h-40' sizeBlur2='w-48 h-48' />
           </div>
         </div>
       </div>
 
-      {/* Right side - Login form */}
       <div className='px-2 md:px-6 lg:px-10 flex justify-center items-center'>
         <div className='w-full max-w-md'>
           <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
-            {/* Header with linear */}
             <Label variant={'formTitle'}>
               {/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
               Přihlášení
@@ -79,9 +75,7 @@ const LoginPage = () => {
                   }}
                 />
                 {errors.name && (
-                  <p className='text-destructive'>
-                    {errors.name.message as string}
-                  </p>
+                  <p className='error-text'>{errors.name.message as string}</p>
                 )}
 
                 <FormField
@@ -110,9 +104,9 @@ const LoginPage = () => {
                 />
 
                 {errors.password && (
-                  <Label size='md' variant={'error'}>
+                  <p className='error-text'>
                     {errors.password.message as string}
-                  </Label>
+                  </p>
                 )}
 
                 {/* {isLogin && (

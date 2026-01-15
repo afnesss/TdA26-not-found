@@ -19,6 +19,20 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 
+const isDirtyText = (className?: string) => {
+  return (
+    <span
+      className={cn(
+        'text-[10px] sm:text-xs font-medium text-primary px-1.5 py-0.5 sm:px-2 sm:py-1 \
+        bg-primary/10 rounded-full whitespace-nowrap',
+        className,
+      )}
+    >
+      Neuloženo
+    </span>
+  )
+}
+
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
 type QuizComponentProps = {
@@ -235,12 +249,6 @@ const QuizComponent = ({
       >
         <div className='flex items-center justify-between gap-2 sm:gap-4'>
           <div className='flex-1 min-w-0'>
-            {mode === 'lecturer' && isDirty && (
-              <span className='sm:hidden inline-block text-[10px] font-medium text-primary px-1.5 py-0.5 bg-primary/10 rounded-full mb-1.5'>
-                Neuloženo
-              </span>
-            )}
-
             {/* quiz name */}
             {mode === 'lecturer' && isExpanded ? (
               <div className='flex items-start gap-1'>
@@ -265,12 +273,10 @@ const QuizComponent = ({
                 </div>
 
                 <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
-                  {mode === 'lecturer' && isDirty && (
-                    <span className='text-[10px] sm:text-xs font-medium text-primary px-1.5 py-0.5 sm:px-2 sm:py-1 bg-primary/10 rounded-full whitespace-nowrap'>
-                      Neuloženo
-                    </span>
-                  )}
-
+                  {mode === 'lecturer' &&
+                    isDirty &&
+                    !isDraft &&
+                    isDirtyText('hidden sm:inline-block')}
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
                       type='delete'
@@ -338,11 +344,11 @@ const QuizComponent = ({
                 </div>
 
                 <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
-                  {mode === 'lecturer' && isDirty && (
+                  {/* {mode === 'lecturer' && isDirty && (
                     <span className='text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
                       Neuloženo
                     </span>
-                  )}
+                  )} */}
 
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
@@ -401,6 +407,11 @@ const QuizComponent = ({
                 <HelpCircle size={14} className='text-secondary shrink-0' />
                 <span>{displayQuiz.questions?.length ?? 0} otázek</span>
               </span>
+
+              {mode === 'lecturer' &&
+                isDirty &&
+                !isDraft &&
+                isDirtyText('inline-block sm:hidden')}
             </div>
           </div>
         </div>

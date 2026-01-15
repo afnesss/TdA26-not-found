@@ -5,11 +5,12 @@ import {
 } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
+import HintPageText from '@/components/shared/HintPageText'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { CourseSummary } from '@/lib/schemas'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Plus, BookOpenText } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
@@ -68,10 +69,6 @@ const DashboardDesign1 = () => {
     setCourseDraft(newDraft)
   }
 
-  const searchBar = (
-    <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-  )
-
   const createButton = (mobile?: boolean) => (
     <Button
       variant='primary'
@@ -89,10 +86,27 @@ const DashboardDesign1 = () => {
       <div className='max-w-7xl mx-auto md:px-4  '>
         <div className='space-y-6 pt-3'>
           {/* Hero Section */}
-          <div className='flex flex-row gap-3 justify-center items-center '>
-            {searchBar}
-            <span className='lg:hidden'>{createButton(true)}</span>
-            <span className='hidden lg:inline'>{createButton(false)}</span>
+          <div className='flex flex-row justify-center items-center '>
+            <HintPageText
+              text='Správa kurzů'
+              icon={BookOpenText}
+              spanText={
+                (searchQuery && filteredCourses.length.toString()) ||
+                courses.length.toString()
+              }
+              className='hidden lg:inline-flex mr-3'
+            />
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              count={
+                (searchQuery && filteredCourses.length.toString()) ||
+                courses.length.toString()
+              }
+              className='flex-1 lg:flex-initial'
+            />
+            <span className='lg:hidden ml-3'>{createButton(true)}</span>
+            <span className='hidden lg:inline ml-3'>{createButton(false)}</span>
           </div>
           {/* Courses Grid */}
           {coursesLoading ? (

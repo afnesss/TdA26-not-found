@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 
 type HintPageTextProps = {
   text: string
-  icon: React.ElementType
+  icon?: React.ElementType
   spanText?: string | null
   className?: string
 }
@@ -23,7 +23,7 @@ const HintPageText = ({
           className,
         )}
       >
-        {<Icon className='w-4 h-4 shrink-0 ' />}
+        {Icon && <Icon className='w-4 h-4 shrink-0 ' />}
         {text}
         {spanText && (
           <span className='bg-primary text-background px-2 py-0.5 rounded-full max-sm:text-2xs sm:text-2xs text-xs'>

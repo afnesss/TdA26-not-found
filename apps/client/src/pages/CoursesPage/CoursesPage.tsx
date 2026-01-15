@@ -5,7 +5,7 @@ import { type FilterIds } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { BookOpen, Filter } from 'lucide-react'
+import { BookOpenText, Filter } from 'lucide-react'
 import { useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
@@ -63,7 +63,7 @@ const CoursesPage = () => {
         <div className='flex flex-row lg:justify-center justify-between items-center mb-3 w-full lg:w-auto'>
           <HintPageText
             text='Dostupné kurzy'
-            icon={BookOpen}
+            icon={BookOpenText}
             spanText={
               (searchQuery && displayedCourses.length.toString()) ||
               courses.length.toString()

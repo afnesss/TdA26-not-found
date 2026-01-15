@@ -1,165 +1,77 @@
-# TdA26-not-found
+# Tým: Not Found
 
-This repository contains the monorepo for our Tour de App 2026 project. It includes the frontend client, backend API, and all necessary configuration for local development and production deployment.
+Tento repozitář obsahuje naši implementaci projektu pro Tour de App 2026.
 
-## Table of Contents
+## Členové týmu
 
-- [Architecture Overview](#architecture-overview)
-  - [Client (`apps/client`)](#client-appsclient)
-  - [API (`apps/api`)](#api-appsapi)
-  - [Database (`db`)](#database-db)
-- [Local Development](#local-development)
-  - [Recommended Setup: Docker Compose](#recommended-setup-docker-compose)
-  - [Alternative Setup: Manual](#alternative-setup-manual)
-  - [Connecting Frontend to Backend](#connecting-frontend-to-backend)
-- [Development Workflow](#development-workflow)
-  - [Git Flow](#git-flow)
-  - [Database Migrations](#database-migrations)
-- [Commit Conventions](#commit-conventions)
-- [Deployment](#deployment)
-  - [Critical Deployment Files](#critical-deployment-files)
-- [Tooling & Quality Assurance](#tooling--quality-assurance)
-  - [Husky Pre-commit Hook](#husky-pre-commit-hook)
+- [**Team Leader**](https://github.com/bondar7)
+- [**Frontend Developer & UI/UX**](https://github.com/afnesss)
+- [**Backend Developer**](https://github.com/Shadowinger)
 
-## Architecture Overview
+## Architektura a Dokumentace
 
-This project is structured as a monorepo using npm workspaces, which allows us to manage multiple applications within a single repository.
+Projekt je strukturován jako monorepo. Pro detailní informace o jednotlivých částech systému prosím navštivte příslušné dokumentace:
 
-For more detailed information on each application, please refer to their dedicated README files:
--   [**Client Application README**](apps/client/README.md)
--   [**API Application README**](apps/api/README.md)
+- **[Frontend Dokumentace](apps/client/README.md)**
+- **[Backend Dokumentace](apps/api/README.md)**
 
-### Client (`apps/client`)
+### Použité technologie
 
-- **Framework**: React with Vite
-- **Styling**: Tailwind CSS.
-- **Production Server**: The application is built into static files and served by Nginx. This is handled automatically within its Docker container during deployment.
-
-### API (`apps/api`)
-
-- **Framework**: Express.js.
-- **Database Access**: We use Drizzle ORM. Drizzle is a modern TypeScript ORM that allows us to interact with our database in a type-safe way, catching potential errors at compile time instead of runtime. It generates and manages SQL migration files based on our schema definitions.
-
-### Database (`db`)
-
-- **Engine**: PostgreSQL
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js, Express, TypeScript
+- **Databáze**: PostgreSQL, Drizzle ORM
+- **Infrastruktura**: Docker, Docker Compose, Caddy
 
 ---
 
-## Local Development
+## Lokální Vývoj a Spuštění
 
-For a consistent and hassle-free development experience, we use Docker to containerize each part of our application.
+Pro konzistentní vývojové prostředí používáme Docker.
 
-### Recommended Setup: Docker Compose
+### 1. Doporučené spuštění (Docker Compose)
 
-The easiest way to run the entire stack locally is with Docker Compose. It builds and runs all services (`client`, `api`, `db`, and `caddy`) with a single command, ensuring the environment mirrors production as closely as possible. Caddy is included to act as a reverse proxy, just like in production.
+Nejjednodušší způsob, jak spustit celý stack (Client, API, DB, Caddy), je pomocí Docker Compose. Tento způsob simuluje produkční prostředí včetně reverzní proxy.
 
-1.  **Start the environment:**
-
-    ```shell
-    docker-compose up --build
-    ```
-
-2.  **Access the application:** The services will be available at the following ports on your local machine:
-
-| Service           | Port                    | Description                                               |
-| :---------------- | :---------------------- | :-------------------------------------------------------- |
-| **Caddy (Proxy)** | `http://localhost:8080` | **Primary entry point.** Access this URL in your browser. |
-| Client (Direct)   | `http://localhost:3001` | Direct access to the Vite dev server.                     |
-| API (Direct)      | `http://localhost:3000` | Direct access to the Express API.                         |
-
-### Alternative Setup: Manual
-
-While not recommended, you can run services individually. This is useful if you only need the database running, for example.
-
-1.  **Run only the Database:**
-
-    ```shell
-    docker-compose up db
-    ```
-
-2.  **Running Services Manually:** If you run the API or Client on your host machine, you will need to create a `.env` file for them and configure the environment variables correctly.
-    - **API**: Requires `DATABASE_URL` (e.g., `postgresql://postgres:password@localhost:5432/tda26`).
-
-### Connecting Frontend to Backend
-
-When making API calls from the client, you should **always use relative URLs that go through the Caddy proxy**. This approach works seamlessly for both local development and production without requiring any environment variables for the API URL.
-
-The Caddy proxy (running on `localhost:8080` locally, and the public URL in production) is the single entry point for our application. It knows how to route requests starting with `/api` to the backend service.
-
-**Correct Way (in client code):**
-
-```javascript
-// This works everywhere.
-axios.get("/api/courses");
+```bash
+docker-compose up --build
 ```
 
-By using `/api/courses`, the browser will automatically make the request to the correct host (`localhost:8080` locally or your production domain), and Caddy will handle the rest.
+> **Doba nasazení:** První build může trvat **5-10 minut** (stahování image, instalace závislostí). Další spuštění jsou v řádu sekund.
 
-    - Check .env.example files, there will be detailed and up to date information about required env vars.
+### 2. Alternativní spuštění (Manuální)
 
----
+Pokud potřebujete spustit například pouze databázi a zbytek spouštět lokálně na hostitelském stroji (např. pro rychlejší debugování):
 
-## Development Workflow
+```bash
+# Spustí pouze databázi na portu 5433
+docker-compose up db
+```
 
-### Git Flow
-
-- **Do not push directly to `main`**. The `main` branch is protected.
-- For any new feature or bugfix, create a new branch from `main`. Use a descriptive name (e.g., `feature/user-authentication`, `fix/login-button`).
-- Once your work is complete, push your branch and open a Pull Request (PR) on GitHub for review.
-
-### Database Migrations
-
-We use Drizzle to manage database schema changes.
-
-1.  **Make Schema Changes**: Modify the schema files in `apps/api/src/db/schema.ts`.
-2.  **Generate a Migration**: After changing the schema, run the following command to generate a new SQL migration file(this is required to apply changes to the DB's existing structure):
-    ```shell
-    npm run db:generate -w api
-    ```
-3.  **Apply Migrations Locally**: The migrations are applied automatically when the API starts up via `docker-compose`. If you need to apply them manually, you can run:
-    ```shell
-    npm run db:migrate -w api
-    ```
-4.  Commit the newly generated migration file along with your schema changes. Migrations are run automatically on the production server at startup.
-
-### Commit Conventions
-
-While it is not strictly necessary, using a conventional commit message format helps to identify where changes were made without looking at the commit itself. It keeps the project history clean and easy to read.
-
-A good format is `type(scope): description`. For example:
-
-- `feat(client): add user login form`
-- `fix(caddy): resolve api routing issue`
-- `chore: update npm dependencies`
-- `docs: explain local development setup`
-
-- use it pls :D
+_Při manuálním spouštění API/Clienta mimo Docker nezapomeňte vytvořit `.env` soubory v příslušných složkách (`apps/client/.env`, `apps/api/.env`)._
 
 ---
 
-## Deployment
+## Infrastruktura a Konfigurace
 
-Deployment to the Tour de Cloud platform is automated through a GitHub Actions workflow.
+### Caddy (Reverse Proxy)
 
-### Critical Deployment Files
+Caddy funguje jako vstupní brána pro celou aplikaci. Řeší směrování požadavků, což zjednodušuje komunikaci mezi frontendem a backendem bez nutnosti CORS konfigurace pro vývoj.
 
-The following files are essential for a successful deployment. **Do not modify them unless you are certain about what you are doing.** A mistake here can break the entire production environment.
+- **Frontend requests**: Všechny požadavky na `/` jsou směrovány na React aplikaci.
+- **API requests**: Všechny požadavky začínající na `/api` jsou směrovány na backend kontejner.
 
-- **`tourdeapp.yaml`**: The manifest file for Tour de Cloud. It defines which containers to build and run, their environment variables, and how they are exposed to the internet.
-- **`apps/**/Dockerfile`**: Each service has its own `Dockerfile`. These files contain the instructions to build the lean, optimized production images for each part of our application.
-- **`.github/workflows/deploy.yml`**: This file defines the CI/CD pipeline. It's triggered on pushes to the `main` branch, builds the Docker images, and pushes them to the Tour de Cloud registry.
+Díky tomu může frontend volat API jednoduše pomocí relativních cest (např. `fetch("/api/courses")`), což funguje identicky lokálně i v produkci.
 
----
+**Konfigurační soubory:**
 
-## Tooling & Quality Assurance
+- `caddy/Caddyfile.development`: Používá se pro lokální vývoj (`localhost:8080`).
+- `caddy/Caddyfile.production`: Používá se pro produkční nasazení.
 
-To ensure our codebase remains clean and stable, we have automated checks in place.
+### Produkční nasazení (Deployment)
 
-### Husky Pre-commit Hook
+Nasazení je automatizováno pomocí GitHub Actions a konfigurace `tourdeapp.yaml`.
 
-This project uses Husky to manage a `pre-commit` Git hook.
-
-- **What it is**: An automated script that runs every time you try to make a commit.
-- **What it does**: It runs `typecheck` and `build` for both the `api` and `client` workspaces.
-- **Why it's important**: If either the build or the type-checking fails, the commit is automatically aborted. This prevents broken or type-unsafe code from ever being committed to the repository, ensuring the `main` branch is always stable.
+- **Kritické soubory**:
+  - `tourdeapp.yaml`: Definuje služby pro Tour de Cloud platformu.
+  - `.github/workflows/deploy.yml`: CI/CD pipeline, která se spouští při pushnutí do `main`.
+  - `Dockerfile` (v každé složce): Optimalizované instrukce pro sestavení produkčních image (multi-stage builds).

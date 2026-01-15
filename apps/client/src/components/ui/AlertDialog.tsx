@@ -65,7 +65,10 @@ const DeleteConfirmDialog = ({
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
+            onClick={(e) => {
+              e.stopPropagation()
+              onConfirm()
+            }}
             disabled={isLoading}
             className='bg-destructive/80 text-destructive-foreground hover:bg-destructive w-15 h-7 md:w-18 md:h-8 rounded-xl cursor-pointer text-xs sm:text-sm shadow-sm'
           >

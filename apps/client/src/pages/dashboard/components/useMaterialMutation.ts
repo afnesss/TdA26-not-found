@@ -11,7 +11,7 @@ const validateFileSize = (file?: File): void => {
     throw {
       status: 400,
       statusText: 'Bad Request',
-      body: { message: 'File too large (max 30MB)' },
+      body: { message: 'Soubor je příliš velký (max 30MB)' },
     }
   }
 }

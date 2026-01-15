@@ -3,7 +3,7 @@ import StateComp from '@/components/shared/StateComp'
 import TabButton from '@/components/shared/TabButton'
 import type { CourseSummary, Material } from '@/lib/schemas'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, BookOpen, FileText, MessageSquare } from 'lucide-react'
+import { BarChart3, BookOpenText, FileText, MessageSquare } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { DetailsContentSkeleton } from '../../components/shared/loadingskeleton/DetailsSkeleton'
@@ -69,7 +69,7 @@ const CourseDetailPage = () => {
             isActive={activeTab === 'details'}
             onClick={() => handleTabChange('details')}
             title='Detaily'
-            icon={BookOpen}
+            icon={BookOpenText}
           />
           <TabButton
             isActive={activeTab === 'materials'}

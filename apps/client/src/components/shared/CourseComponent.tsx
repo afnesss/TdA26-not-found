@@ -172,7 +172,15 @@ const CourseComponent = (props: CourseCompProps) => {
             />
           ) : (
             <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
-              {course.description}
+              {course.description && course.description.length > 100
+                ? (() => {
+                    let truncated = course.description.slice(0, 100)
+                    if (truncated.endsWith(',')) {
+                      truncated = truncated.slice(0, -1)
+                    }
+                    return truncated + '...'
+                  })()
+                : course.description}
             </CardDescription>
           )}
         </CardContent>

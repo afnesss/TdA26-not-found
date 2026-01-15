@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
+  const [displayCount, setDisplayCount] = useState(9)
   const queryClient = useQueryClient()
 
   const navigate = useNavigate()
@@ -45,6 +46,12 @@ const DashboardDesign1 = () => {
     },
   })
   const filteredCourses = filterCourses(courses, searchQuery)
+  const hasMoreCourses = filteredCourses.length > displayCount
+  const displayedCourses = filteredCourses.slice(0, displayCount)
+
+  const loadMoreCourses = () => {
+    setDisplayCount((prev) => prev + 6)
+  }
 
   const handleEditCourse = (course: CourseSummary) => {
     navigate(`/dashboard/${course.uuid}#details`)
@@ -87,46 +94,62 @@ const DashboardDesign1 = () => {
             <span className='lg:hidden'>{createButton(true)}</span>
             <span className='hidden lg:inline'>{createButton(false)}</span>
           </div>
-
           {/* Courses Grid */}
           {coursesLoading ? (
             <CoursesPageSceleton />
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
-              {courseDraft && (
-                <CourseComponent
-                  key={courseDraft.uuid}
-                  course={courseDraft}
-                  index={0}
-                  type='edit'
-                  isDraft
-                  onSaveDraft={async (data) => {
-                    await createCourse(data)
-                    setCourseDraft(null)
-                    queryClient.invalidateQueries({
-                      queryKey: ['courses'],
-                    })
-                  }}
-                  onEdit={() => {
-                    handleEditCourse(courseDraft!)
-                  }}
-                  onCancelDraft={() => setCourseDraft(null)}
-                />
+            <>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
+                {courseDraft && (
+                  <CourseComponent
+                    key={courseDraft.uuid}
+                    course={courseDraft}
+                    index={0}
+                    type='edit'
+                    isDraft
+                    onSaveDraft={async (data) => {
+                      await createCourse(data)
+                      setCourseDraft(null)
+                      queryClient.invalidateQueries({
+                        queryKey: ['courses'],
+                      })
+                    }}
+                    onEdit={() => {
+                      handleEditCourse(courseDraft!)
+                    }}
+                    onCancelDraft={() => setCourseDraft(null)}
+                  />
+                )}
+                {displayedCourses.map((course, index) => (
+                  <CourseComponent
+                    key={course.uuid ?? (course as CourseSummary).uuid ?? index}
+                    course={course}
+                    index={courseDraft ? index + 1 : index}
+                    type='edit'
+                    onEdit={() => {
+                      handleEditCourse(course!)
+                    }}
+                    onDelete={() =>
+                      deleteCourseMutation.mutateAsync(course.uuid)
+                    }
+                  />
+                ))}
+              </div>
+
+              {hasMoreCourses && (
+                <div className='mt-8 text-center'>
+                  <Button
+                    variant='primary'
+                    size='primary'
+                    onClick={loadMoreCourses}
+                  >
+                    Načíst další kurzy
+                  </Button>
+                </div>
               )}
-              {filteredCourses.map((course, index) => (
-                <CourseComponent
-                  key={course.uuid ?? (course as CourseSummary).uuid ?? index}
-                  course={course}
-                  index={courseDraft ? index + 1 : index}
-                  type='edit'
-                  onEdit={() => {
-                    handleEditCourse(course!)
-                  }}
-                  onDelete={() => deleteCourseMutation.mutateAsync(course.uuid)}
-                />
-              ))}
-            </div>
+            </>
           )}
+          {/* display */}
           {!coursesLoading && !coursesError && courses.length === 0 ? (
             <StateComp
               type='no-content'

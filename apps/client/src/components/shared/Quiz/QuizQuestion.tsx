@@ -90,20 +90,27 @@ const QuizQuestion = ({
           <div className='flex-1 min-w-0'>
             <div className='flex items-center gap-2'>
               {mode === 'lecturer' ? (
-                <div className='flex-1 flex items-center gap-2'>
-                  <Textarea
-                    variant='ghost'
-                    value={question.question}
-                    onChange={(e) => {
-                      e.preventDefault()
-                      onQuestionTextUpdate?.(e.target.value)
-                    }}
-                    className={cn(
-                      'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
-                      questionError?.question && 'border-destructive',
-                    )}
-                    placeholder='Zadejte otázku'
-                  />
+                <div className='flex-1 flex flex-col md:flex-row gap-2'>
+                  <div className='flex items-center gap-2 flex-1'>
+                    <Textarea
+                      variant='ghost'
+                      value={question.question}
+                      onChange={(e) => {
+                        e.preventDefault()
+                        onQuestionTextUpdate?.(e.target.value)
+                      }}
+                      className={cn(
+                        'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
+                        questionError?.question && 'border-destructive',
+                      )}
+                      placeholder='Zadejte otázku'
+                    />
+                    <EditBtn
+                      onClick={onQuestionRemove}
+                      type='delete'
+                      classNameBtn='md:hidden shrink-0'
+                    />
+                  </div>
 
                   <div className='flex items-center gap-2 shrink-0'>
                     <Label
@@ -118,7 +125,7 @@ const QuizQuestion = ({
                         onQuestionTypeChange?.(value)
                       }
                     >
-                      <SelectTrigger className='w-32 md:w-40'>
+                      <SelectTrigger className='w-30 md:w-40'>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -130,7 +137,11 @@ const QuizQuestion = ({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <EditBtn onClick={onQuestionRemove} type='delete' />
+                    <EditBtn
+                      onClick={onQuestionRemove}
+                      type='delete'
+                      classNameBtn='hidden md:flex shrink-0'
+                    />
                   </div>
                 </div>
               ) : (
@@ -158,7 +169,9 @@ const QuizQuestion = ({
               )}
             </div>
             {questionError?.question && (
-              <p className='error-text mt-1'>{questionError?.question?.message}</p>
+              <p className='error-text mt-1'>
+                {questionError?.question?.message}
+              </p>
             )}
           </div>
         </div>

@@ -23,7 +23,7 @@ export async function getAllCourses(_req: Request, res: Response) {
       updatedAt: courses.updatedAt,
     })
     .from(courses)
-    .orderBy(desc(courses.createdAt));
+    .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
 }

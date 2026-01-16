@@ -53,7 +53,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     setError,
     clearErrors,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
     setValue,
     register,
     reset,
@@ -199,7 +199,8 @@ const MaterialCard = (props: MaterialCardProps) => {
                         disabled={
                           isSubmitting ||
                           !!errors.name ||
-                          ('url' in errors && !!errors.url)
+                          ('url' in errors && !!errors.url) ||
+                          (!(props.type === 'edit' && 'isDraft' in props && props.isDraft) && !isDirty && !tempFile)
                         }
                       />
                       <EditBtn

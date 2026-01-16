@@ -98,6 +98,7 @@ const FeedItemComp = ({
                   icon={Check}
                   classNameBtn='hover:bg-secondary/20'
                   iconClassName='text-secondary size-4 sm:size-5'
+                  disabled={!isDraft && (editedFeed.message === feedItem.message || editedFeed.message === '')}
                   onClick={handleSave}
                 />
                 <EditBtn

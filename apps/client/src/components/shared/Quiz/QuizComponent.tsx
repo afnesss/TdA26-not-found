@@ -72,6 +72,7 @@ const QuizComponent = ({
   onCancelDraft,
 }: QuizComponentProps) => {
   const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
+  const [showIncompleteError, setShowIncompleteError] = useState(false)
 
   const {
     register,
@@ -448,7 +449,10 @@ const QuizComponent = ({
                   onAddOption={() => addOption(qIndex)}
                   // user props
                   userState={userState}
-                  onAnswerChange={onAnswerChange}
+                  onAnswerChange={(questionId, answer) => {
+                    setShowIncompleteError(false)
+                    onAnswerChange?.(questionId, answer)
+                  }}
                 />
 
                 {qIndex < (displayQuiz.questions?.length ?? 0) - 1 && (
@@ -479,30 +483,54 @@ const QuizComponent = ({
           <div className='flex flex-col lg:mx-10 pt-4 border-t-2 border-gray-100'>
             {mode === 'user' ? (
               <div className='flex flex-row items-center justify-between'>
-                <div className='flex items-center gap-3 md:gap-10 flex-row'>
-                  <Button
-                    variant='primary'
-                    size='grid'
-                    className='w-fit'
-                    disabled={
-                      isSubmitDisabled || isSubmitting || isSubmittingNew
-                    }
-                    onClick={onSubmit}
-                  >
-                    <span className='sm:hidden'>Odeslat</span>
-                    <span className='hidden sm:inline'>Odeslat odpovědi</span>
-                  </Button>
+                <div className='flex flex-col gap-1'>
+                  <div className='flex items-center gap-3 md:gap-10 flex-row'>
+                    <div
+                      onClick={(e) => {
+                        if (
+                          isSubmitDisabled &&
+                          userState?.status !== 'submitted'
+                        ) {
+                          e.preventDefault()
+                          setShowIncompleteError(true)
+                        }
+                      }}
+                    >
+                      <Button
+                        variant='primary'
+                        size='grid'
+                        className='w-fit'
+                        disabled={
+                          isSubmitDisabled || isSubmitting || isSubmittingNew
+                        }
+                        onClick={() => {
+                          setShowIncompleteError(false)
+                          onSubmit?.()
+                        }}
+                      >
+                        <span className='sm:hidden'>Odeslat</span>
+                        <span className='hidden sm:inline'>
+                          Odeslat odpovědi
+                        </span>
+                      </Button>
+                    </div>
 
-                  <Button
-                    variant='link'
-                    className='rounded-lg shadow-none'
-                    disabled={userState?.status !== 'submitted'}
-                    onClick={onToggleShowCorrect}
-                  >
-                    {userState?.showCorrect
-                      ? 'Skrýt odpovědi'
-                      : 'Zobrazit odpovědi'}
-                  </Button>
+                    <Button
+                      variant='link'
+                      className='rounded-lg shadow-none'
+                      disabled={userState?.status !== 'submitted'}
+                      onClick={onToggleShowCorrect}
+                    >
+                      {userState?.showCorrect
+                        ? 'Skrýt odpovědi'
+                        : 'Zobrazit odpovědi'}
+                    </Button>
+                  </div>
+                  {showIncompleteError && (
+                    <p className='error-text'>
+                      Zodpovězte prosím všechny otázky
+                    </p>
+                  )}
                 </div>
 
                 {userState?.status === 'submitted' && userState.results && (

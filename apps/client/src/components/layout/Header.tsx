@@ -14,15 +14,15 @@ export default function Header() {
 
   return (
     <>
-      <div className='w-full h-15 sm:h-18 md:h-22 flex'>
-        <div className='w-1/2 bg-accent-blue px-4 sm:px-8 md:px-12 lg:px-20 flex items-center'>
+      <div className='w-full h-15 sm:h-18 md:h-22 flex bg-primary'>
+        <div className='w-1/2 px-4 sm:px-8 md:px-12 lg:px-20 flex items-center'>
           <img
             src={logo}
             className='h-14 sm:h-17 md:h-18 w-auto py-3 cursor-pointer hover:scale-102 transition-all duration-200'
             onClick={() => navigate('/')}
           />
         </div>
-        <div className='w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center gap-4 md:gap-10 justify-end-safe bg-primary'>
+        <div className='w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center gap-4 md:gap-10 justify-end-safe '>
           {isMd ? (
             <div className='flex flex-col sm:flex-row flex-wrap items-center gap-2 md:gap-10'>
               <Button variant={'tab'} onClick={() => navigate('/courses')}>

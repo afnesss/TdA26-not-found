@@ -14,7 +14,7 @@ const LogoAnim = ({ className, sizeBlur1, sizeBlur2 }: LogoAnimType) => {
       <div className='absolute inset-0 flex items-center justify-center'>
         <motion.div
           className={cn(
-            'absolute w-72 h-72 bg-secondary rounded-full blur-3xl',
+            'absolute w-80 h-80 bg-gray-400 rounded-full blur-3xl',
             sizeBlur1,
           )}
           animate={{
@@ -24,22 +24,6 @@ const LogoAnim = ({ className, sizeBlur1, sizeBlur2 }: LogoAnimType) => {
             duration: 4,
             repeat: Infinity,
             ease: 'easeInOut',
-          }}
-        />
-
-        <motion.div
-          className={cn(
-            'absolute w-80 h-80 bg-accent-teal-light rounded-full blur-3xl',
-            sizeBlur2,
-          )}
-          animate={{
-            opacity: [0.2, 0.35, 0.2],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: 'easeInOut',
-            delay: 1,
           }}
         />
       </div>

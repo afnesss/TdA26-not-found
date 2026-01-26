@@ -9,6 +9,7 @@ import {
 import { colorStyles, colors } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
 import { cn, getTimeAgo } from '@/lib/utils'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 import { Check, Edit, X } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -54,10 +55,11 @@ const CourseComponent = (props: CourseCompProps) => {
   })
 
   const handleNameChange = (name: string) => {
+    const capitalizedName = handleCapitalizedInput(name, state.tempName)
     setState((prev) => ({
       ...prev,
-      tempName: name,
-      nameError: !name.trim() ? 'Název je povinný' : '',
+      tempName: capitalizedName,
+      nameError: !capitalizedName.trim() ? 'Název je povinný' : '',
     }))
   }
 
@@ -158,12 +160,16 @@ const CourseComponent = (props: CourseCompProps) => {
             <Textarea
               value={state.tempDescription}
               onClick={(e) => e.stopPropagation()}
-              onChange={(e) =>
+              onChange={(e) => {
+                const capitalizedValue = handleCapitalizedInput(
+                  e.target.value,
+                  state.tempDescription
+                )
                 setState((prev) => ({
                   ...prev,
-                  tempDescription: e.target.value,
+                  tempDescription: capitalizedValue,
                 }))
-              }
+              }}
               className='mb-2 md:mb-4 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
               minRows={2}
               maxRows={5}

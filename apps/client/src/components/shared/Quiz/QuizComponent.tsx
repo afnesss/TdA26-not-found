@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { QuizValidationSchema, type Question, type Quiz } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import {
   CheckCircle,
@@ -97,11 +98,14 @@ const QuizComponent = ({
   }, [quiz, reset])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
-    setValue(`title`, title, { shouldDirty: true, shouldValidate: true })
+    const capitalizedTitle = handleCapitalizedInput(title, formValues.title ?? '')
+    setValue(`title`, capitalizedTitle, { shouldDirty: true, shouldValidate: true })
   }
 
   const updateQuestionText = (qIndex: number, text: string) => {
-    setValue(`questions.${qIndex}.question`, text, {
+    const currentQuestion = formValues.questions?.[qIndex]?.question ?? ''
+    const capitalizedText = handleCapitalizedInput(text, currentQuestion)
+    setValue(`questions.${qIndex}.question`, capitalizedText, {
       shouldDirty: true,
       shouldValidate: true,
     })
@@ -132,7 +136,9 @@ const QuizComponent = ({
   }
 
   const updateOption = (qIndex: number, optIndex: number, value: string) => {
-    setValue(`questions.${qIndex}.options.${optIndex}`, value, {
+    const currentOption = formValues.questions?.[qIndex]?.options?.[optIndex] ?? ''
+    const capitalizedValue = handleCapitalizedInput(value, currentOption)
+    setValue(`questions.${qIndex}.options.${optIndex}`, capitalizedValue, {
       shouldDirty: true,
       shouldValidate: true,
     })

@@ -7,6 +7,7 @@ import {
   type MaterialValidation,
 } from '@/lib/schemas'
 import { cn, formatFileSize } from '@/lib/utils'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Download, Edit, ExternalLink, X } from 'lucide-react'
@@ -103,7 +104,8 @@ const MaterialCard = (props: MaterialCardProps) => {
   }
 
   const handleNameChange = (name: string) => {
-    setValue('name', name, { shouldValidate: true })
+    const capitalizedName = handleCapitalizedInput(name, formValues.name ?? '')
+    setValue('name', capitalizedName, { shouldValidate: true })
   }
 
   const handleUrlChange = (url: string) => {
@@ -282,7 +284,13 @@ const MaterialCard = (props: MaterialCardProps) => {
             <Textarea
               variant='ghost'
               value={formValues.description}
-              onChange={(e) => setValue('description', e.target.value)}
+              onChange={(e) => {
+                const capitalizedValue = handleCapitalizedInput(
+                  e.target.value,
+                  formValues.description ?? ''
+                )
+                setValue('description', capitalizedValue)
+              }}
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}

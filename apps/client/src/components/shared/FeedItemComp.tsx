@@ -6,6 +6,7 @@ import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
 import DeleteConfirmDialog from '../ui/AlertDialog'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 
 const FeedItemComp = ({
   feedItem,
@@ -32,7 +33,7 @@ const FeedItemComp = ({
     setEditedFeed(feedItem)
   }, [feedItem])
   const handleSave = async () => {
-    if (editedFeed.message === '') {
+    if (editedFeed.message.trim() === '') {
       setMessageError('Příspěvek nesmí být prázdný')
       return
     }
@@ -98,7 +99,11 @@ const FeedItemComp = ({
                   icon={Check}
                   classNameBtn='hover:bg-secondary/20'
                   iconClassName='text-secondary size-4 sm:size-5'
-                  disabled={!isDraft && (editedFeed.message === feedItem.message || editedFeed.message === '')}
+                  disabled={
+                    !isDraft &&
+                    (editedFeed.message === feedItem.message ||
+                      editedFeed.message.trim() === '')
+                  }
                   onClick={handleSave}
                 />
                 <EditBtn
@@ -138,11 +143,15 @@ const FeedItemComp = ({
             placeholder='Text příspěvku'
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
+              const capitalizedValue = handleCapitalizedInput(
+                e.target.value,
+                editedFeed.message ?? '',
+              )
               setEditedFeed({
                 ...editedFeed,
-                message: (e.target as HTMLTextAreaElement).value,
+                message: capitalizedValue,
               })
-              if (editedFeed.message) {
+              if (capitalizedValue) {
                 setMessageError(null)
               }
             }}

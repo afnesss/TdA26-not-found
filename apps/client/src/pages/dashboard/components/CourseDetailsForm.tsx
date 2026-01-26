@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { colorStyles } from '@/lib/constants'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 import {
   CourseUpdateRequestSchema,
   type CourseSummary,
@@ -115,7 +116,11 @@ const CourseDetailsForm = ({
               inputProps={{
                 value: formValues.name ?? selectedCourse?.name ?? '',
                 onChange: (e) => {
-                  setValue('name', e.target.value, {
+                  const capitalizedValue = handleCapitalizedInput(
+                    e.target.value,
+                    formValues.name ?? ''
+                  )
+                  setValue('name', capitalizedValue, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
@@ -134,7 +139,11 @@ const CourseDetailsForm = ({
                 value:
                   formValues.description ?? selectedCourse?.description ?? '',
                 onChange: (e) => {
-                  setValue('description', e.target.value, { shouldDirty: true })
+                  const capitalizedValue = handleCapitalizedInput(
+                    e.target.value,
+                    formValues.description ?? ''
+                  )
+                  setValue('description', capitalizedValue, { shouldDirty: true })
                 },
                 placeholder: 'Zadejte popis kurzu',
                 disabled: updateCourseMutation.isPending || isSubmitting,

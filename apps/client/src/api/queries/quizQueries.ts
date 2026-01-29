@@ -1,4 +1,9 @@
-import type { Quiz, QuizSubmitRequest, QuizSubmitResponse } from '@/lib/schemas'
+import type {
+  Quiz,
+  QuizAnalyticsResponse,
+  QuizSubmitRequest,
+  QuizSubmitResponse,
+} from '@/lib/schemas'
 import apiFetch from '../client'
 
 export const submitQuiz = async (
@@ -47,4 +52,13 @@ export const deleteQuiz = async (
   return await apiFetch<Quiz>(`/courses/${courseId}/quizzes/${quizId}`, {
     method: 'DELETE',
   })
+}
+
+export const getQuizAnalytics = async (
+  quizId: string,
+  courseId: string,
+): Promise<QuizAnalyticsResponse> => {
+  return await apiFetch<QuizAnalyticsResponse>(
+    `/courses/${courseId}/quizzes/${quizId}/analytics`,
+  )
 }

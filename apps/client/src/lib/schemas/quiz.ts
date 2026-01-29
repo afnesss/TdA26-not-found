@@ -125,6 +125,23 @@ export const QuizValidationSchema = z.object({
     .min(1, 'Musí být alespoň jedna otázka'),
 })
 
+export const QuestionAnalyticsSchema = z.object({
+  uuid: z.string(),
+  correctAnswers: z.number().min(0),
+  correctRate: z.number().min(0).max(100),
+  options: z.array(
+    z.object({
+      index: z.number(),
+      selectedCount: z.number().min(0),
+    }),
+  ),
+})
+
+export const QuizAnalyticsResponseSchema = z.object({
+  uuid: z.string(),
+  averagePercentage: z.number().min(0),
+  questionAnalytics: z.array(QuestionAnalyticsSchema),
+})
 export type SingleChoiceQuestion = z.infer<typeof SingleChoiceQuestionSchema>
 export type MultipleChoiceQuestion = z.infer<
   typeof MultipleChoiceQuestionSchema
@@ -135,3 +152,5 @@ export type QuizAnswer = z.infer<typeof QuizAnswerSchema>
 export type QuizSubmitRequest = z.infer<typeof QuizSubmitRequestSchema>
 export type QuizSubmitResponse = z.infer<typeof QuizSubmitResponseSchema>
 export type QuizResults = z.infer<typeof QuizResultsSchema>
+export type QuizAnalyticsResponse = z.infer<typeof QuizAnalyticsResponseSchema>
+export type QuestionAnalytics = z.infer<typeof QuestionAnalyticsSchema>

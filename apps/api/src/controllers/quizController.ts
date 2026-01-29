@@ -3,6 +3,7 @@ import { db } from "../db";
 import { quizzes, quizSubmissions } from "../db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import {
+  Question,
   Quiz,
   QuizAnswer,
   QuizSubmitRequest,
@@ -11,6 +12,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { createSystemEvent } from "../utils/systemEvent";
 import { sseManager } from "../utils/sseManager";
+import { uuid } from "zod";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
@@ -25,7 +27,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
-          Number
+          Number,
         ),
       })
       .from(quizzes)
@@ -87,7 +89,7 @@ export const getQuiz = async (req: Request, res: Response) => {
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
-          Number
+          Number,
         ),
       })
       .from(quizzes)
@@ -141,7 +143,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
 
     await createSystemEvent(
       courseId,
-      `Kvíz aktualizován: ${updatedQuiz.title}`
+      `Kvíz aktualizován: ${updatedQuiz.title}`,
     );
 
     const finalQuiz = { ...updatedQuiz, attemptsCount: stats.count };
@@ -218,10 +220,10 @@ export const submitQuiz = async (req: Request, res: Response) => {
         } else if (q.type === "multipleChoice") {
           // Compare arrays
           const correctIndices = (q.correctIndices as number[]).sort(
-            (a, b) => a - b
+            (a, b) => a - b,
           );
           const selectedIndices = (userAnswer.selectedIndices || []).sort(
-            (a, b) => a - b
+            (a, b) => a - b,
           );
 
           if (
@@ -271,6 +273,107 @@ export const submitQuiz = async (req: Request, res: Response) => {
     };
 
     res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+};
+
+export const getQuizAnalytics = async (req: Request, res: Response) => {
+  try {
+    const { quizId } = req.params;
+    const [quiz] = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.uuid, quizId));
+
+    if (!quiz) {
+      return res.status(404).json({ message: "Kvíz nebyl nalezen" });
+    }
+    const submissions = await db
+      .select()
+      .from(quizSubmissions)
+      .where(eq(quizSubmissions.quizId, quizId))
+      .orderBy(desc(quizSubmissions.createdAt));
+
+    const totalAttempts = submissions.length;
+
+    if (totalAttempts === 0) {
+      return res.json({
+        uuid: quiz.uuid,
+        title: quiz.title,
+        totalAttempts,
+        avegarePercentage: 0,
+        questionAnalytics: [],
+      });
+    }
+
+    const totalScore = submissions.reduce((sum, s) => s.score + sum, 0);
+    const averageScore = totalScore / totalAttempts;
+    const questions = quiz.questions as Question[];
+    const averagePercentage = (averageScore / questions.length) * 100;
+
+    const questionAnalytics = questions.map((question, qIndex) => {
+      const optionCounts = new Array(question.options.length).fill(0);
+      let correctAnswersCount = 0;
+      let isCorrect = false;
+
+      submissions.forEach((submission) => {
+        const answers = submission.answers as QuizAnswer[];
+        const userAnswer = answers.find((a) => a.uuid === question.uuid);
+
+        if (question.type === "singleChoice") {
+          isCorrect = userAnswer?.selectedIndex === question.correctIndex;
+
+          if (userAnswer?.selectedIndex !== undefined) {
+            optionCounts[userAnswer.selectedIndex]++;
+          }
+        } else if (question.type === "multipleChoice") {
+          const selectedIndices = (userAnswer?.selectedIndices || []).sort();
+          const correctIndices = (question.correctIndices || []).sort();
+
+          if (
+            selectedIndices.length === correctIndices.length &&
+            selectedIndices.every((s, i) => s === correctIndices[i])
+          ) {
+            isCorrect = true;
+          }
+
+          (userAnswer?.selectedIndices || []).forEach(
+            (idx) => optionCounts[idx]++,
+          );
+        }
+
+        if (isCorrect) correctAnswersCount++;
+      });
+
+      const optionStats = question.options.map((_, index: number) => {
+        question.type === "singleChoice"
+          ? (isCorrect = question.correctIndex === index)
+          : (isCorrect = question.correctIndices.includes(index));
+
+        return {
+          index,
+          selectedCount: optionCounts[index],
+          // percentage:
+          //   totalAttempts > 0 ? (optionCounts[index] / totalAttempts) * 100 : 0,
+        };
+      });
+
+      return {
+        uuid: question.uuid,
+        correctAnswers: correctAnswersCount,
+        correctRate: (correctAnswersCount / totalAttempts) * 100,
+        options: optionStats,
+      };
+    });
+
+    res.json({
+      uuid: quiz.uuid,
+      // attemptsCount: totalAttempts,
+      averagePercentage: parseFloat(averagePercentage.toFixed(1)),
+      questionAnalytics,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Došlo k chybě serveru" });

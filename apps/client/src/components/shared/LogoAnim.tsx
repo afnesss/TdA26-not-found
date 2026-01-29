@@ -1,4 +1,4 @@
-import logo from '../../assets/blue_logo.png'
+import logo from '../../assets/blue_logo.svg'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 

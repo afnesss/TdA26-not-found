@@ -4,7 +4,7 @@ import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { ChevronDown, LogIn, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
-import logo from '../../assets/white_logo.png'
+import logo from '../../assets/white_logo.svg'
 import { Button } from '../ui/button'
 
 export default function Header() {

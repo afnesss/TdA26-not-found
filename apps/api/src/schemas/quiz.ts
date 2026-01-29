@@ -47,10 +47,32 @@ export const QuizSubmitResponseSchema = z.object({
   submittedAt: z.string().datetime(),
 });
 
+export const QuestionAnalyticsSchema = z.object({
+  uuid: z.string(),
+  correctAnswers: z.number().min(0),
+  correctRate: z.number().min(0).max(100),
+  options: z.array(
+    z.object({
+      index: z.number(),
+      selectedCount: z.number().min(0),
+    }),
+  ),
+});
+
+export const QuizAnalyticsResponseSchema = z.object({
+  uuid: z.string(),
+  averagePercentage: z.number().min(0),
+  questionAnalytics: z.array(QuestionAnalyticsSchema),
+});
+
 export type SingleChoiceQuestion = z.infer<typeof SingleChoiceQuestionSchema>;
-export type MultipleChoiceQuestion = z.infer<typeof MultipleChoiceQuestionSchema>;
+export type MultipleChoiceQuestion = z.infer<
+  typeof MultipleChoiceQuestionSchema
+>;
 export type Question = z.infer<typeof QuestionSchema>;
 export type Quiz = z.infer<typeof QuizSchema>;
 export type QuizAnswer = z.infer<typeof QuizAnswerSchema>;
 export type QuizSubmitRequest = z.infer<typeof QuizSubmitRequestSchema>;
 export type QuizSubmitResponse = z.infer<typeof QuizSubmitResponseSchema>;
+export type QuizAnalyticsResponse = z.infer<typeof QuizAnalyticsResponseSchema>;
+export type QuestionAnalytics = z.infer<typeof QuestionAnalyticsSchema>;

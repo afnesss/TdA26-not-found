@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import type { Question, QuizAnswer } from '@/lib/schemas'
+import type { Question, QuizAnswer, QuestionAnalytics } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { Check, Plus, X } from 'lucide-react'
@@ -22,6 +22,7 @@ type QuizQuestionProps = {
   question: Question
   qIndex: number
   mode: 'user' | 'lecturer'
+  questionAnalytics?: QuestionAnalytics
 
   // Lecturer mode
   onQuestionTextUpdate?: (text: string) => void
@@ -50,6 +51,7 @@ const QuizQuestion = ({
   question,
   qIndex,
   mode,
+  questionAnalytics,
   onQuestionTextUpdate,
   onQuestionTypeChange,
   onQuestionRemove,
@@ -112,6 +114,15 @@ const QuizQuestion = ({
                     />
                   </div>
 
+                  {/* Analytics on large screens - between input and select */}
+                  {questionAnalytics && (
+                    <div className='hidden lg:flex items-center  text-xs lg:text-sm text-gray-600 shrink-0 px-2'>
+                      <span className='font-medium text-accent-teal'>
+                        {questionAnalytics.correctRate.toFixed(0)}% správně
+                      </span>
+                    </div>
+                  )}
+
                   <div className='flex items-center gap-2 shrink-0'>
                     <Label
                       size='sm'
@@ -137,6 +148,14 @@ const QuizQuestion = ({
                         </SelectItem>
                       </SelectContent>
                     </Select>
+
+                    {/* Analytics on small screens - next to select */}
+                    {questionAnalytics && (
+                      <span className='lg:hidden text-xs font-medium text-accent-teal shrink-0'>
+                        {questionAnalytics.correctRate.toFixed(0)}%
+                      </span>
+                    )}
+
                     <EditBtn
                       onClick={onQuestionRemove}
                       type='delete'
@@ -191,6 +210,10 @@ const QuizQuestion = ({
                 ? answer?.selectedIndex === optIndex
                 : (answer?.selectedIndices ?? []).includes(optIndex)
 
+            const optionStats = questionAnalytics?.options.find(
+              (opt) => opt.index === optIndex,
+            )
+
             return (
               <QuizOption
                 key={optIndex}
@@ -198,6 +221,9 @@ const QuizQuestion = ({
                 optIndex={optIndex}
                 question={question}
                 mode={mode}
+                selectedCount={
+                  mode === 'lecturer' ? optionStats?.selectedCount : undefined
+                }
                 // Lecturer props
                 isCorrect={isCorrect}
                 onCorrectToggle={() => onCorrectToggle?.(optIndex)}

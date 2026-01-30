@@ -1,6 +1,11 @@
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { QuizValidationSchema, type Question, type Quiz } from '@/lib/schemas'
+import {
+  QuizValidationSchema,
+  type Question,
+  type Quiz,
+  type QuizAnalyticsResponse,
+} from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
@@ -19,6 +24,9 @@ import { useForm, useWatch, type FieldValue } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
+import { useQuery } from '@tanstack/react-query'
+import { getQuizAnalytics } from '@/api/queries/quizQueries'
+import { useParams } from 'react-router'
 
 const isDirtyText = (className?: string) => {
   return (
@@ -74,6 +82,7 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
   const [showIncompleteError, setShowIncompleteError] = useState(false)
+  const { courseId } = useParams<{ courseId: string }>()
 
   const {
     register,
@@ -88,6 +97,29 @@ const QuizComponent = ({
     defaultValues: quiz,
     mode: 'onSubmit',
   })
+
+  const {
+    data: quizAnalytics,
+    isError: analyticsError,
+    isLoading: analyticsLoading,
+    refetch: refetchQuizAnalytics,
+  } = useQuery<QuizAnalyticsResponse | null>({
+    queryKey: ['quizAnalytics', quiz.uuid],
+    queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
+    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
+  })
+
+  console.log('🔍 Quiz Analytics Debug:', {
+    mode,
+    isExpanded,
+    courseId,
+    quizUuid: quiz.uuid,
+    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
+    quizAnalytics,
+    analyticsLoading,
+    analyticsError,
+  })
+
   const formValues = useWatch({ control, defaultValue: quiz })
   // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {
@@ -98,8 +130,14 @@ const QuizComponent = ({
   }, [quiz, reset])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
-    const capitalizedTitle = handleCapitalizedInput(title, formValues.title ?? '')
-    setValue(`title`, capitalizedTitle, { shouldDirty: true, shouldValidate: true })
+    const capitalizedTitle = handleCapitalizedInput(
+      title,
+      formValues.title ?? '',
+    )
+    setValue(`title`, capitalizedTitle, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   const updateQuestionText = (qIndex: number, text: string) => {
@@ -136,7 +174,8 @@ const QuizComponent = ({
   }
 
   const updateOption = (qIndex: number, optIndex: number, value: string) => {
-    const currentOption = formValues.questions?.[qIndex]?.options?.[optIndex] ?? ''
+    const currentOption =
+      formValues.questions?.[qIndex]?.options?.[optIndex] ?? ''
     const capitalizedValue = handleCapitalizedInput(value, currentOption)
     setValue(`questions.${qIndex}.options.${optIndex}`, capitalizedValue, {
       shouldDirty: true,
@@ -416,6 +455,18 @@ const QuizComponent = ({
               </span>
 
               {mode === 'lecturer' &&
+                quizAnalytics &&
+                !analyticsLoading &&
+                (displayQuiz.attemptsCount ?? 0) > 0 && (
+                  <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
+                    <span>Průměr:</span>
+                    <span className='text-accent-teal'>
+                      {quizAnalytics.averagePercentage ?? 0}%
+                    </span>
+                  </span>
+                )}
+
+              {mode === 'lecturer' &&
                 isDirty &&
                 !isDraft &&
                 isDirtyText('inline-block sm:hidden')}
@@ -430,6 +481,9 @@ const QuizComponent = ({
           {/* Questions */}
           {displayQuiz.questions?.map((origQuestion, qIndex) => {
             const question = origQuestion as Question
+            const questionAnalytics = quizAnalytics?.questionAnalytics.find(
+              (qa) => qa.uuid === question.uuid,
+            )
             return (
               <Fragment key={question.uuid ?? qIndex}>
                 <QuizQuestion
@@ -437,8 +491,10 @@ const QuizComponent = ({
                   qIndex={qIndex}
                   mode={mode}
                   questionError={errors.questions?.[qIndex] as object}
-                  // lecturer props
-                  onQuestionTextUpdate={(text) =>
+                  questionAnalytics={
+                    mode === 'lecturer' ? questionAnalytics : undefined
+                  }
+                  onQuestionTextUpdate={(text: string) =>
                     updateQuestionText(qIndex, text)
                   }
                   onQuestionTypeChange={(type) =>

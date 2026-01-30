@@ -12,6 +12,7 @@ type QuizOptionProps = {
   optIndex: number
   question: Question
   mode: 'user' | 'lecturer'
+  selectedCount?: number
 
   // Lecturer mode
   isCorrect?: boolean
@@ -31,6 +32,7 @@ const QuizOption = ({
   optIndex,
   question,
   mode,
+  selectedCount,
   isCorrect = false,
   onCorrectToggle,
   onOptionUpdate,
@@ -62,8 +64,14 @@ const QuizOption = ({
           value={option}
           onChange={(e) => onOptionUpdate?.(e.target.value)}
           placeholder='Zadejte možnost'
-          className='text-xs md:text-sm'
+          className='text-xs md:text-sm flex-1'
         />
+
+        {selectedCount !== undefined && selectedCount !== 0 && (
+          <span className='text-sm text-accent-teal font-medium shrink-0 min-w-5 text-right'>
+            {selectedCount}x
+          </span>
+        )}
 
         {canRemove && (
           <EditBtn

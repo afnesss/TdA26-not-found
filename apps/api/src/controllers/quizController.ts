@@ -371,7 +371,7 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
     res.json({
       uuid: quiz.uuid,
       // attemptsCount: totalAttempts,
-      averagePercentage: parseFloat(averagePercentage.toFixed(1)),
+      averagePercentage: parseFloat(averagePercentage.toFixed(0)) || 0,
       questionAnalytics,
     });
   } catch (error) {

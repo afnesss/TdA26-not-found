@@ -12,6 +12,8 @@ import CoursePage from './pages/CoursePage/ExactCoursePage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ProtectedRoute from './auth/ProtectedRoute'
 import CourseDetailPage from './pages/dashboard/CourseDetailsPage'
+import TermsOfUsePage from './pages/TermsOfUsePage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 
 function App() {
   const router = createBrowserRouter(
@@ -39,6 +41,8 @@ function App() {
             </ProtectedRoute>
           }
         ></Route>
+        <Route path='/terms-of-use' element={<TermsOfUsePage />} />
+        <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
       </Route>,
     ),
   )

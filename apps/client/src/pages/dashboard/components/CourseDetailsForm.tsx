@@ -41,8 +41,6 @@ const CourseDetailsForm = ({
       })
 
       toast.success('Kurz byl aktualizovan')
-
-      console.log('Course updated:', updatedCourse)
     },
     onError: (error) => {
       console.error('Update failed:', error)
@@ -118,7 +116,7 @@ const CourseDetailsForm = ({
                 onChange: (e) => {
                   const capitalizedValue = handleCapitalizedInput(
                     e.target.value,
-                    formValues.name ?? ''
+                    formValues.name ?? '',
                   )
                   setValue('name', capitalizedValue, {
                     shouldDirty: true,
@@ -141,9 +139,11 @@ const CourseDetailsForm = ({
                 onChange: (e) => {
                   const capitalizedValue = handleCapitalizedInput(
                     e.target.value,
-                    formValues.description ?? ''
+                    formValues.description ?? '',
                   )
-                  setValue('description', capitalizedValue, { shouldDirty: true })
+                  setValue('description', capitalizedValue, {
+                    shouldDirty: true,
+                  })
                 },
                 placeholder: 'Zadejte popis kurzu',
                 disabled: updateCourseMutation.isPending || isSubmitting,

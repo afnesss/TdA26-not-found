@@ -81,7 +81,6 @@ const MaterialCard = (props: MaterialCardProps) => {
     }
   }
   const handleTypeChange = (newType: 'file' | 'url') => {
-    console.log(material.type)
     setValue(`type`, newType, { shouldValidate: true })
     setTempFile(null)
     clearErrors('root.file')

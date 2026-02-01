@@ -68,8 +68,6 @@ export const useUpdateMutation = (courseId: string) => {
       toast.success('Materiál aktualizován')
     },
     onError: (error: ApiError) => {
-      console.error('Update error:', error)
-      console.log('Error body:', error?.body)
       const errorMessage =
         error?.body?.message || 'Chyba při aktualizaci materiálu'
       toast.error(errorMessage)
@@ -96,7 +94,6 @@ export const useCreateMutation = (
     },
     onError: (error: ApiError) => {
       console.error('Create error:', error)
-      console.log('Error body:', error?.body)
       const errorMessage =
         error?.body?.message || 'Chyba při vytváření materiálu'
       toast.error(errorMessage)

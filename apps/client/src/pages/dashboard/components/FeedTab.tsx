@@ -75,7 +75,6 @@ const FeedTab = ({
     <div className='space-y-6'>
       <DetailHeader
         onButtonClick={() => {
-          console.log('зробити feed')
           handleAddPost()
         }}
         title=' Informační kanál'

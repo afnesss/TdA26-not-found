@@ -1,0 +1,49 @@
+import React from 'react'
+import { useNavigate } from 'react-router-dom'
+
+const Footer = () => {
+  const navigate = useNavigate()
+
+  return (
+    <footer className='w-full bg-foreground/90'>
+      <div
+        className='max-w-7xl mx-auto
+               px-4 sm:px-8 lg:px-12 py-3
+               text-gray-500 text-xs font-semibold
+               flex flex-wrap gap-2
+               sm:flex-nowrap sm:items-center sm:justify-between'
+      >
+        <div className='flex flex-wrap items-center gap-2 sm:gap-4'>
+          <span className='mr-2'>© 2025 Think Different Academy</span>
+
+          <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
+            <span
+              className='cursor-pointer hover:text-secondary'
+              onClick={() => navigate('/courses')}
+            >
+              Kurzy
+            </span>
+            <span
+              className='cursor-pointer hover:text-secondary'
+              onClick={() => navigate('/terms-of-use')}
+            >
+              Podmínky použití
+            </span>
+            <span
+              onClick={() => navigate('/privacy-policy')}
+              className='cursor-pointer hover:text-secondary'
+            >
+              Ochrana osobních údajů
+            </span>
+          </div>
+        </div>
+
+        <span className='w-full  sm:w-auto sm:text-right whitespace-nowrap'>
+          info@thinkdifferent.academy
+        </span>
+      </div>
+    </footer>
+  )
+}
+
+export default Footer

@@ -109,17 +109,6 @@ const QuizComponent = ({
     enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
   })
 
-  console.log('🔍 Quiz Analytics Debug:', {
-    mode,
-    isExpanded,
-    courseId,
-    quizUuid: quiz.uuid,
-    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
-    quizAnalytics,
-    analyticsLoading,
-    analyticsError,
-  })
-
   const formValues = useWatch({ control, defaultValue: quiz })
   // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {

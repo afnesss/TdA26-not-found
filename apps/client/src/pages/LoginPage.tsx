@@ -25,10 +25,7 @@ const LoginPage = () => {
   } = useForm()
 
   const onSubmit = async (data: FieldValues) => {
-    console.log('Form submitted')
-
     const isSuccess = auth.login(data.name, data.password, setError)
-    console.log(isSuccess)
     if (isSuccess) {
       navigate('/dashboard')
       reset()
@@ -36,7 +33,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className='max-w-6xl mx-auto overflow-hidden grid h-full md:grid-cols-2 lg:grid-cols-2'>
+    <div className='max-w-6xl mx-auto grid h-full md:grid-cols-2 lg:grid-cols-2'>
       <div className='relative justify-center h-full hidden md:flex items-center px-4 md:pl-6 lg:pl-10 lg:pr-20'>
         <div className='space-y-8 text-left'>
           <HintPageText icon={Sparkles} text='Začněte svou cestu' />

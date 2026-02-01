@@ -38,9 +38,7 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
 
   return (
     <section>
-      <Label size='default' className='font-bold mb-2'>
-        Kvízy
-      </Label>
+      <Label className='font-bold mb-2'>Kvízy</Label>
 
       <div className='space-y-4'>
         {courseData?.quizzes && courseData.quizzes.length > 0 ? (

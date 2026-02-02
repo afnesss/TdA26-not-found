@@ -14,6 +14,7 @@ import CoursesPageSceleton from '../../components/shared/loadingskeleton/Courses
 import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -55,6 +56,7 @@ const CoursesPage = () => {
     setDisplayCount((prev) => prev + 6)
     refetch()
   }
+  useTitle('Kurzy')
 
   return (
     <div className='h-full'>

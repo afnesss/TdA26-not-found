@@ -9,11 +9,12 @@ import MaterialsSection from './components/MaterialsSection'
 import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
   const { id } = useParams<{ id: string }>()
-
+  // useTitle ()
   // Establish SSE connection
   const { isConnected } = useCourseFeedSSE({ courseId: id! })
 
@@ -34,14 +35,14 @@ const CoursePage = () => {
     } catch (err) {
       console.error(err)
       const error = err as { status?: number; message?: string }
-      
+
       // If the error from API has status property, preserve it
       if (error.status) {
-        throw Object.assign(new Error(error.message || 'Request failed'), { 
-          status: error.status 
+        throw Object.assign(new Error(error.message || 'Request failed'), {
+          status: error.status,
         })
       }
-      
+
       throw err
     }
   }
@@ -56,6 +57,8 @@ const CoursePage = () => {
     queryFn: () => fetchCourse(id!),
     enabled: Boolean(id),
   })
+
+  useTitle(courseData?.name || 'Kurz')
 
   if (isLoading) {
     return <CourseSkeleton />

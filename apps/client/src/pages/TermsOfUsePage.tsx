@@ -3,8 +3,10 @@ import TitleText from '@/components/shared/TitleText'
 import { FileText } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText'
 import LegalSection, { LegalText } from '@/components/shared/LegalSection'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const TermsOfUsePage = () => {
+  useTitle('Podmínky použití platformy')
   return (
     <div className='max-w-6xl mx-auto px-3 md:px-5 lg:px-8 py-5'>
       <div className='flex flex-col gap-6'>

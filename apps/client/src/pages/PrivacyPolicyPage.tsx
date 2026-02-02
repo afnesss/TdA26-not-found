@@ -13,7 +13,6 @@ const PrivacyPolicyPage = () => {
         <TitleText
           underlinedText='Zásady ochrany'
           addtext2=' osobních údajů platformy'
-          highlightedText='Think Different Academy'
         />
 
         <div className='bg-background rounded-xl shadow-lg py-4 px-5 md:px-6 space-y-6'>

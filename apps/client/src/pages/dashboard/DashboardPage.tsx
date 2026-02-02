@@ -164,27 +164,27 @@ const DashboardDesign1 = () => {
             </>
           )}
           {/* display */}
-          {!coursesLoading && !coursesError && courses.length === 0 ? (
-            <StateComp
-              type='no-content'
-              onAction={() => console.log('Create course')}
-              message='Začněte vytvořením svého prvního kurzu'
-            />
-          ) : coursesError ? (
-            <StateComp
-              type='error'
-              onAction={() => refetchCourses()}
-              message='Nepodařilo se načíst kurzy'
-            />
-          ) : (
-            filteredCourses.length === 0 &&
-            !coursesLoading && (
+          {!courseDraft &&
+            (!coursesLoading && !coursesError && courses.length === 0 ? (
               <StateComp
-                type='empty-search'
-                onAction={() => setSearchQuery('')}
+                type='no-content'
+                message='Začněte vytvořením svého prvního kurzu'
               />
-            )
-          )}
+            ) : coursesError ? (
+              <StateComp
+                type='error'
+                onAction={() => refetchCourses()}
+                message='Nepodařilo se načíst kurzy'
+              />
+            ) : (
+              filteredCourses.length === 0 &&
+              !coursesLoading && (
+                <StateComp
+                  type='empty-search'
+                  onAction={() => setSearchQuery('')}
+                />
+              )
+            ))}
         </div>
       </div>
     </>

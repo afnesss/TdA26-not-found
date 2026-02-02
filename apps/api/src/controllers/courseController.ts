@@ -29,60 +29,65 @@ export async function getAllCourses(_req: Request, res: Response) {
 }
 
 export async function getCourseByUuid(req: Request, res: Response) {
-  const { uuid } = req.params;
+  try {
+    const { uuid } = req.params;
 
-  const course = await db
-    .select({
-      uuid: courses.uuid,
-      name: courses.name,
-      description: courses.description,
-      createdAt: courses.createdAt,
-      updatedAt: courses.updatedAt,
-    })
-    .from(courses)
-    .where(eq(courses.uuid, uuid));
+    const course = await db
+      .select({
+        uuid: courses.uuid,
+        name: courses.name,
+        description: courses.description,
+        createdAt: courses.createdAt,
+        updatedAt: courses.updatedAt,
+      })
+      .from(courses)
+      .where(eq(courses.uuid, uuid));
 
-  if (course.length === 0) {
+    if (course.length === 0) {
+      res.status(404).json({ message: "Kurz nebyl nalezen" });
+      return;
+    }
+
+    const fetchedQuizzes = await db
+      .select({
+        uuid: quizzes.uuid,
+        title: quizzes.title,
+        courseId: quizzes.courseId,
+        questions: quizzes.questions,
+        createdAt: quizzes.createdAt,
+        updatedAt: quizzes.updatedAt,
+        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
+          Number,
+        ),
+      })
+      .from(quizzes)
+      .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
+      .where(eq(quizzes.courseId, uuid))
+      .groupBy(quizzes.uuid)
+      .orderBy(desc(quizzes.createdAt));
+
+    const fetchedMaterials = await db
+      .select()
+      .from(courseMaterials)
+      .where(eq(courseMaterials.courseId, uuid))
+      .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
+
+    const fetchedFeed = await db
+      .select()
+      .from(feedItems)
+      .where(eq(feedItems.courseId, uuid))
+      .orderBy(desc(feedItems.createdAt));
+
+    res.json({
+      ...course[0],
+      materials: fetchedMaterials.map(mapMaterial),
+      quizzes: fetchedQuizzes,
+      feed: fetchedFeed,
+    });
+  } catch (error) {
+    console.error("Error fetching course:", error);
     res.status(404).json({ message: "Kurz nebyl nalezen" });
-    return;
   }
-
-  const fetchedQuizzes = await db
-    .select({
-      uuid: quizzes.uuid,
-      title: quizzes.title,
-      courseId: quizzes.courseId,
-      questions: quizzes.questions,
-      createdAt: quizzes.createdAt,
-      updatedAt: quizzes.updatedAt,
-      attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
-        Number
-      ),
-    })
-    .from(quizzes)
-    .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
-    .where(eq(quizzes.courseId, uuid))
-    .groupBy(quizzes.uuid)
-    .orderBy(desc(quizzes.createdAt));
-
-  const fetchedMaterials = await db
-    .select()
-    .from(courseMaterials)
-    .where(eq(courseMaterials.courseId, uuid))
-    .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
-
-  const fetchedFeed = await db
-    .select()
-    .from(feedItems)
-    .where(eq(feedItems.courseId, uuid))
-    .orderBy(desc(feedItems.createdAt));
-
-  res.json({
-    ...course[0],
-    materials: fetchedMaterials.map(mapMaterial),
-    quizzes: fetchedQuizzes,
-    feed: fetchedFeed,
-  });
 }
 
 export async function createCourse(req: Request, res: Response) {

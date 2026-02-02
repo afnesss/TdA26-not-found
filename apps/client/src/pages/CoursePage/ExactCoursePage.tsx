@@ -21,7 +21,7 @@ const CoursePage = () => {
     try {
       const raw = await getCourseById(id!)
       if (!raw) {
-        throw new Error('Course not found')
+        throw Object.assign(new Error('Course not found'), { status: 404 })
       }
       const parsed = CourseDetailSchema.safeParse(raw)
 
@@ -33,6 +33,15 @@ const CoursePage = () => {
       return parsed.data
     } catch (err) {
       console.error(err)
+      const error = err as { status?: number; message?: string }
+      
+      // If the error from API has status property, preserve it
+      if (error.status) {
+        throw Object.assign(new Error(error.message || 'Request failed'), { 
+          status: error.status 
+        })
+      }
+      
       throw err
     }
   }
@@ -40,21 +49,29 @@ const CoursePage = () => {
     data: courseData,
     isLoading,
     isError,
+    error,
     refetch,
-  } = useQuery<CourseDetail, Error>({
+  } = useQuery<CourseDetail, Error & { status?: number }>({
     queryKey: ['course', id],
     queryFn: () => fetchCourse(id!),
     enabled: Boolean(id),
   })
 
-  if (isLoading || !courseData) {
+  if (isLoading) {
     return <CourseSkeleton />
   }
 
-  if (isError) {
+  if (isError || !courseData) {
+    const isNotFound = error?.status === 404
+
     return (
-      <div className='flex justify-center items-center h-full'>
-        <StateComp type='error' onAction={() => refetch()} />
+      <div className='flex justify-center items-center min-h-[70vh]'>
+        <StateComp
+          type={isNotFound ? 'not-found' : 'error'}
+          onAction={() =>
+            isNotFound ? (window.location.href = '/courses') : refetch()
+          }
+        />
       </div>
     )
   }

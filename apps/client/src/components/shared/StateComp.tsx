@@ -1,11 +1,11 @@
 import React from 'react'
-import { Search, AlertCircle, BookOpen, type LucideIcon } from 'lucide-react'
+import { Search, AlertCircle, BookOpen, FileQuestion, type LucideIcon } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import fileImg from '../../assets/files-blue.svg'
 
-type StateType = 'empty-search' | 'error' | 'no-content'
+type StateType = 'empty-search' | 'error' | 'no-content' | 'not-found'
 
 type Props = {
   type: StateType
@@ -62,6 +62,14 @@ const StateComp = ({
       iconColor: 'text-primary',
       defaultMessage: 'Zatím nemáte žádné kurzy',
       defaultAction: 'Vytvořit kurz',
+      showButton: true,
+    },
+    'not-found': {
+      icon: FileQuestion,
+      iconBg: 'bg-secondary/20',
+      iconColor: 'text-primary',
+      defaultMessage: 'Kurz nebyl nalezen',
+      defaultAction: 'Zpět na kurzy',
       showButton: true,
     },
   }

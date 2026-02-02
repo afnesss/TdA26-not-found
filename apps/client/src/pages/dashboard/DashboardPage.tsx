@@ -17,6 +17,7 @@ import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import { toast } from 'sonner'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -80,6 +81,8 @@ const DashboardDesign1 = () => {
       {!mobile && <span>Vytvořit kurz</span>}
     </Button>
   )
+
+  useTitle('Sprava kurzů')
   return (
     <>
       {/* Main Content */}

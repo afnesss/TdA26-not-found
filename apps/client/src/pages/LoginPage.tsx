@@ -10,6 +10,7 @@ import FormField from '@/components/shared/FormField'
 import { Label } from '@/components/ui/label'
 import { useNavigate } from 'react-router'
 import auth from '@/auth/fakeAuth'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -31,6 +32,8 @@ const LoginPage = () => {
       reset()
     }
   }
+
+  useTitle('Přihlášení')
 
   return (
     <div className='max-w-6xl mx-auto grid h-full md:grid-cols-2 lg:grid-cols-2'>

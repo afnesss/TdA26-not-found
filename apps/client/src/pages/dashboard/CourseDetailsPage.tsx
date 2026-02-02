@@ -35,7 +35,7 @@ const CourseDetailPage = () => {
     queryFn: getCourses,
   })
 
-  useTitle('Sprava kurzu')
+  useTitle('Správa kurzu')
   const selectedCourse = courses.find((c) => c.uuid === courseId) || null
 
   const handleTabChange = (tab: string) => {

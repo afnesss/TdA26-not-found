@@ -67,14 +67,12 @@ export function useCourseMutation(
       return { previousData }
     },
     onError: (err, variables, context) => {
-      console.log('error submiting quiz ', err)
       queryClient.setQueryData(
         ['course', variables.courseId],
         context?.previousData,
       )
     },
     onSuccess: (data, variables) => {
-      console.log('quiz submitted', data)
       queryClient.invalidateQueries({
         queryKey: ['course', variables.courseId],
       })

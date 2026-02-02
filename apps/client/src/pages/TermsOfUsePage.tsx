@@ -10,11 +10,7 @@ const TermsOfUsePage = () => {
       <div className='flex flex-col gap-6'>
         <HintPageText text='Právní informace' icon={FileText} />
 
-        <TitleText
-          underlinedText='Podmínky použití'
-          addtext2=' platformy'
-          highlightedText='Think Different Academy'
-        />
+        <TitleText underlinedText='Podmínky použití' addtext2=' platformy' />
 
         <div className='bg-background rounded-xl shadow-lg py-4 px-5 md:px-6 space-y-6'>
           <LegalSection title='1. Úvodní ustanovení'>

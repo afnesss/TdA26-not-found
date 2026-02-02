@@ -7,6 +7,7 @@ import {
   type QuizSubmitResponse,
 } from '@/lib/schemas'
 import type { QuizStateById } from '../../../lib/types'
+import { toast } from 'sonner'
 
 export function useCourseMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
@@ -71,11 +72,13 @@ export function useCourseMutation(
         ['course', variables.courseId],
         context?.previousData,
       )
+      toast.error('Chyba při odesílání kvízu')
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['course', variables.courseId],
       })
+      toast.success('Kvíz byl odeslán')
     },
   })
 

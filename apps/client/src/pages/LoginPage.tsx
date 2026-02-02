@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { useNavigate } from 'react-router'
 import auth from '@/auth/fakeAuth'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { toast } from 'sonner'
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -28,6 +29,7 @@ const LoginPage = () => {
   const onSubmit = async (data: FieldValues) => {
     const isSuccess = auth.login(data.name, data.password, setError)
     if (isSuccess) {
+      toast.success('Přihlášení úspěšné')
       navigate('/dashboard')
       reset()
     }

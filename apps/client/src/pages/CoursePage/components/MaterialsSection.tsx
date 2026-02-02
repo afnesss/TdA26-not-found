@@ -1,5 +1,6 @@
 import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
+import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Label } from '@/components/ui/label'
 import type { Material } from '@/lib/schemas/material'
 import { useMediaQuery } from 'usehooks-ts'
@@ -12,7 +13,9 @@ const MaterialsSection = ({ materials }: MaterialSectionProps) => {
 
   return (
     <section>
-      <Label className='font-bold mb-2'>Studijní Materiály</Label>
+      <Label className='font-bold mb-3'>
+        <UnderlinedText strokeWidth='4'>Studijní Materiály</UnderlinedText>
+      </Label>
 
       <div className='space-y-3'>
         {materials && materials.length > 0 ? (

@@ -9,6 +9,8 @@ const MainLayout = () => {
   return (
     <div className='flex flex-col min-h-dvh'>
       <Header />
+      {/* Spacer to prevent content from hiding under fixed header */}
+      <div className='h-15 sm:h-18 md:h-22' aria-hidden='true' />
       <section
         className={`flex-1 p-2 sm:p-5
           bg-linear-to-b from-accent-teal-dark/10 to-accent-teal/10 

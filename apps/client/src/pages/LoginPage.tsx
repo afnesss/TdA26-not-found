@@ -38,7 +38,7 @@ const LoginPage = () => {
   useTitle('Přihlášení')
 
   return (
-    <div className='max-w-6xl mx-auto grid h-full md:grid-cols-2 lg:grid-cols-2'>
+    <div className='w-full max-w-6xl mx-auto grid h-full md:grid-cols-2 lg:grid-cols-2'>
       <div className='relative justify-center h-full hidden md:flex items-center px-4 md:pl-6 lg:pl-10 lg:pr-20'>
         <div className='space-y-8 text-left'>
           <HintPageText icon={Sparkles} text='Začněte svou cestu' />
@@ -53,7 +53,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <div className='px-2 md:px-6 lg:px-10 flex justify-center items-center'>
+      <div className='flex justify-center items-center w-full md:px-6 lg:px-10'>
         <div className='w-full max-w-md'>
           <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
             <Label variant={'formTitle'}>
@@ -62,7 +62,7 @@ const LoginPage = () => {
             </Label>
 
             {/* Form content */}
-            <div className='px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
+            <div className='px-5 sm:px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className='flex flex-col gap-3'

@@ -14,7 +14,7 @@ export default function Header() {
 
   return (
     <>
-      <div className='w-full h-15 sm:h-18 md:h-22 flex bg-primary'>
+      <div className='fixed top-0 left-0 right-0 z-50 w-full h-15 sm:h-18 md:h-22 flex bg-primary'>
         <div className='w-1/2 px-4 sm:px-8 md:px-12 lg:px-20 flex items-center'>
           <img
             src={logo}

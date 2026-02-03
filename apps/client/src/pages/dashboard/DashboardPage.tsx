@@ -78,7 +78,7 @@ const DashboardDesign1 = () => {
       onClick={handleAddCourse}
     >
       <Plus className='w-5 h-5' />
-      {!mobile && <span>Vytvořit kurz</span>}
+      {!mobile && <span className='whitespace-nowrap'>Vytvořit kurz</span>}
     </Button>
   )
 

@@ -19,7 +19,7 @@ const HintPageText = ({
         className={cn(
           'bg-secondary/30 \
             text-primary px-2 sm:px-3 py-1.5 sm:py-2 cursor-default rounded-full max-sm:text-xs sm:text-sm text-md font-bold ' +
-            'inline-flex items-center gap-2',
+            'inline-flex items-center gap-2 whitespace-nowrap',
           className,
         )}
       >

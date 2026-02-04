@@ -8,6 +8,7 @@ import quizRoutes from "./routes/quizRoutes";
 import feedRoutes from "./routes/feedRoutes";
 import { seed } from "./db/seed";
 import path from "path";
+import { generalLimiter } from "./middleware/rateLimiter";
 
 const app = express();
 const port = process.env.PORT;
@@ -25,8 +26,10 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-  })
+  }),
 );
+
+app.use(generalLimiter);
 
 // Skip body parsing for multipart requests (handled by multer)
 app.use((req, res, next) => {
@@ -52,6 +55,9 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.json({ organization: "Student Cyber Games" });
 });
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date() });
+});
 
 // Serve static files from uploads directory
 // Caddy strips /api, so request to /api/uploads/... becomes /uploads/... here
@@ -69,11 +75,11 @@ app.use(
     err: any,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     console.error("Unhandled error:", err);
     res.status(500).json({ message: "Došlo k chybě serveru" });
-  }
+  },
 );
 
 async function start() {
@@ -82,7 +88,7 @@ async function start() {
   } catch (error: any) {
     if (error?.code === "42P07" || error?.cause?.code === "42P07") {
       console.warn(
-        "Migration warning: table already exists — continuing startup."
+        "Migration warning: table already exists — continuing startup.",
       );
     } else {
       console.error("Failed to start server:", error);

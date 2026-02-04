@@ -26,7 +26,10 @@ const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
           <Fragment key={index}>
             <Button
               variant='link'
-              className={cn(' w-fit text-accent-blue')}
+              className={cn(
+                ' w-fit text-accent-blue',
+                !item.path && 'hover:no-underline pointer-events-none',
+              )}
               onClick={() => (item.path ? navigate(item.path) : undefined)}
             >
               <span>{item.label}</span>

@@ -11,13 +11,19 @@ import {
   FeedCreateRequestSchema,
   FeedUpdateRequestSchema,
 } from "../schemas/feed";
+import { writeLimiter } from "../middleware/rateLimiter";
 
 const router = Router({ mergeParams: true });
 
 router.get("/", getFeed);
-router.post("/", validate(FeedCreateRequestSchema), createPost);
-router.put("/:postId", validate(FeedUpdateRequestSchema), updatePost);
-router.delete("/:postId", deletePost);
+router.post("/", writeLimiter, validate(FeedCreateRequestSchema), createPost);
+router.put(
+  "/:postId",
+  writeLimiter,
+  validate(FeedUpdateRequestSchema),
+  updatePost,
+);
+router.delete("/:postId", writeLimiter, deletePost);
 router.get("/stream", streamFeed);
 
 export default router;

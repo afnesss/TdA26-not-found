@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label'
 import { type CourseDetail, type Quiz } from '@/lib/schemas'
 import { startTransition, useEffect, useState } from 'react'
 import type { QuizStateById } from '../../../lib/types'
-import { useCourseMutation } from '../utils/courseMutation'
+import { useQuizSubmitMutation } from '../utils/quizSubmitMutation'
 import { handleSubmit, isQuizComplete } from '../utils/helperFunctions'
 import quizImg from '@/assets/t-play-blue.svg'
 import UnderlinedText from '@/components/shared/UnderlinedText'
@@ -15,7 +15,7 @@ type QuizesSectionProps = {
 
 const QuizesSection = ({ courseData }: QuizesSectionProps) => {
   const [quizState, setQuizState] = useState<QuizStateById>({})
-  const queryMutation = useCourseMutation(setQuizState)
+  const queryMutation = useQuizSubmitMutation(setQuizState)
 
   useEffect(() => {
     if (!courseData?.quizzes) return

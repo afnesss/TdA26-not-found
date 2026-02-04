@@ -18,15 +18,27 @@ export default async function apiFetch<T>(
     defaultHeaders['Content-Type'] = 'application/json'
   }
 
-  const response = await fetch(`/api${input}`, {
-    ...safeOptions,
-    headers: {
-      ...defaultHeaders,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-      ...safeOptions?.headers,
-    },
-  })
+  let response: Response
+  try {
+    response = await fetch(`/api${input}`, {
+      ...safeOptions,
+      headers: {
+        ...defaultHeaders,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+        ...safeOptions?.headers,
+      },
+    })
+  } catch (error) {
+    // Network error (no internet, server down, etc.)
+    throw {
+      status: 0,
+      statusText: 'Network Error',
+      isNetworkError: true,
+      body: { message: 'Chyba připojení' },
+    }
+  }
+
   if (!response.ok) {
     let errorBody: unknown = null
 

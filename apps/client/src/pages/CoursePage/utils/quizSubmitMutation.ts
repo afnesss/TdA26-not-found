@@ -9,7 +9,7 @@ import {
 import type { QuizStateById } from '../../../lib/types'
 import { toast } from 'sonner'
 
-export function useCourseMutation(
+export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
 ) {
   const queryClient = useQueryClient()

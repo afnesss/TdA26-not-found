@@ -11,13 +11,13 @@ const MainLayout = () => {
       <Header />
       {/* Spacer to prevent content from hiding under fixed header */}
       <div className='h-15 sm:h-18 md:h-22' aria-hidden='true' />
-      <section
+      <main
         className={`flex-1 p-4 sm:p-5
           bg-linear-to-b from-accent-teal-dark/10 to-accent-teal/10 
           ${isHScreen ? 'flex items-center' : 'overflow-y-auto'}`}
       >
         <Outlet />
-      </section>
+      </main>
       <Footer />
     </div>
   )

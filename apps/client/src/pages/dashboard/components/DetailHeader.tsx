@@ -46,11 +46,11 @@ const DetailHeader = ({
             )}
           </div>
         </div>
-        <Button variant='primary' size='grid' onClick={onButtonClick}>
+        <Button variant='primary' size='grid' onClick={onButtonClick} aria-label={buttonText}>
           {Icon ? (
-            <Icon className='w-5 h-5 block md:hidden' />
+            <Icon className='w-5 h-5 block md:hidden' aria-hidden='true' />
           ) : (
-            <Plus className='w-5 h-5 block md:hidden' />
+            <Plus className='w-5 h-5 block md:hidden' aria-hidden='true' />
           )}
           <span className={cn(`hidden md:block`)}>{buttonText}</span>
         </Button>

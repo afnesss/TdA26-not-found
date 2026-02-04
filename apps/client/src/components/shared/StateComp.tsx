@@ -106,6 +106,7 @@ const StateComp = ({
             size='primary'
             onClick={onAction}
             className=' w-fit'
+            aria-label={actionText || config.defaultAction}
           >
             {actionText || config.defaultAction}
           </Button>

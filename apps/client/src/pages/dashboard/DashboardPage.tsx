@@ -76,8 +76,9 @@ const DashboardDesign1 = () => {
       size='grid'
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
+      aria-label='Vytvořit kurz'
     >
-      <Plus className='w-5 h-5' />
+      <Plus className='w-5 h-5' aria-hidden='true' />
       {!mobile && <span className='whitespace-nowrap'>Vytvořit kurz</span>}
     </Button>
   )
@@ -159,6 +160,7 @@ const DashboardDesign1 = () => {
                     variant='primary'
                     size='primary'
                     onClick={loadMoreCourses}
+                    aria-label='Načíst další kurzy'
                   >
                     Načíst další kurzy
                   </Button>

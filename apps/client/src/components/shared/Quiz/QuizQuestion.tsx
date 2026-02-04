@@ -118,6 +118,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='md:hidden shrink-0'
+                      aria-label={`Remove question ${qIndex + 1}`}
                     />
                   </div>
 
@@ -167,6 +168,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='hidden md:flex shrink-0'
+                      aria-label={`Remove question ${qIndex + 1}`}
                     />
                   </div>
                 </div>
@@ -295,6 +297,7 @@ const QuizQuestion = ({
             size='sm'
             onClick={onAddOption}
             className='w-full md:w-auto'
+            aria-label={`Add new option to question ${qIndex + 1}`}
           >
             <Plus size={16} />
             Přidat možnost

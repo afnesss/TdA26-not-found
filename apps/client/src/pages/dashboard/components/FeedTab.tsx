@@ -80,6 +80,7 @@ const FeedTab = ({
         title=' Informační kanál'
         gradient='accent-teal'
         buttonText='Nový příspěvek'
+        aria-label='Add new feed post'
       />
 
       {feedLoading ? (

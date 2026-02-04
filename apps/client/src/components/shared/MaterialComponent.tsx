@@ -197,6 +197,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onClick={saveEdit}
                         classNameBtn='hover:bg-secondary/20'
                         iconClassName='text-secondary size-4 sm:size-5'
+                        aria-label='Save material'
                         disabled={
                           isSubmitting ||
                           !!errors.name ||
@@ -215,6 +216,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onClick={cancelEdit}
                         classNameBtn='hover:bg-destructive/20'
                         iconClassName='text-destructive size-4 sm:size-5'
+                        aria-label='Cancel editing'
                         disabled={isSubmitting}
                       />
                     </div>
@@ -235,9 +237,18 @@ const MaterialCard = (props: MaterialCardProps) => {
 
                   {type === 'edit' ? (
                     <div className='flex items-center gap-1 shrink-0'>
-                      <EditBtn icon={Edit} onClick={startEdit} />
+                      <EditBtn
+                        icon={Edit}
+                        onClick={startEdit}
+                        aria-label={`Edit material ${material.name}`}
+                      />
                       <DeleteConfirmDialog
-                        trigger={<EditBtn type='delete' />}
+                        trigger={
+                          <EditBtn
+                            type='delete'
+                            aria-label={`Delete material ${material.name}`}
+                          />
+                        }
                         itemName={material.name}
                         itemType='material'
                         onConfirm={() => {
@@ -255,8 +266,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                           download={material.originalFilename || material.name}
                           target='_blank'
                           rel='noopener noreferrer'
+                          aria-label={`Download ${material.name}`}
                         >
-                          <EditBtn icon={Download} />
+                          <EditBtn
+                            icon={Download}
+                            aria-label={`Download ${material.name}`}
+                          />
                         </a>
                       ) : (
                         <div className='flex items-center'>
@@ -267,13 +282,20 @@ const MaterialCard = (props: MaterialCardProps) => {
                               copied ? 'text-secondary size-4' : ''
                             }
                             onClick={() => handleCopyLink(material.url)}
+                            aria-label={
+                              copied ? 'Link copied' : 'Copy link to clipboard'
+                            }
                           />
                           <a
                             href={material.url}
                             target='_blank'
                             rel='noopener noreferrer'
+                            aria-label={`Open ${material.name} in new tab`}
                           >
-                            <EditBtn icon={ExternalLink} />
+                            <EditBtn
+                              icon={ExternalLink}
+                              aria-label={`Open ${material.name} in new tab`}
+                            />
                           </a>
                         </div>
                       )}

@@ -163,7 +163,7 @@ const CourseComponent = (props: CourseCompProps) => {
               onChange={(e) => {
                 const capitalizedValue = handleCapitalizedInput(
                   e.target.value,
-                  state.tempDescription
+                  state.tempDescription,
                 )
                 setState((prev) => ({
                   ...prev,
@@ -228,6 +228,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   classNameBtn='hover:bg-secondary/20'
                   iconClassName='text-secondary size-4 sm:size-5'
                   disabled={state.saving || !!state.nameError}
+                  aria-label='Save course'
                 />
                 <EditBtn
                   icon={X}
@@ -238,6 +239,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   classNameBtn='hover:bg-destructive/20'
                   iconClassName='text-destructive size-4 sm:size-5'
                   disabled={state.saving}
+                  aria-label='Cancel editing'
                 />
               </div>
             ) : (
@@ -248,12 +250,14 @@ const CourseComponent = (props: CourseCompProps) => {
                     e?.stopPropagation()
                     props.onEdit()
                   }}
+                  aria-label={`Edit course ${course.name}`}
                 />
                 <DeleteConfirmDialog
                   trigger={
                     <EditBtn
                       type='delete'
                       onClick={(e) => e?.stopPropagation()}
+                      aria-label={`Delete course ${course.name}`}
                     />
                   }
                   itemName={course.name}

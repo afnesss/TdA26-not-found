@@ -321,6 +321,7 @@ const QuizComponent = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
+                      aria-label='Cancel quiz draft'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -329,6 +330,7 @@ const QuizComponent = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
+                            aria-label={`Delete quiz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -347,6 +349,8 @@ const QuizComponent = ({
                         e.stopPropagation()
                         toggleExpand()
                       }}
+                      aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                      aria-expanded={isExpanded}
                     >
                       {isExpanded ? (
                         <ChevronUp
@@ -394,6 +398,7 @@ const QuizComponent = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
+                      aria-label='Cancel quiz draft'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -402,6 +407,7 @@ const QuizComponent = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
+                            aria-label={`Delete quiz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -413,7 +419,11 @@ const QuizComponent = ({
                     )
                   )}
 
-                  <button className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'>
+                  <button
+                    className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'
+                    aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                    aria-expanded={isExpanded}
+                  >
                     {isExpanded ? (
                       <ChevronUp
                         size={20}
@@ -524,6 +534,7 @@ const QuizComponent = ({
                   !Array.isArray(errors.questions) &&
                   'border-destructive',
               )}
+              aria-label='Add new question'
             >
               <Plus size={20} />
               Přidat otázku
@@ -558,6 +569,7 @@ const QuizComponent = ({
                           setShowIncompleteError(false)
                           onSubmit?.()
                         }}
+                        aria-label='Submit quiz answers'
                       >
                         <span className='sm:hidden'>Odeslat</span>
                         <span className='hidden sm:inline'>
@@ -571,6 +583,11 @@ const QuizComponent = ({
                       className='rounded-lg shadow-none'
                       disabled={userState?.status !== 'submitted'}
                       onClick={onToggleShowCorrect}
+                      aria-label={
+                        userState?.showCorrect
+                          ? 'Hide correct answers'
+                          : 'Show correct answers'
+                      }
                     >
                       {userState?.showCorrect
                         ? 'Skrýt odpovědi'

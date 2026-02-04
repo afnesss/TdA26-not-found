@@ -17,4 +17,5 @@ export type ApiError = Error & {
     error?: string
     details?: string
   }
+  isNetworkError?: boolean
 }

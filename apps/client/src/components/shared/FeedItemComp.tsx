@@ -37,11 +37,13 @@ const FeedItemComp = ({
       setMessageError('Příspěvek nesmí být prázdný')
       return
     }
-    await onSave?.(editedFeed)
-    setEditName(false)
-
-    toast.success('Příspěvek uložen')
-    //else - error toast?
+    try {
+      await onSave?.(editedFeed)
+      setEditName(false)
+    } catch (error) {
+      // Error is handled by parent, but we need to catch it here
+      // to prevent uncaught promise rejection
+    }
   }
 
   const cancelEdit = () => {

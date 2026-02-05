@@ -1,18 +1,18 @@
-import {
-  createPost,
-  deletePost,
-  getFeed,
-  updatePost,
-} from '@/api/queries/feedQueries'
+import { getFeed } from '@/api/queries/feedQueries'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import { FeedContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import StateComp from '@/components/shared/StateComp'
 import DetailHeader from './DetailHeader'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { FeedCreateRequest, FeedItem } from '@/lib/schemas'
+import { useQuery } from '@tanstack/react-query'
+import type { FeedItem } from '@/lib/schemas'
+import type { ApiError } from '@/lib/types'
 import { useState } from 'react'
 import feedImg from '@/assets/disconnect-blue.svg'
-import { toast } from 'sonner'
+import {
+  useDeletePostMutation,
+  useCreatePostMutation,
+  useUpdatePostMutation,
+} from '@/pages/CoursePage/utils/useFeedMutation'
 
 const FeedTab = ({
   courseId,
@@ -21,33 +21,25 @@ const FeedTab = ({
   courseId: string
   activeTab: string
 }) => {
-  const queryClient = useQueryClient()
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 
   const {
     data: feed = [],
     isError: feedError,
+    error: feedErrorObj,
     isLoading: feedLoading,
     refetch: refetchFeed,
-  } = useQuery<FeedItem[] | null>({
+  } = useQuery<FeedItem[] | null, ApiError>({
     queryKey: ['feed', courseId],
     queryFn: () => getFeed(courseId!),
     enabled: Boolean(courseId),
   })
 
-  const deletePostMutation = useMutation({
-    mutationFn: (variables: { courseId: string; postId: string }) =>
-      deletePost(variables.courseId, variables.postId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['feed', variables.courseId],
-      })
-      toast.success('Přispěvek byl smazán')
-    },
-    onError: () => {
-      toast.error('Chyba při mazání přispěvku')
-    },
-  })
+  const isNetworkError = feedErrorObj?.isNetworkError ?? false
+
+  const { mutateAsync: createPostMutation } = useCreatePostMutation(courseId)
+  const { mutateAsync: updatePostMutation } = useUpdatePostMutation(courseId)
+  const { mutateAsync: deletePostMutation } = useDeletePostMutation(courseId)
 
   const handleAddPost = () => {
     const newDraft: FeedItem = {
@@ -61,15 +53,14 @@ const FeedTab = ({
   const onSaveDraft = async (data: { message: string }) => {
     if (!draftPost || !courseId) return
 
-    setDraftPost(null)
-
     const payload = data || draftPost.message
 
-    await createPost(courseId, payload)
-
-    queryClient.invalidateQueries({
-      queryKey: ['feed', courseId],
-    })
+    try {
+      await createPostMutation(payload)
+      setDraftPost(null)
+    } catch (error) {
+      // Error handled by mutation, keep draft on error
+    }
   }
   return (
     <div className='space-y-6'>
@@ -87,9 +78,11 @@ const FeedTab = ({
         <FeedContentSkeleton />
       ) : feedError ? (
         <StateComp
-          type='error'
+          type={isNetworkError ? 'network-offline' : 'error'}
           onAction={() => refetchFeed()}
-          message='Nepodařilo se načíst informační kanál'
+          message={
+            isNetworkError ? undefined : 'Nepodařilo se načíst informační kanál'
+          }
         />
       ) : (feed && feed.length > 0) || draftPost ? (
         <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-5'>
@@ -112,18 +105,13 @@ const FeedTab = ({
                     key={feedItem.uuid}
                     type='edit'
                     onSave={async (editedFeed) => {
-                      if (courseId) {
-                        await updatePost(courseId, feedItem.uuid, editedFeed)
-                        queryClient.invalidateQueries({
-                          queryKey: ['feed', courseId],
-                        })
-                      }
+                      await updatePostMutation({
+                        postId: feedItem.uuid,
+                        data: editedFeed,
+                      })
                     }}
                     onDelete={() => {
-                      deletePostMutation.mutateAsync({
-                        courseId,
-                        postId: feedItem.uuid,
-                      })
+                      deletePostMutation(feedItem.uuid)
                     }}
                   />
                 ))}

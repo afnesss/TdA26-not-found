@@ -1,8 +1,13 @@
-import { createMaterial, updateMaterial } from '@/api/queries/materialQueries'
+import {
+  createMaterial,
+  deleteMaterial,
+  updateMaterial,
+} from '@/api/queries/materialQueries'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Material } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
+import { onError } from './helperFunctions'
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024 // 30MB
 
@@ -67,11 +72,8 @@ export const useUpdateMutation = (courseId: string) => {
       )
       toast.success('Materiál aktualizován')
     },
-    onError: (error: ApiError) => {
-      const errorMessage =
-        error?.body?.message || 'Chyba při aktualizaci materiálu'
-      toast.error(errorMessage)
-    },
+    onError: (error: ApiError) =>
+      onError(error, 'Chyba při aktualizaci materiálu'),
   })
 }
 
@@ -87,16 +89,28 @@ export const useCreateMutation = (
       }
       return createMaterial(courseId, payload)
     },
+    networkMode: 'always',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
       setDraftMaterial(null)
       toast.success('Materiál vytvořen')
     },
-    onError: (error: ApiError) => {
-      console.error('Create error:', error)
-      const errorMessage =
-        error?.body?.message || 'Chyba při vytváření materiálu'
-      toast.error(errorMessage)
+    onError: (error: ApiError) =>
+      onError(error, 'Chyba při vytváření materiálu'),
+  })
+}
+
+export const useDeleteMaterialMutation = (courseId: string) => {
+  const queryClient = useQueryClient()
+  return useMutation<void, ApiError, string>({
+    mutationFn: (materialId: string) => deleteMaterial(courseId, materialId),
+    networkMode: 'always',
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['materials', courseId],
+      })
+      toast.success('Material smazán')
     },
+    onError: (error: ApiError) => onError(error, 'Chyba při mazání materialu'),
   })
 }

@@ -18,6 +18,11 @@ import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import { toast } from 'sonner'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import type { ApiError } from '@/lib/types'
+import {
+  useCreateCourseMutation,
+  useDeleteCourseMutation,
+} from '../CoursePage/utils/useCourseMutation'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -37,16 +42,9 @@ const DashboardDesign1 = () => {
     queryFn: getCourses,
   })
 
-  const deleteCourseMutation = useMutation({
-    mutationFn: (courseId: string) => deleteCourse(courseId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] })
-      toast.success('Kurz byl smazán')
-    },
-    onError: () => {
-      toast.error('Chyba při mazání kurzu')
-    },
-  })
+  const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
+  const { mutateAsync: createCourseMutation } =
+    useCreateCourseMutation(setCourseDraft)
   const filteredCourses = filterCourses(courses, searchQuery)
   const hasMoreCourses = filteredCourses.length > displayCount
   const displayedCourses = filteredCourses.slice(0, displayCount)
@@ -126,11 +124,7 @@ const DashboardDesign1 = () => {
                     type='edit'
                     isDraft
                     onSaveDraft={async (data) => {
-                      await createCourse(data)
-                      setCourseDraft(null)
-                      queryClient.invalidateQueries({
-                        queryKey: ['courses'],
-                      })
+                      createCourseMutation(data)
                     }}
                     onEdit={() => {
                       handleEditCourse(courseDraft!)
@@ -147,9 +141,7 @@ const DashboardDesign1 = () => {
                     onEdit={() => {
                       handleEditCourse(course!)
                     }}
-                    onDelete={() =>
-                      deleteCourseMutation.mutateAsync(course.uuid)
-                    }
+                    onDelete={() => deleteCourseMutation(course.uuid)}
                   />
                 ))}
               </div>

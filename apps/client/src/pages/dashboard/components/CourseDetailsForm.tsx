@@ -1,53 +1,26 @@
-import { updateCourse } from '@/api/queries/courseQueries'
+import ThinkIcon from '@/assets/t-think-blue.svg?react'
 import Breadcrumb from '@/components/shared/Breadcrumb'
 import FormField from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { colorStyles } from '@/lib/constants'
 import { handleCapitalizedInput } from '@/lib/capitalize'
+import { colorStyles } from '@/lib/constants'
 import {
   CourseUpdateRequestSchema,
   type CourseSummary,
   type CourseUpdateRequest,
 } from '@/lib/schemas'
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import ThinkIcon from '@/assets/t-think-blue.svg?react'
-import { useForm, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils'
+import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm, useWatch } from 'react-hook-form'
 
 const CourseDetailsForm = ({
   selectedCourse,
 }: {
   selectedCourse: CourseSummary
 }) => {
-  const queryClient = useQueryClient()
-
-  const updateCourseMutation = useMutation({
-    mutationFn: (data: { name: string; description?: string }) =>
-      updateCourse(selectedCourse.uuid, data),
-    onSuccess: (updatedCourse) => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] })
-      queryClient.invalidateQueries({
-        queryKey: ['course', selectedCourse.uuid],
-      })
-
-      reset({
-        name: updatedCourse?.name,
-        description: updatedCourse?.description ?? '',
-      })
-
-      toast.success('Kurz byl aktualizovan')
-    },
-    onError: (error) => {
-      console.error('Update failed:', error)
-      toast.error('Chyba při aktualizaci kurzu')
-    },
-  })
-
   const {
     register,
     handleSubmit,
@@ -66,6 +39,13 @@ const CourseDetailsForm = ({
     },
   })
 
+  const { mutate: updateCourseMutation, isPending: updateCoursePending } =
+    useUpdateCourseMutation(selectedCourse.uuid, (updatedCourse) => {
+      reset({
+        name: updatedCourse?.name,
+        description: updatedCourse?.description ?? '',
+      })
+    })
   const formValues = useWatch({
     control,
     defaultValue: {
@@ -75,7 +55,7 @@ const CourseDetailsForm = ({
   })
 
   const handleSave = handleSubmit((data) => {
-    updateCourseMutation.mutate({
+    updateCourseMutation({
       name: data.name ?? selectedCourse.name,
       description: data.description ?? selectedCourse.description ?? undefined,
     })
@@ -125,7 +105,7 @@ const CourseDetailsForm = ({
                 },
                 type: 'text',
                 placeholder: 'Název kurzu',
-                disabled: updateCourseMutation.isPending || isSubmitting,
+                disabled: updateCoursePending || isSubmitting,
               }}
               className={cn(errors.name && 'border border-destructive')}
             />
@@ -146,7 +126,7 @@ const CourseDetailsForm = ({
                   })
                 },
                 placeholder: 'Zadejte popis kurzu',
-                disabled: updateCourseMutation.isPending || isSubmitting,
+                disabled: updateCoursePending || isSubmitting,
               }}
             />
           </div>
@@ -181,7 +161,7 @@ const CourseDetailsForm = ({
               variant='primary'
               size='grid'
               onClick={handleSave}
-              disabled={!isDirty || updateCourseMutation.isPending}
+              disabled={!isDirty || updateCoursePending}
               className='w-fit'
             >
               Uložit změny

@@ -7,6 +7,7 @@ import {
 import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
 import type { Material } from '@/lib/schemas'
+import type { ApiError } from '@/lib/types'
 import { MaterialsContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import DetailHeader from './DetailHeader'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,10 +16,11 @@ import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import {
   useCreateMutation,
+  useDeleteMaterialMutation,
   useUpdateMutation,
   type CreateMaterialPayload,
   type MaterialDraft,
-} from './useMaterialMutation'
+} from '../../CoursePage/utils/useMaterialMutation'
 
 const MaterialsTab = ({
   courseId,
@@ -33,13 +35,16 @@ const MaterialsTab = ({
   const {
     data: materials = [],
     isError: materialsError,
+    error: materialsErrorObj,
     isLoading: materialsLoading,
     refetch: refetchMaterials,
-  } = useQuery<Material[] | null>({
+  } = useQuery<Material[] | null, ApiError>({
     queryKey: ['materials', courseId],
     queryFn: () => getMaterials(courseId!),
     enabled: Boolean(courseId) && activeTab === 'materials',
   })
+
+  const isNetworkError = materialsErrorObj?.isNetworkError ?? false
 
   const { mutateAsync: updateMaterialMutation } = useUpdateMutation(courseId)
 
@@ -48,19 +53,8 @@ const MaterialsTab = ({
     setDraftMaterial,
   )
 
-  const deleteMaterialMutation = useMutation({
-    mutationFn: (variables: { courseId: string; materialId: string }) =>
-      deleteMaterial(variables.courseId, variables.materialId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ['materials', variables.courseId],
-      })
-      toast.success('Material byl smazán')
-    },
-    onError: () => {
-      toast.error('Chyba při mazání materialu')
-    },
-  })
+  const { mutateAsync: deleteMaterialMutation } =
+    useDeleteMaterialMutation(courseId)
 
   const handleSaveDraft = async (data: MaterialDraft) => {
     if (!draftMaterial) return
@@ -117,9 +111,11 @@ const MaterialsTab = ({
         <MaterialsContentSkeleton />
       ) : materialsError ? (
         <StateComp
-          type='error'
+          type={isNetworkError ? 'network-offline' : 'error'}
           onAction={() => refetchMaterials()}
-          message='Nepodařilo se načíst materiály'
+          message={
+            isNetworkError ? undefined : 'Nepodařilo se načíst materiály'
+          }
         />
       ) : (materials && materials.length > 0) || draftMaterial ? (
         <div className='grid gap-4'>
@@ -142,11 +138,8 @@ const MaterialsTab = ({
                   onSave={async (editedMaterial) => {
                     await handleUpdateMaterial(material.uuid, editedMaterial)
                   }}
-                  onDelete={() =>
-                    deleteMaterialMutation.mutateAsync({
-                      courseId,
-                      materialId: material.uuid,
-                    })
+                  onDelete={async () =>
+                    await deleteMaterialMutation(material.uuid)
                   }
                 />
               ))}

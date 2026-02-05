@@ -29,6 +29,17 @@ export const getQuizzes = async (req: Request, res: Response) => {
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
           Number,
         ),
+        averagePercentage: sql<number>`
+          ROUND(
+            AVG(
+              CASE 
+                WHEN ${quizSubmissions.maxScore} > 0 
+                THEN CAST(${quizSubmissions.score} AS FLOAT) / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100
+                ELSE NULL
+              END
+            )
+          )
+        `.mapWith(Number),
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
@@ -65,10 +76,14 @@ export const createQuiz = async (req: Request, res: Response) => {
 
     await createSystemEvent(courseId, `Přidán nový kvíz: ${quizData.title}`);
 
-    const createdQuiz = { ...newQuiz, attemptsCount: 0 };
+    const createdQuiz = {
+      ...newQuiz,
+      attemptsCount: 0,
+      averagePercentage: null,
+    };
     sseManager.broadcast(courseId, "quiz_added", createdQuiz);
 
-    // Return with attemptsCount 0
+    // Return with attemptsCount 0 and no average yet
     res.status(201).json(createdQuiz);
   } catch (error) {
     console.error(error);
@@ -91,6 +106,9 @@ export const getQuiz = async (req: Request, res: Response) => {
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
           Number,
         ),
+        averagePercentage: sql<number>`
+          ROUND(AVG(CAST(${quizSubmissions.score} AS FLOAT) / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100))
+        `.mapWith(Number),
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
@@ -133,10 +151,13 @@ export const updateQuiz = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
-    // Get fresh attempts count
+    // Get fresh attempts count and average
     const [stats] = await db
       .select({
         count: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+        averagePercentage: sql<number>`
+          ROUND(AVG(CAST(${quizSubmissions.score} AS FLOAT) / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100))
+        `.mapWith(Number),
       })
       .from(quizSubmissions)
       .where(eq(quizSubmissions.quizId, quizId));
@@ -146,7 +167,11 @@ export const updateQuiz = async (req: Request, res: Response) => {
       `Kvíz aktualizován: ${updatedQuiz.title}`,
     );
 
-    const finalQuiz = { ...updatedQuiz, attemptsCount: stats.count };
+    const finalQuiz = {
+      ...updatedQuiz,
+      attemptsCount: stats.count,
+      averagePercentage: stats.averagePercentage || null,
+    };
     sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
 
     res.json(finalQuiz);
@@ -250,10 +275,13 @@ export const submitQuiz = async (req: Request, res: Response) => {
       })
       .returning();
 
-    // Get fresh attempts count
+    // Get fresh attempts count and average
     const [stats] = await db
       .select({
         count: sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+        averagePercentage: sql<number>`
+          ROUND(AVG(CAST(${quizSubmissions.score} AS FLOAT) / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100))
+        `.mapWith(Number),
       })
       .from(quizSubmissions)
       .where(eq(quizSubmissions.quizId, quizId));
@@ -261,6 +289,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
     const updatedQuiz = {
       ...quiz,
       attemptsCount: stats.count,
+      averagePercentage: stats.averagePercentage || null,
     };
     sseManager.broadcast(courseId, "quiz_updated", updatedQuiz);
 
@@ -301,17 +330,11 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
     if (totalAttempts === 0) {
       return res.json({
         uuid: quiz.uuid,
-        title: quiz.title,
-        totalAttempts,
-        avegarePercentage: 0,
         questionAnalytics: [],
       });
     }
 
-    const totalScore = submissions.reduce((sum, s) => s.score + sum, 0);
-    const averageScore = totalScore / totalAttempts;
     const questions = quiz.questions as Question[];
-    const averagePercentage = (averageScore / questions.length) * 100;
 
     const questionAnalytics = questions.map((question, qIndex) => {
       const optionCounts = new Array(question.options.length).fill(0);
@@ -370,8 +393,6 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
 
     res.json({
       uuid: quiz.uuid,
-      // attemptsCount: totalAttempts,
-      averagePercentage: parseFloat(averagePercentage.toFixed(0)) || 0,
       questionAnalytics,
     });
   } catch (error) {

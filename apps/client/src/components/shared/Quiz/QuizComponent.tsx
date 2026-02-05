@@ -106,7 +106,11 @@ const QuizComponent = ({
   } = useQuery<QuizAnalyticsResponse | null>({
     queryKey: ['quizAnalytics', quiz.uuid],
     queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
-    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
+    enabled:
+      Boolean(courseId) &&
+      Boolean(isExpanded) &&
+      mode === 'lecturer' &&
+      !isDraft,
   })
 
   const formValues = useWatch({ control, defaultValue: quiz })
@@ -445,7 +449,7 @@ const QuizComponent = ({
             <div className='flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1'>
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <CheckCircle size={14} className='text-primary shrink-0' />
-                <span>{displayQuiz.attemptsCount} vyplnění</span>
+                <span>{quiz.attemptsCount} vyplnění</span>
               </span>
 
               <span className='flex items-center gap-1 whitespace-nowrap'>
@@ -454,13 +458,13 @@ const QuizComponent = ({
               </span>
 
               {mode === 'lecturer' &&
-                quizAnalytics &&
-                !analyticsLoading &&
-                (displayQuiz.attemptsCount ?? 0) > 0 && (
+                (quiz.attemptsCount ?? 0) > 0 &&
+                quiz.averagePercentage !== undefined &&
+                quiz.averagePercentage !== null && (
                   <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
                     <span>Průměr:</span>
                     <span className='text-accent-teal'>
-                      {quizAnalytics.averagePercentage ?? 0}%
+                      {quiz.averagePercentage}%
                     </span>
                   </span>
                 )}

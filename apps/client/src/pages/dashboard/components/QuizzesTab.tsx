@@ -22,6 +22,7 @@ const QuizzesTab = ({
   activeTab: string
 }) => {
   const [draftQuiz, setDraftQuiz] = useState<Quiz | null>(null)
+  const isOffline = !navigator.onLine
 
   const {
     data: quizzes = [],
@@ -99,6 +100,8 @@ const QuizzesTab = ({
 
       {quizzesLoading ? (
         <QuizzesContentSkeleton />
+      ) : isOffline && quizzes?.length === 0 ? (
+        <StateComp type='network-offline' onAction={() => refetchQuizzes()} />
       ) : quizzesError ? (
         <StateComp
           type={isNetworkError ? 'network-offline' : 'error'}

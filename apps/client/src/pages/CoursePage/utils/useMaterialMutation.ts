@@ -59,6 +59,7 @@ export const useUpdateMutation = (courseId: string) => {
       validateFileSize(data.file)
       return updateMaterial(courseId, materialId, data)
     },
+    networkMode: 'always',
     onSuccess: (updatedMaterial) => {
       // Update cache directly to preserve order
       queryClient.setQueryData<Material[]>(

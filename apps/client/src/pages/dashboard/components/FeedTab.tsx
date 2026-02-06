@@ -22,6 +22,7 @@ const FeedTab = ({
   activeTab: string
 }) => {
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
+  const isOffline = !navigator.onLine
 
   const {
     data: feed = [],
@@ -76,6 +77,8 @@ const FeedTab = ({
 
       {feedLoading ? (
         <FeedContentSkeleton />
+      ) : isOffline && feed?.length === 0 ? (
+        <StateComp type='network-offline' onAction={() => refetchFeed()} />
       ) : feedError ? (
         <StateComp
           type={isNetworkError ? 'network-offline' : 'error'}

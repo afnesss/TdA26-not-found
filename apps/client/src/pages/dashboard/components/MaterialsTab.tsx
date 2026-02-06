@@ -1,19 +1,11 @@
-import {
-  createMaterial,
-  deleteMaterial,
-  getMaterials,
-  updateMaterial,
-} from '@/api/queries/materialQueries'
+import { getMaterials } from '@/api/queries/materialQueries'
+import { MaterialsContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
 import type { Material } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
-import { MaterialsContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
-import DetailHeader from './DetailHeader'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useParams } from 'react-router'
-import { toast } from 'sonner'
 import {
   useCreateMutation,
   useDeleteMaterialMutation,
@@ -21,6 +13,7 @@ import {
   type CreateMaterialPayload,
   type MaterialDraft,
 } from '../../CoursePage/utils/useMaterialMutation'
+import DetailHeader from './DetailHeader'
 
 const MaterialsTab = ({
   courseId,
@@ -29,9 +22,8 @@ const MaterialsTab = ({
   courseId: string
   activeTab: string
 }) => {
-  const queryClient = useQueryClient()
   const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
-
+  const isOffline = !navigator.onLine
   const {
     data: materials = [],
     isError: materialsError,
@@ -42,6 +34,8 @@ const MaterialsTab = ({
     queryKey: ['materials', courseId],
     queryFn: () => getMaterials(courseId!),
     enabled: Boolean(courseId) && activeTab === 'materials',
+    refetchOnMount: 'always',
+    networkMode: 'always',
   })
 
   const isNetworkError = materialsErrorObj?.isNetworkError ?? false
@@ -109,6 +103,8 @@ const MaterialsTab = ({
 
       {materialsLoading ? (
         <MaterialsContentSkeleton />
+      ) : isOffline && materials?.length === 0 ? (
+        <StateComp type='network-offline' onAction={() => refetchMaterials()} />
       ) : materialsError ? (
         <StateComp
           type={isNetworkError ? 'network-offline' : 'error'}

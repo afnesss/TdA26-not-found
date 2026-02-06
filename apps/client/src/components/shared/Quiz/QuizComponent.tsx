@@ -17,7 +17,13 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { Fragment, useEffect, useState, type MouseEvent } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from 'react'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
 import { useForm, useWatch, type FieldValue } from 'react-hook-form'
@@ -82,6 +88,7 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
   const [showIncompleteError, setShowIncompleteError] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const { courseId } = useParams<{ courseId: string }>()
 
   const {
@@ -98,6 +105,7 @@ const QuizComponent = ({
     mode: 'onSubmit',
   })
 
+  const formValues = useWatch({ control, defaultValue: quiz })
   const {
     data: quizAnalytics,
     isError: analyticsError,
@@ -110,13 +118,15 @@ const QuizComponent = ({
       Boolean(courseId) &&
       Boolean(isExpanded) &&
       mode === 'lecturer' &&
-      !isDraft,
+      !isDraft &&
+      (formValues?.attemptsCount ?? 0) > 0,
   })
 
-  const formValues = useWatch({ control, defaultValue: quiz })
   // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded)
+    startTransition(() => {
+      setIsExpanded(!isExpanded)
+    })
   }
   useEffect(() => {
     reset(quiz)
@@ -271,7 +281,7 @@ const QuizComponent = ({
 
   const handleSave = handleSubmit((data: Quiz) => {
     onSave?.(data)
-    reset()
+    // Don't reset here - let useEffect handle it when quiz prop updates
   })
 
   const displayQuiz = mode === 'lecturer' ? formValues : quiz

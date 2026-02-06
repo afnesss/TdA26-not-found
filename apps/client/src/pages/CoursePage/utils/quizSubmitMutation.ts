@@ -8,6 +8,7 @@ import {
 } from '@/lib/schemas'
 import type { QuizStateById } from '../../../lib/types'
 import { toast } from 'sonner'
+import { onError } from './helperFunctions'
 
 export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
@@ -44,6 +45,7 @@ export function useQuizSubmitMutation(
       }))
       return parsed.data
     },
+    networkMode: 'always',
     onMutate: ({ courseId, quizId }) => {
       const previousData = queryClient.getQueryData<CourseDetail | undefined>([
         'course',
@@ -67,12 +69,12 @@ export function useQuizSubmitMutation(
 
       return { previousData }
     },
-    onError: (err, variables, context) => {
+    onError: (error, variables, context) => {
       queryClient.setQueryData(
         ['course', variables.courseId],
         context?.previousData,
       )
-      toast.error('Chyba při odesílání kvízu')
+      onError(error, 'Chyba při odesílání kvízu')
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

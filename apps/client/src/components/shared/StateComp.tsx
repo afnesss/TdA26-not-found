@@ -1,11 +1,23 @@
 import React from 'react'
-import { Search, AlertCircle, BookOpen, FileQuestion, type LucideIcon } from 'lucide-react'
+import {
+  Search,
+  AlertCircle,
+  BookOpen,
+  FileQuestion,
+  WifiOff,
+  type LucideIcon,
+} from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import fileImg from '../../assets/files-blue.svg'
 
-type StateType = 'empty-search' | 'error' | 'no-content' | 'not-found'
+type StateType =
+  | 'empty-search'
+  | 'error'
+  | 'no-content'
+  | 'not-found'
+  | 'network-offline'
 
 type Props = {
   type: StateType
@@ -70,6 +82,14 @@ const StateComp = ({
       iconColor: 'text-primary',
       defaultMessage: 'Kurz nebyl nalezen',
       defaultAction: 'Zpět na kurzy',
+      showButton: true,
+    },
+    'network-offline': {
+      icon: WifiOff,
+      iconBg: 'bg-destructive/20',
+      iconColor: 'text-destructive/70',
+      defaultMessage: 'Žádné připojení k internetu',
+      defaultAction: 'Zkusit znovu',
       showButton: true,
     },
   }

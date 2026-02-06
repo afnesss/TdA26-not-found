@@ -57,6 +57,7 @@ const CoursePage = () => {
     queryFn: () => fetchCourse(id!),
     enabled: Boolean(id),
   })
+  const isOffline = !navigator.onLine
 
   useTitle(courseData?.name || 'Kurz')
 
@@ -70,7 +71,9 @@ const CoursePage = () => {
     return (
       <div className='flex justify-center items-center min-h-[70vh]'>
         <StateComp
-          type={isNotFound ? 'not-found' : 'error'}
+          type={
+            isNotFound ? 'not-found' : isOffline ? 'network-offline' : 'error'
+          }
           onAction={() =>
             isNotFound ? (window.location.href = '/courses') : refetch()
           }

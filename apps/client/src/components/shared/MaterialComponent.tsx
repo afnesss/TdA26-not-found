@@ -102,13 +102,22 @@ const MaterialCard = (props: MaterialCardProps) => {
     }
   }
 
-  const handleNameChange = (name: string) => {
-    const capitalizedName = handleCapitalizedInput(name, formValues.name ?? '')
-    setValue('name', capitalizedName, { shouldValidate: true })
+  const handleFieldChange = (
+    field: 'name' | 'description',
+    value: string,
+  ) => {
+    const capitalizedValue = handleCapitalizedInput(
+      value,
+      formValues[field] ?? '',
+    )
+    setValue(field, capitalizedValue, {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
   }
 
   const handleUrlChange = (url: string) => {
-    setValue('url', url, { shouldValidate: true })
+    setValue('url', url, { shouldValidate: true, shouldDirty: true })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +189,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                       <Textarea
                         variant='ghost'
                         value={formValues.name}
-                        onChange={(e) => handleNameChange(e.target.value)}
+                        onChange={(e) =>
+                          handleFieldChange('name', e.target.value)
+                        }
                         className={cn(
                           'w-full min-h-0 text-sm sm:text-base font-semibold block',
                           errors.name && 'border-destructive',
@@ -202,13 +213,11 @@ const MaterialCard = (props: MaterialCardProps) => {
                           isSubmitting ||
                           !!errors.name ||
                           ('url' in errors && !!errors.url) ||
-                          (!(
-                            props.type === 'edit' &&
-                            'isDraft' in props &&
-                            props.isDraft
-                          ) &&
-                            !isDirty &&
-                            !tempFile)
+                          (props.type === 'edit' &&
+                          'isDraft' in props &&
+                          props.isDraft
+                            ? false
+                            : !isDirty && !tempFile)
                         }
                       />
                       <EditBtn
@@ -311,13 +320,9 @@ const MaterialCard = (props: MaterialCardProps) => {
             <Textarea
               variant='ghost'
               value={formValues.description}
-              onChange={(e) => {
-                const capitalizedValue = handleCapitalizedInput(
-                  e.target.value,
-                  formValues.description ?? '',
-                )
-                setValue('description', capitalizedValue)
-              }}
+              onChange={(e) =>
+                handleFieldChange('description', e.target.value)
+              }
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}

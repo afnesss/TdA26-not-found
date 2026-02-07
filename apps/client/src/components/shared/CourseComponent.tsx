@@ -81,10 +81,7 @@ const CourseComponent = (props: CourseCompProps) => {
           name: state.tempName,
           description: state.tempDescription,
         })
-        toast.success('Kurz vytvořen')
       } catch (err) {
-        console.error('Save error:', err)
-        toast.error('Chyba při vytváření kurzu')
         setState((prev) => ({ ...prev, saving: false }))
       }
     }

@@ -5,7 +5,7 @@ import {
   type QuizAnswer,
 } from '@/lib/schemas'
 import { submitQuiz } from '@/api/queries/quizQueries'
-import type { UseMutationResult } from '@tanstack/react-query'
+import type { UseMutationResult, QueryClient } from '@tanstack/react-query'
 import { useQuizSubmitMutation } from './quizSubmitMutation'
 import { toast } from 'sonner'
 
@@ -142,4 +142,17 @@ export const onError = (error: ApiError, message: string) => {
   } else {
     toast.error(message)
   }
+}
+
+export const onErrorWithRollback = (
+  error: ApiError,
+  message: string,
+  queryClient: QueryClient,
+  queryKey: unknown[],
+  previousData: unknown,
+) => {
+  if (previousData !== undefined) {
+    queryClient.setQueryData(queryKey, previousData)
+  }
+  onError(error, message)
 }

@@ -8,7 +8,7 @@ import {
 } from '@/lib/schemas'
 import type { QuizStateById } from '../../../lib/types'
 import { toast } from 'sonner'
-import { onError } from './helperFunctions'
+import { onError, onErrorWithRollback } from './helperFunctions'
 
 export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
@@ -70,11 +70,13 @@ export function useQuizSubmitMutation(
       return { previousData }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(
+      onErrorWithRollback(
+        error,
+        'Chyba při odesílání kvízu',
+        queryClient,
         ['course', variables.courseId],
         context?.previousData,
       )
-      onError(error, 'Chyba při odesílání kvízu')
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

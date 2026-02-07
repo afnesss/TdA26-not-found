@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Material } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
-import { onError } from './helperFunctions'
+import { onError, onErrorWithRollback } from './helperFunctions'
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024 // 30MB
 
@@ -47,7 +47,8 @@ export const useUpdateMutation = (courseId: string) => {
   return useMutation<
     Material,
     ApiError,
-    { materialId: string; data: MaterialDraft }
+    { materialId: string; data: MaterialDraft },
+    { previousMaterials?: Material[] }
   >({
     mutationFn: ({
       materialId,
@@ -60,8 +61,33 @@ export const useUpdateMutation = (courseId: string) => {
       return updateMaterial(courseId, materialId, data)
     },
     networkMode: 'always',
+    onMutate: async ({ materialId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+
+      const previousMaterials = queryClient.getQueryData<Material[]>([
+        'materials',
+        courseId,
+      ])
+
+      queryClient.setQueryData<Material[]>(
+        ['materials', courseId],
+        (oldMaterials) => {
+          if (!oldMaterials) return oldMaterials
+          return oldMaterials.map((m) =>
+            m.uuid === materialId
+              ? {
+                  ...m,
+                  name: data.name ?? m.name,
+                  description: data.description ?? m.description,
+                }
+              : m,
+          )
+        },
+      )
+
+      return { previousMaterials }
+    },
     onSuccess: (updatedMaterial) => {
-      // Update cache directly to preserve order
       queryClient.setQueryData<Material[]>(
         ['materials', courseId],
         (oldData) => {
@@ -73,8 +99,15 @@ export const useUpdateMutation = (courseId: string) => {
       )
       toast.success('Materiál aktualizován')
     },
-    onError: (error: ApiError) =>
-      onError(error, 'Chyba při aktualizaci materiálu'),
+    onError: (error: ApiError, _variables, context) => {
+      onErrorWithRollback(
+        error,
+        'Chyba při aktualizaci materiálu',
+        queryClient,
+        ['materials', courseId],
+        context?.previousMaterials,
+      )
+    },
   })
 }
 
@@ -83,7 +116,12 @@ export const useCreateMutation = (
   setDraftMaterial: (a: Material | null) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation<Material, ApiError, CreateMaterialPayload>({
+  return useMutation<
+    Material,
+    ApiError,
+    CreateMaterialPayload,
+    { previousMaterials?: Material[] }
+  >({
     mutationFn: (payload: CreateMaterialPayload) => {
       if (payload.type === 'file') {
         validateFileSize(payload.file)
@@ -91,27 +129,94 @@ export const useCreateMutation = (
       return createMaterial(courseId, payload)
     },
     networkMode: 'always',
+    onMutate: async (data: CreateMaterialPayload) => {
+      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+
+      const previousMaterials = queryClient.getQueryData<Material[]>([
+        'materials',
+        courseId,
+      ])
+
+      // Only optimistic update for URL type - safe because URL is immediately available
+      if (data.type === 'url') {
+        const optimisticMaterial: Material = {
+          uuid: 'temp-' + Date.now(),
+          name: data.name,
+          description: data.description,
+          type: 'url',
+          url: data.url,
+        }
+
+        queryClient.setQueryData<Material[]>(
+          ['materials', courseId],
+          (oldMaterials) => {
+            if (!oldMaterials) return oldMaterials
+            return [...oldMaterials, optimisticMaterial]
+          },
+        )
+      }
+      // For files, no optimistic update - wait for server response
+
+      return { previousMaterials }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
       setDraftMaterial(null)
       toast.success('Materiál vytvořen')
     },
-    onError: (error: ApiError) =>
-      onError(error, 'Chyba při vytváření materiálu'),
+    onError: (error: ApiError, _variables, context) => {
+      onErrorWithRollback(
+        error,
+        'Chyba při vytváření materiálu',
+        queryClient,
+        ['materials', courseId],
+        context?.previousMaterials,
+      )
+    },
   })
 }
 
 export const useDeleteMaterialMutation = (courseId: string) => {
   const queryClient = useQueryClient()
-  return useMutation<void, ApiError, string>({
+  return useMutation<
+    void,
+    ApiError,
+    string,
+    { previousMaterials?: Material[] }
+  >({
     mutationFn: (materialId: string) => deleteMaterial(courseId, materialId),
     networkMode: 'always',
+    onMutate: async (materialId) => {
+      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+
+      const previousMaterials = queryClient.getQueryData<Material[]>([
+        'materials',
+        courseId,
+      ])
+      queryClient.setQueryData<Material[]>(
+        ['materials', courseId],
+        (oldMaterials) => {
+          if (!oldMaterials) return oldMaterials
+          return oldMaterials.filter((m) => m.uuid !== materialId)
+        },
+      )
+
+      return { previousMaterials }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['materials', courseId],
       })
       toast.success('Material smazán')
     },
-    onError: (error: ApiError) => onError(error, 'Chyba při mazání materialu'),
+    onError: (error: ApiError, _variables, context) => {
+      onErrorWithRollback(
+        error,
+        'Chyba při mazání materialu',
+        queryClient,
+        ['materials', courseId],
+        context?.previousMaterials,
+      )
+    },
   })
 }

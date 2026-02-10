@@ -47,7 +47,6 @@ const MaterialCard = (props: MaterialCardProps) => {
   )
   const [copied, setCopied] = useState(false)
   const [tempFile, setTempFile] = useState<File | null>(null)
-  const queryClient = useQueryClient()
 
   const {
     handleSubmit,
@@ -102,10 +101,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     }
   }
 
-  const handleFieldChange = (
-    field: 'name' | 'description',
-    value: string,
-  ) => {
+  const handleFieldChange = (field: 'name' | 'description', value: string) => {
     const capitalizedValue = handleCapitalizedInput(
       value,
       formValues[field] ?? '',
@@ -320,9 +316,7 @@ const MaterialCard = (props: MaterialCardProps) => {
             <Textarea
               variant='ghost'
               value={formValues.description}
-              onChange={(e) =>
-                handleFieldChange('description', e.target.value)
-              }
+              onChange={(e) => handleFieldChange('description', e.target.value)}
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
@@ -417,11 +411,20 @@ const MaterialCard = (props: MaterialCardProps) => {
                 ) : errors.root?.file ? (
                   <p className='error-text'>{errors.root.file.message}</p>
                 ) : (
-                  <div className='flex gap-2 text-xs flex-row items-end sm:text-sm text-gray-500'>
-                    Současný:{' '}
-                    {formatFileSize(
-                      material.type === 'file' ? (material.sizeBytes ?? 0) : 0,
-                    )}{' '}
+                  <div className='flex gap-1 text-xs flex-col sm:flex-row sm:items-end sm:text-sm text-gray-500'>
+                    <span className='font-medium'>Současný soubor:</span>
+                    <span className='truncate'>
+                      {material.type === 'file' && material.originalFilename}
+                    </span>
+                    <span className='text-gray-400'>
+                      (
+                      {formatFileSize(
+                        material.type === 'file'
+                          ? (material.sizeBytes ?? 0)
+                          : 0,
+                      )}
+                      )
+                    </span>
                   </div>
                 )
               ) : (

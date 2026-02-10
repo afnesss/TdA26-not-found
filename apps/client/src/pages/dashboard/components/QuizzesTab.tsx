@@ -34,6 +34,7 @@ const QuizzesTab = ({
     queryKey: ['quizzes', courseId],
     queryFn: () => getQuizzes(courseId!),
     enabled: Boolean(courseId) && activeTab === 'quizzes',
+    networkMode: 'always',
   })
 
   const isNetworkError = quizzesErrorObj?.isNetworkError ?? false

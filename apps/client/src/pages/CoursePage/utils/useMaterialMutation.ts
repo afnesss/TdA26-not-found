@@ -167,7 +167,7 @@ export const useCreateMutation = (
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při vytváření materiálu',
+        error.body?.message || 'Chyba při vytváření materiálu',
         queryClient,
         ['materials', courseId],
         context?.previousMaterials,

@@ -34,6 +34,7 @@ const FeedTab = ({
     queryKey: ['feed', courseId],
     queryFn: () => getFeed(courseId!),
     enabled: Boolean(courseId),
+    networkMode: 'always',
   })
 
   const isNetworkError = feedErrorObj?.isNetworkError ?? false

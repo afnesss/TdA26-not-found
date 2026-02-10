@@ -56,6 +56,7 @@ const CoursePage = () => {
     queryKey: ['course', id],
     queryFn: () => fetchCourse(id!),
     enabled: Boolean(id),
+    networkMode: 'always',
   })
   const isOffline = !navigator.onLine
 

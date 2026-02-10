@@ -146,7 +146,6 @@ export const FeedContentSkeleton = () => {
             </div>
 
             {/* Content */}
-            <Skeleton className='h-4 w-full mb-1' />
             <Skeleton className='h-4 w-4/5' />
           </div>
         ))}

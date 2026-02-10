@@ -7,6 +7,7 @@ import {
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
+import { uploadLimiter, writeLimiter } from "../middleware/rateLimiter";
 
 const router = Router({ mergeParams: true });
 
@@ -74,8 +75,8 @@ const uploadMiddleware = (req: any, res: any, next: any) => {
 };
 
 router.get("/", getMaterials);
-router.post("/", uploadMiddleware, createMaterial);
-router.put("/:materialId", uploadMiddleware, updateMaterial);
-router.delete("/:materialId", deleteMaterial);
+router.post("/", uploadLimiter, uploadMiddleware, createMaterial);
+router.put("/:materialId", writeLimiter, uploadMiddleware, updateMaterial);
+router.delete("/:materialId", writeLimiter, deleteMaterial);
 
 export default router;

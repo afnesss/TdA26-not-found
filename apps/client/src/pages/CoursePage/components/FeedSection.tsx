@@ -3,6 +3,7 @@ import StateComp from '@/components/shared/StateComp'
 import { Label } from '@/components/ui/label'
 import type { FeedItem } from '@/lib/schemas'
 import feedImg from '@/assets/disconnect-blue.svg'
+import UnderlinedText from '@/components/shared/UnderlinedText'
 
 type FeedSectionProps = {
   feed: FeedItem[]
@@ -12,8 +13,10 @@ type FeedSectionProps = {
 const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
   return (
     <section>
-      <Label size='default' className='font-bold mb-2'>
-        Oznámení
+      <Label className='font-bold mb-2'>
+        <UnderlinedText strokeWidth='4' height='10' offset='-bottom-0.5'>
+          Oznámení
+        </UnderlinedText>
       </Label>
       {feed && feed.length > 0 ? (
         <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-5'>

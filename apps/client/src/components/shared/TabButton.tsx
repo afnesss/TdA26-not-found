@@ -47,6 +47,7 @@ const TabButton = ({
       variant={'filter'}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
+      aria-label={title}
       className={`
         ${
           isActive

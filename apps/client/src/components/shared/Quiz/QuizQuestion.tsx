@@ -79,13 +79,20 @@ const QuizQuestion = ({
   return (
     <div>
       {/* Question Header */}
-      <div className='flex items-start gap-1.5 md:gap-3 mb-4'>
+      <div
+        className={cn(
+          'flex gap-1.5 md:gap-3 mb-4',
+          mode === 'user' && isSubmitted ? 'items-center' : 'items-start',
+        )}
+      >
         {/* Question number and text wrapper */}
-        <div className='flex items-start gap-1.5 md:gap-3 flex-1 min-w-0'>
-          <span
-            className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6
-          md:h-8 rounded-full flex items-center justify-center shrink-0 mt-1'
-          >
+        <div
+          className={cn(
+            'flex gap-1.5 md:gap-3 flex-1 min-w-0',
+            mode === 'user' && isSubmitted ? 'items-center' : 'items-start',
+          )}
+        >
+          <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
             {qIndex + 1}
           </span>
 
@@ -111,6 +118,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='md:hidden shrink-0'
+                      aria-label={`Remove question ${qIndex + 1}`}
                     />
                   </div>
 
@@ -160,29 +168,46 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='hidden md:flex shrink-0'
+                      aria-label={`Remove question ${qIndex + 1}`}
                     />
                   </div>
                 </div>
               ) : (
-                <div className='flex-1 flex items-center justify-between gap-2'>
-                  <Label size='md' className='flex-1 text-xs sm:text-sm'>
-                    {question.question}
-                  </Label>
+                <div className='flex-1'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <Label size='md' className='flex-1 text-xs sm:text-sm'>
+                      {question.question}
+                    </Label>
 
-                  {mode === 'user' && isSubmitted && (
-                    <div className='shrink-0'>
-                      {userState.results?.correctPerQuestion[qIndex] ? (
-                        <Check
-                          className='text-secondary size-4 md:size-5'
-                          strokeWidth={3}
-                        />
+                    {mode === 'user' && isSubmitted && (
+                      <div className='shrink-0'>
+                        {userState.results?.correctPerQuestion[qIndex] ? (
+                          <Check
+                            className='text-secondary size-4 md:size-5'
+                            strokeWidth={3}
+                          />
+                        ) : (
+                          <X
+                            className='text-destructive size-4 md:size-5'
+                            strokeWidth={3}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {mode === 'user' && !isSubmitted && (
+                    <p className='text-[10px] md:text-xs text-gray-500 mt-1 flex items-center gap-1.5'>
+                      {question.type === 'singleChoice' ? (
+                        <>
+                          <span>Vyberte jednu správnou odpověď</span>
+                        </>
                       ) : (
-                        <X
-                          className='text-destructive size-4 md:size-5'
-                          strokeWidth={3}
-                        />
+                        <>
+                          <span>Vyberte všechny správné odpovědi</span>
+                        </>
                       )}
-                    </div>
+                    </p>
                   )}
                 </div>
               )}
@@ -272,6 +297,7 @@ const QuizQuestion = ({
             size='sm'
             onClick={onAddOption}
             className='w-full md:w-auto'
+            aria-label={`Add new option to question ${qIndex + 1}`}
           >
             <Plus size={16} />
             Přidat možnost

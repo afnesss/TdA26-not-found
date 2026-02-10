@@ -14,6 +14,7 @@ import CoursesPageSceleton from '../../components/shared/loadingskeleton/Courses
 import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -55,12 +56,13 @@ const CoursesPage = () => {
     setDisplayCount((prev) => prev + 6)
     refetch()
   }
+  useTitle('Kurzy')
 
   return (
     <div className='h-full'>
       {/* Hero */}
       <div className='max-w-7xl mx-auto lg:px-4 pt-3'>
-        <div className='flex flex-row lg:justify-center justify-between items-center mb-3 w-full lg:w-auto'>
+        <div className='flex flex-row md:justify-center justify-between items-center mb-3 w-full md:w-auto'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpenText}

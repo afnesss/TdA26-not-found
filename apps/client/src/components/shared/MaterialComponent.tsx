@@ -47,7 +47,6 @@ const MaterialCard = (props: MaterialCardProps) => {
   )
   const [copied, setCopied] = useState(false)
   const [tempFile, setTempFile] = useState<File | null>(null)
-  const queryClient = useQueryClient()
 
   const {
     handleSubmit,
@@ -81,7 +80,6 @@ const MaterialCard = (props: MaterialCardProps) => {
     }
   }
   const handleTypeChange = (newType: 'file' | 'url') => {
-    console.log(material.type)
     setValue(`type`, newType, { shouldValidate: true })
     setTempFile(null)
     clearErrors('root.file')
@@ -103,13 +101,19 @@ const MaterialCard = (props: MaterialCardProps) => {
     }
   }
 
-  const handleNameChange = (name: string) => {
-    const capitalizedName = handleCapitalizedInput(name, formValues.name ?? '')
-    setValue('name', capitalizedName, { shouldValidate: true })
+  const handleFieldChange = (field: 'name' | 'description', value: string) => {
+    const capitalizedValue = handleCapitalizedInput(
+      value,
+      formValues[field] ?? '',
+    )
+    setValue(field, capitalizedValue, {
+      shouldValidate: true,
+      shouldDirty: true,
+    })
   }
 
   const handleUrlChange = (url: string) => {
-    setValue('url', url, { shouldValidate: true })
+    setValue('url', url, { shouldValidate: true, shouldDirty: true })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,7 +167,7 @@ const MaterialCard = (props: MaterialCardProps) => {
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
-        <div className='flex-1 min-w-0 flex flex-col gap-2'>
+        <div className='flex-1 min-w-0 flex flex-col gap-1'>
           {/* Title row */}
           <div className='flex items-center justify-between gap-2 sm:gap-4'>
             <div className='flex items-center gap-1 min-w-0 flex-1'>
@@ -181,7 +185,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                       <Textarea
                         variant='ghost'
                         value={formValues.name}
-                        onChange={(e) => handleNameChange(e.target.value)}
+                        onChange={(e) =>
+                          handleFieldChange('name', e.target.value)
+                        }
                         className={cn(
                           'w-full min-h-0 text-sm sm:text-base font-semibold block',
                           errors.name && 'border-destructive',
@@ -198,11 +204,16 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onClick={saveEdit}
                         classNameBtn='hover:bg-secondary/20'
                         iconClassName='text-secondary size-4 sm:size-5'
+                        aria-label='Save material'
                         disabled={
                           isSubmitting ||
                           !!errors.name ||
                           ('url' in errors && !!errors.url) ||
-                          (!(props.type === 'edit' && 'isDraft' in props && props.isDraft) && !isDirty && !tempFile)
+                          (props.type === 'edit' &&
+                          'isDraft' in props &&
+                          props.isDraft
+                            ? false
+                            : !isDirty && !tempFile)
                         }
                       />
                       <EditBtn
@@ -210,6 +221,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onClick={cancelEdit}
                         classNameBtn='hover:bg-destructive/20'
                         iconClassName='text-destructive size-4 sm:size-5'
+                        aria-label='Cancel editing'
                         disabled={isSubmitting}
                       />
                     </div>
@@ -230,9 +242,18 @@ const MaterialCard = (props: MaterialCardProps) => {
 
                   {type === 'edit' ? (
                     <div className='flex items-center gap-1 shrink-0'>
-                      <EditBtn icon={Edit} onClick={startEdit} />
+                      <EditBtn
+                        icon={Edit}
+                        onClick={startEdit}
+                        aria-label={`Edit material ${material.name}`}
+                      />
                       <DeleteConfirmDialog
-                        trigger={<EditBtn type='delete' />}
+                        trigger={
+                          <EditBtn
+                            type='delete'
+                            aria-label={`Delete material ${material.name}`}
+                          />
+                        }
                         itemName={material.name}
                         itemType='material'
                         onConfirm={() => {
@@ -250,8 +271,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                           download={material.originalFilename || material.name}
                           target='_blank'
                           rel='noopener noreferrer'
+                          aria-label={`Download ${material.name}`}
                         >
-                          <EditBtn icon={Download} />
+                          <EditBtn
+                            icon={Download}
+                            aria-label={`Download ${material.name}`}
+                          />
                         </a>
                       ) : (
                         <div className='flex items-center'>
@@ -262,13 +287,20 @@ const MaterialCard = (props: MaterialCardProps) => {
                               copied ? 'text-secondary size-4' : ''
                             }
                             onClick={() => handleCopyLink(material.url)}
+                            aria-label={
+                              copied ? 'Link copied' : 'Copy link to clipboard'
+                            }
                           />
                           <a
                             href={material.url}
                             target='_blank'
                             rel='noopener noreferrer'
+                            aria-label={`Open ${material.name} in new tab`}
                           >
-                            <EditBtn icon={ExternalLink} />
+                            <EditBtn
+                              icon={ExternalLink}
+                              aria-label={`Open ${material.name} in new tab`}
+                            />
                           </a>
                         </div>
                       )}
@@ -284,13 +316,7 @@ const MaterialCard = (props: MaterialCardProps) => {
             <Textarea
               variant='ghost'
               value={formValues.description}
-              onChange={(e) => {
-                const capitalizedValue = handleCapitalizedInput(
-                  e.target.value,
-                  formValues.description ?? ''
-                )
-                setValue('description', capitalizedValue)
-              }}
+              onChange={(e) => handleFieldChange('description', e.target.value)}
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
@@ -385,11 +411,20 @@ const MaterialCard = (props: MaterialCardProps) => {
                 ) : errors.root?.file ? (
                   <p className='error-text'>{errors.root.file.message}</p>
                 ) : (
-                  <div className='flex gap-2 text-xs flex-row items-end sm:text-sm text-gray-500'>
-                    Současný:{' '}
-                    {formatFileSize(
-                      material.type === 'file' ? (material.sizeBytes ?? 0) : 0,
-                    )}{' '}
+                  <div className='flex gap-1 text-xs flex-col sm:flex-row sm:items-end sm:text-sm text-gray-500'>
+                    <span className='font-medium'>Současný soubor:</span>
+                    <span className='truncate'>
+                      {material.type === 'file' && material.originalFilename}
+                    </span>
+                    <span className='text-gray-400'>
+                      (
+                      {formatFileSize(
+                        material.type === 'file'
+                          ? (material.sizeBytes ?? 0)
+                          : 0,
+                      )}
+                      )
+                    </span>
                   </div>
                 )
               ) : (

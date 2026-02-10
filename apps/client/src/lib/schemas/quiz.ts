@@ -25,6 +25,7 @@ export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
   attemptsCount: z.number().int().optional(),
+  averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z.array(QuestionSchema),
 })
 
@@ -120,6 +121,7 @@ export const QuizValidationSchema = z.object({
       message: 'Název kvízu nesmí být prázdný',
     }),
   attemptsCount: z.number().int().optional(),
+  averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z
     .array(QuestionValidationSchema)
     .min(1, 'Musí být alespoň jedna otázka'),

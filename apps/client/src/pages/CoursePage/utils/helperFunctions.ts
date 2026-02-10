@@ -1,12 +1,13 @@
-import type { QuizStateById } from '../../../lib/types'
+import type { ApiError, QuizStateById } from '../../../lib/types'
 import {
   QuizSubmitResponseSchema,
   type CourseSummary,
   type QuizAnswer,
 } from '@/lib/schemas'
 import { submitQuiz } from '@/api/queries/quizQueries'
-import type { UseMutationResult } from '@tanstack/react-query'
-import { useCourseMutation } from './courseMutation'
+import type { UseMutationResult, QueryClient } from '@tanstack/react-query'
+import { useQuizSubmitMutation } from './quizSubmitMutation'
+import { toast } from 'sonner'
 
 export const handleSingleChoice = (
   quizId: string,
@@ -108,7 +109,7 @@ export const isQuizComplete = (
   return answersCount === totalQuestions
 }
 
-type SubmitQuizMutation = ReturnType<typeof useCourseMutation>
+type SubmitQuizMutation = ReturnType<typeof useQuizSubmitMutation>
 export const handleSubmit = async (
   courseId: string,
   quizId: string,
@@ -133,4 +134,25 @@ export const filterCourses = (
       course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+}
+
+export const onError = (error: ApiError, message: string) => {
+  if (error?.isNetworkError) {
+    toast.error(error.body?.message || 'Chyba připojení')
+  } else {
+    toast.error(message)
+  }
+}
+
+export const onErrorWithRollback = (
+  error: ApiError,
+  message: string,
+  queryClient: QueryClient,
+  queryKey: unknown[],
+  previousData: unknown,
+) => {
+  if (previousData !== undefined) {
+    queryClient.setQueryData(queryKey, previousData)
+  }
+  onError(error, message)
 }

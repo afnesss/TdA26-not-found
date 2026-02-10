@@ -37,11 +37,13 @@ const FeedItemComp = ({
       setMessageError('Příspěvek nesmí být prázdný')
       return
     }
-    await onSave?.(editedFeed)
-    setEditName(false)
-
-    toast.success('Příspěvek uložen')
-    //else - error toast?
+    try {
+      await onSave?.(editedFeed)
+      setEditName(false)
+    } catch (error) {
+      // Error is handled by parent, but we need to catch it here
+      // to prevent uncaught promise rejection
+    }
   }
 
   const cancelEdit = () => {
@@ -105,20 +107,28 @@ const FeedItemComp = ({
                       editedFeed.message.trim() === '')
                   }
                   onClick={handleSave}
+                  aria-label='Save feed post'
                 />
                 <EditBtn
                   icon={X}
                   onClick={cancelEdit}
                   classNameBtn='hover:bg-destructive/20'
                   iconClassName='text-destructive size-4 sm:size-5'
+                  aria-label='Cancel editing'
                   // disabled={saving}
                 />
               </>
             ) : (
               <>
-                <EditBtn icon={Edit} onClick={() => setEditName(true)} />
+                <EditBtn
+                  icon={Edit}
+                  onClick={() => setEditName(true)}
+                  aria-label='Edit feed post'
+                />
                 <DeleteConfirmDialog
-                  trigger={<EditBtn type='delete' />}
+                  trigger={
+                    <EditBtn type='delete' aria-label='Delete feed post' />
+                  }
                   itemType='příspěvek'
                   onConfirm={() => {
                     onDelete?.()

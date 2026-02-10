@@ -25,6 +25,7 @@ export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
   attemptsCount: z.number().int().optional(),
+  averagePercentage: z.number().min(0).optional(),
   questions: z.array(QuestionSchema),
 });
 

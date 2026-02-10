@@ -17,6 +17,7 @@ import quizImg from '@/assets/t-play-blue.svg'
 import quizImgAct from '@/assets/t-play-white.svg'
 import feedImg from '@/assets/audiocall-blue.svg'
 import feedImgAct from '@/assets/audiocall-white.svg'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -34,6 +35,7 @@ const CourseDetailPage = () => {
     queryFn: getCourses,
   })
 
+  useTitle('Správa kurzu')
   const selectedCourse = courses.find((c) => c.uuid === courseId) || null
 
   const handleTabChange = (tab: string) => {

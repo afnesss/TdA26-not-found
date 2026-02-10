@@ -26,14 +26,18 @@ const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
           <Fragment key={index}>
             <Button
               variant='link'
-              className={cn(' w-fit text-accent-blue')}
+              className={cn(
+                ' w-fit text-accent-blue',
+                !item.path && 'hover:no-underline pointer-events-none',
+              )}
               onClick={() => (item.path ? navigate(item.path) : undefined)}
+              aria-label={item.path ? `Navigate to ${item.label}` : item.label}
             >
               <span>{item.label}</span>
             </Button>
 
             {!isLast && (
-              <ChevronRight className='text-accent-blue size-3 sm:mt-0.5 sm:size-4' />
+              <ChevronRight className='text-accent-blue size-3 sm:mt-0.5 sm:size-4' aria-hidden='true' />
             )}
           </Fragment>
         )

@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as quizController from "../controllers/quizController";
 import { validate } from "../middleware/validate";
 import { QuizSchema, QuizSubmitRequestSchema } from "../schemas/quiz";
+import { quizSubmitLimiter, writeLimiter } from "../middleware/rateLimiter";
 
 const router = Router({ mergeParams: true });
 

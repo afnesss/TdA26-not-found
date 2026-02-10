@@ -14,26 +14,43 @@ export default function Header() {
 
   return (
     <>
-      <div className='w-full h-15 sm:h-18 md:h-22 flex bg-primary'>
+      <header
+        className='fixed top-0 left-0 right-0 z-50 w-full h-15 sm:h-18 md:h-22 flex bg-primary'
+        role='banner'
+      >
         <div className='w-1/2 px-4 sm:px-8 md:px-12 lg:px-20 flex items-center'>
           <img
             src={logo}
+            alt='Think Different Academy Logo'
             className='h-14 sm:h-17 md:h-18 w-auto py-3 cursor-pointer hover:scale-102 transition-all duration-200'
             onClick={() => navigate('/')}
+            role='button'
+            aria-label='Navigate to home page'
           />
         </div>
         <div className='w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center gap-4 md:gap-10 justify-end-safe '>
           {isMd ? (
-            <div className='flex flex-col sm:flex-row flex-wrap items-center gap-2 md:gap-10'>
-              <Button variant={'tab'} onClick={() => navigate('/courses')}>
+            <nav
+              className='flex flex-col sm:flex-row flex-wrap items-center gap-2 md:gap-10'
+              aria-label='Main navigation'
+            >
+              <Button
+                variant={'tab'}
+                onClick={() => navigate('/courses')}
+                aria-label='Navigate to Kurzy'
+              >
                 Kurzy
               </Button>
               {auth.isAutenticated() && (
-                <Button variant='tab' onClick={() => navigate('/dashboard')}>
+                <Button
+                  variant='tab'
+                  onClick={() => navigate('/dashboard')}
+                  aria-label='Navigate to Dashboard'
+                >
                   Dashboard
                 </Button>
               )}
-            </div>
+            </nav>
           ) : // {auth.isAutenticated()
           auth.isAutenticated() ? (
             <DropdownMenuComponent
@@ -63,7 +80,11 @@ export default function Header() {
               width='w-25'
             />
           ) : (
-            <Button variant={'tab'} onClick={() => navigate('/courses')}>
+            <Button
+              variant={'tab'}
+              onClick={() => navigate('/courses')}
+              aria-label='Navigate to Kurzy'
+            >
               Kurzy
             </Button>
           )}
@@ -78,18 +99,27 @@ export default function Header() {
               }
               navigate('/login')
             }}
+            aria-label={auth.isAutenticated() ? 'Log out' : 'Log in'}
           >
             <span className='hidden sm:block'>
               {auth.isAutenticated() ? 'Odhlásit se' : 'Přihlásit se'}
             </span>
             {auth.isAutenticated() ? (
-              <LogOut size={20} className='text-destructive block sm:hidden ' />
+              <LogOut
+                size={20}
+                className='text-destructive block sm:hidden '
+                aria-hidden='true'
+              />
             ) : (
-              <LogIn size={20} className='block sm:hidden ' />
+              <LogIn
+                size={20}
+                className='block sm:hidden '
+                aria-hidden='true'
+              />
             )}
           </Button>
         </div>
-      </div>
+      </header>
     </>
   )
 }

@@ -12,7 +12,7 @@ const LogoAnim = ({ className, sizeBlur1, sizeBlur2 }: LogoAnimType) => {
   return (
     <>
       <div className='absolute inset-0 flex items-center justify-center'>
-        <motion.div
+        {/* <motion.div
           className={cn(
             'absolute w-80 h-80 bg-gray-400 rounded-full blur-3xl',
             sizeBlur1,
@@ -25,12 +25,12 @@ const LogoAnim = ({ className, sizeBlur1, sizeBlur2 }: LogoAnimType) => {
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-        />
+        /> */}
       </div>
       <div className='relative z-10'>
         <motion.img
           src={logo}
-          className={cn('h-32 w-32 lg:h-40 lg:w-40 object-contain', className)}
+          className={cn('h-32 w-32 lg:h-36 lg:w-36 object-contain', className)}
           animate={{
             y: [0, -15, 0],
           }}
@@ -38,10 +38,6 @@ const LogoAnim = ({ className, sizeBlur1, sizeBlur2 }: LogoAnimType) => {
             duration: 4,
             repeat: Infinity,
             ease: 'easeInOut',
-          }}
-          style={{
-            filter:
-              'drop-shadow(0 20px 40px rgba(69, 123, 255, 0.3)) drop-shadow(0 10px 20px rgba(145, 245, 173, 0.2))',
           }}
         />
       </div>

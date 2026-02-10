@@ -81,13 +81,20 @@ const QuizOption = ({
               e?.stopPropagation()
               onOptionRemove?.()
             }}
+            aria-label={`Remove option ${optIndex + 1}`}
           />
         )}
       </div>
     )
   }
 
-  // User mode
+  const getAnswerState = (): 'correct' | 'incorrect' | 'none' => {
+    if (!showCorrect) return 'none'
+    if (isCorrect) return 'correct'
+    if (isSelected && !isCorrect) return 'incorrect'
+    return 'none'
+  }
+
   return (
     <Label
       className={cn(
@@ -107,9 +114,11 @@ const QuizOption = ({
     >
       <Checkbox
         variant={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
-        checked={isSelected}
+        checked={isSelected || (showCorrect && isCorrect)}
         disabled={isSubmitted}
         onCheckedChange={onAnswerChange}
+        answerState={getAnswerState()}
+        aria-label={`Option ${optIndex + 1}: ${option}`}
       />
       <span className='text-xs sm:text-sm font-medium text-foreground'>
         {option}

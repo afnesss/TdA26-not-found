@@ -4,9 +4,10 @@ import { Label } from '@/components/ui/label'
 import { type CourseDetail, type Quiz } from '@/lib/schemas'
 import { startTransition, useEffect, useState } from 'react'
 import type { QuizStateById } from '../../../lib/types'
-import { useCourseMutation } from '../utils/courseMutation'
+import { useQuizSubmitMutation } from '../utils/quizSubmitMutation'
 import { handleSubmit, isQuizComplete } from '../utils/helperFunctions'
 import quizImg from '@/assets/t-play-blue.svg'
+import UnderlinedText from '@/components/shared/UnderlinedText'
 
 type QuizesSectionProps = {
   courseData?: CourseDetail | null
@@ -14,7 +15,7 @@ type QuizesSectionProps = {
 
 const QuizesSection = ({ courseData }: QuizesSectionProps) => {
   const [quizState, setQuizState] = useState<QuizStateById>({})
-  const queryMutation = useCourseMutation(setQuizState)
+  const queryMutation = useQuizSubmitMutation(setQuizState)
 
   useEffect(() => {
     if (!courseData?.quizzes) return
@@ -38,8 +39,10 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
 
   return (
     <section>
-      <Label size='default' className='font-bold mb-2'>
-        Kvízy
+      <Label className='font-bold mb-2'>
+        <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
+          Kvízy
+        </UnderlinedText>
       </Label>
 
       <div className='space-y-4'>

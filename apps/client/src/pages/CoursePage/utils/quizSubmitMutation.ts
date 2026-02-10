@@ -7,8 +7,10 @@ import {
   type QuizSubmitResponse,
 } from '@/lib/schemas'
 import type { QuizStateById } from '../../../lib/types'
+import { toast } from 'sonner'
+import { onError, onErrorWithRollback } from './helperFunctions'
 
-export function useCourseMutation(
+export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
 ) {
   const queryClient = useQueryClient()
@@ -43,6 +45,7 @@ export function useCourseMutation(
       }))
       return parsed.data
     },
+    networkMode: 'always',
     onMutate: ({ courseId, quizId }) => {
       const previousData = queryClient.getQueryData<CourseDetail | undefined>([
         'course',
@@ -66,18 +69,20 @@ export function useCourseMutation(
 
       return { previousData }
     },
-    onError: (err, variables, context) => {
-      console.log('error submiting quiz ', err)
-      queryClient.setQueryData(
+    onError: (error, variables, context) => {
+      onErrorWithRollback(
+        error,
+        'Chyba při odesílání kvízu',
+        queryClient,
         ['course', variables.courseId],
         context?.previousData,
       )
     },
     onSuccess: (data, variables) => {
-      console.log('quiz submitted', data)
       queryClient.invalidateQueries({
         queryKey: ['course', variables.courseId],
       })
+      toast.success('Kvíz byl odeslán')
     },
   })
 

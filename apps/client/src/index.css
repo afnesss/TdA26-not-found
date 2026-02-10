@@ -138,7 +138,7 @@
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    scrollbar-width: none;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
   }

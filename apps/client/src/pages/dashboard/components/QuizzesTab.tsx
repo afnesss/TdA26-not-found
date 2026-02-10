@@ -1,18 +1,18 @@
-import {
-  createQuiz,
-  deleteQuiz,
-  getQuizzes,
-  updateQuiz,
-} from '@/api/queries/quizQueries'
+import { getQuizzes } from '@/api/queries/quizQueries'
+import quizImg from '@/assets/t-play-blue.svg'
 import { QuizzesContentSkeleton } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import type { Quiz } from '@/lib/schemas'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ApiError } from '@/lib/types'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import {
+  useCreateQuizMutation,
+  useDeleteQuizMutation,
+  useUpdateQuizMutation,
+} from '../../CoursePage/utils/useQuizMutation'
 import DetailHeader from './DetailHeader'
-import quizImg from '@/assets/t-play-blue.svg'
 
 const QuizzesTab = ({
   courseId,
@@ -21,54 +21,29 @@ const QuizzesTab = ({
   courseId: string
   activeTab: string
 }) => {
-  const queryClient = useQueryClient()
   const [draftQuiz, setDraftQuiz] = useState<Quiz | null>(null)
+  const isOffline = !navigator.onLine
 
   const {
     data: quizzes = [],
     isError: quizzesError,
+    error: quizzesErrorObj,
     isLoading: quizzesLoading,
     refetch: refetchQuizzes,
-  } = useQuery<Quiz[] | null>({
+  } = useQuery<Quiz[] | null, ApiError>({
     queryKey: ['quizzes', courseId],
     queryFn: () => getQuizzes(courseId!),
     enabled: Boolean(courseId) && activeTab === 'quizzes',
+    networkMode: 'always',
   })
 
-  const updateQuizMutation = useMutation({
-    mutationFn: ({ quizId, data }: { quizId: string; data: Quiz }) =>
-      updateQuiz(courseId!, quizId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
-      toast.success('Kvíz byl aktualizován')
-    },
-    onError: () => {
-      toast.error('Chyba při ukládání')
-    },
-  })
+  const isNetworkError = quizzesErrorObj?.isNetworkError ?? false
 
-  const createQuizMutation = useMutation({
-    mutationFn: (data: Quiz) => createQuiz(courseId!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
-      setDraftQuiz(null)
-      toast.success('Kvíz byl vytvořen')
-    },
-    onError: () => {
-      toast.error('Chyba při ukládání')
-    },
-  })
-
-  const deleteQuizMutation = useMutation({
-    mutationFn: (quizId: string) => deleteQuiz(courseId, quizId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
-      toast.success('Kvíz byl smazán')
-    },
-    onError: () => {
-      toast.error('Chyba při mazání kvízu')
-    },
-  })
+  const { mutate: createQuizMutation, isPending: createQuizPending } =
+    useCreateQuizMutation(courseId, setDraftQuiz)
+  const { mutate: updateQuizMutation, isPending: updateQuizPending } =
+    useUpdateQuizMutation(courseId)
+  const { mutate: deleteQuizMutation } = useDeleteQuizMutation(courseId)
 
   const handleUpdate = (quizId: string, editedQuiz: Quiz) => {
     const cleanedQuiz: Quiz = {
@@ -81,7 +56,7 @@ const QuizzesTab = ({
         return q
       }),
     }
-    updateQuizMutation.mutate({
+    updateQuizMutation({
       quizId,
       data: cleanedQuiz,
     })
@@ -89,14 +64,13 @@ const QuizzesTab = ({
   const handleCreateQuiz = (editedQuiz: Quiz) => {
     const cleanedQuiz: Quiz = {
       ...editedQuiz,
-      // Видалити uuid з квізу та питань для створення
       uuid: undefined,
       questions: editedQuiz.questions.map((q) => {
         const { uuid, ...questionWithoutUuid } = q
         return questionWithoutUuid
       }),
     }
-    createQuizMutation.mutate(cleanedQuiz)
+    createQuizMutation(cleanedQuiz)
   }
   const handleAddQuiz = () => {
     const newDraft: Quiz = {
@@ -127,11 +101,13 @@ const QuizzesTab = ({
 
       {quizzesLoading ? (
         <QuizzesContentSkeleton />
+      ) : isOffline && quizzes?.length === 0 ? (
+        <StateComp type='network-offline' onAction={() => refetchQuizzes()} />
       ) : quizzesError ? (
         <StateComp
-          type='error'
+          type={isNetworkError ? 'network-offline' : 'error'}
           onAction={() => refetchQuizzes()}
-          message='Nepodařilo se načíst kvízy'
+          message={isNetworkError ? undefined : 'Nepodařilo se načíst kvízy'}
         />
       ) : (quizzes && quizzes.length > 0) || draftQuiz ? (
         <div className='grid gap-4'>
@@ -145,7 +121,7 @@ const QuizzesTab = ({
               onSave={async (updatedQuiz) => {
                 handleCreateQuiz(updatedQuiz)
               }}
-              isSubmitting={createQuizMutation.isPending}
+              isSubmitting={createQuizPending}
             />
           )}
           {quizzes &&
@@ -158,9 +134,9 @@ const QuizzesTab = ({
                 onSave={async (updatedQuiz) => {
                   handleUpdate(quiz.uuid!, updatedQuiz)
                 }}
-                isSubmitting={updateQuizMutation.isPending}
+                isSubmitting={updateQuizPending}
                 onDelete={() => {
-                  deleteQuizMutation.mutateAsync(quiz.uuid!)
+                  deleteQuizMutation(quiz.uuid!)
                 }}
               />
             ))}

@@ -17,7 +17,13 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { Fragment, useEffect, useState, type MouseEvent } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useState,
+  useTransition,
+  type MouseEvent,
+} from 'react'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
 import { useForm, useWatch, type FieldValue } from 'react-hook-form'
@@ -121,9 +127,27 @@ const QuizComponent = ({
   })
 
   const formValues = useWatch({ control, defaultValue: quiz })
+  const {
+    data: quizAnalytics,
+    isError: analyticsError,
+    isLoading: analyticsLoading,
+    refetch: refetchQuizAnalytics,
+  } = useQuery<QuizAnalyticsResponse | null>({
+    queryKey: ['quizAnalytics', quiz.uuid],
+    queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
+    enabled:
+      Boolean(courseId) &&
+      Boolean(isExpanded) &&
+      mode === 'lecturer' &&
+      !isDraft &&
+      (formValues?.attemptsCount ?? 0) > 0,
+  })
+
   // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded)
+    startTransition(() => {
+      setIsExpanded(!isExpanded)
+    })
   }
   useEffect(() => {
     reset(quiz)
@@ -278,7 +302,7 @@ const QuizComponent = ({
 
   const handleSave = handleSubmit((data: Quiz) => {
     onSave?.(data)
-    reset()
+    // Don't reset here - let useEffect handle it when quiz prop updates
   })
 
   const displayQuiz = mode === 'lecturer' ? formValues : quiz
@@ -332,6 +356,7 @@ const QuizComponent = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
+                      aria-label='Cancel quiz draft'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -340,6 +365,7 @@ const QuizComponent = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
+                            aria-label={`Delete quiz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -358,6 +384,8 @@ const QuizComponent = ({
                         e.stopPropagation()
                         toggleExpand()
                       }}
+                      aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                      aria-expanded={isExpanded}
                     >
                       {isExpanded ? (
                         <ChevronUp
@@ -405,6 +433,7 @@ const QuizComponent = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
+                      aria-label='Cancel quiz draft'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -413,6 +442,7 @@ const QuizComponent = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
+                            aria-label={`Delete quiz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -424,7 +454,11 @@ const QuizComponent = ({
                     )
                   )}
 
-                  <button className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'>
+                  <button
+                    className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'
+                    aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                    aria-expanded={isExpanded}
+                  >
                     {isExpanded ? (
                       <ChevronUp
                         size={20}
@@ -446,7 +480,7 @@ const QuizComponent = ({
             <div className='flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1'>
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <CheckCircle size={14} className='text-primary shrink-0' />
-                <span>{displayQuiz.attemptsCount} vyplnění</span>
+                <span>{quiz.attemptsCount} vyplnění</span>
               </span>
 
               <span className='flex items-center gap-1 whitespace-nowrap'>
@@ -535,6 +569,7 @@ const QuizComponent = ({
                   !Array.isArray(errors.questions) &&
                   'border-destructive',
               )}
+              aria-label='Add new question'
             >
               <Plus size={20} />
               Přidat otázku
@@ -569,6 +604,7 @@ const QuizComponent = ({
                           setShowIncompleteError(false)
                           onSubmit?.()
                         }}
+                        aria-label='Submit quiz answers'
                       >
                         <span className='sm:hidden'>Odeslat</span>
                         <span className='hidden sm:inline'>
@@ -582,6 +618,11 @@ const QuizComponent = ({
                       className='rounded-lg shadow-none'
                       disabled={userState?.status !== 'submitted'}
                       onClick={onToggleShowCorrect}
+                      aria-label={
+                        userState?.showCorrect
+                          ? 'Hide correct answers'
+                          : 'Show correct answers'
+                      }
                     >
                       {userState?.showCorrect
                         ? 'Skrýt odpovědi'

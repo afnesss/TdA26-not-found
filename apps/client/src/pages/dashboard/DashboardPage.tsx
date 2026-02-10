@@ -17,6 +17,12 @@ import CourseComponent from '../../components/shared/CourseComponent'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import { toast } from 'sonner'
+import { useTitle } from '@/lib/dynamicTitleHook'
+import type { ApiError } from '@/lib/types'
+import {
+  useCreateCourseMutation,
+  useDeleteCourseMutation,
+} from '../CoursePage/utils/useCourseMutation'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -36,16 +42,9 @@ const DashboardDesign1 = () => {
     queryFn: getCourses,
   })
 
-  const deleteCourseMutation = useMutation({
-    mutationFn: (courseId: string) => deleteCourse(courseId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] })
-      toast.success('Kurz byl smazán')
-    },
-    onError: () => {
-      toast.error('Chyba při mazání kurzu')
-    },
-  })
+  const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
+  const { mutateAsync: createCourseMutation } =
+    useCreateCourseMutation(setCourseDraft)
   const filteredCourses = filterCourses(courses, searchQuery)
   const hasMoreCourses = filteredCourses.length > displayCount
   const displayedCourses = filteredCourses.slice(0, displayCount)
@@ -75,11 +74,14 @@ const DashboardDesign1 = () => {
       size='grid'
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
+      aria-label='Vytvořit kurz'
     >
-      <Plus className='w-5 h-5' />
-      {!mobile && <span>Vytvořit kurz</span>}
+      <Plus className='w-5 h-5' aria-hidden='true' />
+      {!mobile && <span className='whitespace-nowrap'>Vytvořit kurz</span>}
     </Button>
   )
+
+  useTitle('Sprava kurzů')
   return (
     <>
       {/* Main Content */}
@@ -122,11 +124,7 @@ const DashboardDesign1 = () => {
                     type='edit'
                     isDraft
                     onSaveDraft={async (data) => {
-                      await createCourse(data)
-                      setCourseDraft(null)
-                      queryClient.invalidateQueries({
-                        queryKey: ['courses'],
-                      })
+                      createCourseMutation(data)
                     }}
                     onEdit={() => {
                       handleEditCourse(courseDraft!)
@@ -143,9 +141,7 @@ const DashboardDesign1 = () => {
                     onEdit={() => {
                       handleEditCourse(course!)
                     }}
-                    onDelete={() =>
-                      deleteCourseMutation.mutateAsync(course.uuid)
-                    }
+                    onDelete={() => deleteCourseMutation(course.uuid)}
                   />
                 ))}
               </div>
@@ -156,6 +152,7 @@ const DashboardDesign1 = () => {
                     variant='primary'
                     size='primary'
                     onClick={loadMoreCourses}
+                    aria-label='Načíst další kurzy'
                   >
                     Načíst další kurzy
                   </Button>
@@ -164,27 +161,27 @@ const DashboardDesign1 = () => {
             </>
           )}
           {/* display */}
-          {!coursesLoading && !coursesError && courses.length === 0 ? (
-            <StateComp
-              type='no-content'
-              onAction={() => console.log('Create course')}
-              message='Začněte vytvořením svého prvního kurzu'
-            />
-          ) : coursesError ? (
-            <StateComp
-              type='error'
-              onAction={() => refetchCourses()}
-              message='Nepodařilo se načíst kurzy'
-            />
-          ) : (
-            filteredCourses.length === 0 &&
-            !coursesLoading && (
+          {!courseDraft &&
+            (!coursesLoading && !coursesError && courses.length === 0 ? (
               <StateComp
-                type='empty-search'
-                onAction={() => setSearchQuery('')}
+                type='no-content'
+                message='Začněte vytvořením svého prvního kurzu'
               />
-            )
-          )}
+            ) : coursesError ? (
+              <StateComp
+                type='error'
+                onAction={() => refetchCourses()}
+                message='Nepodařilo se načíst kurzy'
+              />
+            ) : (
+              filteredCourses.length === 0 &&
+              !coursesLoading && (
+                <StateComp
+                  type='empty-search'
+                  onAction={() => setSearchQuery('')}
+                />
+              )
+            ))}
         </div>
       </div>
     </>

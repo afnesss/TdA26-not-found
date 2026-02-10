@@ -141,7 +141,7 @@ export const QuestionAnalyticsSchema = z.object({
 
 export const QuizAnalyticsResponseSchema = z.object({
   uuid: z.string(),
-  // averagePercentage: z.number().min(0),
+  averagePercentage: z.number().min(0),
   questionAnalytics: z.array(QuestionAnalyticsSchema),
 })
 export type SingleChoiceQuestion = z.infer<typeof SingleChoiceQuestionSchema>

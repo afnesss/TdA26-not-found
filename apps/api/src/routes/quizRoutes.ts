@@ -7,19 +7,13 @@ import { quizSubmitLimiter, writeLimiter } from "../middleware/rateLimiter";
 const router = Router({ mergeParams: true });
 
 router.get("/", quizController.getQuizzes);
-router.post("/", writeLimiter, validate(QuizSchema), quizController.createQuiz);
-router.get("/:quizId/analytics", writeLimiter, quizController.getQuizAnalytics);
+router.post("/", validate(QuizSchema), quizController.createQuiz);
+router.get("/:quizId/analytics", quizController.getQuizAnalytics);
 router.get("/:quizId", quizController.getQuiz);
-router.put(
-  "/:quizId",
-  writeLimiter,
-  validate(QuizSchema),
-  quizController.updateQuiz,
-);
-router.delete("/:quizId", writeLimiter, quizController.deleteQuiz);
+router.put("/:quizId", validate(QuizSchema), quizController.updateQuiz);
+router.delete("/:quizId", quizController.deleteQuiz);
 router.post(
   "/:quizId/submit",
-  quizSubmitLimiter,
   validate(QuizSubmitRequestSchema),
   quizController.submitQuiz,
 );

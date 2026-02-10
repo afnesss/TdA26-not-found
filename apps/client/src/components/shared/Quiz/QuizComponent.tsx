@@ -88,7 +88,6 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
   const [showIncompleteError, setShowIncompleteError] = useState(false)
-  const [isPending, startTransition] = useTransition()
   const { courseId } = useParams<{ courseId: string }>()
 
   const {
@@ -103,6 +102,28 @@ const QuizComponent = ({
     resolver: zodResolver(QuizValidationSchema),
     defaultValues: quiz,
     mode: 'onSubmit',
+  })
+
+  const {
+    data: quizAnalytics,
+    isError: analyticsError,
+    isLoading: analyticsLoading,
+    refetch: refetchQuizAnalytics,
+  } = useQuery<QuizAnalyticsResponse | null>({
+    queryKey: ['quizAnalytics', quiz.uuid],
+    queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
+    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
+  })
+
+  console.log('🔍 Quiz Analytics Debug:', {
+    mode,
+    isExpanded,
+    courseId,
+    quizUuid: quiz.uuid,
+    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
+    quizAnalytics,
+    analyticsLoading,
+    analyticsError,
   })
 
   const formValues = useWatch({ control, defaultValue: quiz })
@@ -468,13 +489,13 @@ const QuizComponent = ({
               </span>
 
               {mode === 'lecturer' &&
-                (quiz.attemptsCount ?? 0) > 0 &&
-                quiz.averagePercentage !== undefined &&
-                quiz.averagePercentage !== null && (
+                quizAnalytics &&
+                !analyticsLoading &&
+                (displayQuiz.attemptsCount ?? 0) > 0 && (
                   <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
                     <span>Průměr:</span>
                     <span className='text-accent-teal'>
-                      {quiz.averagePercentage}%
+                      {quizAnalytics.averagePercentage ?? 0}%
                     </span>
                   </span>
                 )}

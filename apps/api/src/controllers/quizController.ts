@@ -330,11 +330,17 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
     if (totalAttempts === 0) {
       return res.json({
         uuid: quiz.uuid,
+        title: quiz.title,
+        totalAttempts,
+        avegarePercentage: 0,
         questionAnalytics: [],
       });
     }
 
+    const totalScore = submissions.reduce((sum, s) => s.score + sum, 0);
+    const averageScore = totalScore / totalAttempts;
     const questions = quiz.questions as Question[];
+    const averagePercentage = (averageScore / questions.length) * 100;
 
     const questionAnalytics = questions.map((question, qIndex) => {
       const optionCounts = new Array(question.options.length).fill(0);
@@ -393,6 +399,8 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
 
     res.json({
       uuid: quiz.uuid,
+      // attemptsCount: totalAttempts,
+      averagePercentage: parseFloat(averagePercentage.toFixed(0)) || 0,
       questionAnalytics,
     });
   } catch (error) {

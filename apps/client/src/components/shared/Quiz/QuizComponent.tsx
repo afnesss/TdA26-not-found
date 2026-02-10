@@ -88,6 +88,7 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
   const [showIncompleteError, setShowIncompleteError] = useState(false)
+  const [, startTransition] = useTransition()
   const { courseId } = useParams<{ courseId: string }>()
 
   const {
@@ -102,28 +103,6 @@ const QuizComponent = ({
     resolver: zodResolver(QuizValidationSchema),
     defaultValues: quiz,
     mode: 'onSubmit',
-  })
-
-  const {
-    data: quizAnalytics,
-    isError: analyticsError,
-    isLoading: analyticsLoading,
-    refetch: refetchQuizAnalytics,
-  } = useQuery<QuizAnalyticsResponse | null>({
-    queryKey: ['quizAnalytics', quiz.uuid],
-    queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
-    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
-  })
-
-  console.log('🔍 Quiz Analytics Debug:', {
-    mode,
-    isExpanded,
-    courseId,
-    quizUuid: quiz.uuid,
-    enabled: Boolean(courseId) && Boolean(isExpanded) && mode === 'lecturer',
-    quizAnalytics,
-    analyticsLoading,
-    analyticsError,
   })
 
   const formValues = useWatch({ control, defaultValue: quiz })

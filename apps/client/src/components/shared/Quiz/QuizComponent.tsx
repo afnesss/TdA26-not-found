@@ -1,5 +1,8 @@
+import { getQuizAnalytics } from '@/api/queries/quizQueries'
+import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { handleCapitalizedInput } from '@/lib/capitalize'
 import {
   QuizValidationSchema,
   type Question,
@@ -7,8 +10,10 @@ import {
   type QuizAnalyticsResponse,
 } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
-import { handleCapitalizedInput } from '@/lib/capitalize'
+import { cn } from '@/lib/utils'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery } from '@tanstack/react-query'
 import {
   CheckCircle,
   ChevronDown,
@@ -17,22 +22,11 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import {
-  Fragment,
-  useEffect,
-  useState,
-  useTransition,
-  type MouseEvent,
-} from 'react'
+import { Fragment, useEffect, useState, useTransition } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
-import { useForm, useWatch, type FieldValue } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { cn } from '@/lib/utils'
-import DeleteConfirmDialog from '@/components/ui/AlertDialog'
-import { useQuery } from '@tanstack/react-query'
-import { getQuizAnalytics } from '@/api/queries/quizQueries'
-import { useParams } from 'react-router'
 
 const isDirtyText = (className?: string) => {
   return (
@@ -467,17 +461,14 @@ const QuizComponent = ({
                 <span>{displayQuiz.questions?.length ?? 0} otázek</span>
               </span>
 
-              {mode === 'lecturer' &&
-                quizAnalytics &&
-                !analyticsLoading &&
-                (displayQuiz.attemptsCount ?? 0) > 0 && (
-                  <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
-                    <span>Průměr:</span>
-                    <span className='text-accent-teal'>
-                      {quizAnalytics.averagePercentage ?? 0}%
-                    </span>
+              {mode === 'lecturer' && (displayQuiz.attemptsCount ?? 0) > 0 && (
+                <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
+                  <span>Průměr:</span>
+                  <span className='text-accent-teal'>
+                    {displayQuiz.averagePercentage ?? 0}%
                   </span>
-                )}
+                </span>
+              )}
 
               {mode === 'lecturer' &&
                 isDirty &&

@@ -23,6 +23,7 @@ const QuizzesTab = ({
 }) => {
   const [draftQuiz, setDraftQuiz] = useState<Quiz | null>(null)
   const isOffline = !navigator.onLine
+  const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
 
   const {
     data: quizzes = [],
@@ -137,6 +138,12 @@ const QuizzesTab = ({
                 isSubmitting={updateQuizPending}
                 onDelete={() => {
                   deleteQuizMutation(quiz.uuid!)
+                }}
+                isExpanded={expandedQuizId === quiz.uuid}
+                onToggleExpand={() => {
+                  setExpandedQuizId(
+                    expandedQuizId === quiz.uuid ? null : (quiz.uuid ?? null),
+                  )
                 }}
               />
             ))}

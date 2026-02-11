@@ -64,6 +64,8 @@ type QuizComponentProps = {
   onDelete?: () => void | Promise<void>
   isDraft?: boolean
   onCancelDraft?: () => void
+  isExpanded?: boolean
+  onToggleExpand?: () => void
 }
 
 const QuizComponent = ({
@@ -79,8 +81,9 @@ const QuizComponent = ({
   onDelete,
   isDraft,
   onCancelDraft,
+  isExpanded,
+  onToggleExpand,
 }: QuizComponentProps) => {
-  const [isExpanded, setIsExpanded] = useState(isDraft ? true : false)
   const [showIncompleteError, setShowIncompleteError] = useState(false)
   const [, startTransition] = useTransition()
   const { courseId } = useParams<{ courseId: string }>()
@@ -116,11 +119,10 @@ const QuizComponent = ({
       (formValues?.attemptsCount ?? 0) > 0,
   })
 
-  // Initialize edited quiz when expanding in lecturer mode
   const toggleExpand = () => {
-    startTransition(() => {
-      setIsExpanded(!isExpanded)
-    })
+    if (onToggleExpand) {
+      onToggleExpand()
+    }
   }
   useEffect(() => {
     reset(quiz)

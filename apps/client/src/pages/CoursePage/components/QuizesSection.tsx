@@ -16,6 +16,7 @@ type QuizesSectionProps = {
 const QuizesSection = ({ courseData }: QuizesSectionProps) => {
   const [quizState, setQuizState] = useState<QuizStateById>({})
   const queryMutation = useQuizSubmitMutation(setQuizState)
+  const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!courseData?.quizzes) return
@@ -106,6 +107,12 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
                 queryMutation.variables?.quizId === quiz.uuid &&
                 queryMutation.isPending
               }
+              isExpanded={expandedQuizId === quiz.uuid}
+              onToggleExpand={() => {
+                setExpandedQuizId(
+                  expandedQuizId === quiz.uuid ? null : (quiz.uuid ?? null),
+                )
+              }}
             />
           ))
         ) : (

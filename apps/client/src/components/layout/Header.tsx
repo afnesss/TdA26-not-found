@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
 import logo from '../../assets/white_logo.svg'
 import { Button } from '../ui/button'
+import { toast } from 'sonner'
 
 export default function Header() {
   const navigate = useNavigate()
@@ -96,6 +97,7 @@ export default function Header() {
             onClick={() => {
               if (auth.isAutenticated()) {
                 auth.logout()
+                toast.success('Odhlášení úspěšné')
               }
               navigate('/login')
             }}

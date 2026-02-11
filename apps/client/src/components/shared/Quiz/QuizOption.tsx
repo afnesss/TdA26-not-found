@@ -114,7 +114,7 @@ const QuizOption = ({
     >
       <Checkbox
         variant={question.type === 'singleChoice' ? 'radio' : 'checkbox'}
-        checked={isSelected || (showCorrect && isCorrect)}
+        checked={isSelected}
         disabled={isSubmitted}
         onCheckedChange={onAnswerChange}
         answerState={getAnswerState()}

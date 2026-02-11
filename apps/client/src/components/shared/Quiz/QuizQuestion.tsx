@@ -173,7 +173,7 @@ const QuizQuestion = ({
                   </div>
                 </div>
               ) : (
-                <div className='flex-1'>
+                <div className={cn(mode === 'user' ? '' : 'flex-1')}>
                   <div className='flex items-center justify-between gap-2'>
                     <Label size='md' className='flex-1 text-xs sm:text-sm'>
                       {question.question}
@@ -183,12 +183,12 @@ const QuizQuestion = ({
                       <div className='shrink-0'>
                         {userState.results?.correctPerQuestion[qIndex] ? (
                           <Check
-                            className='text-secondary size-4 md:size-5'
+                            className='text-secondary p-1 rounded-full bg-secondary/30 size-5 md:size-6'
                             strokeWidth={3}
                           />
                         ) : (
                           <X
-                            className='text-destructive size-4 md:size-5'
+                            className='text-destructive p-1 rounded-full bg-destructive/30 size-5 md:size-6'
                             strokeWidth={3}
                           />
                         )}

@@ -5,8 +5,15 @@ import type {
 } from '@/lib/schemas'
 import apiFetch from '../client'
 
-export const getFeed = async (courseId: string): Promise<FeedItem[] | null> => {
-  return await apiFetch<FeedItem[]>(`/courses/${courseId}/feed`)
+export const getFeed = async (
+  courseId: string,
+  cursor?: string,
+): Promise<FeedItem[] | null> => {
+  const url = cursor
+    ? `/courses/${courseId}/feed/${cursor}`
+    : `/courses/${courseId}/feed`
+
+  return await apiFetch<FeedItem[]>(url)
 }
 
 export const createPost = async (

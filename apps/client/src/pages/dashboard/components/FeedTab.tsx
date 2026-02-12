@@ -13,6 +13,8 @@ import {
   useCreatePostMutation,
   useUpdatePostMutation,
 } from '@/pages/CoursePage/utils/useFeedMutation'
+import { useFeedPagination } from '@/pages/CoursePage/utils/useFeedPagination'
+import { Button } from '@/components/ui/button'
 
 const FeedTab = ({
   courseId,
@@ -25,19 +27,17 @@ const FeedTab = ({
   const isOffline = !navigator.onLine
 
   const {
-    data: feed = [],
+    allPosts,
+    loadMorePosts,
+    hasMore,
+    isLoadingMore,
+    paginationError,
+    isLoading: feedLoading,
     isError: feedError,
     error: feedErrorObj,
-    isLoading: feedLoading,
     refetch: refetchFeed,
-  } = useQuery<FeedItem[] | null, ApiError>({
-    queryKey: ['feed', courseId],
-    queryFn: () => getFeed(courseId!),
-    enabled: Boolean(courseId),
-    networkMode: 'always',
-  })
-
-  const isNetworkError = feedErrorObj?.isNetworkError ?? false
+  } = useFeedPagination(courseId!)
+  const isNetworkError = (feedErrorObj as ApiError)?.isNetworkError ?? false
 
   const { mutateAsync: createPostMutation } = useCreatePostMutation(courseId)
   const { mutateAsync: updatePostMutation } = useUpdatePostMutation(courseId)
@@ -78,7 +78,7 @@ const FeedTab = ({
 
       {feedLoading ? (
         <FeedContentSkeleton />
-      ) : isOffline && feed?.length === 0 ? (
+      ) : isOffline && allPosts?.length === 0 ? (
         <StateComp type='network-offline' onAction={() => refetchFeed()} />
       ) : feedError ? (
         <StateComp
@@ -88,7 +88,7 @@ const FeedTab = ({
             isNetworkError ? undefined : 'Nepodařilo se načíst informační kanál'
           }
         />
-      ) : (feed && feed.length > 0) || draftPost ? (
+      ) : (allPosts && allPosts.length > 0) || draftPost ? (
         <div className='bg-background rounded-xl shadow-md p-2 sm:p-3 md:p-5'>
           <div className='space-y-4'>
             {draftPost && (
@@ -101,27 +101,49 @@ const FeedTab = ({
                 onCancelDraft={() => setDraftPost(null)}
               />
             )}
-            {feed && feed.length > 0 && (
+            {allPosts && allPosts.length > 0 && (
               <>
-                {feed.map((feedItem) => (
-                  <FeedItemComp
-                    feedItem={feedItem}
-                    key={feedItem.uuid}
-                    type='edit'
-                    onSave={async (editedFeed) => {
-                      await updatePostMutation({
-                        postId: feedItem.uuid,
-                        data: editedFeed,
-                      })
-                    }}
-                    onDelete={() => {
-                      deletePostMutation(feedItem.uuid)
-                    }}
-                  />
-                ))}
+                {allPosts.map(
+                  (feedItem) =>
+                    feedItem && (
+                      <FeedItemComp
+                        feedItem={feedItem}
+                        key={feedItem.uuid}
+                        type='edit'
+                        onSave={async (editedFeed) => {
+                          await updatePostMutation({
+                            postId: feedItem.uuid,
+                            data: editedFeed,
+                          })
+                        }}
+                        onDelete={() => {
+                          deletePostMutation(feedItem.uuid)
+                        }}
+                      />
+                    ),
+                )}
               </>
             )}
           </div>
+
+          {hasMore && (
+            <div className='mt-3 text-center'>
+              <Button
+                variant='primary'
+                size='primary'
+                onClick={() => {
+                  loadMorePosts()
+                }}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore
+                  ? 'Načítání...'
+                  : paginationError
+                    ? 'Chyba při načítaní'
+                    : 'Načíst další příspěvky'}
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <StateComp

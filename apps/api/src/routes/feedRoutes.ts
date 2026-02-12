@@ -15,7 +15,10 @@ import { writeLimiter } from "../middleware/rateLimiter";
 
 const router = Router({ mergeParams: true });
 
+router.get("/stream", streamFeed);
+router.get("/:cursor", getFeed);
 router.get("/", getFeed);
+
 router.post("/", writeLimiter, validate(FeedCreateRequestSchema), createPost);
 router.put(
   "/:postId",
@@ -24,6 +27,5 @@ router.put(
   updatePost,
 );
 router.delete("/:postId", writeLimiter, deletePost);
-router.get("/stream", streamFeed);
 
 export default router;

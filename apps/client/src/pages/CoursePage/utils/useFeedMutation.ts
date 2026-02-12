@@ -1,6 +1,6 @@
 import { createPost, deletePost, updatePost } from '@/api/queries/feedQueries'
 import type { ApiError } from '@/lib/types'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import type { FeedItem } from '@/lib/schemas'
@@ -11,15 +11,15 @@ export const useCreatePostMutation = (courseId: string) => {
     FeedItem,
     ApiError,
     { message: string },
-    { previousFeed?: FeedItem[] }
+    { previousFeed?: InfiniteData<FeedItem[]> }
   >({
     mutationFn: (data: { message: string }) => createPost(courseId, data),
     networkMode: 'always',
     onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: ['feed', courseId] })
+      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
 
-      const previousFeed = queryClient.getQueryData<FeedItem[]>([
-        'feed',
+      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
+        'feed-paginated',
         courseId,
       ])
 
@@ -30,16 +30,21 @@ export const useCreatePostMutation = (courseId: string) => {
         type: 'manual',
       }
 
-      queryClient.setQueryData<FeedItem[]>(['feed', courseId], (oldFeed) => {
-        if (!oldFeed) return oldFeed
-        return [optimisticPost, ...oldFeed]
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
+        if (!oldData?.pages) return oldData
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page, index) => 
+            index === 0 ? [optimisticPost, ...page] : page
+          ),
+        }
       })
 
       return { previousFeed }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['feed', courseId],
+        queryKey: ['feed-paginated', courseId],
       })
       toast.success('Příspěvek vytvořen')
     },
@@ -49,7 +54,7 @@ export const useCreatePostMutation = (courseId: string) => {
         error,
         'Chyba při vytváření příspěvku',
         queryClient,
-        ['feed', courseId],
+        ['feed-paginated', courseId],
         context?.previousFeed,
       )
     },
@@ -62,31 +67,34 @@ export const useUpdatePostMutation = (courseId: string) => {
     FeedItem,
     ApiError,
     { postId: string; data: FeedItem },
-    { previousFeed?: FeedItem[] }
+    { previousFeed?: InfiniteData<FeedItem[]> }
   >({
     mutationFn: ({ postId, data }: { postId: string; data: FeedItem }) =>
       updatePost(courseId, postId, data),
     networkMode: 'always',
     onMutate: async ({ postId, data }) => {
-      await queryClient.cancelQueries({ queryKey: ['feed', courseId] })
+      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
 
-      const previousFeed = queryClient.getQueryData<FeedItem[]>([
-        'feed',
+      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
+        'feed-paginated',
         courseId,
       ])
 
-      queryClient.setQueryData<FeedItem[]>(['feed', courseId], (oldFeed) => {
-        if (!oldFeed) return oldFeed
-        return oldFeed.map((item) =>
-          item.uuid === postId ? { ...item, ...data } : item,
-        )
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
+        if (!oldData?.pages) return oldData
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => 
+            page.map(item => item.uuid === postId ? { ...item, ...data } : item)
+          ),
+        }
       })
 
       return { previousFeed }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['feed', courseId],
+        queryKey: ['feed-paginated', courseId],
       })
       toast.success('Příspěvek uložen')
     },
@@ -96,7 +104,7 @@ export const useUpdatePostMutation = (courseId: string) => {
         error,
         'Chyba při ukládání příspěvku',
         queryClient,
-        ['feed', courseId],
+        ['feed-paginated', courseId],
         context?.previousFeed,
       )
     },
@@ -105,27 +113,32 @@ export const useUpdatePostMutation = (courseId: string) => {
 
 export const useDeletePostMutation = (courseId: string) => {
   const queryClient = useQueryClient()
-  return useMutation<void, ApiError, string, { previousFeed?: FeedItem[] }>({
+  return useMutation<void, ApiError, string, { previousFeed?: InfiniteData<FeedItem[]> }>({
     mutationFn: (postId: string) => deletePost(courseId, postId),
     networkMode: 'always',
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: ['feed', courseId] })
+      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
 
-      const previousFeed = queryClient.getQueryData<FeedItem[]>([
-        'feed',
+      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
+        'feed-paginated',
         courseId,
       ])
 
-      queryClient.setQueryData<FeedItem[]>(['feed', courseId], (oldFeed) => {
-        if (!oldFeed) return oldFeed
-        return oldFeed.filter((item) => item.uuid !== postId)
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
+        if (!oldData?.pages) return oldData
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => 
+            page.filter(item => item.uuid !== postId)
+          ),
+        }
       })
 
       return { previousFeed }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['feed', courseId],
+        queryKey: ['feed-paginated', courseId],
       })
       toast.success('Přispěvek smazán')
     },
@@ -134,7 +147,7 @@ export const useDeletePostMutation = (courseId: string) => {
         error,
         'Chyba při mazání příspěvku',
         queryClient,
-        ['feed', courseId],
+        ['feed-paginated', courseId],
         context?.previousFeed,
       )
     },

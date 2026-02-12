@@ -49,7 +49,7 @@ export const useFeedPagination = (
 
   return {
     allPosts,
-    loadMorePosts: fetchNextPage,
+    loadMorePosts,
     hasMore: hasNextPage,
     isLoadingMore: isFetchingNextPage,
     isLoading,

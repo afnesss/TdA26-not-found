@@ -118,6 +118,7 @@ const QuizzesTab = ({
               quiz={draftQuiz}
               mode='lecturer'
               isDraft={true}
+              isExpanded={true}
               onCancelDraft={() => setDraftQuiz(null)}
               onSave={async (updatedQuiz) => {
                 handleCreateQuiz(updatedQuiz)

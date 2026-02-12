@@ -4,13 +4,21 @@ import { Label } from '@/components/ui/label'
 import type { FeedItem } from '@/lib/schemas'
 import feedImg from '@/assets/disconnect-blue.svg'
 import UnderlinedText from '@/components/shared/UnderlinedText'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { useParams } from 'react-router'
+import { useFeedPagination } from '../utils/useFeedPagination'
 
 type FeedSectionProps = {
   feed: FeedItem[]
-  isConnected: boolean
+  isConnected?: boolean
 }
 
 const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
+  const { id: courseId } = useParams()
+  const { allPosts, loadMorePosts, hasMore, isLoadingMore, paginationError } =
+    useFeedPagination(courseId!, feed)
+
   return (
     <section>
       <Label className='font-bold mb-2'>
@@ -18,13 +26,39 @@ const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
           Oznámení
         </UnderlinedText>
       </Label>
-      {feed && feed.length > 0 ? (
+      {allPosts && allPosts.length > 0 ? (
         <div className='bg-background rounded-xl shadow-md p-1.5 sm:p-3 md:p-5'>
           <div className='space-y-4'>
-            {feed.map((post) => (
-              <FeedItemComp feedItem={post} key={post.uuid} type='classic' />
-            ))}
+            {allPosts.map(
+              (post) =>
+                post && (
+                  <FeedItemComp
+                    feedItem={post}
+                    key={post.uuid}
+                    type='classic'
+                  />
+                ),
+            )}
           </div>
+
+          {hasMore && (
+            <div className='mt-3 text-center'>
+              <Button
+                variant='primary'
+                size='primary'
+                onClick={() => {
+                  loadMorePosts()
+                }}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore
+                  ? 'Načítání...'
+                  : paginationError
+                    ? 'Chyba při načítaní'
+                    : 'Načíst další příspěvky'}
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <StateComp

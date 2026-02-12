@@ -63,9 +63,9 @@ const FeedItemComp = ({
       }`}
     >
       {/* Header */}
-      <div className='flex items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2'>
+      <div className='flex items-start justify-between gap-2 sm:gap-3 mb-2'>
         {/* Badges and dates */}
-        <div className='flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-1 min-w-0'>
+        <div className='flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0'>
           {/* Badge */}
           <div className='flex gap-1.5 sm:gap-2 items-center'>
             <span

@@ -1,18 +1,24 @@
 import { Request, Response } from "express";
 import { db } from "../db";
 import { feedItems } from "../db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, lt } from "drizzle-orm";
 import { sseManager } from "../utils/sseManager";
 
 export const getFeed = async (req: Request, res: Response) => {
-  const { courseId } = req.params;
-
+  const { courseId, cursor } = req.params;
+  const conditions = cursor
+    ? and(
+        eq(feedItems.courseId, courseId),
+        lt(feedItems.createdAt, new Date(cursor)),
+      )
+    : eq(feedItems.courseId, courseId);
   try {
     const items = await db
       .select()
       .from(feedItems)
-      .where(eq(feedItems.courseId, courseId))
-      .orderBy(desc(feedItems.createdAt));
+      .where(conditions)
+      .orderBy(desc(feedItems.createdAt))
+      .limit(15);
 
     res.json(items);
   } catch (error) {

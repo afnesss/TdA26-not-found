@@ -76,7 +76,8 @@ export async function getCourseByUuid(req: Request, res: Response) {
       .select()
       .from(feedItems)
       .where(eq(feedItems.courseId, uuid))
-      .orderBy(desc(feedItems.createdAt));
+      .orderBy(desc(feedItems.createdAt))
+      .limit(15);
 
     res.json({
       ...course[0],

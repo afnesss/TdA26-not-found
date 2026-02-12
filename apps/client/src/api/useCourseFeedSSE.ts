@@ -1,6 +1,7 @@
 import type { CourseDetail, FeedItem } from '@/lib/schemas'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
   const queryClient = useQueryClient()
@@ -39,6 +40,21 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
           }
         },
       )
+      toast.info(newPost.message)
+      // Update feed-paginated cache
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page, index) =>
+              index === 0 ? [newPost, ...page] : page,
+            ),
+          }
+        },
+      )
     })
 
     eventSource.addEventListener('post_updated', (event) => {
@@ -59,12 +75,22 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
         },
       )
 
-      queryClient.setQueryData<FeedItem[]>(['feed', courseId], (oldData) => {
-        if (!oldData) return oldData
-        return oldData.map((post) =>
-          post.uuid === updatedPost.uuid ? updatedPost : post,
-        )
-      })
+      // Update feed-paginated cache
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) =>
+              page.map((post) =>
+                post.uuid === updatedPost.uuid ? updatedPost : post,
+              ),
+            ),
+          }
+        },
+      )
     })
 
     eventSource.addEventListener('post_deleted', (event) => {
@@ -83,11 +109,20 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
         },
       )
 
-      // Update feed list cache for dashboard
-      queryClient.setQueryData<FeedItem[]>(['feed', courseId], (oldData) => {
-        if (!oldData) return oldData
-        return oldData.filter((post) => post.uuid !== uuid)
-      })
+      // Update feed-paginated cache
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) =>
+              page.filter((post) => post.uuid !== uuid),
+            ),
+          }
+        },
+      )
     })
 
     // --- Course Updates ---

@@ -36,6 +36,13 @@
       "when": 1767285203926,
       "tag": "0004_brown_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1739462400000,
+      "tag": "0005_add_course_status",
+      "breakpoints": true
     }
   ]
 }

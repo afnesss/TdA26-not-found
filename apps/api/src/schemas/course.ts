@@ -3,10 +3,19 @@ import { MaterialSchema } from "./material";
 import { QuizSchema } from "./quiz";
 import { FeedItemSchema } from "./feed";
 
+export const CourseStatusSchema = z.enum([
+  'draft',
+  'planned',
+  'live',
+  'paused',
+  'archived',
+]);
+
 export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   description: z.string().optional().nullable(), // Nullable from DB
+  status: CourseStatusSchema.default('draft'),
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
 });
@@ -19,12 +28,14 @@ export const CourseCreateRequestSchema = z.object({
 export const CourseUpdateRequestSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
+  status: CourseStatusSchema.optional(),
 });
 
 export const CourseDetailSchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   description: z.string().optional().nullable(),
+  status: CourseStatusSchema.default('draft'),
   materials: z.array(MaterialSchema),
   quizzes: z.array(QuizSchema),
   feed: z.array(FeedItemSchema),

@@ -114,6 +114,7 @@ const CourseComponent = (props: CourseCompProps) => {
     if (state.isEditing) return
 
     if (type === 'classic') {
+      if (course.status !== 'live') return
       navigate(`/courses/${course.uuid}`)
     } else if (type === 'edit') {
       props.onEdit()
@@ -124,7 +125,8 @@ const CourseComponent = (props: CourseCompProps) => {
     <Card
       key={course.uuid}
       className={cn(
-        'transition-colors cursor-pointer',
+        'transition-colors',
+        (type === 'edit' || course.status === 'live') && 'cursor-pointer',
         (course.status === 'draft' || course.status === 'archived') &&
           'opacity-70',
         course.status === 'live' && 'ring-2 ring-secondary/50',
@@ -141,35 +143,61 @@ const CourseComponent = (props: CourseCompProps) => {
 
       <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
         <CourseStateBadge status={course.status} />
-        {type === 'edit' && !props.isDraft && (
-          <div className='flex gap-2 md:gap-1.5 items-center'>
-            <EditBtn
-              icon={Edit}
-              onClick={(e) => {
-                e?.stopPropagation()
-                props.onEdit()
-              }}
-              aria-label={`Edit course ${course.name}`}
-            />
-            <DeleteConfirmDialog
-              trigger={
-                <EditBtn
-                  type='delete'
-                  onClick={(e) => e?.stopPropagation()}
-                  aria-label={`Delete course ${course.name}`}
-                  disabled={course.status === 'live'}
-                />
-              }
-              itemName={course.name}
-              itemType='kurz'
-              onConfirm={() => {
-                if (props.onDelete) {
-                  props.onDelete()
+        {type === 'edit' &&
+          (!props.isDraft ? (
+            <div className='flex gap-2 md:gap-1.5 items-center'>
+              <EditBtn
+                icon={Edit}
+                onClick={(e) => {
+                  e?.stopPropagation()
+                  props.onEdit()
+                }}
+                aria-label={`Edit course ${course.name}`}
+              />
+              <DeleteConfirmDialog
+                trigger={
+                  <EditBtn
+                    type='delete'
+                    onClick={(e) => e?.stopPropagation()}
+                    aria-label={`Delete course ${course.name}`}
+                    disabled={course.status === 'live'}
+                  />
                 }
-              }}
-            ></DeleteConfirmDialog>
-          </div>
-        )}
+                itemName={course.name}
+                itemType='kurz'
+                onConfirm={() => {
+                  if (props.onDelete) {
+                    props.onDelete()
+                  }
+                }}
+              ></DeleteConfirmDialog>
+            </div>
+          ) : (
+            <div className='space-x-2'>
+              <EditBtn
+                icon={Check}
+                onClick={(e) => {
+                  e?.stopPropagation()
+                  saveEdit()
+                }}
+                classNameBtn='hover:bg-secondary/20'
+                iconClassName='text-secondary size-4 sm:size-5'
+                disabled={state.saving || !!state.nameError}
+                aria-label='Save course'
+              />
+              <EditBtn
+                icon={X}
+                onClick={(e) => {
+                  e?.stopPropagation()
+                  cancelEdit()
+                }}
+                classNameBtn='hover:bg-destructive/20'
+                iconClassName='text-destructive size-4 sm:size-5'
+                disabled={state.saving}
+                aria-label='Cancel editing'
+              />
+            </div>
+          ))}
       </div>
       <div className='px-4 pb-4 md:px-6 md:pb-6 pt-2 relative overflow-hidden flex-1 flex flex-col justify-between'>
         {/* Status badge and actions in top-right corner */}
@@ -257,59 +285,34 @@ const CourseComponent = (props: CourseCompProps) => {
                     colorStyles.bg[courseColor],
                     colorStyles.text[courseColor],
                   )}
+                  disabled={course.status !== 'live'}
                 >
                   <span className='font-semibold'>Zobrazit</span>
                 </Button>
               </>
             )}
 
+            {type === 'edit' && (
+              <CardDate
+                course={course}
+                getTime={getTimeAgo}
+                isDraft={'isDraft' in props && props.isDraft}
+                state={course.status}
+              />
+            )}
+
             {type === 'edit' &&
-              (state.isEditing ? (
-                <div className='space-x-2'>
-                  <EditBtn
-                    icon={Check}
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      saveEdit()
-                    }}
-                    classNameBtn='hover:bg-secondary/20'
-                    iconClassName='text-secondary size-4 sm:size-5'
-                    disabled={state.saving || !!state.nameError}
-                    aria-label='Save course'
-                  />
-                  <EditBtn
-                    icon={X}
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      cancelEdit()
-                    }}
-                    classNameBtn='hover:bg-destructive/20'
-                    iconClassName='text-destructive size-4 sm:size-5'
-                    disabled={state.saving}
-                    aria-label='Cancel editing'
-                  />
-                </div>
-              ) : (
-                <>
-                  <CardDate
-                    course={course}
-                    getTime={getTimeAgo}
-                    isDraft={'isDraft' in props && props.isDraft}
-                  />
-                  {type === 'edit' &&
-                    !('isDraft' in props && props.isDraft) &&
-                    !state.isEditing &&
-                    props.onStatusChange && (
-                      <StatusActionButtons
-                        currentStatus={course.status}
-                        courseColor={courseColor}
-                        onStatusChange={(newStatus) =>
-                          props.onStatusChange!(course.uuid, newStatus)
-                        }
-                      />
-                    )}
-                </>
-              ))}
+              !('isDraft' in props && props.isDraft) &&
+              !state.isEditing &&
+              props.onStatusChange && (
+                <StatusActionButtons
+                  currentStatus={course.status}
+                  courseColor={courseColor}
+                  onStatusChange={(newStatus) =>
+                    props.onStatusChange!(course.uuid, newStatus)
+                  }
+                />
+              )}
           </div>
         </CardFooter>
       </div>

@@ -57,7 +57,7 @@ const DashboardDesign1 = () => {
       planned: 'Kurz byl naplánován',
       live: 'Kurz byl spuštěn',
       paused: 'Kurz byl pozastaven',
-      archived: 'Kurz byl ukončen',
+      archived: 'Kurz byl archivován',
     }
 
     try {

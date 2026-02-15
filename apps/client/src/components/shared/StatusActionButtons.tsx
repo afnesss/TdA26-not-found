@@ -67,7 +67,7 @@ export function StatusActionButtons({
       case 'paused':
         return [
           {
-            label: 'Ukončit',
+            label: 'Archivovat',
             icon: Archive,
             status: 'archived' as CourseStatus,
             variant: 'outline' as const,

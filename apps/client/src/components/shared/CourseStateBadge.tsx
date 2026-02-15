@@ -16,7 +16,7 @@ const statusConfig: Record<
   }
 > = {
   draft: {
-    label: 'Koncept',
+    label: 'Návrh',
     className: 'bg-muted text-muted-foreground ',
   },
   planned: {
@@ -24,12 +24,12 @@ const statusConfig: Record<
     className: 'bg-primary/20 text-primary ',
   },
   live: {
-    label: 'AKTIVNÍ',
+    label: 'Aktivní',
     className: 'bg-secondary text-secondary-foreground ',
   },
   paused: {
     label: 'Pozastaveno',
-    className: 'bg-destructive/20 text-destructive',
+    className: 'bg-accent-teal/20 text-accent-teal',
   },
   archived: {
     label: 'Archivováno',

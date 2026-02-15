@@ -32,7 +32,7 @@ const CourseDetailPage = () => {
     refetch: refetchCourse,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   })
 
   useTitle('Správa kurzu')

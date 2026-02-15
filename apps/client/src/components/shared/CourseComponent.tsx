@@ -9,8 +9,11 @@ import {
 import { colorStyles, colors } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
 import { cn, getTimeAgo } from '@/lib/utils'
+import { CourseStateBadge } from './CourseStateBadge'
+import { StatusActionButtons } from './StatusActionButtons'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { Check, Edit, X } from 'lucide-react'
+import { Check, Edit, X, Play, Pause, Archive, Calendar } from 'lucide-react'
+import type { CourseStatus } from '@/lib/schemas'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -35,6 +38,7 @@ interface CourseEdit {
   onSaveDraft?: (data: { name: string; description?: string }) => void
   onCancelDraft?: () => void
   onDelete?: () => void
+  onStatusChange?: (courseId: string, newStatus: CourseStatus) => void
 }
 
 type CourseCompProps = CourseClassic | CourseEdit
@@ -119,14 +123,57 @@ const CourseComponent = (props: CourseCompProps) => {
   return (
     <Card
       key={course.uuid}
-      className={'transition-colors cursor-pointer'}
+      className={cn(
+        'transition-colors cursor-pointer',
+        (course.status === 'draft' || course.status === 'archived') &&
+          'opacity-70',
+        course.status === 'live' && 'ring-2 ring-secondary/50',
+      )}
       onClick={handleCardClick}
     >
       <div
-        className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseColor]}`}
+        className={cn(
+          'h-2 bg-linear-to-r',
+          colorStyles.gradient[courseColor],
+          course.status === 'live' && 'animate-pulse',
+        )}
       />
 
-      <div className='p-4 md:p-6 relative overflow-hidden flex-1 flex flex-col justify-between'>
+      <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
+        <CourseStateBadge status={course.status} />
+        {type === 'edit' && !props.isDraft && (
+          <div className='flex gap-2 md:gap-1.5 items-center'>
+            <EditBtn
+              icon={Edit}
+              onClick={(e) => {
+                e?.stopPropagation()
+                props.onEdit()
+              }}
+              aria-label={`Edit course ${course.name}`}
+            />
+            <DeleteConfirmDialog
+              trigger={
+                <EditBtn
+                  type='delete'
+                  onClick={(e) => e?.stopPropagation()}
+                  aria-label={`Delete course ${course.name}`}
+                  disabled={course.status === 'live'}
+                />
+              }
+              itemName={course.name}
+              itemType='kurz'
+              onConfirm={() => {
+                if (props.onDelete) {
+                  props.onDelete()
+                }
+              }}
+            ></DeleteConfirmDialog>
+          </div>
+        )}
+      </div>
+      <div className='px-4 pb-4 md:px-6 md:pb-6 pt-2 relative overflow-hidden flex-1 flex flex-col justify-between'>
+        {/* Status badge and actions in top-right corner */}
+
         <CardContent>
           {/* Název - editovatelný v režimu editace */}
           {state.isEditing ? (
@@ -188,85 +235,83 @@ const CourseComponent = (props: CourseCompProps) => {
           )}
         </CardContent>
 
-        <CardFooter>
-          <CardDate
-            course={course}
-            getTime={getTimeAgo}
-            isDraft={'isDraft' in props && props.isDraft}
-          />
+        <CardFooter className='flex-col items-start gap-2'>
+          <div className='flex justify-between w-full items-center'>
+            {type === 'classic' && (
+              <>
+                <CardDate
+                  course={course}
+                  getTime={getTimeAgo}
+                  // isDraft={'isDraft' in props && props.isDraft}
+                />
 
-          {type === 'classic' && (
-            <Button
-              variant={'grid'}
-              size={'grid'}
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/courses/${course.uuid}`)
-              }}
-              className={cn(
-                'bg-linear-to-br',
-                colorStyles.bg[courseColor],
-                colorStyles.text[courseColor],
-              )}
-            >
-              <span className='font-semibold'>Zobrazit</span>
-            </Button>
-          )}
+                <Button
+                  variant={'grid'}
+                  size={'grid'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/courses/${course.uuid}`)
+                  }}
+                  className={cn(
+                    'bg-linear-to-br',
+                    colorStyles.bg[courseColor],
+                    colorStyles.text[courseColor],
+                  )}
+                >
+                  <span className='font-semibold'>Zobrazit</span>
+                </Button>
+              </>
+            )}
 
-          {type === 'edit' &&
-            (state.isEditing ? (
-              <div className='space-x-2'>
-                <EditBtn
-                  icon={Check}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    saveEdit()
-                  }}
-                  classNameBtn='hover:bg-secondary/20'
-                  iconClassName='text-secondary size-4 sm:size-5'
-                  disabled={state.saving || !!state.nameError}
-                  aria-label='Save course'
-                />
-                <EditBtn
-                  icon={X}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    cancelEdit()
-                  }}
-                  classNameBtn='hover:bg-destructive/20'
-                  iconClassName='text-destructive size-4 sm:size-5'
-                  disabled={state.saving}
-                  aria-label='Cancel editing'
-                />
-              </div>
-            ) : (
-              <div className='flex gap-2'>
-                <EditBtn
-                  icon={Edit}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.onEdit()
-                  }}
-                  aria-label={`Edit course ${course.name}`}
-                />
-                <DeleteConfirmDialog
-                  trigger={
-                    <EditBtn
-                      type='delete'
-                      onClick={(e) => e?.stopPropagation()}
-                      aria-label={`Delete course ${course.name}`}
-                    />
-                  }
-                  itemName={course.name}
-                  itemType='kurz'
-                  onConfirm={() => {
-                    if (props.onDelete) {
-                      props.onDelete()
-                    }
-                  }}
-                ></DeleteConfirmDialog>
-              </div>
-            ))}
+            {type === 'edit' &&
+              (state.isEditing ? (
+                <div className='space-x-2'>
+                  <EditBtn
+                    icon={Check}
+                    onClick={(e) => {
+                      e?.stopPropagation()
+                      saveEdit()
+                    }}
+                    classNameBtn='hover:bg-secondary/20'
+                    iconClassName='text-secondary size-4 sm:size-5'
+                    disabled={state.saving || !!state.nameError}
+                    aria-label='Save course'
+                  />
+                  <EditBtn
+                    icon={X}
+                    onClick={(e) => {
+                      e?.stopPropagation()
+                      cancelEdit()
+                    }}
+                    classNameBtn='hover:bg-destructive/20'
+                    iconClassName='text-destructive size-4 sm:size-5'
+                    disabled={state.saving}
+                    aria-label='Cancel editing'
+                  />
+                </div>
+              ) : (
+                <>
+                  <CardDate
+                    course={course}
+                    getTime={getTimeAgo}
+                    isDraft={'isDraft' in props && props.isDraft}
+                  />
+                  {type === 'edit' &&
+                    !('isDraft' in props && props.isDraft) &&
+                    !state.isEditing &&
+                    props.onStatusChange && (
+                      <StatusActionButtons
+                        currentStatus={course.status}
+                        courseColor={courseColor}
+                        compact={true}
+                        onStatusChange={(newStatus) =>
+                          props.onStatusChange!(course.uuid, newStatus)
+                        }
+                      />
+                    )}
+                </>
+              ))}
+          </div>
         </CardFooter>
       </div>
     </Card>

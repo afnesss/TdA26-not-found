@@ -15,15 +15,19 @@ export const useDeleteCourseMutation = () => {
     void,
     ApiError,
     string,
-    { previousCourses?: CourseSummary[] }
+    { previousCourses?: CourseSummary[]; previousCoursesUser?: CourseSummary[] }
   >({
     mutationFn: async (courseId: string) => await deleteCourse(courseId),
     networkMode: 'always',
     onMutate: async (courseId) => {
       await queryClient.cancelQueries({ queryKey: ['courses'] })
+      await queryClient.cancelQueries({ queryKey: ['courses-user'] })
 
       const previousCourses = queryClient.getQueryData<CourseSummary[]>([
         'courses',
+      ])
+      const previousCoursesUser = queryClient.getQueryData<CourseSummary[]>([
+        'courses-user',
       ])
 
       queryClient.setQueryData<CourseSummary[]>(['courses'], (oldCourses) => {
@@ -31,10 +35,19 @@ export const useDeleteCourseMutation = () => {
         return oldCourses.filter((course) => course.uuid !== courseId)
       })
 
-      return { previousCourses }
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses-user'],
+        (oldCourses) => {
+          if (!oldCourses) return oldCourses
+          return oldCourses.filter((course) => course.uuid !== courseId)
+        },
+      )
+
+      return { previousCourses, previousCoursesUser }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
       toast.success('Kurz smazán')
     },
     onError: (error: ApiError, _variables, context) => {
@@ -104,6 +117,7 @@ export const useUpdateCourseMutation = (
     },
     onSuccess: (updatedCourse) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
       queryClient.invalidateQueries({
         queryKey: ['course', courseId],
       })
@@ -156,6 +170,7 @@ export const useCreateCourseMutation = (
         uuid: 'temp-' + Date.now(),
         name: data.name,
         description: data.description,
+        status: 'draft',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
@@ -170,6 +185,9 @@ export const useCreateCourseMutation = (
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['courses'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['courses-user'],
       })
       setDraftCourse(null)
       toast.success('Kurz vytvořen')

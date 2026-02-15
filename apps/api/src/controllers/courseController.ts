@@ -7,22 +7,25 @@ import {
   courseMaterials,
   feedItems,
 } from "../db/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, inArray } from "drizzle-orm";
 import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
 import { createSystemEvent } from "../utils/systemEvent";
 
 export async function getAllCourses(_req: Request, res: Response) {
+  const userView = _req.query.userView;
   const allCourses = await db
     .select({
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
+      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
     })
     .from(courses)
+    .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -37,6 +40,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
         uuid: courses.uuid,
         name: courses.name,
         description: courses.description,
+        status: courses.status,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
       })
@@ -109,6 +113,7 @@ export async function createCourse(req: Request, res: Response) {
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
+      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
     });
@@ -118,7 +123,7 @@ export async function createCourse(req: Request, res: Response) {
 
 export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
-  const { name, description } = req.body;
+  const { name, description, status } = req.body;
 
   const existing = await db
     .select()
@@ -136,6 +141,7 @@ export async function updateCourse(req: Request, res: Response) {
       name: name ?? existing[0].name,
       description:
         description !== undefined ? description : existing[0].description,
+      status: status ?? existing[0].status,
       updatedAt: new Date(),
     })
     .where(eq(courses.uuid, uuid))
@@ -143,6 +149,7 @@ export async function updateCourse(req: Request, res: Response) {
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
+      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
     });

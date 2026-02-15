@@ -6,8 +6,11 @@ import type {
 } from '@/lib/schemas'
 import apiFetch from '../client'
 
-export const getCourses = async () =>
-  await apiFetch<CourseSummary[]>('/courses')
+export const getCourses = async (userView: boolean = false) => {
+  const params = userView ? '?userView=true' : ''
+  console.log(userView)
+  return await apiFetch<CourseSummary[]>(`/courses${params}`)
+}
 
 export const getCourseById = async (
   uuid: string,

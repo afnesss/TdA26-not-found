@@ -4,20 +4,34 @@ import { QuizSchema } from "./quiz";
 import { FeedItemSchema } from "./feed";
 
 export const CourseStatusSchema = z.enum([
-  'draft',
-  'planned',
-  'live',
-  'paused',
-  'archived',
+  "draft",
+  "planned",
+  "live",
+  "paused",
+  "archived",
 ]);
+
+export const StatusHistoryEventSchema = z.object({
+  statuts: CourseStatusSchema,
+  timestamp: z.date().or(z.string().datetime()),
+  note: z.string().optional(),
+});
+
+export const StatusHistorySchema = z.object({
+  events: z.array(StatusHistoryEventSchema),
+});
 
 export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   description: z.string().optional().nullable(), // Nullable from DB
-  status: CourseStatusSchema.default('draft'),
+  status: CourseStatusSchema.default("draft"),
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
+
+  startedAt: z.date().or(z.string().datetime()).nullable().optional(),
+  scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
+  status_history: StatusHistorySchema.optional(),
 });
 
 export const CourseCreateRequestSchema = z.object({
@@ -35,7 +49,7 @@ export const CourseDetailSchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   description: z.string().optional().nullable(),
-  status: CourseStatusSchema.default('draft'),
+  status: CourseStatusSchema.default("draft"),
   materials: z.array(MaterialSchema),
   quizzes: z.array(QuizSchema),
   feed: z.array(FeedItemSchema),
@@ -45,3 +59,4 @@ export type CourseSummary = z.infer<typeof CourseSummarySchema>;
 export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>;
 export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>;
 export type CourseDetail = z.infer<typeof CourseDetailSchema>;
+export type StatusHistory = z.infer<typeof StatusHistorySchema>;

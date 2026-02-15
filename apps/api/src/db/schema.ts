@@ -1,3 +1,4 @@
+import { time } from "console";
 import {
   pgTable,
   text,
@@ -8,6 +9,7 @@ import {
   jsonb,
   boolean,
 } from "drizzle-orm/pg-core";
+import { StatusHistory } from "../schemas";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -31,6 +33,12 @@ export const courses = pgTable("courses", {
   status: varchar("status", { length: 20 }).notNull().default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+  statrtedAt: timestamp("started_at"),
+  scheduledFor: timestamp("scheduled_for"),
+  status_history: jsonb("status_history")
+    .$type<StatusHistory>()
+    .default({ events: [] }),
 });
 
 export const courseMaterials = pgTable("course_materials", {

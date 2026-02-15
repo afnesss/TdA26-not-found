@@ -11,6 +11,16 @@ export const CourseStatusSchema = z.enum([
   'archived',
 ])
 
+export const StatusHistoryEventSchema = z.object({
+  statuts: CourseStatusSchema,
+  timestamp: z.date().or(z.string().datetime()),
+  note: z.string().optional(),
+})
+
+export const StatusHistorySchema = z.object({
+  events: z.array(StatusHistoryEventSchema),
+})
+
 export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
@@ -18,6 +28,10 @@ export const CourseSummarySchema = z.object({
   status: CourseStatusSchema.default('draft'),
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
+
+  startedAt: z.date().or(z.string().datetime()).nullable().optional(),
+  scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
+  status_history: StatusHistorySchema.optional(),
 })
 
 export const CourseCreateRequestSchema = z.object({

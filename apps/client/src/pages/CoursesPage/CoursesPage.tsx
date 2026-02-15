@@ -28,8 +28,8 @@ const CoursesPage = () => {
     isError,
     refetch,
   } = useQuery<CourseSummary[]>({
-    queryKey: ['courses'],
-    queryFn: getCourses,
+    queryKey: ['courses-user'],
+    queryFn: () => getCourses(true),
   })
 
   const filteredCourses = filterCourses(courses, searchQuery)
@@ -136,10 +136,12 @@ const CoursesPage = () => {
               {displayedCourses.length === 0 && !isLoading && !isError ? (
                 <StateComp
                   type='empty-search'
-                  onAction={() => {
-                    setSearchQuery('')
-                    setDisplayCount(9)
-                  }}
+                  {...(searchQuery !== '' && {
+                    onAction: () => {
+                      setSearchQuery('')
+                      setDisplayCount(9)
+                    },
+                  })}
                 />
               ) : isError ? (
                 <StateComp

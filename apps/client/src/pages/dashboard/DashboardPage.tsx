@@ -2,6 +2,7 @@ import {
   createCourse,
   deleteCourse,
   getCourses,
+  updateCourse,
 } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
@@ -23,6 +24,7 @@ import {
   useCreateCourseMutation,
   useDeleteCourseMutation,
 } from '../CoursePage/utils/useCourseMutation'
+import type { CourseStatus } from '@/lib/schemas'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,12 +41,35 @@ const DashboardDesign1 = () => {
     refetch: refetchCourses,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   })
 
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
   const { mutateAsync: createCourseMutation } =
     useCreateCourseMutation(setCourseDraft)
+
+  const handleStatusChange = async (
+    courseId: string,
+    newStatus: CourseStatus,
+  ) => {
+    const statusMessages: Record<CourseStatus, string> = {
+      draft: 'Kurz byl převeden do návrhu',
+      planned: 'Kurz byl naplánován',
+      live: 'Kurz byl spuštěn',
+      paused: 'Kurz byl pozastaven',
+      archived: 'Kurz byl ukončen',
+    }
+
+    try {
+      await updateCourse(courseId, { status: newStatus })
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] })
+      toast.success(statusMessages[newStatus])
+    } catch (error) {
+      toast.error('Nepodařilo se změnit stav kurzu')
+    }
+  }
   const filteredCourses = filterCourses(courses, searchQuery)
   const hasMoreCourses = filteredCourses.length > displayCount
   const displayedCourses = filteredCourses.slice(0, displayCount)
@@ -62,6 +87,7 @@ const DashboardDesign1 = () => {
       uuid: 'testid',
       name: '',
       description: '',
+      status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -142,6 +168,7 @@ const DashboardDesign1 = () => {
                       handleEditCourse(course!)
                     }}
                     onDelete={() => deleteCourseMutation(course.uuid)}
+                    onStatusChange={handleStatusChange}
                   />
                 ))}
               </div>

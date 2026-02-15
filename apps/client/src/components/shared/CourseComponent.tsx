@@ -303,7 +303,6 @@ const CourseComponent = (props: CourseCompProps) => {
                       <StatusActionButtons
                         currentStatus={course.status}
                         courseColor={courseColor}
-                        compact={true}
                         onStatusChange={(newStatus) =>
                           props.onStatusChange!(course.uuid, newStatus)
                         }

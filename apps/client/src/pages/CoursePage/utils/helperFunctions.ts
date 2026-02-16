@@ -176,3 +176,44 @@ export const toDateTimeLocalValue = (value?: string | Date | null) => {
 
   return formatDateTimeLocal(date)
 }
+
+export const formatDateWithToday = (
+  dateString: string,
+  showTime: boolean = false,
+): string => {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) {
+    return 'Nezadáno'
+  }
+
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const dateOnly = new Date(date)
+  dateOnly.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+  yesterday.setHours(0, 0, 0, 0)
+
+  const time = showTime
+    ? ` • ${date.toLocaleTimeString('cs-CZ', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    : ''
+
+  // if (dateOnly.getTime() === today.getTime()) {
+  //   return `Dnes${time}`
+  // }
+  // if (dateOnly.getTime() === yesterday.getTime()) {
+  //   return `Včera${time}`
+  // }
+
+  const formattedDate = date.toLocaleDateString('cs-CZ', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+
+  return `${formattedDate}${time}`
+}

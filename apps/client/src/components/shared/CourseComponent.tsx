@@ -12,11 +12,10 @@ import { cn, getTimeAgo } from '@/lib/utils'
 import { CourseStateBadge } from './CourseStateBadge'
 import { StatusActionButtons } from './StatusActionButtons'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { Check, Edit, X, Play, Pause, Archive, Calendar } from 'lucide-react'
+import { Check, Edit, X } from 'lucide-react'
 import type { CourseStatus } from '@/lib/schemas'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { toast } from 'sonner'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
@@ -39,6 +38,17 @@ interface CourseEdit {
   onCancelDraft?: () => void
   onDelete?: () => void
   onStatusChange?: (courseId: string, newStatus: CourseStatus) => void
+  planning?: {
+    editable: boolean
+    isEditing: boolean
+    value: string
+    error: string
+    saving: boolean
+    onOpen: () => void
+    onChange: (value: string) => void
+    onConfirm: () => void
+    onCancel: () => void
+  }
 }
 
 type CourseCompProps = CourseClassic | CourseEdit
@@ -46,7 +56,6 @@ type CourseCompProps = CourseClassic | CourseEdit
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
   const isLg = useMediaQuery('(min-width: 1024px)')
-  const isMd = useMediaQuery('(min-width: 768px)')
   const navigate = useNavigate()
   const courseColor = colors[index % (isLg ? 3 : 2)]
 
@@ -112,6 +121,8 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const handleCardClick = () => {
     if (state.isEditing) return
+    if (type === 'edit' && 'planning' in props && props.planning?.isEditing)
+      return
 
     if (type === 'classic') {
       if (course.status !== 'live') return
@@ -126,7 +137,9 @@ const CourseComponent = (props: CourseCompProps) => {
       key={course.uuid}
       className={cn(
         'transition-colors',
-        (type === 'edit' || course.status === 'live') && 'cursor-pointer',
+        ((type === 'edit' && !props.planning?.isEditing) ||
+          course.status === 'live') &&
+          'cursor-pointer',
         (course.status === 'draft' || course.status === 'archived') &&
           'opacity-70',
         course.status === 'live' && 'ring-2 ring-secondary/50',
@@ -160,6 +173,12 @@ const CourseComponent = (props: CourseCompProps) => {
                     type='delete'
                     onClick={(e) => e?.stopPropagation()}
                     aria-label={`Delete course ${course.name}`}
+                    classNameBtn={cn(
+                      (course.status === 'live' ||
+                        course.status === 'paused' ||
+                        course.status === 'planned') &&
+                        'hidden',
+                    )}
                     disabled={course.status === 'live'}
                   />
                 }
@@ -209,17 +228,17 @@ const CourseComponent = (props: CourseCompProps) => {
               <Textarea
                 value={state.tempName}
                 onClick={(e) => e.stopPropagation()}
-                onChange={(e) => handleNameChange(e.target.value)} // ← Змінено
+                onChange={(e) => handleNameChange(e.target.value)}
                 className={cn(
                   'font-semibold text-base sm:text-lg lg:text-xl overflow-hidden flex items-center sm:py-1.8 placeholder:pt-1',
-                  state.nameError && 'border-destructive', // ← Червона рамка
+                  state.nameError && 'border-destructive',
                 )}
                 minRows={1}
                 maxRows={3}
                 placeholder='Název kurzu'
                 disabled={state.saving}
               />
-              {state.nameError && ( // ← Показати помилку
+              {state.nameError && (
                 <p className='text-xs text-destructive'>{state.nameError}</p>
               )}
             </div>
@@ -270,6 +289,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 <CardDate
                   course={course}
                   getTime={getTimeAgo}
+                  state={course.status}
                   // isDraft={'isDraft' in props && props.isDraft}
                 />
 
@@ -298,12 +318,14 @@ const CourseComponent = (props: CourseCompProps) => {
                 getTime={getTimeAgo}
                 isDraft={'isDraft' in props && props.isDraft}
                 state={course.status}
+                planning={props.planning}
               />
             )}
 
             {type === 'edit' &&
               !('isDraft' in props && props.isDraft) &&
               !state.isEditing &&
+              !props.planning?.isEditing &&
               props.onStatusChange && (
                 <StatusActionButtons
                   currentStatus={course.status}
@@ -313,6 +335,33 @@ const CourseComponent = (props: CourseCompProps) => {
                   }
                 />
               )}
+
+            {type === 'edit' && props.planning?.isEditing && (
+              <div className='flex gap-2 items-end'>
+                <EditBtn
+                  icon={Check}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.planning?.onConfirm()
+                  }}
+                  classNameBtn='hover:bg-secondary/20'
+                  iconClassName='text-secondary size-4 sm:size-5'
+                  disabled={props.planning.saving || !!props.planning.error}
+                  aria-label='Save course'
+                />
+                <EditBtn
+                  icon={X}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.planning?.onCancel()
+                  }}
+                  classNameBtn='hover:bg-destructive/20'
+                  iconClassName='text-destructive size-4 sm:size-5'
+                  disabled={props.planning.saving}
+                  aria-label='Cancel editing'
+                />
+              </div>
+            )}
           </div>
         </CardFooter>
       </div>

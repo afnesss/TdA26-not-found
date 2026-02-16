@@ -12,13 +12,9 @@ export const CourseStatusSchema = z.enum([
 ])
 
 export const StatusHistoryEventSchema = z.object({
-  statuts: CourseStatusSchema,
+  status: CourseStatusSchema,
   timestamp: z.date().or(z.string().datetime()),
   note: z.string().optional(),
-})
-
-export const StatusHistorySchema = z.object({
-  events: z.array(StatusHistoryEventSchema),
 })
 
 export const CourseSummarySchema = z.object({
@@ -31,7 +27,7 @@ export const CourseSummarySchema = z.object({
 
   startedAt: z.date().or(z.string().datetime()).nullable().optional(),
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
-  status_history: StatusHistorySchema.optional(),
+  status_history: z.array(StatusHistoryEventSchema).optional(),
 })
 
 export const CourseCreateRequestSchema = z.object({
@@ -49,6 +45,9 @@ export const CourseUpdateRequestSchema = z.object({
     .optional(),
   description: z.string().optional(),
   status: CourseStatusSchema.optional(),
+  startedAt: z.date().or(z.string().datetime()).nullable().optional(),
+  scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
+  status_history: z.array(StatusHistoryEventSchema).optional(),
 })
 
 export const CourseDetailSchema = z.object({
@@ -59,6 +58,7 @@ export const CourseDetailSchema = z.object({
   materials: z.array(MaterialSchema),
   quizzes: z.array(QuizSchema),
   feed: z.array(FeedItemSchema),
+  status_history: z.array(StatusHistoryEventSchema).optional(),
 })
 
 export type CourseStatus = z.infer<typeof CourseStatusSchema>
@@ -66,3 +66,4 @@ export type CourseSummary = z.infer<typeof CourseSummarySchema>
 export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>
 export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>
 export type CourseDetail = z.infer<typeof CourseDetailSchema>
+export type StatusHistoryEvent = z.infer<typeof StatusHistoryEventSchema>

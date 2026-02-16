@@ -9,7 +9,7 @@ import {
   jsonb,
   boolean,
 } from "drizzle-orm/pg-core";
-import { StatusHistory } from "../schemas";
+import { StatusHistoryEvent } from "../schemas";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -34,11 +34,11 @@ export const courses = pgTable("courses", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 
-  statrtedAt: timestamp("started_at"),
+  startedAt: timestamp("started_at"),
   scheduledFor: timestamp("scheduled_for"),
   status_history: jsonb("status_history")
-    .$type<StatusHistory>()
-    .default({ events: [] }),
+    .$type<StatusHistoryEvent[]>()
+    .default([]),
 });
 
 export const courseMaterials = pgTable("course_materials", {

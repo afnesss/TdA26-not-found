@@ -23,6 +23,8 @@ export async function getAllCourses(_req: Request, res: Response) {
       status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      scheduledFor: courses.scheduledFor,
     })
     .from(courses)
     .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
@@ -43,6 +45,9 @@ export async function getCourseByUuid(req: Request, res: Response) {
         status: courses.status,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
+        startedAt: courses.startedAt,
+        status_history: courses.status_history,
+        scheduledFor: courses.scheduledFor,
       })
       .from(courses)
       .where(eq(courses.uuid, uuid));
@@ -116,6 +121,8 @@ export async function createCourse(req: Request, res: Response) {
       status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      status_history: courses.status_history,
+      scheduledFor: courses.scheduledFor,
     });
 
   res.status(201).json(newCourse[0]);
@@ -123,7 +130,7 @@ export async function createCourse(req: Request, res: Response) {
 
 export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
-  const { name, description, status } = req.body;
+  const { name, description, status, scheduledFor } = req.body;
 
   const existing = await db
     .select()
@@ -134,6 +141,15 @@ export async function updateCourse(req: Request, res: Response) {
     res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
+  const isStatusChanged = status && status !== existing[0].status;
+  const nextStatus = status ?? existing[0].status;
+  const scheduleWasProvided = scheduledFor !== undefined;
+  const nextScheduledForDate =
+    scheduledFor === null
+      ? null
+      : scheduledFor !== undefined
+        ? new Date(scheduledFor)
+        : existing[0].scheduledFor;
 
   const updated = await db
     .update(courses)
@@ -143,6 +159,26 @@ export async function updateCourse(req: Request, res: Response) {
         description !== undefined ? description : existing[0].description,
       status: status ?? existing[0].status,
       updatedAt: new Date(),
+      startedAt:
+        status === "live" && isStatusChanged
+          ? new Date()
+          : existing[0].startedAt,
+
+      status_history:
+        isStatusChanged && status
+          ? [
+              ...(existing[0].status_history ?? []),
+              { status, timestamp: new Date().toISOString() },
+            ]
+          : existing[0].status_history,
+      scheduledFor:
+        nextStatus === "live"
+          ? null
+          : nextStatus === "planned"
+            ? nextScheduledForDate
+            : scheduleWasProvided
+              ? nextScheduledForDate
+              : existing[0].scheduledFor,
     })
     .where(eq(courses.uuid, uuid))
     .returning({
@@ -152,9 +188,19 @@ export async function updateCourse(req: Request, res: Response) {
       status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      status_history: courses.status_history,
+      scheduledFor: courses.scheduledFor,
     });
 
-  await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
+  // Only create feed event if something other than status was changed
+  const isOnlyStatusChange =
+    status !== undefined && name === undefined && description === undefined;
+
+  if (!isOnlyStatusChange) {
+    await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
+  }
+
   sseManager.broadcast(uuid, "course_updated", updated[0]);
 
   res.json(updated[0]);

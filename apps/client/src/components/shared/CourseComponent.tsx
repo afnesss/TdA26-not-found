@@ -12,12 +12,13 @@ import { cn, getTimeAgo } from '@/lib/utils'
 import { CourseStateBadge } from './CourseStateBadge'
 import { StatusActionButtons } from './StatusActionButtons'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { Check, Edit, X } from 'lucide-react'
+import { Edit } from 'lucide-react'
 import type { CourseStatus } from '@/lib/schemas'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
+import EditSaveCancelButtons from './EditSaveCancelButtons'
 import { Textarea } from '../ui/textarea'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { useMediaQuery } from 'usehooks-ts'
@@ -192,30 +193,14 @@ const CourseComponent = (props: CourseCompProps) => {
               ></DeleteConfirmDialog>
             </div>
           ) : (
-            <div className='space-x-2'>
-              <EditBtn
-                icon={Check}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  saveEdit()
-                }}
-                classNameBtn='hover:bg-secondary/20'
-                iconClassName='text-secondary size-4 sm:size-5'
-                disabled={state.saving || !!state.nameError}
-                aria-label='Save course'
-              />
-              <EditBtn
-                icon={X}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  cancelEdit()
-                }}
-                classNameBtn='hover:bg-destructive/20'
-                iconClassName='text-destructive size-4 sm:size-5'
-                disabled={state.saving}
-                aria-label='Cancel editing'
-              />
-            </div>
+            <EditSaveCancelButtons
+              className='space-x-2'
+              onSave={() => saveEdit()}
+              onCancel={cancelEdit}
+              saveDisabled={state.saving || !!state.nameError}
+              cancelDisabled={state.saving}
+              saveAriaLabel='Save course'
+            />
           ))}
       </div>
       <div className='px-4 pb-4 md:px-6 md:pb-6 pt-2 relative overflow-hidden flex-1 flex flex-col justify-between'>
@@ -337,30 +322,14 @@ const CourseComponent = (props: CourseCompProps) => {
               )}
 
             {type === 'edit' && props.planning?.isEditing && (
-              <div className='flex gap-2 items-end'>
-                <EditBtn
-                  icon={Check}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.planning?.onConfirm()
-                  }}
-                  classNameBtn='hover:bg-secondary/20'
-                  iconClassName='text-secondary size-4 sm:size-5'
-                  disabled={props.planning.saving || !!props.planning.error}
-                  aria-label='Save course'
-                />
-                <EditBtn
-                  icon={X}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.planning?.onCancel()
-                  }}
-                  classNameBtn='hover:bg-destructive/20'
-                  iconClassName='text-destructive size-4 sm:size-5'
-                  disabled={props.planning.saving}
-                  aria-label='Cancel editing'
-                />
-              </div>
+              <EditSaveCancelButtons
+                className='flex gap-2 items-end'
+                onSave={() => props.planning?.onConfirm()}
+                onCancel={() => props.planning?.onCancel()}
+                saveDisabled={props.planning.saving || !!props.planning.error}
+                cancelDisabled={props.planning.saving}
+                saveAriaLabel='Save course'
+              />
             )}
           </div>
         </CardFooter>

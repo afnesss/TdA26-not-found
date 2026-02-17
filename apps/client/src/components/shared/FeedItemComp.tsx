@@ -1,12 +1,13 @@
 import type { FeedItem } from '@/lib/schemas'
 import { cn, formatDate } from '@/lib/utils'
-import { Check, Edit, X } from 'lucide-react'
+import { Edit } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
 import { toast } from 'sonner'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { handleCapitalizedInput } from '@/lib/capitalize'
+import EditSaveCancelButtons from './EditSaveCancelButtons'
 
 const FeedItemComp = ({
   feedItem,
@@ -94,30 +95,19 @@ const FeedItemComp = ({
 
         {/* Action Buttons */}
         {displayFeed.type === 'manual' && type === 'edit' && (
-          <div className='flex gap-0.5 sm:gap-1 shrink-0'>
+          <div className='flex sm:gap-1 shrink-0'>
             {editName ? (
-              <>
-                <EditBtn
-                  icon={Check}
-                  classNameBtn='hover:bg-secondary/20'
-                  iconClassName='text-secondary size-4 sm:size-5'
-                  disabled={
-                    !isDraft &&
-                    (editedFeed.message === feedItem.message ||
-                      editedFeed.message.trim() === '')
-                  }
-                  onClick={handleSave}
-                  aria-label='Save feed post'
-                />
-                <EditBtn
-                  icon={X}
-                  onClick={cancelEdit}
-                  classNameBtn='hover:bg-destructive/20'
-                  iconClassName='text-destructive size-4 sm:size-5'
-                  aria-label='Cancel editing'
-                  // disabled={saving}
-                />
-              </>
+              <EditSaveCancelButtons
+                onSave={handleSave}
+                onCancel={cancelEdit}
+                saveDisabled={
+                  !isDraft &&
+                  (editedFeed.message === feedItem.message ||
+                    editedFeed.message.trim() === '')
+                }
+                saveAriaLabel='Save feed post'
+                className='flex gap-1'
+              />
             ) : (
               <>
                 <EditBtn

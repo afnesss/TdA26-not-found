@@ -1,4 +1,8 @@
-﻿import { getCourses, updateCourse } from '@/api/queries/courseQueries'
+﻿import {
+  cloneCourse,
+  getCourses,
+  updateCourse,
+} from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import HintPageText from '@/components/shared/HintPageText'
@@ -25,6 +29,7 @@ import CoursesPageSceleton from '../../components/shared/loadingskeleton/Courses
 import { toast } from 'sonner'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import {
+  useCloneCourseMutation,
   useCreateCourseMutation,
   useDeleteCourseMutation,
 } from '../CoursePage/utils/useCourseMutation'
@@ -63,6 +68,7 @@ const DashboardDesign1 = () => {
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
   const { mutateAsync: createCourseMutation } =
     useCreateCourseMutation(setCourseDraft)
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation()
 
   const invalidateCourseQueries = (courseId: string) => {
     queryClient.invalidateQueries({ queryKey: ['courses'] })
@@ -325,6 +331,9 @@ const DashboardDesign1 = () => {
                       onDelete={() => deleteCourseMutation(course.uuid)}
                       onStatusChange={handleStatusChange}
                       planning={planning}
+                      onCopyAsDraft={async (source: CourseSummary) => {
+                        cloneCourseMutation({ source })
+                      }}
                     />
                   )
                 })}

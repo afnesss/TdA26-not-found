@@ -42,3 +42,9 @@ export const deleteCourse = async (courseId: string): Promise<void> => {
     method: 'DELETE',
   })
 }
+
+export const cloneCourse = async (courseId: string): Promise<CourseSummary> => {
+  return await apiFetch(`/courses/${courseId}/clone`, {
+    method: 'POST',
+  })
+}

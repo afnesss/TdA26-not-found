@@ -39,6 +39,7 @@ interface CourseEdit {
   onCancelDraft?: () => void
   onDelete?: () => void
   onStatusChange?: (courseId: string, newStatus: CourseStatus) => void
+  onCopyAsDraft?: (source: CourseSummary) => void
   planning?: {
     editable: boolean
     isEditing: boolean
@@ -166,6 +167,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   e?.stopPropagation()
                   props.onEdit()
                 }}
+                classNameBtn={cn(course.status === 'draft' ? '' : 'hidden')}
                 aria-label={`Edit course ${course.name}`}
               />
               <DeleteConfirmDialog
@@ -174,13 +176,6 @@ const CourseComponent = (props: CourseCompProps) => {
                     type='delete'
                     onClick={(e) => e?.stopPropagation()}
                     aria-label={`Delete course ${course.name}`}
-                    classNameBtn={cn(
-                      (course.status === 'live' ||
-                        course.status === 'paused' ||
-                        course.status === 'planned') &&
-                        'hidden',
-                    )}
-                    disabled={course.status === 'live'}
                   />
                 }
                 itemName={course.name}
@@ -268,70 +263,82 @@ const CourseComponent = (props: CourseCompProps) => {
         </CardContent>
 
         <CardFooter className='flex-col items-start gap-2'>
-          <div className='flex justify-between w-full items-center'>
-            {type === 'classic' && (
-              <>
-                <CardDate
-                  course={course}
-                  getTime={getTimeAgo}
-                  state={course.status}
-                  // isDraft={'isDraft' in props && props.isDraft}
-                />
-
-                <Button
-                  variant={'grid'}
-                  size={'grid'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigate(`/courses/${course.uuid}`)
-                  }}
-                  className={cn(
-                    'bg-linear-to-br',
-                    colorStyles.bg[courseColor],
-                    colorStyles.text[courseColor],
-                  )}
-                  disabled={course.status !== 'live'}
-                >
-                  <span className='font-semibold'>Zobrazit</span>
-                </Button>
-              </>
-            )}
-
-            {type === 'edit' && (
+          {type === 'classic' && (
+            <div className='flex justify-between w-full items-center'>
               <CardDate
                 course={course}
                 getTime={getTimeAgo}
-                isDraft={'isDraft' in props && props.isDraft}
                 state={course.status}
-                planning={props.planning}
+                // isDraft={'isDraft' in props && props.isDraft}
               />
-            )}
 
-            {type === 'edit' &&
-              !('isDraft' in props && props.isDraft) &&
-              !state.isEditing &&
-              !props.planning?.isEditing &&
-              props.onStatusChange && (
-                <StatusActionButtons
-                  currentStatus={course.status}
-                  courseColor={courseColor}
-                  onStatusChange={(newStatus) =>
-                    props.onStatusChange!(course.uuid, newStatus)
-                  }
+              <Button
+                variant={'grid'}
+                size={'grid'}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/courses/${course.uuid}`)
+                }}
+                className={cn(
+                  'bg-linear-to-br',
+                  colorStyles.bg[courseColor],
+                  colorStyles.text[courseColor],
+                )}
+                disabled={course.status !== 'live'}
+              >
+                <span className='font-semibold'>Zobrazit</span>
+              </Button>
+            </div>
+          )}
+
+          {type === 'edit' && (
+            <div className='w-full'>
+              <div className='flex justify-between w-full items-center gap-2'>
+                <CardDate
+                  course={course}
+                  getTime={getTimeAgo}
+                  isDraft={'isDraft' in props && props.isDraft}
+                  state={course.status}
+                  planning={props.planning}
                 />
-              )}
 
-            {type === 'edit' && props.planning?.isEditing && (
-              <EditSaveCancelButtons
-                className='flex gap-2 items-end'
-                onSave={() => props.planning?.onConfirm()}
-                onCancel={() => props.planning?.onCancel()}
-                saveDisabled={props.planning.saving || !!props.planning.error}
-                cancelDisabled={props.planning.saving}
-                saveAriaLabel='Save course'
-              />
-            )}
-          </div>
+                {!('isDraft' in props && props.isDraft) &&
+                  !state.isEditing &&
+                  !props.planning?.isEditing &&
+                  props.onStatusChange && (
+                    <StatusActionButtons
+                      currentStatus={course.status}
+                      courseColor={courseColor}
+                      onStatusChange={(newStatus) =>
+                        props.onStatusChange!(course.uuid, newStatus)
+                      }
+                      onCopyAsDraft={() => {
+                        props.onCopyAsDraft?.(course)
+                      }}
+                    />
+                  )}
+
+                {props.planning?.isEditing && (
+                  <EditSaveCancelButtons
+                    className='flex gap-2 items-end'
+                    onSave={() => props.planning?.onConfirm()}
+                    onCancel={() => props.planning?.onCancel()}
+                    saveDisabled={
+                      props.planning.saving || !!props.planning.error
+                    }
+                    cancelDisabled={props.planning.saving}
+                    saveAriaLabel='Save course'
+                  />
+                )}
+              </div>
+
+              {props.planning?.error && (
+                <p className='text-xs text-destructive mt-1'>
+                  {props.planning.error}
+                </p>
+              )}
+            </div>
+          )}
         </CardFooter>
       </div>
     </Card>

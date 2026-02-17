@@ -3,6 +3,7 @@ import {
   getAllCourses,
   getCourseByUuid,
   createCourse,
+  cloneCourse,
   updateCourse,
   deleteCourse,
   streamCourses,
@@ -27,6 +28,7 @@ router.post(
   validate(CourseCreateRequestSchema),
   createCourse,
 );
+router.post("/:uuid/clone", writeLimiter, cloneCourse);
 router.put(
   "/:uuid",
   writeLimiter,

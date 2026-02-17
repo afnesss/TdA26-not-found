@@ -1,6 +1,7 @@
 import type { ApiError } from '@/lib/types'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import {
+  cloneCourse,
   createCourse,
   deleteCourse,
   updateCourse,
@@ -54,6 +55,62 @@ export const useDeleteCourseMutation = () => {
       onErrorWithRollback(
         error,
         'Chyba při mazání kurzu',
+        queryClient,
+        ['courses'],
+        context?.previousCourses,
+      )
+    },
+  })
+}
+
+export const useCloneCourseMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    CourseSummary,
+    ApiError,
+    { source: CourseSummary },
+    { previousCourses?: CourseSummary[]; tempId: string }
+  >({
+    mutationFn: async ({ source }) => {
+      const result = await cloneCourse(source.uuid)
+      if (!result) {
+        throw new Error('Clone course returned null')
+      }
+      return result
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] })
+      toast.success('Kurz byl zkopirován')
+    },
+    onMutate: async ({ source }) => {
+      await queryClient.cancelQueries({ queryKey: ['courses'] })
+
+      const previousCourses = queryClient.getQueryData<CourseSummary[]>([
+        'courses',
+      ])
+      const tempId = `temp-clone-${Date.now()}`
+
+      const optimistic: CourseSummary = {
+        uuid: tempId,
+        name: `${source.name} (kopie)`,
+        description: source.description ?? '',
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => [
+        optimistic,
+        ...old,
+      ])
+
+      return { previousCourses, tempId }
+    },
+    onError: (error: ApiError, _variables, context) => {
+      onErrorWithRollback(
+        error,
+        'Chyba při kopirování kurzu',
         queryClient,
         ['courses'],
         context?.previousCourses,

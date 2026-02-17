@@ -9,6 +9,9 @@ import {
 } from "../db/schema";
 import { eq, sql, desc, inArray } from "drizzle-orm";
 import { mapMaterial } from "./materialController";
+import fs from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 import { sseManager } from "../utils/sseManager";
 import { createSystemEvent } from "../utils/systemEvent";
@@ -126,6 +129,136 @@ export async function createCourse(req: Request, res: Response) {
     });
 
   res.status(201).json(newCourse[0]);
+}
+
+const UPLOAD_DIR = path.join(process.cwd(), "uploads");
+
+const copyMaterialFile = async (
+  sourceUrl: string,
+  targetMaterialId: string,
+) => {
+  const sourceFilename = path.basename(sourceUrl);
+  const sourcePath = path.join(UPLOAD_DIR, sourceFilename);
+  const extension = path.extname(sourceFilename);
+  const targetFilename = `${targetMaterialId}${extension}`;
+  const targetPath = path.join(UPLOAD_DIR, targetFilename);
+
+  await fs.copyFile(sourcePath, targetPath);
+  return `/api/uploads/${targetFilename}`;
+};
+
+export async function cloneCourse(req: Request, res: Response) {
+  const { uuid } = req.params;
+  const copiedFilePaths: string[] = [];
+
+  try {
+    const [sourceCourse] = await db
+      .select()
+      .from(courses)
+      .where(eq(courses.uuid, uuid));
+
+    if (!sourceCourse) {
+      res.status(404).json({ message: "Kurz nebyl nalezen" });
+      return;
+    }
+
+    const sourceMaterials = await db
+      .select()
+      .from(courseMaterials)
+      .where(eq(courseMaterials.courseId, uuid))
+      .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
+
+    const sourceQuizzes = await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.courseId, uuid))
+      .orderBy(desc(quizzes.createdAt), desc(quizzes.uuid));
+
+    const clonedCourse = await db.transaction(async (tx) => {
+      const [newCourse] = await tx
+        .insert(courses)
+        .values({
+          name: `${sourceCourse.name} (kopie)`,
+          description: sourceCourse.description ?? null,
+          status: "draft",
+          startedAt: null,
+          scheduledFor: null,
+          status_history: [],
+        })
+        .returning({
+          uuid: courses.uuid,
+          name: courses.name,
+          description: courses.description,
+          status: courses.status,
+          createdAt: courses.createdAt,
+          updatedAt: courses.updatedAt,
+          startedAt: courses.startedAt,
+          status_history: courses.status_history,
+          scheduledFor: courses.scheduledFor,
+        });
+
+      for (const material of sourceMaterials) {
+        if (material.type === "file") {
+          if (!material.fileUrl) {
+            throw new Error("Zdrojový souborový material nemá fileUrl");
+          }
+
+          const materialId = uuidv4();
+          const fileUrl = await copyMaterialFile(material.fileUrl, materialId);
+          const filename = path.basename(fileUrl);
+          copiedFilePaths.push(path.join(UPLOAD_DIR, filename));
+
+          await tx.insert(courseMaterials).values({
+            uuid: materialId,
+            courseId: newCourse.uuid,
+            type: "file",
+            name: material.name,
+            description: material.description ?? null,
+            fileUrl,
+            mimeType: material.mimeType ?? null,
+            sizeBytes: material.sizeBytes ?? null,
+            originalFilename: material.originalFilename ?? null,
+          });
+
+          continue;
+        }
+
+        await tx.insert(courseMaterials).values({
+          courseId: newCourse.uuid,
+          type: "url",
+          name: material.name,
+          description: material.description ?? null,
+          url: material.url ?? null,
+          faviconUrl: material.faviconUrl ?? null,
+        });
+      }
+
+      for (const quiz of sourceQuizzes) {
+        await tx.insert(quizzes).values({
+          courseId: newCourse.uuid,
+          title: quiz.title,
+          questions: quiz.questions,
+        });
+      }
+
+      return newCourse;
+    });
+
+    // await createSystemEvent(
+    //   clonedCourse.uuid,
+    //   `Kurz byl zkopirovan z "${sourceCourse.name}"`,
+    // );
+
+    sseManager.broadcast("courses", "course_upserted", clonedCourse);
+
+    res.status(201).json(clonedCourse);
+  } catch (error) {
+    for (const filePath of copiedFilePaths) {
+      await fs.unlink(filePath).catch(() => undefined);
+    }
+    console.error("Error cloning course:", error);
+    res.status(500).json({ message: "Nepodarilo se zkopirovat kurz" });
+  }
 }
 
 export async function updateCourse(req: Request, res: Response) {

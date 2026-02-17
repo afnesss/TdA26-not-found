@@ -23,7 +23,6 @@ type CardDateProps = {
 
 const CardDate = ({
   course,
-  getTime,
   isDraft,
   state = 'draft',
   planning,
@@ -113,9 +112,6 @@ const CardDate = ({
             className='h-8 rounded-md border border-input bg-background px-2 text-sm '
             disabled={planning.saving}
           />
-          {planning.error && (
-            <p className='text-xs text-destructive'>{planning.error}</p>
-          )}
         </div>
       ) : (
         <div className='flex items-center gap-1.5'>

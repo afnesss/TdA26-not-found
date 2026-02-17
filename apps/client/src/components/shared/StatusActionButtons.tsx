@@ -1,6 +1,13 @@
 import { Button } from '@/components/ui/button'
-import type { CourseStatus } from '@/lib/schemas'
-import { Play, Pause, Archive, Calendar, RotateCcw } from 'lucide-react'
+import type { CourseStatus, CourseSummary } from '@/lib/schemas'
+import {
+  Play,
+  Pause,
+  Archive,
+  Calendar,
+  RotateCcw,
+  FilePlus,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { colorStyles } from '@/lib/constants'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
@@ -10,6 +17,7 @@ interface StatusActionButtonProps {
   onStatusChange: (newStatus: CourseStatus) => void
   courseColor: string
   className?: string
+  onCopyAsDraft?: () => void
 }
 
 export function StatusActionButtons({
@@ -17,6 +25,7 @@ export function StatusActionButtons({
   onStatusChange,
   courseColor,
   className,
+  onCopyAsDraft,
 }: StatusActionButtonProps) {
   const getActions = () => {
     switch (currentStatus) {
@@ -57,6 +66,13 @@ export function StatusActionButtons({
       case 'live':
         return [
           {
+            label: 'Archivovat',
+            icon: Archive,
+            status: 'archived' as CourseStatus,
+            variant: 'outline' as const,
+            primary: false,
+          },
+          {
             label: 'Pozastavit',
             icon: Pause,
             status: 'paused' as CourseStatus,
@@ -84,8 +100,8 @@ export function StatusActionButtons({
       case 'archived':
         return [
           {
-            label: 'Obnovit',
-            icon: RotateCcw,
+            label: 'Kopírovat jako návrh',
+            icon: FilePlus,
             status: 'draft' as CourseStatus,
             variant: 'grid' as const,
             primary: true,
@@ -106,6 +122,10 @@ export function StatusActionButtons({
 
         const handleClick = (e?: React.MouseEvent) => {
           e?.stopPropagation()
+          if (currentStatus === 'archived' && onCopyAsDraft) {
+            onCopyAsDraft()
+            return
+          }
           onStatusChange(action.status)
         }
 

@@ -2,7 +2,13 @@
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import HintPageText from '@/components/shared/HintPageText'
+import FilterDropdown from '@/components/shared/FilterDropdown'
 import { Button } from '@/components/ui/button'
+import {
+  defaultStatusFilters,
+  statusFilterItems,
+  type FilterIds,
+} from '@/lib/constants'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, BookOpenText } from 'lucide-react'
@@ -12,6 +18,7 @@ import CourseComponent from '../../components/shared/CourseComponent'
 import {
   filterCourses,
   formatDateTimeLocal,
+  sortCoursesByFilter,
   toDateTimeLocalValue,
 } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
@@ -21,9 +28,14 @@ import {
   useCreateCourseMutation,
   useDeleteCourseMutation,
 } from '../CoursePage/utils/useCourseMutation'
+import { useMediaQuery } from 'usehooks-ts'
+import { filterItems } from '@/lib/constants'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
+  const [statusFilters, setStatusFilters] =
+    useState<Record<CourseStatus, boolean>>(defaultStatusFilters)
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
 
@@ -33,6 +45,7 @@ const DashboardDesign1 = () => {
     useState(false)
   const [planningError, setPlanningError] = useState('')
   const [planningSaving, setPlanningSaving] = useState(false)
+  const isMd = useMediaQuery('(min-width: 768px)')
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -163,12 +176,21 @@ const DashboardDesign1 = () => {
     }
   }
 
-  const filteredCourses = filterCourses(courses, searchQuery)
-  const hasMoreCourses = filteredCourses.length > displayCount
-  const displayedCourses = filteredCourses.slice(0, displayCount)
+  const searchFilteredCourses = filterCourses(courses, searchQuery)
+  const filteredCourses = searchFilteredCourses.filter(
+    (course) => statusFilters[course.status],
+  )
+  const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
+
+  const hasMoreCourses = sortedCourses.length > displayCount
+  const displayedCourses = sortedCourses.slice(0, displayCount)
 
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
+  }
+
+  const resetStatusFilters = () => {
+    setStatusFilters({ ...defaultStatusFilters })
   }
 
   const handleEditCourse = (course: CourseSummary) => {
@@ -201,6 +223,9 @@ const DashboardDesign1 = () => {
   )
 
   useTitle('Správa kurzů')
+
+  const isSearchEmpty = searchQuery.trim() === ''
+  const useResetStatusAction = isSearchEmpty && courses.length > 0
   return (
     <>
       <div className='max-w-7xl mx-auto md:px-4'>
@@ -213,7 +238,25 @@ const DashboardDesign1 = () => {
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
               }
-              className='hidden lg:inline-flex mr-3'
+              className='hidden lg:inline-flex'
+            />
+            <FilterDropdown
+              items={filterItems}
+              selectedValue={selectedFilter}
+              onSelect={setSelectedFilter}
+              statusCheckboxes={statusFilterItems.map((item) => ({
+                label: item.label,
+                value: item.value,
+                checked: statusFilters[item.value],
+                onCheckedChange: (checked) => {
+                  setStatusFilters((prev) => ({
+                    ...prev,
+                    [item.value]: checked,
+                  }))
+                },
+              }))}
+              align={isMd ? 'center' : 'start'}
+              width='w-30 md:w-40'
             />
             <SearchBar
               searchQuery={searchQuery}
@@ -319,7 +362,16 @@ const DashboardDesign1 = () => {
               !coursesLoading && (
                 <StateComp
                   type='empty-search'
-                  onAction={() => setSearchQuery('')}
+                  onAction={() => {
+                    if (useResetStatusAction) {
+                      resetStatusFilters()
+                      return
+                    }
+                    setSearchQuery('')
+                  }}
+                  actionText={
+                    useResetStatusAction ? 'Zrušit filtry' : undefined
+                  }
                 />
               )
             ))}

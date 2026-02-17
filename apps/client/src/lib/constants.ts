@@ -1,4 +1,5 @@
 import { BookOpen, Calendar, ArrowRight } from 'lucide-react'
+import type { CourseStatus } from './schemas'
 
 export const colors = [
   'accent-teal-light',
@@ -51,3 +52,24 @@ export const filters = [
 ] as const
 
 export type FilterIds = (typeof filters)[number]['id']
+
+export const filterItems: { label: string; value: FilterIds }[] = [
+  { label: 'Nejnovější', value: 'newest' },
+  { label: 'Nejstarší', value: 'oldest' },
+]
+
+export const statusFilterItems: { label: string; value: CourseStatus }[] = [
+  { label: 'Návrhy', value: 'draft' },
+  { label: 'Naplánováné', value: 'planned' },
+  { label: 'Aktivní', value: 'live' },
+  { label: 'Pozastavené', value: 'paused' },
+  { label: 'Archiv', value: 'archived' },
+]
+
+export const defaultStatusFilters: Record<CourseStatus, boolean> = {
+  draft: true,
+  planned: true,
+  live: true,
+  paused: true,
+  archived: true,
+}

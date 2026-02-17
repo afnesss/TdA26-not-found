@@ -4,6 +4,7 @@ import {
   type CourseSummary,
   type QuizAnswer,
 } from '@/lib/schemas'
+import type { FilterIds } from '@/lib/constants'
 import { submitQuiz } from '@/api/queries/quizQueries'
 import type { UseMutationResult, QueryClient } from '@tanstack/react-query'
 import { useQuizSubmitMutation } from './quizSubmitMutation'
@@ -134,6 +135,27 @@ export const filterCourses = (
       course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+}
+
+export const sortCoursesByFilter = (
+  courses: CourseSummary[],
+  selectedFilter: FilterIds,
+): CourseSummary[] => {
+  return [...courses].sort((a, b) => {
+    if (selectedFilter === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    }
+
+    if (selectedFilter === 'oldest') {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    }
+
+    if (selectedFilter === 'updated') {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    }
+
+    return 0
+  })
 }
 
 export const onError = (error: ApiError, message: string) => {

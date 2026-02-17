@@ -5,6 +5,7 @@ import {
   createCourse,
   updateCourse,
   deleteCourse,
+  streamCourses,
 } from "../controllers/courseController";
 // import { authMiddleware } from "../middleware/auth";
 import { validate } from "../middleware/validate";
@@ -16,6 +17,7 @@ import { writeLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
+router.get("/stream", streamCourses);
 router.get("/", getAllCourses);
 router.get("/:uuid", getCourseByUuid);
 

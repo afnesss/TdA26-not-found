@@ -197,6 +197,16 @@ export async function updateCourse(req: Request, res: Response) {
   const isOnlyStatusChange =
     status !== undefined && name === undefined && description === undefined;
 
+  const wasUserVisible = ["planned", "live"].includes(existing[0].status);
+  const isUserVisible = ["planned", "live"].includes(nextStatus);
+  if ((!wasUserVisible && isUserVisible) || (wasUserVisible && isUserVisible)) {
+    sseManager.broadcast("courses", "course_upserted", updated[0]);
+  } else if (wasUserVisible && !isUserVisible) {
+    sseManager.broadcast("courses", "course_removed", {
+      uuid: updated[0].uuid,
+    });
+  }
+
   if (!isOnlyStatusChange) {
     await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
   }
@@ -223,3 +233,12 @@ export async function deleteCourse(req: Request, res: Response) {
 
   res.status(204).send();
 }
+
+export const streamCourses = (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  sseManager.addClient("courses", res);
+};

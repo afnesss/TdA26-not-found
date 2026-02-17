@@ -15,12 +15,14 @@ import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
 import { filterCourses } from '../CoursePage/utils/helperFunctions'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { isConnected } = useCoursesSSE()
 
   const {
     data: courses = [],

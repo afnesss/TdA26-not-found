@@ -29,9 +29,9 @@ const CardDate = ({
   planning,
 }: CardDateProps) => {
   const getStatusLabel = () => {
+    if (planning?.isEditing) return
     switch (state) {
       case 'draft':
-        if (planning?.isEditing) return
         return 'Vytvořeno'
       case 'planned':
         return 'Začíná'

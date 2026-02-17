@@ -25,10 +25,29 @@ export const useCoursesSSE = () => {
 
     eventSource.addEventListener('course_upserted', (event) => {
       const newCourse = JSON.parse(event.data) as CourseSummary
+      let toastMessage: string | null = null
 
       queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
         if (!oldData) return oldData
-        const exists = oldData.some((c) => c.uuid === newCourse.uuid)
+
+        const existingCourse = oldData.find((c) => c.uuid === newCourse.uuid)
+        const exists = Boolean(existingCourse)
+
+        if (newCourse.status === 'live' && existingCourse?.status !== 'live') {
+          toastMessage = `Kurz "${newCourse.name}" byl spuštěn`
+        } else if (
+          newCourse.status === 'planned' &&
+          existingCourse?.status !== 'planned'
+        ) {
+          toastMessage = `Kurz "${newCourse.name}" byl naplánován`
+        } else if (
+          newCourse.status === 'planned' &&
+          existingCourse?.status === 'planned' &&
+          newCourse.scheduledFor !== existingCourse.scheduledFor
+        ) {
+          toastMessage = `Termín kurzu "${newCourse.name}" byl změněn`
+        }
+
         if (newCourse.status !== 'planned' && newCourse.status !== 'live')
           return oldData
 
@@ -38,6 +57,9 @@ export const useCoursesSSE = () => {
             )
           : [newCourse, ...oldData]
       })
+      if (toastMessage) {
+        toast.info(toastMessage)
+      }
     })
 
     eventSource.addEventListener('course_removed', (event) => {

@@ -22,9 +22,9 @@ export default async function apiFetch<T>(
   try {
     response = await fetch(`/api${input}`, {
       ...safeOptions,
+      credentials: 'include',
       headers: {
         ...defaultHeaders,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers,
         ...safeOptions?.headers,
       },

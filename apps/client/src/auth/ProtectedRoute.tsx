@@ -1,9 +1,13 @@
 import React from 'react'
-import auth from './fakeAuth'
 import { Navigate } from 'react-router'
+import { ClipLoader } from 'react-spinners'
+import { useAuth } from './useAuth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!auth.isAutenticated()) {
+  const { isAuth, isLoading } = useAuth()
+
+  if (isLoading) return <ClipLoader />
+  if (!isAuth) {
     return <Navigate to={'/login'} replace />
   }
 

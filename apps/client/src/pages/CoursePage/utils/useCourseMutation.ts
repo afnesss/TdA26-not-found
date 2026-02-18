@@ -179,7 +179,7 @@ export const useUpdateCourseMutation = (
         queryKey: ['course', courseId],
       })
 
-      toast.success('Kurz aktualizovan')
+      toast.success('Kurz aktualizován')
 
       // Zavolat callback pro reset formy
       if (onSuccessCallback) {

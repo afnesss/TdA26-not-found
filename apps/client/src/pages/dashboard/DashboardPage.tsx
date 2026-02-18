@@ -35,6 +35,7 @@ import {
 } from '../CoursePage/utils/useCourseMutation'
 import { useMediaQuery } from 'usehooks-ts'
 import { filterItems } from '@/lib/constants'
+import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -75,6 +76,7 @@ const DashboardDesign1 = () => {
     queryClient.invalidateQueries({ queryKey: ['courses-user'] })
     queryClient.invalidateQueries({ queryKey: ['course', courseId] })
   }
+  const { isConnected } = useDashboardCoursesSSE()
 
   const closePlanningEditor = () => {
     setPlanningCourseId(null)

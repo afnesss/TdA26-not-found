@@ -8,7 +8,6 @@ import apiFetch from '../client'
 
 export const getCourses = async (userView: boolean = false) => {
   const params = userView ? '?userView=true' : ''
-  console.log(userView)
   return await apiFetch<CourseSummary[]>(`/courses${params}`)
 }
 

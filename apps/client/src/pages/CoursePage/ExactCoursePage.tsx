@@ -1,6 +1,10 @@
-import { getCourseById } from '@/api/queries/courseQueries'
+import { getCourseById, getCourses } from '@/api/queries/courseQueries'
 import StateComp from '@/components/shared/StateComp'
-import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas'
+import {
+  CourseDetailSchema,
+  type CourseDetail,
+  type CourseSummary,
+} from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router'
 import CourseSkeleton from '../../components/shared/loadingskeleton/CoursePageSkeleton'
@@ -10,6 +14,7 @@ import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import NotFoundPage from '../NotFoundPage'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
@@ -46,6 +51,14 @@ const CoursePage = () => {
       throw err
     }
   }
+  const { data: coursesUser = [], isLoading: isCoursesUserLoading } = useQuery<
+    CourseSummary[]
+  >({
+    queryKey: ['courses-user'],
+    queryFn: () => getCourses(true),
+    enabled: Boolean(id),
+  })
+
   const {
     data: courseData,
     isLoading,
@@ -61,6 +74,11 @@ const CoursePage = () => {
   const isOffline = !navigator.onLine
 
   useTitle(courseData?.name || 'Kurz')
+  const hasAccessToCourse = coursesUser.some((c) => c.uuid === id)
+
+  if (!hasAccessToCourse) {
+    return <NotFoundPage />
+  }
 
   if (isLoading) {
     return <CourseSkeleton />

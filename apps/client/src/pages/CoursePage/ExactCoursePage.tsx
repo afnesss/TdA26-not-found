@@ -19,7 +19,6 @@ import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
 
 const CoursePage = () => {
-  // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
   const { id } = useParams<{ id: string }>()
   // useTitle ()
   // Establish SSE connection
@@ -64,17 +63,14 @@ const CoursePage = () => {
   })
 
   const {
-    data: courseData,
+    coursesUser,
+    isCoursesUserLoading,
+    courseData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useQuery<CourseDetail, Error & { status?: number }>({
-    queryKey: ['course', id],
-    queryFn: () => fetchCourse(id!),
-    enabled: Boolean(id),
-    networkMode: 'always',
-  })
+  } = useCoursePageQueries(id)
   const isOffline = !navigator.onLine
 
   useTitle(courseData?.name || 'Kurz')

@@ -59,12 +59,19 @@ const CoursesPage = () => {
     refetch()
   }
 
+  const resetStatusFilters = () => {
+    setStatusFilters({ live: true, planned: true })
+  }
+
   const statusFilterItems: { label: string; value: 'live' | 'planned' }[] = [
     { label: 'Aktivní', value: 'live' },
     { label: 'Naplanováné', value: 'planned' },
   ]
 
   useTitle('Kurzy')
+
+  const isSearchEmpty = searchQuery.trim() === ''
+  const useResetStatusAction = isSearchEmpty && courses.length > 0
 
   return (
     <div className='h-full'>
@@ -97,7 +104,7 @@ const CoursesPage = () => {
               },
             }))}
             align={isMd ? 'center' : 'start'}
-            width='w-30 md:w-40'
+            width='w-35 md:w-40'
           />
 
           <SearchBar
@@ -137,12 +144,15 @@ const CoursesPage = () => {
               {displayedCourses.length === 0 && !isLoading && !isError ? (
                 <StateComp
                   type='empty-search'
-                  {...(searchQuery !== '' && {
-                    onAction: () => {
-                      setSearchQuery('')
-                      setDisplayCount(9)
-                    },
-                  })}
+                  onAction={() => {
+                    if (useResetStatusAction) {
+                      resetStatusFilters()
+                      return
+                    }
+                    setSearchQuery('')
+                    setDisplayCount(9)
+                  }}
+                  actionText={useResetStatusAction ? 'Zrušit filtry' : undefined}
                 />
               ) : isError ? (
                 <StateComp

@@ -264,7 +264,7 @@ const DashboardDesign1 = () => {
                 },
               }))}
               align={isMd ? 'center' : 'start'}
-              width='w-30 md:w-40'
+              width='w-35 md:w-40'
             />
             <SearchBar
               searchQuery={searchQuery}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Eye, EyeOff, Lock, User, Sparkles } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText'
 import { Input } from '@/components/ui/input'
@@ -9,14 +9,16 @@ import TitleText from '@/components/shared/TitleText'
 import FormField from '@/components/shared/FormField'
 import { Label } from '@/components/ui/label'
 import { useNavigate } from 'react-router'
-import auth from '@/auth/fakeAuth'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { toast } from 'sonner'
+import { userLogin } from '@/api/queries/authQueries'
+import { useQueryClient } from '@tanstack/react-query'
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true)
   const [show, setShow] = useState(false)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const {
     register,
@@ -27,8 +29,12 @@ const LoginPage = () => {
   } = useForm()
 
   const onSubmit = async (data: FieldValues) => {
-    const isSuccess = auth.login(data.name, data.password, setError)
-    if (isSuccess) {
+    const result = await userLogin({
+      username: data.name,
+      password: data.password,
+    })
+    if (result) {
+      queryClient.setQueryData(['auth', 'me'], { username: data.name })
       toast.success('Přihlášení úspěšné')
       navigate('/dashboard')
       reset()

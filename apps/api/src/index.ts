@@ -9,6 +9,7 @@ import feedRoutes from "./routes/feedRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import { generalLimiter } from "./middleware/rateLimiter";
+import cookieParser from "cookie-parser";
 import {
   startIntervalScheduler,
   stopIntervalScheduler,
@@ -33,6 +34,7 @@ app.use(
   }),
 );
 
+app.use(cookieParser());
 app.use(generalLimiter);
 
 // Skip body parsing for multipart requests (handled by multer)
@@ -67,7 +69,7 @@ app.get("/health", (req, res) => {
 // Caddy strips /api, so request to /api/uploads/... becomes /uploads/... here
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/courses/:courseId/materials", materialRoutes);
 app.use("/courses/:courseId/quizzes", quizRoutes);
 app.use("/courses/:courseId/feed", feedRoutes);

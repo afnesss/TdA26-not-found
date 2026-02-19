@@ -1,5 +1,12 @@
+import { getCourseById, getCourses } from '@/api/queries/courseQueries'
 import StateComp from '@/components/shared/StateComp'
-import { useParams } from 'react-router'
+import {
+  CourseDetailSchema,
+  type CourseDetail,
+  type CourseSummary,
+} from '@/lib/schemas'
+import { useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams } from 'react-router'
 import CourseSkeleton from '../../components/shared/loadingskeleton/CoursePageSkeleton'
 import FeedSection from './components/FeedSection'
 import MaterialsSection from './components/MaterialsSection'
@@ -7,12 +14,53 @@ import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
-import { useCoursePageQueries } from './utils/useCoursePageQueries'
 
 const CoursePage = () => {
   const { id } = useParams<{ id: string }>()
+  // useTitle ()
+  // Establish SSE connection
+  const navigate = useNavigate()
+  const redirectedRef = useRef(false)
   const { isConnected } = useCourseFeedSSE({ courseId: id! })
+
+  const fetchCourse = async (id: string): Promise<CourseDetail> => {
+    try {
+      const raw = await getCourseById(id!)
+      if (!raw) {
+        throw Object.assign(new Error('Course not found'), { status: 404 })
+      }
+      const parsed = CourseDetailSchema.safeParse(raw)
+
+      if (!parsed.success) {
+        console.error('Course schema validation failed', parsed.error)
+        throw new Error('Invalid course data')
+      }
+
+      return parsed.data
+    } catch (err) {
+      console.error(err)
+      const error = err as { status?: number; message?: string }
+
+      // If the error from API has status property, preserve it
+      if (error.status) {
+        throw Object.assign(new Error(error.message || 'Request failed'), {
+          status: error.status,
+        })
+      }
+
+      throw err
+    }
+  }
+  const { data: coursesUser = [], isLoading: isCoursesUserLoading } = useQuery<
+    CourseSummary[]
+  >({
+    queryKey: ['courses-user'],
+    queryFn: () => getCourses(true),
+    enabled: Boolean(id),
+  })
 
   const {
     coursesUser,
@@ -27,13 +75,28 @@ const CoursePage = () => {
 
   useTitle(courseData?.name || 'Kurz')
   const hasAccessToCourse = coursesUser.some((c) => c.uuid === id)
+  const canEvaluateCourseAccess = !isCoursesUserLoading
+  const shouldShowNotFoundByAccess =
+    canEvaluateCourseAccess && !hasAccessToCourse && !courseData
 
-  if (!hasAccessToCourse) {
-    return <NotFoundPage />
-  }
+  useEffect(() => {
+    if (!courseData || redirectedRef.current) return
 
-  if (isLoading) {
+    const isPaused = courseData.status === 'paused'
+    const isArchived = courseData.status === 'archived'
+    const isClosed = isPaused || isArchived
+    if (!isClosed) return
+
+    redirectedRef.current = true
+
+    navigate('/courses', { replace: true })
+  }, [courseData, navigate])
+
+  if (isLoading || !canEvaluateCourseAccess) {
     return <CourseSkeleton />
+  }
+  if (shouldShowNotFoundByAccess) {
+    return <NotFoundPage />
   }
 
   if (isError || !courseData) {

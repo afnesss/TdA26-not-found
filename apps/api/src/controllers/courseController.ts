@@ -178,7 +178,7 @@ export async function cloneCourse(req: Request, res: Response) {
       const [newCourse] = await tx
         .insert(courses)
         .values({
-          name: `${sourceCourse.name} (kopie)`,
+          name: `${sourceCourse.name}`,
           description: sourceCourse.description ?? null,
           status: "draft",
           startedAt: null,
@@ -337,12 +337,14 @@ export async function updateCourse(req: Request, res: Response) {
   } else if (wasUserVisible && !isUserVisible) {
     sseManager.broadcast("courses", "course_removed", {
       uuid: updated[0].uuid,
+      name: updated[0].name,
+      status: updated[0].status,
     });
   }
 
-  if (!isOnlyStatusChange) {
-    await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
-  }
+  // if (!isOnlyStatusChange) {
+  //   await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
+  // }
 
   sseManager.broadcast(uuid, "course_updated", updated[0]);
 

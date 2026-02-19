@@ -10,6 +10,10 @@ import { seed } from "./db/seed";
 import path from "path";
 import { generalLimiter } from "./middleware/rateLimiter";
 import cookieParser from "cookie-parser";
+import {
+  startIntervalScheduler,
+  stopIntervalScheduler,
+} from "./utils/courseScheduler";
 
 const app = express();
 const port = process.env.PORT;
@@ -99,11 +103,29 @@ async function start() {
   }
 
   try {
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
+    startIntervalScheduler();
+
+    const shutdown = (signal: string) => {
+      console.log(`[shutdown] Received ${signal}, stopping gracefully...`);
+      stopIntervalScheduler();
+      server.close((err) => {
+        if (err) {
+          console.error("[shutdown] Error while closing server:", err);
+          process.exit(1);
+        }
+        console.log("[shutdown] HTTP server closed");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
   } catch (error) {
     console.error("Failed to start server:", error);
+    stopIntervalScheduler();
     process.exit(1);
   }
 }

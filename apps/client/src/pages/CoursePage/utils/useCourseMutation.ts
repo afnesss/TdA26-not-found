@@ -93,7 +93,7 @@ export const useCloneCourseMutation = () => {
 
       const optimistic: CourseSummary = {
         uuid: tempId,
-        name: `${source.name} (kopie)`,
+        name: `${source.name}`,
         description: source.description ?? '',
         status: 'draft',
         createdAt: new Date().toISOString(),
@@ -179,7 +179,7 @@ export const useUpdateCourseMutation = (
         queryKey: ['course', courseId],
       })
 
-      toast.success('Kurz aktualizovan')
+      toast.success('Kurz aktualizován')
 
       // Zavolat callback pro reset formy
       if (onSuccessCallback) {

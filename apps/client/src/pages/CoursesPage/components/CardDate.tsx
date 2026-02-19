@@ -128,7 +128,9 @@ const CardDate = ({
               {getDateToDisplay()}
             </button>
           ) : (
-            <span className='text-sm font-medium'>{getDateToDisplay()}</span>
+            <span className='text-xs md:text-sm font-medium'>
+              {getDateToDisplay()}
+            </span>
           )}
         </div>
       )}

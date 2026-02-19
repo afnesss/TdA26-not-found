@@ -17,6 +17,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
+import { useCoursePageQueries } from './utils/useCoursePageQueries'
 
 const CoursePage = () => {
   const { id } = useParams<{ id: string }>()
@@ -25,42 +26,6 @@ const CoursePage = () => {
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
   const { isConnected } = useCourseFeedSSE({ courseId: id! })
-
-  const fetchCourse = async (id: string): Promise<CourseDetail> => {
-    try {
-      const raw = await getCourseById(id!)
-      if (!raw) {
-        throw Object.assign(new Error('Course not found'), { status: 404 })
-      }
-      const parsed = CourseDetailSchema.safeParse(raw)
-
-      if (!parsed.success) {
-        console.error('Course schema validation failed', parsed.error)
-        throw new Error('Invalid course data')
-      }
-
-      return parsed.data
-    } catch (err) {
-      console.error(err)
-      const error = err as { status?: number; message?: string }
-
-      // If the error from API has status property, preserve it
-      if (error.status) {
-        throw Object.assign(new Error(error.message || 'Request failed'), {
-          status: error.status,
-        })
-      }
-
-      throw err
-    }
-  }
-  const { data: coursesUser = [], isLoading: isCoursesUserLoading } = useQuery<
-    CourseSummary[]
-  >({
-    queryKey: ['courses-user'],
-    queryFn: () => getCourses(true),
-    enabled: Boolean(id),
-  })
 
   const {
     coursesUser,

@@ -93,7 +93,7 @@ export const useCloneCourseMutation = () => {
 
       const optimistic: CourseSummary = {
         uuid: tempId,
-        name: `${source.name} (kopie)`,
+        name: `${source.name}`,
         description: source.description ?? '',
         status: 'draft',
         createdAt: new Date().toISOString(),

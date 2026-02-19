@@ -1,5 +1,5 @@
-import type { CourseDetail, CourseSummary, FeedItem } from '@/lib/schemas'
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import type { CourseSummary } from '@/lib/schemas'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -63,9 +63,27 @@ export const useCoursesSSE = () => {
     })
 
     eventSource.addEventListener('course_removed', (event) => {
-      const payload = JSON.parse(event.data) as { uuid?: string } | string
+      const payload = JSON.parse(event.data) as
+        | { uuid?: string; name?: string; status?: string }
+        | string
+      const payloadData = typeof payload === 'string' ? undefined : payload
       const courseIdToDelete =
-        typeof payload === 'string' ? payload : payload.uuid
+        typeof payload === 'string' ? payload : payloadData?.uuid
+
+      const existingCourse = queryClient
+        .getQueryData<CourseSummary[]>(['courses-user'])
+        ?.find((course) => course.uuid === courseIdToDelete)
+
+      const removedCourseName =
+        payloadData?.name ?? existingCourse?.name
+      const removedCourseStatus = payloadData?.status ?? existingCourse?.status
+
+      if (removedCourseName && removedCourseStatus === 'paused') {
+        toast.info(`Kurz "${removedCourseName}" pozastaveno lektorem`)
+      }
+      if (removedCourseName && removedCourseStatus === 'archived') {
+        toast.info(`Kurz "${removedCourseName}" dokončeno lektorem`)
+      }
 
       queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
         if (!oldData) return oldData
@@ -73,6 +91,8 @@ export const useCoursesSSE = () => {
 
         return oldData.filter((c: CourseSummary) => c.uuid !== courseIdToDelete)
       })
+
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
     })
 
     return () => {

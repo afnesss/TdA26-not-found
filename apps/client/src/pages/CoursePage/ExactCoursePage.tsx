@@ -1,8 +1,12 @@
-import { getCourseById } from '@/api/queries/courseQueries'
+import { getCourseById, getCourses } from '@/api/queries/courseQueries'
 import StateComp from '@/components/shared/StateComp'
-import { CourseDetailSchema, type CourseDetail } from '@/lib/schemas'
+import {
+  CourseDetailSchema,
+  type CourseDetail,
+  type CourseSummary,
+} from '@/lib/schemas'
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import CourseSkeleton from '../../components/shared/loadingskeleton/CoursePageSkeleton'
 import FeedSection from './components/FeedSection'
 import MaterialsSection from './components/MaterialsSection'
@@ -10,12 +14,17 @@ import QuizesSection from './components/QuizesSection'
 import SummarySection from './components/SummarySection'
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useEffect, useRef } from 'react'
+import { toast } from 'sonner'
+import NotFoundPage from '../NotFoundPage'
 
 const CoursePage = () => {
   // const [courseData, setCourseData] = useState<CourseDetail  | null>(null);
   const { id } = useParams<{ id: string }>()
   // useTitle ()
   // Establish SSE connection
+  const navigate = useNavigate()
+  const redirectedRef = useRef(false)
   const { isConnected } = useCourseFeedSSE({ courseId: id! })
 
   const fetchCourse = async (id: string): Promise<CourseDetail> => {
@@ -46,6 +55,14 @@ const CoursePage = () => {
       throw err
     }
   }
+  const { data: coursesUser = [], isLoading: isCoursesUserLoading } = useQuery<
+    CourseSummary[]
+  >({
+    queryKey: ['courses-user'],
+    queryFn: () => getCourses(true),
+    enabled: Boolean(id),
+  })
+
   const {
     data: courseData,
     isLoading,
@@ -61,9 +78,29 @@ const CoursePage = () => {
   const isOffline = !navigator.onLine
 
   useTitle(courseData?.name || 'Kurz')
+  const hasAccessToCourse = coursesUser.some((c) => c.uuid === id)
+  const canEvaluateCourseAccess = !isCoursesUserLoading
+  const shouldShowNotFoundByAccess =
+    canEvaluateCourseAccess && !hasAccessToCourse && !courseData
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!courseData || redirectedRef.current) return
+
+    const isPaused = courseData.status === 'paused'
+    const isArchived = courseData.status === 'archived'
+    const isClosed = isPaused || isArchived
+    if (!isClosed) return
+
+    redirectedRef.current = true
+
+    navigate('/courses', { replace: true })
+  }, [courseData, navigate])
+
+  if (isLoading || !canEvaluateCourseAccess) {
     return <CourseSkeleton />
+  }
+  if (shouldShowNotFoundByAccess) {
+    return <NotFoundPage />
   }
 
   if (isError || !courseData) {

@@ -2,11 +2,17 @@
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth";
 
-// declare module "express-session" {
-//   interface SessionData {
-//     user?: { uuid: string; username: string };
-//   }
-// }
+const clearAuthCookieAndRespond = (
+  res: Response,
+  cookieOptions: {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: "strict";
+  },
+) => {
+  res.clearCookie("token", cookieOptions);
+  res.status(401).json({ message: "Relace vypršela" });
+};
 
 export function authMiddleware(
   req: AuthRequest,
@@ -34,8 +40,7 @@ export function authMiddleware(
 
     const payload = jwt.verify(token, jwtSecret);
     if (typeof payload === "string") {
-      res.clearCookie("token", cookieOptions);
-      res.status(401).json({ message: "Relace vypršela" });
+      clearAuthCookieAndRespond(res, cookieOptions);
       return;
     }
 
@@ -44,17 +49,12 @@ export function authMiddleware(
       payload === null ||
       !("username" in payload)
     ) {
-      res.clearCookie("token", cookieOptions);
-      return res.status(401).json({ message: "Relace vypršela" });
+      clearAuthCookieAndRespond(res, cookieOptions);
+      return;
     }
     req.user = { username: String((payload as jwt.JwtPayload).username) };
     next();
   } catch (error) {
-    res.clearCookie("token", cookieOptions);
-    res.status(401).json({ message: "Relace vypršela" });
+    clearAuthCookieAndRespond(res, cookieOptions);
   }
-  // if (!req.session.user) {
-  //   res.status(401).json({ error: "Nejste oprávnění });
-  //   return;
-  // }
 }

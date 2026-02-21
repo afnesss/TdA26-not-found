@@ -4,12 +4,17 @@ import {
   deleteModule,
   getModuleByUuid,
   getModules,
+  reorderModules,
   updateModule,
 } from "../controllers/moduleController";
 import { authMiddleware } from "../middleware/auth";
 import { writeLimiter } from "../middleware/rateLimiter";
 import { validate } from "../middleware/validate";
-import { ModuleCreateRequestSchema, ModuleUpdateRequestSchema } from "../schemas/module";
+import {
+  ModuleCreateRequestSchema,
+  ModuleReorderRequestSchema,
+  ModuleUpdateRequestSchema,
+} from "../schemas/module";
 
 const router = Router({ mergeParams: true });
 
@@ -28,6 +33,13 @@ router.put(
   writeLimiter,
   validate(ModuleUpdateRequestSchema),
   updateModule,
+);
+router.put(
+  "/reorder",
+  authMiddleware,
+  writeLimiter,
+  validate(ModuleReorderRequestSchema),
+  reorderModules,
 );
 router.delete("/:moduleId", authMiddleware, writeLimiter, deleteModule);
 

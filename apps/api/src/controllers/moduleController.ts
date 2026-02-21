@@ -8,19 +8,24 @@ import {
   quizSubmissions,
 } from "../db/schema";
 import { mapMaterial } from "./materialController";
+import { ModuleReorderRequest } from "../schemas";
 
 const MODULE_STATUSES = new Set(["active", "passive"]);
+const moduleSummarySelect = {
+  uuid: modules.uuid,
+  name: modules.name,
+  description: modules.description,
+  status: modules.status,
+  createdAt: modules.createdAt,
+  updatedAt: modules.updatedAt,
+};
 
 async function buildModuleDetail(moduleUuid: string) {
   const [fetchedModule] = await db
     .select({
-      uuid: modules.uuid,
+      ...moduleSummarySelect,
       courseId: modules.courseId,
-      name: modules.name,
-      description: modules.description,
-      status: modules.status,
-      createdAt: modules.createdAt,
-      updatedAt: modules.updatedAt,
+      position: modules.position,
     })
     .from(modules)
     .where(eq(modules.uuid, moduleUuid));
@@ -77,15 +82,7 @@ export async function getModules(req: Request, res: Response) {
     const { courseId } = req.params;
 
     const moduleSummaries = await db
-      .select({
-        uuid: modules.uuid,
-        courseId: modules.courseId,
-        name: modules.name,
-        description: modules.description,
-        status: modules.status,
-        createdAt: modules.createdAt,
-        updatedAt: modules.updatedAt,
-      })
+      .select(moduleSummarySelect)
       .from(modules)
       .where(eq(modules.courseId, courseId))
       .orderBy(
@@ -154,13 +151,12 @@ export async function createModule(req: Request, res: Response) {
           status: status ?? "passive",
           position: nextPosition,
         })
-        .returning({ uuid: modules.uuid });
+        .returning(moduleSummarySelect);
 
       return [created];
     });
 
-    const detailedModule = await buildModuleDetail(newModule.uuid);
-    res.status(201).json(detailedModule);
+    res.status(201).json(newModule);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -186,16 +182,14 @@ export async function updateModule(req: Request, res: Response) {
     }
 
     if (name !== undefined && !name.trim()) {
-      return res
-        .status(400)
-        .json({ message: "Název modulu nesmí být prazdný" });
+      return res.status(400).json({ message: "Název modulu nesmí být prázdný" });
     }
 
     if (status !== undefined && !MODULE_STATUSES.has(status)) {
       return res.status(400).json({ message: "Neplatný status modulu" });
     }
 
-    await db
+    const [updatedModule] = await db
       .update(modules)
       .set({
         name: name?.trim() ?? existingModule.name,
@@ -204,10 +198,10 @@ export async function updateModule(req: Request, res: Response) {
         status: status ?? existingModule.status,
         updatedAt: new Date(),
       })
-      .where(and(eq(modules.uuid, moduleId), eq(modules.courseId, courseId)));
+      .where(and(eq(modules.uuid, moduleId), eq(modules.courseId, courseId)))
+      .returning(moduleSummarySelect);
 
-    const detailedModule = await buildModuleDetail(moduleId);
-    res.json(detailedModule);
+    res.json(updatedModule);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -249,6 +243,70 @@ export async function deleteModule(req: Request, res: Response) {
   } catch (error: any) {
     if (error?.code === "NOT_FOUND") {
       return res.status(404).json({ message: "Modul nebyl nalezen" });
+    }
+
+    console.error(error);
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
+export async function reorderModules(req: Request, res: Response) {
+  try {
+    const { courseId } = req.params;
+    const { moduleIds } = req.body as ModuleReorderRequest;
+
+    const reorderedModules = await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        select ${modules.uuid}
+        from ${modules}
+        where ${modules.courseId} = ${courseId}
+        for update
+      `);
+
+      const rows = await tx
+        .select({ uuid: modules.uuid })
+        .from(modules)
+        .where(eq(modules.courseId, courseId));
+
+      const existingIds = rows.map((r) => r.uuid);
+      const existingSet = new Set(existingIds);
+
+      if (
+        existingIds.length !== moduleIds.length ||
+        !moduleIds.every((id) => existingSet.has(id))
+      ) {
+        throw Object.assign(new Error("INVALID_IDS"), { code: "INVALID_IDS" });
+      }
+
+      await tx
+        .update(modules)
+        .set({ position: sql`${modules.position} + 1000` })
+        .where(eq(modules.courseId, courseId));
+
+      for (let i = 0; i < moduleIds.length; i++) {
+        await tx
+          .update(modules)
+          .set({ position: i + 1, updatedAt: new Date() })
+          .where(
+            and(eq(modules.uuid, moduleIds[i]), eq(modules.courseId, courseId)),
+          );
+      }
+
+      return tx
+        .select(moduleSummarySelect)
+        .from(modules)
+        .where(eq(modules.courseId, courseId))
+        .orderBy(
+          asc(modules.position),
+          asc(modules.createdAt),
+          asc(modules.uuid),
+        );
+    });
+
+    return res.json(reorderedModules);
+  } catch (error: any) {
+    if (error?.code === "INVALID_IDS") {
+      return res.status(400).json({ message: "Neplatný seznam modulů" });
     }
 
     console.error(error);

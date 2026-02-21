@@ -47,12 +47,12 @@ export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
 
 export const getMaterials = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.params;
+    const { moduleId } = req.params;
 
     const materials = await db
       .select()
       .from(courseMaterials)
-      .where(eq(courseMaterials.courseId, courseId))
+      .where(eq(courseMaterials.moduleId, moduleId))
       .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
 
     res.json(materials.map(mapMaterial));
@@ -78,7 +78,7 @@ const moveFile = async (source: string, destination: string) => {
 
 export const createMaterial = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.params;
+    const { moduleId } = req.params;
     const { type } = req.body;
 
     if (type === "file") {
@@ -119,7 +119,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 
         .values({
           uuid: id,
-          courseId,
+          moduleId,
           type: "file",
           name,
           description,
@@ -130,10 +130,10 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
+      // await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
       const mappedMaterial = mapMaterial(material);
-      sseManager.broadcast(courseId, "material_added", mappedMaterial);
+      // sseManager.broadcast(courseId, "material_added", mappedMaterial);
 
       res.status(201).json(mappedMaterial);
     } else if (type === "url") {
@@ -159,7 +159,7 @@ export const createMaterial = async (req: Request, res: Response) => {
       const [material] = await db
         .insert(courseMaterials)
         .values({
-          courseId,
+          moduleId,
           type: "url",
           name,
           description,
@@ -168,10 +168,10 @@ export const createMaterial = async (req: Request, res: Response) => {
         })
         .returning();
 
-      await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
+      // await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
       const mappedMaterial = mapMaterial(material);
-      sseManager.broadcast(courseId, "material_added", mappedMaterial);
+      // sseManager.broadcast(courseId, "material_added", mappedMaterial);
 
       res.status(201).json(mappedMaterial);
     } else {
@@ -188,7 +188,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 
 export const updateMaterial = async (req: Request, res: Response) => {
   try {
-    const { courseId, materialId } = req.params;
+    const { moduleId, materialId } = req.params;
 
     // Check if material exists
     const existing = await db.query.courseMaterials.findFirst({
@@ -200,7 +200,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Materiál nebyl nalezen" });
     }
 
-    if (existing.courseId !== courseId) {
+    if (existing.moduleId !== moduleId) {
       if (req.file) await fs.unlink(req.file.path).catch(() => {});
       return res
         .status(404)
@@ -253,13 +253,13 @@ export const updateMaterial = async (req: Request, res: Response) => {
         .where(eq(courseMaterials.uuid, materialId))
         .returning();
 
-      await createSystemEvent(
-        courseId,
-        `Materiál aktualizován: ${updated.name}`
-      );
+      // await createSystemEvent(
+      //   courseId,
+      //   `Materiál aktualizován: ${updated.name}`,
+      // );
 
       const mappedUpdated = mapMaterial(updated);
-      sseManager.broadcast(courseId, "material_updated", mappedUpdated);
+      // sseManager.broadcast(courseId, "material_updated", mappedUpdated);
 
       res.json(mappedUpdated);
     } else {
@@ -291,13 +291,13 @@ export const updateMaterial = async (req: Request, res: Response) => {
         .where(eq(courseMaterials.uuid, materialId))
         .returning();
 
-      await createSystemEvent(
-        courseId,
-        `Materiál aktualizován: ${updated.name}`
-      );
+      // await createSystemEvent(
+      //   courseId,
+      //   `Materiál aktualizován: ${updated.name}`,
+      // );
 
       const mappedUpdated = mapMaterial(updated);
-      sseManager.broadcast(courseId, "material_updated", mappedUpdated);
+      // sseManager.broadcast(courseId, "material_updated", mappedUpdated);
 
       res.json(mappedUpdated);
     }
@@ -310,7 +310,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
 
 export const deleteMaterial = async (req: Request, res: Response) => {
   try {
-    const { courseId, materialId } = req.params;
+    const { moduleId, materialId } = req.params;
 
     const existing = await db.query.courseMaterials.findFirst({
       where: eq(courseMaterials.uuid, materialId),
@@ -320,7 +320,7 @@ export const deleteMaterial = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Materiál nebyl nalezen" });
     }
 
-    if (existing.courseId !== courseId) {
+    if (existing.moduleId !== moduleId) {
       return res
         .status(404)
         .json({ message: "Materiál v tomto kurzu neexistuje" });
@@ -339,9 +339,9 @@ export const deleteMaterial = async (req: Request, res: Response) => {
       .delete(courseMaterials)
       .where(eq(courseMaterials.uuid, materialId));
 
-    await createSystemEvent(courseId, `Materiál odebrán: ${existing.name}`);
+    // await createSystemEvent(courseId, `Materiál odebrán: ${existing.name}`);
 
-    sseManager.broadcast(courseId, "material_deleted", { uuid: materialId });
+    // sseManager.broadcast(courseId, "material_deleted", { uuid: materialId });
 
     res.status(204).send();
   } catch (error) {

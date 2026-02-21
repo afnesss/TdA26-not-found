@@ -1,36 +1,31 @@
+import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { Request, Response } from "express";
-import { db } from "../db";
-import {
-  courses,
-  quizzes,
-  quizSubmissions,
-  courseMaterials,
-  feedItems,
-} from "../db/schema";
-import { eq, sql, desc, inArray } from "drizzle-orm";
-import { mapMaterial } from "./materialController";
 import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import { db } from "../db";
+import {
+  courseMaterials,
+  courses,
+  feedItems,
+  modules,
+  quizSubmissions,
+  quizzes,
+} from "../db/schema";
+import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
-import { createSystemEvent } from "../utils/systemEvent";
 
 export async function getAllCourses(_req: Request, res: Response) {
-  const userView = _req.query.userView;
   const allCourses = await db
     .select({
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
-      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
-      startedAt: courses.startedAt,
-      scheduledFor: courses.scheduledFor,
     })
     .from(courses)
-    .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -45,12 +40,8 @@ export async function getCourseByUuid(req: Request, res: Response) {
         uuid: courses.uuid,
         name: courses.name,
         description: courses.description,
-        status: courses.status,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
-        startedAt: courses.startedAt,
-        status_history: courses.status_history,
-        scheduledFor: courses.scheduledFor,
       })
       .from(courses)
       .where(eq(courses.uuid, uuid));
@@ -60,29 +51,68 @@ export async function getCourseByUuid(req: Request, res: Response) {
       return;
     }
 
-    const fetchedQuizzes = await db
+    const baseModules = await db
       .select({
-        uuid: quizzes.uuid,
-        title: quizzes.title,
-        courseId: quizzes.courseId,
-        questions: quizzes.questions,
-        createdAt: quizzes.createdAt,
-        updatedAt: quizzes.updatedAt,
-        attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
-          Number,
-        ),
+        uuid: modules.uuid,
+        name: modules.name,
+        description: modules.description,
+        status: modules.status,
+        courseId: modules.courseId,
+        createdAt: modules.createdAt,
+        updatedAt: modules.updatedAt,
       })
-      .from(quizzes)
-      .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
-      .where(eq(quizzes.courseId, uuid))
-      .groupBy(quizzes.uuid)
-      .orderBy(desc(quizzes.createdAt));
+      .from(modules)
+      .where(eq(modules.courseId, uuid))
+      .orderBy(desc(modules.createdAt), desc(modules.uuid));
 
-    const fetchedMaterials = await db
-      .select()
-      .from(courseMaterials)
-      .where(eq(courseMaterials.courseId, uuid))
-      .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
+    const fetchedModules = await Promise.all(
+      baseModules.map(async (module) => {
+        const [fetchedMaterials, fetchedQuizzes] = await Promise.all([
+          db
+            .select()
+            .from(courseMaterials)
+            .where(eq(courseMaterials.moduleId, module.uuid))
+            .orderBy(
+              desc(courseMaterials.createdAt),
+              desc(courseMaterials.uuid),
+            ),
+          db
+            .select({
+              uuid: quizzes.uuid,
+              title: quizzes.title,
+              moduleId: quizzes.moduleId,
+              questions: quizzes.questions,
+              createdAt: quizzes.createdAt,
+              updatedAt: quizzes.updatedAt,
+              attemptsCount:
+                sql<number>`count(${quizSubmissions.uuid})`.mapWith(Number),
+              averagePercentage: sql<number>`
+                ROUND(
+                  AVG(
+                    CASE
+                      WHEN ${quizSubmissions.maxScore} > 0
+                      THEN CAST(${quizSubmissions.score} AS FLOAT)
+                        / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100
+                      ELSE NULL
+                    END
+                  )
+                )
+              `.mapWith(Number),
+            })
+            .from(quizzes)
+            .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
+            .where(eq(quizzes.moduleId, module.uuid))
+            .groupBy(quizzes.uuid)
+            .orderBy(desc(quizzes.createdAt), desc(quizzes.uuid)),
+        ]);
+
+        return {
+          ...module,
+          materials: fetchedMaterials.map(mapMaterial),
+          quizzes: fetchedQuizzes,
+        };
+      }),
+    );
 
     const fetchedFeed = await db
       .select()
@@ -93,8 +123,8 @@ export async function getCourseByUuid(req: Request, res: Response) {
 
     res.json({
       ...course[0],
-      materials: fetchedMaterials.map(mapMaterial),
-      quizzes: fetchedQuizzes,
+
+      modules: fetchedModules,
       feed: fetchedFeed,
     });
   } catch (error) {
@@ -121,11 +151,8 @@ export async function createCourse(req: Request, res: Response) {
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
-      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
-      status_history: courses.status_history,
-      scheduledFor: courses.scheduledFor,
     });
 
   res.status(201).json(newCourse[0]);
@@ -158,27 +185,47 @@ export async function cloneCourse(req: Request, res: Response) {
       .where(eq(courses.uuid, uuid));
 
     if (!sourceCourse) {
-      res.status(404).json({ message: "Kurz nebyl nalezen" });
-      return;
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
     }
 
-    const sourceMaterials = await db
+    const sourceModules = await db
       .select()
-      .from(courseMaterials)
-      .where(eq(courseMaterials.courseId, uuid))
-      .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
+      .from(modules)
+      .where(eq(modules.courseId, uuid))
+      .orderBy(
+        asc(modules.position),
+        asc(modules.createdAt),
+        asc(modules.uuid),
+      );
 
-    const sourceQuizzes = await db
-      .select()
-      .from(quizzes)
-      .where(eq(quizzes.courseId, uuid))
-      .orderBy(desc(quizzes.createdAt), desc(quizzes.uuid));
+    const sourceModuleIds = sourceModules.map((m) => m.uuid);
+
+    const sourceMaterials =
+      sourceModuleIds.length === 0
+        ? []
+        : await db
+            .select()
+            .from(courseMaterials)
+            .where(inArray(courseMaterials.moduleId, sourceModuleIds))
+            .orderBy(
+              desc(courseMaterials.createdAt),
+              desc(courseMaterials.uuid),
+            );
+
+    const sourceQuizzes =
+      sourceModuleIds.length === 0
+        ? []
+        : await db
+            .select()
+            .from(quizzes)
+            .where(inArray(quizzes.moduleId, sourceModuleIds))
+            .orderBy(desc(quizzes.createdAt), desc(quizzes.uuid));
 
     const clonedCourse = await db.transaction(async (tx) => {
       const [newCourse] = await tx
         .insert(courses)
         .values({
-          name: `${sourceCourse.name}`,
+          name: sourceCourse.name,
           description: sourceCourse.description ?? null,
           status: "draft",
           startedAt: null,
@@ -197,7 +244,29 @@ export async function cloneCourse(req: Request, res: Response) {
           scheduledFor: courses.scheduledFor,
         });
 
+      const moduleIdMap = new Map<string, string>();
+
+      for (const sourceModule of sourceModules) {
+        const [newModule] = await tx
+          .insert(modules)
+          .values({
+            courseId: newCourse.uuid,
+            name: sourceModule.name,
+            description: sourceModule.description ?? null,
+            status: sourceModule.status,
+            position: sourceModule.position,
+          })
+          .returning({ uuid: modules.uuid });
+
+        moduleIdMap.set(sourceModule.uuid, newModule.uuid);
+      }
+
       for (const material of sourceMaterials) {
+        const mappedModuleId = moduleIdMap.get(material.moduleId);
+        if (!mappedModuleId) {
+          continue;
+        }
+
         if (material.type === "file") {
           if (!material.fileUrl) {
             throw new Error("Zdrojový souborový material nemá fileUrl");
@@ -210,7 +279,7 @@ export async function cloneCourse(req: Request, res: Response) {
 
           await tx.insert(courseMaterials).values({
             uuid: materialId,
-            courseId: newCourse.uuid,
+            moduleId: mappedModuleId,
             type: "file",
             name: material.name,
             description: material.description ?? null,
@@ -224,7 +293,7 @@ export async function cloneCourse(req: Request, res: Response) {
         }
 
         await tx.insert(courseMaterials).values({
-          courseId: newCourse.uuid,
+          moduleId: mappedModuleId,
           type: "url",
           name: material.name,
           description: material.description ?? null,
@@ -234,8 +303,13 @@ export async function cloneCourse(req: Request, res: Response) {
       }
 
       for (const quiz of sourceQuizzes) {
+        const mappedModuleId = moduleIdMap.get(quiz.moduleId);
+        if (!mappedModuleId) {
+          continue;
+        }
+
         await tx.insert(quizzes).values({
-          courseId: newCourse.uuid,
+          moduleId: mappedModuleId,
           title: quiz.title,
           questions: quiz.questions,
         });
@@ -244,20 +318,14 @@ export async function cloneCourse(req: Request, res: Response) {
       return newCourse;
     });
 
-    // await createSystemEvent(
-    //   clonedCourse.uuid,
-    //   `Kurz byl zkopirovan z "${sourceCourse.name}"`,
-    // );
-
     sseManager.broadcast("courses", "course_upserted", clonedCourse);
-
-    res.status(201).json(clonedCourse);
+    return res.status(201).json(clonedCourse);
   } catch (error) {
     for (const filePath of copiedFilePaths) {
       await fs.unlink(filePath).catch(() => undefined);
     }
     console.error("Error cloning course:", error);
-    res.status(500).json({ message: "Nepodarilo se zkopirovat kurz" });
+    return res.status(500).json({ message: "Nepodařilo se zkopírovat kurz" });
   }
 }
 
@@ -352,21 +420,26 @@ export async function updateCourse(req: Request, res: Response) {
 }
 
 export async function deleteCourse(req: Request, res: Response) {
-  const { uuid } = req.params;
+  try {
+    const { uuid } = req.params;
 
-  const existing = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.uuid, uuid));
+    // Single atomic delete avoids race between "exists?" check and delete.
+    const [deletedCourse] = await db
+      .delete(courses)
+      .where(eq(courses.uuid, uuid))
+      .returning({ uuid: courses.uuid });
 
-  if (existing.length === 0) {
-    res.status(404).json({ message: "Kurz nebyl nalezen" });
-    return;
+    // If nothing was deleted, the course did not exist.
+    if (!deletedCourse) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    return res.status(204).send();
+  } catch (error) {
+    // Explicit server error handling for DB/runtime failures.
+    console.error("Error deleting course:", error);
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
-
-  await db.delete(courses).where(eq(courses.uuid, uuid));
-
-  res.status(204).send();
 }
 
 export const streamCourses = (req: Request, res: Response) => {

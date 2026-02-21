@@ -16,13 +16,13 @@ import { uuid } from "zod";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.params;
+    const { moduleId } = req.params;
 
     const result = await db
       .select({
         uuid: quizzes.uuid,
         title: quizzes.title,
-        courseId: quizzes.courseId,
+        moduleId: quizzes.moduleId,
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
@@ -43,7 +43,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
-      .where(eq(quizzes.courseId, courseId))
+      .where(eq(quizzes.moduleId, moduleId))
       .groupBy(quizzes.uuid)
       .orderBy(desc(quizzes.createdAt));
 
@@ -56,7 +56,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
 
 export const createQuiz = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.params;
+    const { moduleId } = req.params;
     const quizData = req.body as Quiz;
 
     // Assign UUIDs to questions if missing
@@ -68,20 +68,20 @@ export const createQuiz = async (req: Request, res: Response) => {
     const [newQuiz] = await db
       .insert(quizzes)
       .values({
-        courseId,
+        moduleId,
         title: quizData.title,
         questions: questionsWithIds,
       })
       .returning();
 
-    await createSystemEvent(courseId, `Přidán nový kvíz: ${quizData.title}`);
+    // await createSystemEvent(courseId, `Přidán nový kvíz: ${quizData.title}`);
 
     const createdQuiz = {
       ...newQuiz,
       attemptsCount: 0,
       averagePercentage: null,
     };
-    sseManager.broadcast(courseId, "quiz_added", createdQuiz);
+    // sseManager.broadcast(courseId, "quiz_added", createdQuiz);
 
     // Return with attemptsCount 0 and no average yet
     res.status(201).json(createdQuiz);
@@ -93,13 +93,13 @@ export const createQuiz = async (req: Request, res: Response) => {
 
 export const getQuiz = async (req: Request, res: Response) => {
   try {
-    const { courseId, quizId } = req.params;
+    const { moduleId, quizId } = req.params;
 
     const [quiz] = await db
       .select({
         uuid: quizzes.uuid,
         title: quizzes.title,
-        courseId: quizzes.courseId,
+        moduleId: quizzes.moduleId,
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
@@ -112,7 +112,7 @@ export const getQuiz = async (req: Request, res: Response) => {
       })
       .from(quizzes)
       .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)))
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)))
       .groupBy(quizzes.uuid);
 
     if (!quiz) {
@@ -128,7 +128,7 @@ export const getQuiz = async (req: Request, res: Response) => {
 
 export const updateQuiz = async (req: Request, res: Response) => {
   try {
-    const { courseId, quizId } = req.params;
+    const { moduleId, quizId } = req.params;
     const quizData = req.body as Quiz;
 
     // Assign UUIDs to questions if missing (though they should persist on update)
@@ -144,7 +144,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
         questions: questionsWithIds,
         updatedAt: new Date(),
       })
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)))
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)))
       .returning();
 
     if (!updatedQuiz) {
@@ -162,17 +162,17 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .from(quizSubmissions)
       .where(eq(quizSubmissions.quizId, quizId));
 
-    await createSystemEvent(
-      courseId,
-      `Kvíz aktualizován: ${updatedQuiz.title}`,
-    );
+    // await createSystemEvent(
+    //   courseId,
+    //   `Kvíz aktualizován: ${updatedQuiz.title}`,
+    // );
 
     const finalQuiz = {
       ...updatedQuiz,
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
     };
-    sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
+    // sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
 
     res.json(finalQuiz);
   } catch (error) {
@@ -183,13 +183,13 @@ export const updateQuiz = async (req: Request, res: Response) => {
 
 export const deleteQuiz = async (req: Request, res: Response) => {
   try {
-    const { courseId, quizId } = req.params;
+    const { moduleId, quizId } = req.params;
 
     // First check if quiz exists to get its title before deletion
     const [existingQuiz] = await db
       .select()
       .from(quizzes)
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)));
 
     if (!existingQuiz) {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
@@ -197,11 +197,11 @@ export const deleteQuiz = async (req: Request, res: Response) => {
 
     await db
       .delete(quizzes)
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)));
 
-    await createSystemEvent(courseId, `Kvíz odebrán: ${existingQuiz.title}`);
+    // await createSystemEvent(courseId, `Kvíz odebrán: ${existingQuiz.title}`);
 
-    sseManager.broadcast(courseId, "quiz_deleted", { uuid: quizId });
+    // sseManager.broadcast(courseId, "quiz_deleted", { uuid: quizId });
 
     res.status(204).send();
   } catch (error) {
@@ -212,13 +212,13 @@ export const deleteQuiz = async (req: Request, res: Response) => {
 
 export const submitQuiz = async (req: Request, res: Response) => {
   try {
-    const { courseId, quizId } = req.params;
+    const { moduleId, quizId } = req.params;
     const { answers } = req.body as QuizSubmitRequest;
 
     const [quiz] = await db
       .select()
       .from(quizzes)
-      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.courseId, courseId)));
+      .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)));
 
     if (!quiz) {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
@@ -291,7 +291,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
     };
-    sseManager.broadcast(courseId, "quiz_updated", updatedQuiz);
+    // sseManager.broadcast(courseId, "quiz_updated", updatedQuiz);
 
     const response: QuizSubmitResponse = {
       quizUuid: quizId,
@@ -384,8 +384,6 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
         return {
           index,
           selectedCount: optionCounts[index],
-          // percentage:
-          //   totalAttempts > 0 ? (optionCounts[index] / totalAttempts) * 100 : 0,
         };
       });
 

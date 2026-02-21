@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { courses, courseMaterials, quizzes, feedItems } from "./schema";
+import { courses, modules, courseMaterials, quizzes, feedItems } from "./schema";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
@@ -28,7 +28,7 @@ const sampleCourses = [
   {
     name: "Základy cloudových technologií",
     description:
-      "Pochopte základní koncepty cloudových platform jako AWS, Azure a Google Cloud. Naučte se o IaaS, PaaS, SaaS a strategiích nasazení.",
+      "Pochopte základní koncepty cloudových platforem jako AWS, Azure a Google Cloud. Naučte se o IaaS, PaaS, SaaS a strategiích nasazení.",
   },
   {
     name: "Základy kybernetické bezpečnosti",
@@ -132,70 +132,99 @@ const sampleCourses = [
   },
 ];
 
+const moduleBlueprints = [
+  {
+    position: 1,
+    name: "Modul 1: Základy",
+    description:
+      "Úvodní tematický blok se základními pojmy, orientací v kurzu a prvními studijními materiály.",
+    status: "active" as const,
+  },
+  {
+    position: 2,
+    name: "Modul 2: Klíčové koncepty",
+    description:
+      "Procvičování a prohloubení hlavních konceptů pomocí cvičení, diskuze a průběžného ověření znalostí.",
+    status: "passive" as const,
+  },
+  {
+    position: 3,
+    name: "Modul 3: Projekt a závěrečné shrnutí",
+    description:
+      "Závěrečný blok zaměřený na projektové zadání, doplňkové zdroje a souhrnné ověření znalostí.",
+    status: "passive" as const,
+  },
+];
+
 export async function seed() {
   console.log("Seeding database...");
 
-  // Copy seed assets to uploads directory
   try {
     const seedAssetsDir = path.join(process.cwd(), "seed_assets");
     const uploadsDir = path.join(process.cwd(), "uploads");
 
-    // Ensure uploads directory exists
     await fs.mkdir(uploadsDir, { recursive: true });
 
     const files = await fs.readdir(seedAssetsDir);
     for (const file of files) {
-      await fs.copyFile(
-        path.join(seedAssetsDir, file),
-        path.join(uploadsDir, file)
-      );
+      await fs.copyFile(path.join(seedAssetsDir, file), path.join(uploadsDir, file));
       console.log(`Copied ${file} to uploads directory`);
     }
   } catch (error) {
-    console.warn(
-      "Failed to copy seed assets (ignoring if dev environment issue):",
-      error
-    );
+    console.warn("Failed to copy seed assets (ignoring if dev environment issue):", error);
   }
 
   const existingCourses = await db.select().from(courses);
-
   if (existingCourses.length > 0) {
     console.log("Courses already exist, skipping seed");
     return;
   }
 
-  // Insert Courses
-  const createdCourses = await db
-    .insert(courses)
-    .values(sampleCourses)
-    .returning();
+  const createdCourses = await db.insert(courses).values(sampleCourses).returning();
   console.log(`Created ${createdCourses.length} courses`);
 
   for (const course of createdCourses) {
-    // 1. Materials
+    const createdModules = await db
+      .insert(modules)
+      .values(
+        moduleBlueprints.map((m) => ({
+          courseId: course.uuid,
+          name: m.name,
+          description: m.description,
+          status: m.status,
+          position: m.position,
+        })),
+      )
+      .returning({
+        uuid: modules.uuid,
+        position: modules.position,
+      });
+
+    const moduleByPosition = new Map(createdModules.map((m) => [m.position, m.uuid]));
+    const module1Id = moduleByPosition.get(1)!;
+    const module2Id = moduleByPosition.get(2)!;
+    const module3Id = moduleByPosition.get(3)!;
+
     const materials = [
       {
-        courseId: course.uuid,
+        moduleId: module1Id,
         type: "url" as const,
         name: "Oficiální sylabus kurzu",
         description: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
         url: "https://example.com/syllabus",
-        faviconUrl:
-          "https://www.google.com/s2/favicons?domain=example.com&sz=64",
+        faviconUrl: "https://www.google.com/s2/favicons?domain=example.com&sz=64",
       },
       {
-        courseId: course.uuid,
+        moduleId: module1Id,
         type: "url" as const,
         name: "Doplňková četba - Modul 1: Základy",
         description:
           "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
         url: "https://medium.com/tag/programming-basics",
-        faviconUrl:
-          "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
+        faviconUrl: "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
       },
       {
-        courseId: course.uuid,
+        moduleId: module1Id,
         type: "file" as const,
         name: "Prezentace z přednášky - Týden 1: Úvod",
         description:
@@ -206,17 +235,16 @@ export async function seed() {
         originalFilename: "lecture-slides-week1.txt",
       },
       {
-        courseId: course.uuid,
+        moduleId: module1Id,
         type: "url" as const,
         name: "Interaktivní programovací prostředí",
         description:
           "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
         url: "https://replit.com/",
-        faviconUrl:
-          "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
+        faviconUrl: "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
       },
       {
-        courseId: course.uuid,
+        moduleId: module2Id,
         type: "file" as const,
         name: "Cvičení - Modul 2: Datové struktury",
         description: "Úkoly k řešení zaměřené na běžné datové struktury.",
@@ -226,19 +254,15 @@ export async function seed() {
         originalFilename: "exercise-sheet-module2.txt",
       },
       {
-        courseId: course.uuid,
+        moduleId: module2Id,
         type: "url" as const,
         name: "Fórum pro pokročilá témata",
-        description:
-          "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
-        url:
-          "https://stackoverflow.com/tags/" +
-          course.name.split(" ")[0].toLowerCase(),
-        faviconUrl:
-          "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
+        description: "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+        url: `https://stackoverflow.com/tags/${course.name.split(" ")[0].toLowerCase()}`,
+        faviconUrl: "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
       },
       {
-        courseId: course.uuid,
+        moduleId: module3Id,
         type: "file" as const,
         name: "Pokyny k projektu",
         description:
@@ -249,24 +273,22 @@ export async function seed() {
         originalFilename: "project-guidelines.txt",
       },
       {
-        courseId: course.uuid,
+        moduleId: module3Id,
         type: "url" as const,
         name: "Externí zdroje kurzu",
         description: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
-        url:
-          "https://www.freecodecamp.org/news/tag/" +
-          course.name.split(" ")[0].toLowerCase(),
-        faviconUrl:
-          "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
+        url: `https://www.freecodecamp.org/news/tag/${course.name
+          .split(" ")[0]
+          .toLowerCase()}`,
+        faviconUrl: "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
       },
     ];
 
     await db.insert(courseMaterials).values(materials);
 
-    // 2. Quizzes
     const quizzesData = [
       {
-        courseId: course.uuid,
+        moduleId: module1Id,
         title: "Modul 1: Kvíz ze základů",
         questions: [
           {
@@ -284,14 +306,8 @@ export async function seed() {
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question:
-              "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
-            options: [
-              "Objektově orientované",
-              "Funkcionální",
-              "Procedurální",
-              "Logické",
-            ],
+            question: "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
+            options: ["Objektově orientované", "Funkcionální", "Procedurální", "Logické"],
             correctIndices: [0, 1, 2],
           },
           {
@@ -305,7 +321,7 @@ export async function seed() {
         ],
       },
       {
-        courseId: course.uuid,
+        moduleId: module2Id,
         title: "Modul 2: Hodnocení klíčových konceptů",
         questions: [
           {
@@ -343,7 +359,7 @@ export async function seed() {
         ],
       },
       {
-        courseId: course.uuid,
+        moduleId: module3Id,
         title: "Zkušební kvíz k závěrečné zkoušce",
         questions: [
           {
@@ -358,12 +374,7 @@ export async function seed() {
             uuid: uuidv4(),
             type: "multipleChoice",
             question: "Které z těchto jsou principy čistého kódu?",
-            options: [
-              "Čitelnost",
-              "Udržovatelnost",
-              "Škálovatelnost",
-              "Obfuskace",
-            ],
+            options: ["Čitelnost", "Udržovatelnost", "Škálovatelnost", "Obfuskace"],
             correctIndices: [0, 1, 2],
           },
           {
@@ -391,7 +402,6 @@ export async function seed() {
 
     await db.insert(quizzes).values(quizzesData);
 
-    // 3. Feed Items
     const feed = [
       {
         courseId: course.uuid,
@@ -402,7 +412,7 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový materiál: Oficiální sylabus kurzu`,
+        message: "Přidán nový materiál: Oficiální sylabus kurzu",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28),
       },
       {
@@ -415,7 +425,7 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový kvíz: Modul 1: Kvíz ze základů`,
+        message: "Přidán nový kvíz: Modul 1: Kvíz ze základů",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20),
       },
       {
@@ -428,7 +438,7 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový materiál: Prezentace z přednášky - Týden 1: Úvod`,
+        message: "Přidán nový materiál: Prezentace z přednášky - Týden 1: Úvod",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
       },
       {
@@ -443,7 +453,7 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový materiál: Cvičení - Modul 2: Datové struktury`,
+        message: "Přidán nový materiál: Cvičení - Modul 2: Datové struktury",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
       },
       {
@@ -456,7 +466,7 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový kvíz: Modul 2: Hodnocení klíčových konceptů`,
+        message: "Přidán nový kvíz: Modul 2: Hodnocení klíčových konceptů",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1),
       },
       {
@@ -469,14 +479,13 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message:
-          "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
+        message: "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
       },
       {
         courseId: course.uuid,
         type: "system" as const,
-        message: `Přidán nový materiál: Pokyny k projektu`,
+        message: "Přidán nový materiál: Pokyny k projektu",
         createdAt: new Date(Date.now() - 1000 * 60 * 30),
       },
       {

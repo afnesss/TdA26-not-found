@@ -32,9 +32,19 @@ export const ModuleUpdateRequestSchema = z.object({
   status: CourseModulesStatusSchema.optional(),
 });
 
+export const ModuleReorderRequestSchema = z.object({
+  moduleIds: z
+    .array(z.string().uuid())
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "moduleIds obsahuje duplicity",
+    }),
+});
+
 export type ModuleSummary = z.infer<typeof ModuleSummarySchema>;
 export type ModuleDetail = z.infer<typeof ModuleDetailSchema>;
 export type CourseModule = ModuleDetail;
 export type CourseModulesStatus = z.infer<typeof CourseModulesStatusSchema>;
 export type ModuleCreateRequest = z.infer<typeof ModuleCreateRequestSchema>;
 export type ModuleUpdateRequest = z.infer<typeof ModuleUpdateRequestSchema>;
+export type ModuleReorderRequest = z.infer<typeof ModuleReorderRequestSchema>;

@@ -6,6 +6,7 @@ import courseRoutes from "./routes/courseRoutes";
 import materialRoutes from "./routes/materialRoutes";
 import quizRoutes from "./routes/quizRoutes";
 import feedRoutes from "./routes/feedRoutes";
+import moduleRoutes from "./routes/moduleRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import { generalLimiter } from "./middleware/rateLimiter";
@@ -70,8 +71,9 @@ app.get("/health", (req, res) => {
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/auth", authRoutes);
-app.use("/courses/:courseId/materials", materialRoutes);
-app.use("/courses/:courseId/quizzes", quizRoutes);
+app.use("/courses/:courseId/modules", moduleRoutes);
+app.use("/courses/:courseId/modules/:moduleId/materials", materialRoutes);
+app.use("/courses/:courseId/modules/:moduleId/quizzes", quizRoutes);
 app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
 

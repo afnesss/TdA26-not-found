@@ -8,8 +8,11 @@ import {
   integer,
   jsonb,
   boolean,
+  uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
 import { StatusHistoryEvent } from "../schemas";
+import { sql } from "drizzle-orm";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -41,10 +44,33 @@ export const courses = pgTable("courses", {
     .default([]),
 });
 
+export const modules = pgTable(
+  "course_modules",
+  {
+    uuid: uuid("uuid").defaultRandom().primaryKey(),
+    courseId: uuid("course_id")
+      .references(() => courses.uuid, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
+    status: varchar("status", { length: 20 }).notNull().default("passive"),
+    position: integer("position").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("course_modules_course_position_unique").on(
+      t.courseId,
+      t.position,
+    ),
+    check("course_modules_position_positive", sql`${t.position} > 0`),
+  ],
+);
+
 export const courseMaterials = pgTable("course_materials", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
-  courseId: uuid("course_id")
-    .references(() => courses.uuid, { onDelete: "cascade" })
+  moduleId: uuid("module_id")
+    .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
   type: varchar("type", { length: 50 }).notNull(), // 'file' or 'url'
   name: varchar("name", { length: 256 }).notNull(),
@@ -64,8 +90,8 @@ export const courseMaterials = pgTable("course_materials", {
 
 export const quizzes = pgTable("quizzes", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
-  courseId: uuid("course_id")
-    .references(() => courses.uuid, { onDelete: "cascade" })
+  moduleId: uuid("module_id")
+    .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
   title: varchar("title", { length: 256 }).notNull(),
   questions: jsonb("questions").notNull(), // Stores Question[]

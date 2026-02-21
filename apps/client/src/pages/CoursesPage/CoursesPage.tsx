@@ -1,11 +1,11 @@
 import { getCourses } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
-import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
-import { type FilterIds } from '@/lib/constants'
+import FilterDropdown from '@/components/shared/FilterDropdown'
+import { filterItems, type FilterIds } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { BookOpenText, Filter } from 'lucide-react'
+import { BookOpenText } from 'lucide-react'
 import { useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
@@ -13,14 +13,25 @@ import HintPageText from '../../components/shared/HintPageText'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import StateComp from '../../components/shared/StateComp'
 import { Button } from '../../components/ui/button'
-import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import {
+  filterCourses,
+  sortCoursesByFilter,
+} from '../CoursePage/utils/helperFunctions'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
+  const [statusFilters, setStatusFilters] = useState<
+    Record<'live' | 'planned', boolean>
+  >({
+    live: true,
+    planned: true,
+  })
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { isConnected } = useCoursesSSE()
 
   const {
     data: courses = [],
@@ -28,27 +39,18 @@ const CoursesPage = () => {
     isError,
     refetch,
   } = useQuery<CourseSummary[]>({
-    queryKey: ['courses'],
-    queryFn: getCourses,
+    queryKey: ['courses-user'],
+    queryFn: () => getCourses(true),
   })
 
-  const filteredCourses = filterCourses(courses, searchQuery)
+  const filteredCourses = filterCourses(courses, searchQuery).filter(
+    (course) =>
+      course.status === 'live' || course.status === 'planned'
+        ? statusFilters[course.status]
+        : true,
+  )
 
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    if (selectedFilter === 'newest') {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    }
-
-    if (selectedFilter === 'oldest') {
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    }
-
-    if (selectedFilter === 'updated') {
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    }
-
-    return 0
-  })
+  const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
 
   const hasMoreCourses = sortedCourses.length > displayCount
   const displayedCourses = sortedCourses.slice(0, displayCount)
@@ -56,7 +58,20 @@ const CoursesPage = () => {
     setDisplayCount((prev) => prev + 6)
     refetch()
   }
+
+  const resetStatusFilters = () => {
+    setStatusFilters({ live: true, planned: true })
+  }
+
+  const statusFilterItems: { label: string; value: 'live' | 'planned' }[] = [
+    { label: 'Aktivní', value: 'live' },
+    { label: 'Naplanováné', value: 'planned' },
+  ]
+
   useTitle('Kurzy')
+
+  const isSearchEmpty = searchQuery.trim() === ''
+  const useResetStatusAction = isSearchEmpty && courses.length > 0
 
   return (
     <div className='h-full'>
@@ -73,30 +88,23 @@ const CoursesPage = () => {
             className='hidden lg:inline-flex'
           />
 
-          <DropdownMenuComponent
-            trigger={
-              <Button
-                variant='filter'
-                className='bg-background text-primary mr-3 md:ml-3 h-9 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
-              >
-                <Filter size={16} />
-              </Button>
-            }
-            items={[
-              {
-                label: 'Nejnovější',
-                value: 'newest',
-                onClick: () => setSelectedFilter('newest'),
-              },
-              {
-                label: 'Nejstarší',
-                value: 'oldest',
-                onClick: () => setSelectedFilter('oldest'),
-              },
-            ]}
+          <FilterDropdown
+            items={filterItems}
             selectedValue={selectedFilter}
+            onSelect={setSelectedFilter}
+            statusCheckboxes={statusFilterItems.map((item) => ({
+              label: item.label,
+              value: item.value,
+              checked: statusFilters[item.value],
+              onCheckedChange: (checked) => {
+                setStatusFilters((prev) => ({
+                  ...prev,
+                  [item.value]: checked,
+                }))
+              },
+            }))}
             align={isMd ? 'center' : 'start'}
-            width='w-28'
+            width='w-35 md:w-40'
           />
 
           <SearchBar
@@ -137,9 +145,14 @@ const CoursesPage = () => {
                 <StateComp
                   type='empty-search'
                   onAction={() => {
+                    if (useResetStatusAction) {
+                      resetStatusFilters()
+                      return
+                    }
                     setSearchQuery('')
                     setDisplayCount(9)
                   }}
+                  actionText={useResetStatusAction ? 'Zrušit filtry' : undefined}
                 />
               ) : isError ? (
                 <StateComp

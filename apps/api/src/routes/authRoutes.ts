@@ -4,8 +4,8 @@ import { authMiddleware } from "../middleware/auth";
 
 const router = Router();
 
-// router.post("/login", login);
-// router.post("/logout", logout);
-// router.get("/me", authMiddleware, me);
+router.post("/login", login);
+router.post("/logout", logout);
+router.get("/me", authMiddleware, me);
 
 export default router;

@@ -9,6 +9,11 @@ import feedRoutes from "./routes/feedRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import { generalLimiter } from "./middleware/rateLimiter";
+import cookieParser from "cookie-parser";
+import {
+  startIntervalScheduler,
+  stopIntervalScheduler,
+} from "./utils/courseScheduler";
 
 const app = express();
 const port = process.env.PORT;
@@ -29,6 +34,7 @@ app.use(
   }),
 );
 
+app.use(cookieParser());
 app.use(generalLimiter);
 
 // Skip body parsing for multipart requests (handled by multer)
@@ -63,7 +69,7 @@ app.get("/health", (req, res) => {
 // Caddy strips /api, so request to /api/uploads/... becomes /uploads/... here
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-// app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/courses/:courseId/materials", materialRoutes);
 app.use("/courses/:courseId/quizzes", quizRoutes);
 app.use("/courses/:courseId/feed", feedRoutes);
@@ -97,11 +103,29 @@ async function start() {
   }
 
   try {
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
+    startIntervalScheduler();
+
+    const shutdown = (signal: string) => {
+      console.log(`[shutdown] Received ${signal}, stopping gracefully...`);
+      stopIntervalScheduler();
+      server.close((err) => {
+        if (err) {
+          console.error("[shutdown] Error while closing server:", err);
+          process.exit(1);
+        }
+        console.log("[shutdown] HTTP server closed");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
   } catch (error) {
     console.error("Failed to start server:", error);
+    stopIntervalScheduler();
     process.exit(1);
   }
 }

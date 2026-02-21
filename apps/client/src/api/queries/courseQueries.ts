@@ -6,8 +6,10 @@ import type {
 } from '@/lib/schemas'
 import apiFetch from '../client'
 
-export const getCourses = async () =>
-  await apiFetch<CourseSummary[]>('/courses')
+export const getCourses = async (userView: boolean = false) => {
+  const params = userView ? '?userView=true' : ''
+  return await apiFetch<CourseSummary[]>(`/courses${params}`)
+}
 
 export const getCourseById = async (
   uuid: string,
@@ -37,5 +39,11 @@ export const createCourse = async (
 export const deleteCourse = async (courseId: string): Promise<void> => {
   return await apiFetch<void>(`/courses/${courseId}`, {
     method: 'DELETE',
+  })
+}
+
+export const cloneCourse = async (courseId: string): Promise<CourseSummary> => {
+  return await apiFetch(`/courses/${courseId}/clone`, {
+    method: 'POST',
   })
 }

@@ -4,6 +4,7 @@ import {
   type CourseSummary,
   type QuizAnswer,
 } from '@/lib/schemas'
+import type { FilterIds } from '@/lib/constants'
 import { submitQuiz } from '@/api/queries/quizQueries'
 import type { UseMutationResult, QueryClient } from '@tanstack/react-query'
 import { useQuizSubmitMutation } from './quizSubmitMutation'
@@ -136,6 +137,27 @@ export const filterCourses = (
   )
 }
 
+export const sortCoursesByFilter = (
+  courses: CourseSummary[],
+  selectedFilter: FilterIds,
+): CourseSummary[] => {
+  return [...courses].sort((a, b) => {
+    if (selectedFilter === 'newest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    }
+
+    if (selectedFilter === 'oldest') {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    }
+
+    if (selectedFilter === 'updated') {
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    }
+
+    return 0
+  })
+}
+
 export const onError = (error: ApiError, message: string) => {
   if (error?.isNetworkError) {
     toast.error(error.body?.message || 'Chyba připojení')
@@ -155,4 +177,65 @@ export const onErrorWithRollback = (
     queryClient.setQueryData(queryKey, previousData)
   }
   onError(error, message)
+}
+
+export const formatDateTimeLocal = (date: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`
+}
+
+export const toDateTimeLocalValue = (value?: string | Date | null) => {
+  if (!value) {
+    return ''
+  }
+
+  const date = typeof value === 'string' ? new Date(value) : value
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  return formatDateTimeLocal(date)
+}
+
+export const formatDateWithToday = (
+  dateString: string,
+  showTime: boolean = false,
+): string => {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) {
+    return 'Nezadáno'
+  }
+
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const dateOnly = new Date(date)
+  dateOnly.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+  yesterday.setHours(0, 0, 0, 0)
+
+  const time = showTime
+    ? ` • ${date.toLocaleTimeString('cs-CZ', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    : ''
+
+  // if (dateOnly.getTime() === today.getTime()) {
+  //   return `Dnes${time}`
+  // }
+  // if (dateOnly.getTime() === yesterday.getTime()) {
+  //   return `Včera${time}`
+  // }
+
+  const formattedDate = date.toLocaleDateString('cs-CZ', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+
+  return `${formattedDate}${time}`
 }

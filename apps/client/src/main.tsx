@@ -27,7 +27,7 @@ createRoot(rootElement).render(
     <QueryClientProvider client={client}>
       <>
         <App />
-        <Toaster position='top-right' />
+        <Toaster position='top-right' duration={2000} />
       </>
     </QueryClientProvider>
   </StrictMode>,

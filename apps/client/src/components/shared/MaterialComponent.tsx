@@ -10,7 +10,7 @@ import { cn, formatFileSize } from '@/lib/utils'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, Copy, Download, Edit, ExternalLink, X } from 'lucide-react'
+import { Check, Copy, Download, Edit, ExternalLink } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import EditBtn from '../../pages/dashboard/components/EditBtn'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { Textarea } from '../ui/textarea'
 import MaterialIcon from './MaterialIcon'
+import EditSaveCancelButtons from './EditSaveCancelButtons'
 
 type MaterialCardProps =
   | {
@@ -198,33 +199,23 @@ const MaterialCard = (props: MaterialCardProps) => {
                       />
                     </div>
 
-                    <div className='flex items-center gap-1 shrink-0'>
-                      <EditBtn
-                        icon={Check}
-                        onClick={saveEdit}
-                        classNameBtn='hover:bg-secondary/20'
-                        iconClassName='text-secondary size-4 sm:size-5'
-                        aria-label='Save material'
-                        disabled={
-                          isSubmitting ||
-                          !!errors.name ||
-                          ('url' in errors && !!errors.url) ||
-                          (props.type === 'edit' &&
-                          'isDraft' in props &&
-                          props.isDraft
-                            ? false
-                            : !isDirty && !tempFile)
-                        }
-                      />
-                      <EditBtn
-                        icon={X}
-                        onClick={cancelEdit}
-                        classNameBtn='hover:bg-destructive/20'
-                        iconClassName='text-destructive size-4 sm:size-5'
-                        aria-label='Cancel editing'
-                        disabled={isSubmitting}
-                      />
-                    </div>
+                    <EditSaveCancelButtons
+                      className='flex items-center gap-1 shrink-0'
+                      onSave={saveEdit}
+                      onCancel={cancelEdit}
+                      saveAriaLabel='Save material'
+                      saveDisabled={
+                        isSubmitting ||
+                        !!errors.name ||
+                        ('url' in errors && !!errors.url) ||
+                        (props.type === 'edit' &&
+                        'isDraft' in props &&
+                        props.isDraft
+                          ? false
+                          : !isDirty && !tempFile)
+                      }
+                      cancelDisabled={isSubmitting}
+                    />
                   </div>
                   {errors.name && (
                     <p className='error-text mb-1'>{errors.name.message}</p>
@@ -459,7 +450,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               {material.type === 'url' && (
                 <a
                   href={material.url}
-                  className='text-primary hover:underline truncate'
+                  className='text-primary hover:underline break-all'
                   target='_blank'
                   rel='noopener noreferrer'
                 >

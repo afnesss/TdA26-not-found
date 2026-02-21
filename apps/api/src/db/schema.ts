@@ -1,4 +1,15 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, jsonb, boolean } from "drizzle-orm/pg-core";
+import { time } from "console";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+  integer,
+  jsonb,
+  boolean,
+} from "drizzle-orm/pg-core";
+import { StatusHistoryEvent } from "../schemas";
 
 // export const users = pgTable("users", {
 //   uuid: uuid("uuid").defaultRandom().primaryKey(),
@@ -7,12 +18,27 @@ import { pgTable, text, timestamp, uuid, varchar, integer, jsonb, boolean } from
 //   createdAt: timestamp("created_at").defaultNow().notNull(),
 // });
 
+export const courseStatusEnum = [
+  "draft",
+  "planned",
+  "live",
+  "paused",
+  "archived",
+] as const;
+
 export const courses = pgTable("courses", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
   name: varchar("name", { length: 256 }).notNull(),
   description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+  startedAt: timestamp("started_at"),
+  scheduledFor: timestamp("scheduled_for"),
+  status_history: jsonb("status_history")
+    .$type<StatusHistoryEvent[]>()
+    .default([]),
 });
 
 export const courseMaterials = pgTable("course_materials", {

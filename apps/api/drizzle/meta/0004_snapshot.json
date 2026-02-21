@@ -96,12 +96,8 @@
           "name": "course_materials_course_id_courses_uuid_fk",
           "tableFrom": "course_materials",
           "tableTo": "courses",
-          "columnsFrom": [
-            "course_id"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
+          "columnsFrom": ["course_id"],
+          "columnsTo": ["uuid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -215,12 +211,8 @@
           "name": "feed_items_course_id_courses_uuid_fk",
           "tableFrom": "feed_items",
           "tableTo": "courses",
-          "columnsFrom": [
-            "course_id"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
+          "columnsFrom": ["course_id"],
+          "columnsTo": ["uuid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -280,12 +272,8 @@
           "name": "quiz_submissions_quiz_id_quizzes_uuid_fk",
           "tableFrom": "quiz_submissions",
           "tableTo": "quizzes",
-          "columnsFrom": [
-            "quiz_id"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
+          "columnsFrom": ["quiz_id"],
+          "columnsTo": ["uuid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -346,12 +334,8 @@
           "name": "quizzes_course_id_courses_uuid_fk",
           "tableFrom": "quizzes",
           "tableTo": "courses",
-          "columnsFrom": [
-            "course_id"
-          ],
-          "columnsTo": [
-            "uuid"
-          ],
+          "columnsFrom": ["course_id"],
+          "columnsTo": ["uuid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

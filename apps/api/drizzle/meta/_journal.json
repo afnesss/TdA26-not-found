@@ -36,6 +36,34 @@
       "when": 1767285203926,
       "tag": "0004_brown_lady_ursula",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1739462400000,
+      "tag": "0005_add_course_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771166394694,
+      "tag": "0006_reflective_revanche",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771239080642,
+      "tag": "0007_keen_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771264800000,
+      "tag": "0008_fix_status_history_shape",
+      "breakpoints": true
     }
   ]
 }

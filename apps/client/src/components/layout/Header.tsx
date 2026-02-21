@@ -1,17 +1,21 @@
-import auth from '@/auth/fakeAuth'
-import { cn } from '@/lib/utils'
+﻿import { userLogout } from '@/api/queries/authQueries'
+import { useAuth } from '@/auth/useAuth'
+import { useQueryClient } from '@tanstack/react-query'
 import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
+import { cn } from '@/lib/utils'
 import { ChevronDown, LogIn, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import logo from '../../assets/white_logo.svg'
 import { Button } from '../ui/button'
-import { toast } from 'sonner'
 
 export default function Header() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const isMd = useMediaQuery('(min-width: 768px)')
   const isDashboard = location.pathname.includes('/dashboard')
+  const { isAuth } = useAuth()
 
   return (
     <>
@@ -42,7 +46,7 @@ export default function Header() {
               >
                 Kurzy
               </Button>
-              {auth.isAutenticated() && (
+              {isAuth && (
                 <Button
                   variant='tab'
                   onClick={() => navigate('/dashboard')}
@@ -52,8 +56,7 @@ export default function Header() {
                 </Button>
               )}
             </nav>
-          ) : // {auth.isAutenticated()
-          auth.isAutenticated() ? (
+          ) : isAuth ? (
             <DropdownMenuComponent
               trigger={
                 <Button
@@ -92,21 +95,26 @@ export default function Header() {
           <Button
             variant={'secondary'}
             className={cn(
-              `text-sm md:text-base px-2 py-2 md:px-4 ${auth.isAutenticated() ? 'text-destructive' : 'text-primary'}`,
+              `text-sm md:text-base px-2 py-2 md:px-4 ${isAuth ? 'text-destructive' : 'text-primary'}`,
             )}
-            onClick={() => {
-              if (auth.isAutenticated()) {
-                auth.logout()
-                toast.success('Odhlášení úspěšné')
+            onClick={async () => {
+              if (isAuth) {
+                try {
+                  await userLogout()
+                  queryClient.setQueryData(['auth', 'me'], null)
+                  toast.success('Odhlášení úspěšné')
+                } catch (error) {
+                  toast.error('Chyba odhlášení')
+                }
               }
               navigate('/login')
             }}
-            aria-label={auth.isAutenticated() ? 'Log out' : 'Log in'}
+            aria-label={isAuth ? 'Log out' : 'Log in'}
           >
             <span className='hidden sm:block'>
-              {auth.isAutenticated() ? 'Odhlásit se' : 'Přihlásit se'}
+              {isAuth ? 'Odhlásit se' : 'Přihlásit se'}
             </span>
-            {auth.isAutenticated() ? (
+            {isAuth ? (
               <LogOut
                 size={20}
                 className='text-destructive block sm:hidden '

@@ -1,4 +1,4 @@
-import type { CourseDetail, FeedItem } from '@/lib/schemas'
+import type { CourseDetail, CourseStatus, FeedItem } from '@/lib/schemas'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -130,6 +130,12 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       const updatedCourse = JSON.parse(event.data)
       console.log('Course updated:', updatedCourse)
 
+      if (updatedCourse.status === 'paused') {
+        toast.info(`Kurz "${updatedCourse.name}" pozastaveno lektorem`)
+      } else if (updatedCourse.status === 'archived') {
+        toast.info(`Kurz "${updatedCourse.name}" dokončeno lektorem`)
+      }
+
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
         (oldData) => {
@@ -138,9 +144,15 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
             ...oldData,
             name: updatedCourse.name,
             description: updatedCourse.description,
+            status_history: updatedCourse.status_history,
+            startedAt: updatedCourse.startedAt,
+            scheduledFor: updatedCourse.scheduledFor,
+            updatedAt: updatedCourse.updatedAt,
+            status: updatedCourse.status,
           }
         },
       )
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
     })
 
     // --- Material Updates ---

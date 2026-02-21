@@ -1,35 +1,59 @@
-import {
-  createCourse,
-  deleteCourse,
+﻿import {
+  cloneCourse,
   getCourses,
+  updateCourse,
 } from '@/api/queries/courseQueries'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import HintPageText from '@/components/shared/HintPageText'
+import FilterDropdown from '@/components/shared/FilterDropdown'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import type { CourseSummary } from '@/lib/schemas'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  defaultStatusFilters,
+  statusFilterItems,
+  type FilterIds,
+} from '@/lib/constants'
+import type { CourseStatus, CourseSummary } from '@/lib/schemas'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, BookOpenText } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
-import { filterCourses } from '../CoursePage/utils/helperFunctions'
+import {
+  filterCourses,
+  formatDateTimeLocal,
+  sortCoursesByFilter,
+  toDateTimeLocalValue,
+} from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import { toast } from 'sonner'
 import { useTitle } from '@/lib/dynamicTitleHook'
-import type { ApiError } from '@/lib/types'
 import {
+  useCloneCourseMutation,
   useCreateCourseMutation,
   useDeleteCourseMutation,
 } from '../CoursePage/utils/useCourseMutation'
+import { useMediaQuery } from 'usehooks-ts'
+import { filterItems } from '@/lib/constants'
+import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
+  const [statusFilters, setStatusFilters] =
+    useState<Record<CourseStatus, boolean>>(defaultStatusFilters)
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
-  const queryClient = useQueryClient()
 
+  const [planningCourseId, setPlanningCourseId] = useState<string | null>(null)
+  const [planningDateTime, setPlanningDateTime] = useState('')
+  const [planningNeedsStatusUpdate, setPlanningNeedsStatusUpdate] =
+    useState(false)
+  const [planningError, setPlanningError] = useState('')
+  const [planningSaving, setPlanningSaving] = useState(false)
+  const isMd = useMediaQuery('(min-width: 768px)')
+
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
 
   const {
@@ -39,18 +63,142 @@ const DashboardDesign1 = () => {
     refetch: refetchCourses,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses'],
-    queryFn: getCourses,
+    queryFn: () => getCourses(),
   })
 
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
   const { mutateAsync: createCourseMutation } =
     useCreateCourseMutation(setCourseDraft)
-  const filteredCourses = filterCourses(courses, searchQuery)
-  const hasMoreCourses = filteredCourses.length > displayCount
-  const displayedCourses = filteredCourses.slice(0, displayCount)
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation()
+
+  const invalidateCourseQueries = (courseId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['courses'] })
+    queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+    queryClient.invalidateQueries({ queryKey: ['course', courseId] })
+  }
+  const { isConnected } = useDashboardCoursesSSE()
+
+  const closePlanningEditor = () => {
+    setPlanningCourseId(null)
+    setPlanningDateTime('')
+    setPlanningNeedsStatusUpdate(false)
+    setPlanningError('')
+    setPlanningSaving(false)
+  }
+
+  const openPlanningEditor = (
+    course: CourseSummary,
+    needsStatusUpdate: boolean,
+  ) => {
+    const existingValue = toDateTimeLocalValue(course.scheduledFor)
+    const defaultDate = new Date()
+    defaultDate.setHours(defaultDate.getHours() + 1)
+    const defaultValue = formatDateTimeLocal(defaultDate)
+
+    setPlanningCourseId(course.uuid)
+    setPlanningDateTime(existingValue || defaultValue)
+    setPlanningNeedsStatusUpdate(needsStatusUpdate)
+    setPlanningError('')
+    setPlanningSaving(false)
+  }
+
+  const handlePlanningConfirm = async () => {
+    if (!planningCourseId) {
+      return
+    }
+
+    if (!planningDateTime) {
+      setPlanningError('Vyberte datum a čas')
+      return
+    }
+
+    const selectedDate = new Date(planningDateTime)
+    if (Number.isNaN(selectedDate.getTime())) {
+      setPlanningError('Neplatný formát data')
+      return
+    }
+
+    const now = new Date()
+    if (selectedDate <= now) {
+      setPlanningError('Datum musí být v budoucnosti')
+      return
+    }
+
+    setPlanningSaving(true)
+
+    try {
+      const payload = planningNeedsStatusUpdate
+        ? {
+            status: 'planned' as CourseStatus,
+            scheduledFor: selectedDate.toISOString(),
+          }
+        : { scheduledFor: selectedDate.toISOString() }
+
+      await updateCourse(planningCourseId, payload)
+      invalidateCourseQueries(planningCourseId)
+
+      toast.success(
+        planningNeedsStatusUpdate
+          ? 'Kurz byl naplánován'
+          : 'Termín kurzu byl změněn',
+      )
+
+      closePlanningEditor()
+    } catch (error) {
+      setPlanningSaving(false)
+      toast.error('Nepodařilo se uložit termín kurzu')
+    }
+  }
+
+  const handleStatusChange = async (
+    courseId: string,
+    newStatus: CourseStatus,
+  ) => {
+    const statusMessages: Record<CourseStatus, string> = {
+      draft: 'Kurz byl převeden do návrhu',
+      planned: 'Kurz byl naplánován',
+      live: 'Kurz byl spuštěn',
+      paused: 'Kurz byl pozastaven',
+      archived: 'Kurz byl archivován',
+    }
+
+    if (newStatus === 'planned') {
+      const course = courses.find((item) => item.uuid === courseId)
+      if (!course) {
+        toast.error('Kurz nebyl nalezen')
+        return
+      }
+
+      openPlanningEditor(course, true)
+      return
+    }
+
+    closePlanningEditor()
+
+    try {
+      await updateCourse(courseId, { status: newStatus })
+      invalidateCourseQueries(courseId)
+      toast.success(statusMessages[newStatus])
+    } catch (error) {
+      toast.error('Nepodařilo se změnit stav kurzu')
+    }
+  }
+
+  const searchFilteredCourses = filterCourses(courses, searchQuery)
+  const filteredCourses = searchFilteredCourses.filter(
+    (course) => statusFilters[course.status],
+  )
+  const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
+
+  const hasMoreCourses = sortedCourses.length > displayCount
+  const displayedCourses = sortedCourses.slice(0, displayCount)
 
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
+  }
+
+  const resetStatusFilters = () => {
+    setStatusFilters({ ...defaultStatusFilters })
   }
 
   const handleEditCourse = (course: CourseSummary) => {
@@ -62,6 +210,7 @@ const DashboardDesign1 = () => {
       uuid: 'testid',
       name: '',
       description: '',
+      status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -81,14 +230,15 @@ const DashboardDesign1 = () => {
     </Button>
   )
 
-  useTitle('Sprava kurzů')
+  useTitle('Správa kurzů')
+
+  const isSearchEmpty = searchQuery.trim() === ''
+  const useResetStatusAction = isSearchEmpty && courses.length > 0
   return (
     <>
-      {/* Main Content */}
-      <div className='max-w-7xl mx-auto md:px-4  '>
+      <div className='max-w-7xl mx-auto md:px-4'>
         <div className='space-y-6 pt-3'>
-          {/* Hero Section */}
-          <div className='flex flex-row justify-center items-center '>
+          <div className='flex flex-row justify-center items-center'>
             <HintPageText
               text='Správa kurzů'
               icon={BookOpenText}
@@ -96,7 +246,25 @@ const DashboardDesign1 = () => {
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
               }
-              className='hidden lg:inline-flex mr-3'
+              className='hidden lg:inline-flex'
+            />
+            <FilterDropdown
+              items={filterItems}
+              selectedValue={selectedFilter}
+              onSelect={setSelectedFilter}
+              statusCheckboxes={statusFilterItems.map((item) => ({
+                label: item.label,
+                value: item.value,
+                checked: statusFilters[item.value],
+                onCheckedChange: (checked) => {
+                  setStatusFilters((prev) => ({
+                    ...prev,
+                    [item.value]: checked,
+                  }))
+                },
+              }))}
+              align={isMd ? 'center' : 'start'}
+              width='w-35 md:w-40'
             />
             <SearchBar
               searchQuery={searchQuery}
@@ -110,7 +278,7 @@ const DashboardDesign1 = () => {
             <span className='lg:hidden ml-3'>{createButton(true)}</span>
             <span className='hidden lg:inline ml-3'>{createButton(false)}</span>
           </div>
-          {/* Courses Grid */}
+
           {coursesLoading ? (
             <CoursesPageSceleton />
           ) : (
@@ -127,23 +295,50 @@ const DashboardDesign1 = () => {
                       createCourseMutation(data)
                     }}
                     onEdit={() => {
-                      handleEditCourse(courseDraft!)
+                      handleEditCourse(courseDraft)
                     }}
                     onCancelDraft={() => setCourseDraft(null)}
                   />
                 )}
-                {displayedCourses.map((course, index) => (
-                  <CourseComponent
-                    key={course.uuid ?? (course as CourseSummary).uuid ?? index}
-                    course={course}
-                    index={courseDraft ? index + 1 : index}
-                    type='edit'
-                    onEdit={() => {
-                      handleEditCourse(course!)
-                    }}
-                    onDelete={() => deleteCourseMutation(course.uuid)}
-                  />
-                ))}
+
+                {displayedCourses.map((course, index) => {
+                  const isPlanningForCourse = planningCourseId === course.uuid
+                  const planning = {
+                    editable: course.status === 'planned',
+                    isEditing: isPlanningForCourse,
+                    value: isPlanningForCourse ? planningDateTime : '',
+                    error: isPlanningForCourse ? planningError : '',
+                    saving: isPlanningForCourse && planningSaving,
+                    onOpen: () => openPlanningEditor(course, false),
+                    onChange: (value: string) => {
+                      setPlanningDateTime(value)
+                      if (planningError) {
+                        setPlanningError('')
+                      }
+                    },
+                    onConfirm: handlePlanningConfirm,
+                    onCancel: closePlanningEditor,
+                  }
+                  return (
+                    <CourseComponent
+                      key={
+                        course.uuid ?? (course as CourseSummary).uuid ?? index
+                      }
+                      course={course}
+                      index={courseDraft ? index + 1 : index}
+                      type='edit'
+                      onEdit={() => {
+                        handleEditCourse(course)
+                      }}
+                      onDelete={() => deleteCourseMutation(course.uuid)}
+                      onStatusChange={handleStatusChange}
+                      planning={planning}
+                      onCopyAsDraft={async (source: CourseSummary) => {
+                        cloneCourseMutation({ source })
+                      }}
+                    />
+                  )
+                })}
               </div>
 
               {hasMoreCourses && (
@@ -160,7 +355,7 @@ const DashboardDesign1 = () => {
               )}
             </>
           )}
-          {/* display */}
+
           {!courseDraft &&
             (!coursesLoading && !coursesError && courses.length === 0 ? (
               <StateComp
@@ -178,7 +373,16 @@ const DashboardDesign1 = () => {
               !coursesLoading && (
                 <StateComp
                   type='empty-search'
-                  onAction={() => setSearchQuery('')}
+                  onAction={() => {
+                    if (useResetStatusAction) {
+                      resetStatusFilters()
+                      return
+                    }
+                    setSearchQuery('')
+                  }}
+                  actionText={
+                    useResetStatusAction ? 'Zrušit filtry' : undefined
+                  }
                 />
               )
             ))}

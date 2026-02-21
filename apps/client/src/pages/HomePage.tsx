@@ -8,9 +8,11 @@ import HintPageText from '../components/shared/HintPageText'
 import LogoAnim from '@/components/shared/LogoAnim'
 import { Label } from '@/components/ui/label'
 import TitleText from '@/components/shared/TitleText'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 
 const HomePage = () => {
   const navigate = useNavigate()
+  const { isConnected } = useCoursesSSE()
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-3 items-center justify-center max-w-7xl mx-auto md:px-6 lg:px-12'>

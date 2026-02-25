@@ -10,6 +10,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
+import {
+  useDeletePostMutation,
+  useUpdatePostMutation,
+} from '../CoursePage/utils/useFeedMutation'
 import { fmt } from '../CoursePage/utils/helperFunctions'
 import type { CourseModulesLayoutContext } from './CourseModulesLayoutContext'
 
@@ -25,7 +29,11 @@ const CourseModulesLayoutPage = () => {
     isError: courseError,
     error: courseQueryError,
     refetch: refetchCourse,
-  } = useQuery<CourseDetail, QueryError, CourseModulesLayoutContext['courseMeta']>({
+  } = useQuery<
+    CourseDetail,
+    QueryError,
+    CourseModulesLayoutContext['courseMeta']
+  >({
     queryKey: ['course', courseId],
     queryFn: () => getCourseById(courseId!),
     enabled: Boolean(courseId),
@@ -55,6 +63,13 @@ const CourseModulesLayoutPage = () => {
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
+  const { mutateAsync: updatePostMutation } = useUpdatePostMutation(
+    courseId ?? '',
+  )
+  const { mutateAsync: deletePostMutation } = useDeletePostMutation(
+    courseId ?? '',
+  )
+
   const historyItems = useMemo(
     () => courseMeta?.status_history ?? [],
     [courseMeta?.status_history],
@@ -72,7 +87,9 @@ const CourseModulesLayoutPage = () => {
     const isNotFound = courseQueryError?.status === 404
     return (
       <StateComp
-        type={isNotFound ? 'not-found' : isOffline ? 'network-offline' : 'error'}
+        type={
+          isNotFound ? 'not-found' : isOffline ? 'network-offline' : 'error'
+        }
         message={isNotFound ? 'Kurz nebyl nalezen' : undefined}
         onAction={() => refetchCourse()}
       />
@@ -80,7 +97,8 @@ const CourseModulesLayoutPage = () => {
   }
 
   const previewMode = courseMeta.status !== 'draft'
-  const courseIndexColor: keyof typeof colorStyles.gradient = 'accent-teal-light'
+  const courseIndexColor: keyof typeof colorStyles.gradient =
+    'accent-teal-light'
 
   return (
     <div className='max-w-7xl mx-auto md:px-4'>
@@ -118,7 +136,7 @@ const CourseModulesLayoutPage = () => {
                   Historie
                 </Button>
               </div>
-              {!previewMode && sideTab === 'feed' && (
+              {sideTab === 'feed' && (
                 <Button
                   variant='outline'
                   size='sm'
@@ -142,7 +160,9 @@ const CourseModulesLayoutPage = () => {
                   <StateComp
                     type={isOffline ? 'network-offline' : 'error'}
                     onAction={() => refetchFeed()}
-                    message={isOffline ? undefined : 'Nepodařilo se načíst příspěvky'}
+                    message={
+                      isOffline ? undefined : 'Nepodařilo se načíst příspěvky'
+                    }
                     className='pt-8 pb-0'
                   />
                 ) : feedItems?.length ? (
@@ -151,8 +171,15 @@ const CourseModulesLayoutPage = () => {
                       key={item.uuid}
                       feedItem={item}
                       type={previewMode ? 'classic' : 'edit'}
-                      onSave={async () => Promise.resolve()}
-                      onDelete={() => undefined}
+                      onSave={async (editedFeed) => {
+                        await updatePostMutation({
+                          postId: item.uuid,
+                          data: editedFeed,
+                        })
+                      }}
+                      onDelete={() => {
+                        void deletePostMutation(item.uuid)
+                      }}
                     />
                   ))
                 ) : (

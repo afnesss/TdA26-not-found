@@ -1,7 +1,6 @@
-import type { CourseModule } from '@/lib/schemas/module'
+﻿import type { CourseModule } from '@/lib/schemas/module'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
-import { fmt } from '@/pages/CoursePage/utils/helperFunctions'
 import type { ReactNode } from 'react'
 import { Label } from '../ui/label'
 
@@ -9,6 +8,7 @@ type CourseModulesGridProps = {
   modules: CourseModule[]
   onOpenModule?: (moduleId: string) => void
   renderActions?: (module: CourseModule) => ReactNode
+  renderFooterActions?: (module: CourseModule) => ReactNode
   getIndexBadgeClassName?: (module: CourseModule, index: number) => string
   cardClassName?: string
 }
@@ -17,10 +17,13 @@ const CourseModulesGrid = ({
   modules,
   onOpenModule,
   renderActions,
+  renderFooterActions,
   getIndexBadgeClassName,
   cardClassName,
 }: CourseModulesGridProps) => {
   const isCardClickable = Boolean(onOpenModule)
+  const formatUpdatedDate = (dateInput: string | Date) =>
+    new Date(dateInput).toLocaleDateString('cs-CZ')
 
   return (
     <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
@@ -73,8 +76,8 @@ const CourseModulesGrid = ({
               {m.description || 'Bez popisu modulu'}
             </p>
 
-            <div className='flex items-center justify-between gap-10 pt-2 border-t border-border/60'>
-              <div className='mt-auto text-xs md:text-sm flex gap-5'>
+            <div className='flex  justify-between gap-3 pt-2 border-t border-border/60'>
+              <div className=' text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
                 <p className='text-muted-foreground'>
                   Materiály:{' '}
                   <span className='font-semibold text-neutral-black'>
@@ -87,12 +90,19 @@ const CourseModulesGrid = ({
                     {m.quizzes.length}
                   </span>
                 </p>
+                {m.updatedAt && m.updatedAt !== m.createdAt && (
+                  <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
+                    upraveno {formatUpdatedDate(String(m.updatedAt))}
+                  </span>
+                )}
               </div>
-              {m.updatedAt && m.updatedAt !== m.createdAt && (
-                <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
-                  upraveno {fmt(String(m.updatedAt))}
-                </span>
-              )}
+              <div className='flex flex-col items-end gap-2'>
+                {renderFooterActions ? (
+                  <div className='flex shrink-0 items-center gap-2'>
+                    {renderFooterActions(m)}
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </Card>

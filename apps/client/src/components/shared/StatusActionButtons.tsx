@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+﻿import { Button } from '@/components/ui/button'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import {
   Play,
@@ -21,6 +21,7 @@ interface StatusActionButtonProps {
   iconClassName?: string
   labelClassName?: string
   onCopyAsDraft?: () => void
+  hideCopyAsDraft?: boolean
 }
 
 export function StatusActionButtons({
@@ -32,6 +33,7 @@ export function StatusActionButtons({
   iconClassName,
   labelClassName,
   onCopyAsDraft,
+  hideCopyAsDraft = false,
 }: StatusActionButtonProps) {
   const getActions = () => {
     switch (currentStatus) {
@@ -104,9 +106,11 @@ export function StatusActionButtons({
           },
         ]
       case 'archived':
+        if (hideCopyAsDraft) return []
         return [
           {
             label: 'Kopírovat jako návrh',
+            mobileLabel: 'Kopírovat',
             icon: FilePlus,
             status: 'draft' as CourseStatus,
             variant: 'grid' as const,
@@ -157,8 +161,8 @@ export function StatusActionButtons({
               buttonClassName,
             )}
           >
-            <Icon className={cn('w-3.5 h-3.5 mr-1', iconClassName)} />
-            <span className={cn('text-xs font-medium', labelClassName)}>
+            <Icon className={cn('w-3.5 h-3.5 md:mr-1', iconClassName)} />
+            <span className={cn('hidden md:inline text-xs font-medium', labelClassName)}>
               {action.label}
             </span>
           </Button>

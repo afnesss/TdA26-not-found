@@ -46,7 +46,7 @@ const UserCourseOverviewPage = () => {
             onOpenModule={(moduleId) =>
               navigate(`/courses/${courseId}/modules/${moduleId}`)
             }
-            renderActions={(m) => {
+            renderFooterActions={(m) => {
               return (
                 <Button
                   variant={'grid'}

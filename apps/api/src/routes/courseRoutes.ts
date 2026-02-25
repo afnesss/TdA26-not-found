@@ -16,6 +16,7 @@ import {
 } from "../schemas/course";
 import { writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
+import { requireCourseDraft } from "../middleware/courseStatus";
 
 const router = Router();
 
@@ -36,8 +37,15 @@ router.put(
   authMiddleware,
   writeLimiter,
   validate(CourseUpdateRequestSchema),
+  requireCourseDraft("uuid"),
   updateCourse,
 );
-router.delete("/:uuid", authMiddleware, writeLimiter, deleteCourse);
+router.delete(
+  "/:uuid",
+  authMiddleware,
+  writeLimiter,
+  requireCourseDraft("uuid"),
+  deleteCourse,
+);
 
 export default router;

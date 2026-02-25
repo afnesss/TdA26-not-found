@@ -1,4 +1,4 @@
-import { getCourseById, updateCourse } from '@/api/queries/courseQueries'
+﻿import { getCourseById, updateCourse } from '@/api/queries/courseQueries'
 import { updateModule } from '@/api/queries/moduleQueries'
 import {
   CourseStateBadge,
@@ -15,11 +15,13 @@ import { colorStyles } from '@/lib/constants'
 import type { CourseDetail } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
+import { useDeleteModuleMutation } from '@/pages/CoursePage/utils/useModuleMutation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Edit, Eye, Plus } from 'lucide-react'
+import { Edit, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
+import DashboardAddButton from './components/DashboardAddButton'
 import EditableDetailCard from './components/EditableDetailCard'
 import EditBtn from './components/EditBtn'
 import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
@@ -82,6 +84,8 @@ const CourseModulesOverviewPage = () => {
     },
   })
 
+  const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId)
+
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
   if (courseLoading) {
@@ -99,6 +103,8 @@ const CourseModulesOverviewPage = () => {
   }
 
   const modules = course.modules ?? []
+  const canToggleModuleVisibility =
+    courseMeta.status === 'draft' || courseMeta.status === 'live'
   const hasCourseDetailsChanges =
     courseName !== courseMeta.name ||
     courseDescription !== (courseMeta.description ?? '')
@@ -124,7 +130,7 @@ const CourseModulesOverviewPage = () => {
     moduleId: string,
     currentStatus: 'active' | 'passive',
   ) => {
-    if (courseMeta.status !== 'live') return
+    if (!canToggleModuleVisibility) return
 
     toggleModuleVisibilityMutation.mutate({
       moduleId,
@@ -162,11 +168,11 @@ const CourseModulesOverviewPage = () => {
             currentStatus={courseMeta.status}
             onStatusChange={handleCourseStatusChange}
             courseColor={'accent-teal-dark'}
-            className='flex-wrap justify-end'
+            className='justify-end'
             buttonClassName='md:h-9'
-            iconClassName='w-3.5 h-3.5 mr-1'
             labelClassName='text-xs md:text-sm'
             onCopyAsDraft={() => handleCourseStatusChange('draft')}
+            hideCopyAsDraft={courseMeta.status === 'archived'}
           />
         }
         footerActions={
@@ -197,14 +203,7 @@ const CourseModulesOverviewPage = () => {
           </h2>
 
           {!previewMode && (
-            <Button
-              variant='outline'
-              size='sm'
-              className='border-dashed rounded-full'
-            >
-              <Plus className='size-4' />
-              Přidat modul
-            </Button>
+            <DashboardAddButton label='Přidat modul' className='rounded-full' />
           )}
         </div>
 
@@ -217,36 +216,16 @@ const CourseModulesOverviewPage = () => {
         ) : (
           <CourseModulesGrid
             modules={modules}
+            onOpenModule={handleOpenModule}
             getIndexBadgeClassName={(m) =>
               courseMeta.status !== 'live'
                 ? 'bg-primary/30'
                 : m.status === 'active'
                   ? 'bg-secondary/60'
-                  : 'bg-destructive/30'
+                  : 'bg-muted-foreground/20'
             }
             renderActions={(m) =>
-              courseMeta.status !== 'draft' ? (
-                <div className='flex items-center gap-3'>
-                  <EditBtn
-                    icon={Eye}
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      handleOpenModule(m.uuid)
-                    }}
-                    aria-label={`Preview module ${m.name}`}
-                  />
-                  {courseMeta.status === 'live' && (
-                    <ModuleVisibilityActionButton
-                      status={m.status}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleToggleModuleVisibility(m.uuid, m.status)
-                      }}
-                      disabled={toggleModuleVisibilityMutation.isPending}
-                    />
-                  )}
-                </div>
-              ) : (
+              courseMeta.status !== 'draft' ? null : (
                 <>
                   <EditBtn
                     icon={Edit}
@@ -267,13 +246,44 @@ const CourseModulesOverviewPage = () => {
                         />
                       }
                       onConfirm={() => {
-                        // TODO: implement delete module mutation
+                        deleteModuleMutation(m.uuid)
                       }}
                     />
                   </div>
                 </>
               )
             }
+            renderFooterActions={(m) => (
+              <>
+                {courseMeta.status !== 'draft' && (
+                  <Button
+                    variant={'grid'}
+                    size={'sm'}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigate(`/dashboard/${courseId}/modules/${m.uuid}`)
+                    }}
+                    className={cn(
+                      'bg-linear-to-br h-8 text-xs md:text-sm',
+                      colorStyles.bg['accent-teal-dark'],
+                      colorStyles.text['accent-teal-dark'],
+                    )}
+                  >
+                    <span className='font-semibold'>Zobrazit</span>
+                  </Button>
+                )}
+                {canToggleModuleVisibility && (
+                  <ModuleVisibilityActionButton
+                    status={m.status}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleToggleModuleVisibility(m.uuid, m.status)
+                    }}
+                    disabled={toggleModuleVisibilityMutation.isPending}
+                  />
+                )}
+              </>
+            )}
           />
         )}
       </div>

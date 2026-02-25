@@ -16,16 +16,25 @@ import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
 
-export async function getAllCourses(_req: Request, res: Response) {
+export async function getAllCourses(req: Request, res: Response) {
+  const userView = String(req.query.userView ?? "").toLowerCase() === "true";
+
   const allCourses = await db
     .select({
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
+      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      scheduledFor: courses.scheduledFor,
+      status_history: courses.status_history,
     })
     .from(courses)
+    .where(
+      userView ? inArray(courses.status, ["planned", "live"]) : undefined,
+    )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -40,8 +49,12 @@ export async function getCourseByUuid(req: Request, res: Response) {
         uuid: courses.uuid,
         name: courses.name,
         description: courses.description,
+        status: courses.status,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
+        startedAt: courses.startedAt,
+        scheduledFor: courses.scheduledFor,
+        status_history: courses.status_history,
       })
       .from(courses)
       .where(eq(courses.uuid, uuid));
@@ -57,13 +70,18 @@ export async function getCourseByUuid(req: Request, res: Response) {
         name: modules.name,
         description: modules.description,
         status: modules.status,
+        position: modules.position,
         courseId: modules.courseId,
         createdAt: modules.createdAt,
         updatedAt: modules.updatedAt,
       })
       .from(modules)
       .where(eq(modules.courseId, uuid))
-      .orderBy(desc(modules.createdAt), desc(modules.uuid));
+      .orderBy(
+        asc(modules.position),
+        asc(modules.createdAt),
+        asc(modules.uuid),
+      );
 
     const fetchedModules = await Promise.all(
       baseModules.map(async (module) => {
@@ -151,8 +169,12 @@ export async function createCourse(req: Request, res: Response) {
       uuid: courses.uuid,
       name: courses.name,
       description: courses.description,
+      status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      scheduledFor: courses.scheduledFor,
+      status_history: courses.status_history,
     });
 
   res.status(201).json(newCourse[0]);

@@ -3,7 +3,7 @@ import {
   deleteMaterial,
   updateMaterial,
 } from '@/api/queries/materialQueries'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Material } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
@@ -16,6 +16,16 @@ const getMaterialsQueryKey = (courseId: string, moduleId: string) => [
   courseId,
   moduleId,
 ]
+const getDashboardModuleQueryKey = (courseId: string, moduleId: string) => [
+  'course-module',
+  courseId,
+  moduleId,
+]
+const getDashboardModulesQueryKey = (courseId: string) => [
+  'course-modules',
+  courseId,
+]
+const getCourseQueryKey = (courseId: string) => ['course', courseId]
 
 const validateFileSize = (file?: File): void => {
   if (file && file.size > MAX_FILE_SIZE) {
@@ -25,6 +35,22 @@ const validateFileSize = (file?: File): void => {
       body: { message: 'Soubor je příliš velký (max 30MB)' },
     }
   }
+}
+
+const invalidateQueries = (
+  courseId: string,
+  moduleId: string,
+  queryClient: QueryClient,
+) => {
+  queryClient.invalidateQueries({
+    queryKey: getDashboardModuleQueryKey(courseId, moduleId),
+  })
+  queryClient.invalidateQueries({
+    queryKey: getDashboardModulesQueryKey(courseId),
+  })
+  queryClient.invalidateQueries({
+    queryKey: getCourseQueryKey(courseId),
+  })
 }
 
 export type MaterialDraft = {
@@ -93,15 +119,13 @@ export const useUpdateMutation = (courseId: string, moduleId: string) => {
       return { previousMaterials }
     },
     onSuccess: (updatedMaterial) => {
-      queryClient.setQueryData<Material[]>(
-        materialsQueryKey,
-        (oldData) => {
-          if (!oldData) return oldData
-          return oldData.map((m) =>
-            m.uuid === updatedMaterial.uuid ? updatedMaterial : m,
-          )
-        },
-      )
+      queryClient.setQueryData<Material[]>(materialsQueryKey, (oldData) => {
+        if (!oldData) return oldData
+        return oldData.map((m) =>
+          m.uuid === updatedMaterial.uuid ? updatedMaterial : m,
+        )
+      })
+      invalidateQueries(courseId, moduleId, queryClient)
       toast.success('Materiál aktualizován')
     },
     onError: (error: ApiError, _variables, context) => {
@@ -167,6 +191,7 @@ export const useCreateMutation = (
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: materialsQueryKey })
       setDraftMaterial(null)
+      invalidateQueries(courseId, moduleId, queryClient)
       toast.success('Materiál vytvořen')
     },
     onError: (error: ApiError, _variables, context) => {
@@ -215,6 +240,7 @@ export const useDeleteMaterialMutation = (
       queryClient.invalidateQueries({
         queryKey: materialsQueryKey,
       })
+      invalidateQueries(courseId, moduleId, queryClient)
       toast.success('Material smazán')
     },
     onError: (error: ApiError, _variables, context) => {

@@ -81,6 +81,29 @@ export const requireCourseNotArchived = (param?: string) =>
     message: "Archivovaný kurz nelze upravovat",
   });
 
+export const requireCourseUpdateAllowed = (param?: string) =>
+  requireCourseStatus({
+    param,
+    predicate: (status, req) => {
+      const hasName = req.body?.name !== undefined;
+      const hasDescription = req.body?.description !== undefined;
+      const hasStatus = req.body?.status !== undefined;
+      const hasScheduledFor = req.body?.scheduledFor !== undefined;
+
+      const isStatusOnlyChange =
+        hasStatus && !hasName && !hasDescription && !hasScheduledFor;
+
+      if (isStatusOnlyChange) {
+        // Status change is always allowed regardless of current course status.
+        return true;
+      }
+
+      // Any other course data changes are only allowed in draft.
+      return status === "draft";
+    },
+    message: "Změna kurzu není povolena v aktuálním stavu kurzu",
+  });
+
 export const requireModuleUpdateAllowed = (param?: string) =>
   requireCourseStatus({
     param,
@@ -104,4 +127,3 @@ export const requireModuleUpdateAllowed = (param?: string) =>
     },
     message: "Změna modulu není povolena v aktuálním stavu kurzu",
   });
-

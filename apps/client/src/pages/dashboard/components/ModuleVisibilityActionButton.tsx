@@ -1,0 +1,49 @@
+import { Button } from '@/components/ui/button'
+import { colorStyles } from '@/lib/constants'
+import { cn } from '@/lib/utils'
+import { Lock, Unlock } from 'lucide-react'
+import type { MouseEventHandler } from 'react'
+
+type ModuleVisibilityActionButtonProps = {
+  status: 'active' | 'passive'
+  onClick: MouseEventHandler<HTMLButtonElement>
+  disabled?: boolean
+  className?: string
+}
+
+const ModuleVisibilityActionButton = ({
+  status,
+  onClick,
+  disabled,
+  className,
+}: ModuleVisibilityActionButtonProps) => {
+  const isActive = status === 'active'
+
+  return (
+    <Button
+      variant={isActive ? 'outline' : 'grid'}
+      size='sm'
+      className={cn(
+        'h-8 ',
+        !isActive &&
+          cn(
+            'bg-linear-to-br font-medium text-xs md:text-sm',
+            colorStyles.bg['accent-teal-light'],
+            colorStyles.text['accent-teal-light'],
+          ),
+        className,
+      )}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {isActive ? (
+        <Lock className='w-3.5 h-3.5 mr-1' />
+      ) : (
+        <Unlock className='w-3.5 h-3.5 mr-1' />
+      )}
+      {isActive ? 'Skrýt' : 'Aktivovat'}
+    </Button>
+  )
+}
+
+export default ModuleVisibilityActionButton

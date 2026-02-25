@@ -108,11 +108,14 @@ export const filterCourses = (
   )
 }
 
-export const truncateDescription = (description?: string): string => {
+export const truncateDescription = (
+  description?: string,
+  length: number = 100,
+): string => {
   if (!description) return ''
-  if (description.length <= 100) return description
+  if (description.length <= length) return description
 
-  let truncated = description.slice(0, 100)
+  let truncated = description.slice(0, length)
   if (truncated.endsWith(',')) {
     truncated = truncated.slice(0, -1)
   }

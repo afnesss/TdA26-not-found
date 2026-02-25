@@ -6,16 +6,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 type ModuleTabProps = {
   module: ModuleSummary
   index: number
-  liveModuleVisibility: boolean
+  path?: string
 }
 
-const UserModuleTab = ({
-  module,
-  index,
-}: {
-  module: ModuleSummary
-  index: number
-}) => {
+const UserModuleTab = ({ module, index, path = 'courses' }: ModuleTabProps) => {
   const navigate = useNavigate()
   const { courseId, moduleId } = useParams<{
     courseId: string
@@ -32,7 +26,7 @@ const UserModuleTab = ({
           ? 'bg-primary text-background shadow-md'
           : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
       )}
-      onClick={() => navigate(`/courses/${courseId}/${module.uuid}`)}
+      onClick={() => navigate(`/${path}/${courseId}/modules/${module.uuid}`)}
     >
       <span className='inline-flex items-center gap-2'>
         <span

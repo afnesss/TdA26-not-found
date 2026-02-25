@@ -284,7 +284,7 @@ const CourseModuleDetailPage = () => {
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
         <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto '>
           {modules.map((m, i) => (
-            <UserModuleTab key={m.uuid} module={m} index={i} />
+            <UserModuleTab key={m.uuid} module={m} index={i} path='dashboard' />
           ))}
         </div>
       </div>

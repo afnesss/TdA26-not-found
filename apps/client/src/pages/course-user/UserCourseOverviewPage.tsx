@@ -9,8 +9,6 @@ import { useFeedPagination } from '../CoursePage/utils/useFeedPagination'
 import SummarySection from '../CoursePage/components/SummarySection'
 import { useNavigate } from 'react-router-dom'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
-import { colorStyles } from '@/lib/constants'
-import { cn } from '@/lib/utils'
 
 const UserCourseOverviewPage = () => {
   const navigate = useNavigate()
@@ -43,29 +41,10 @@ const UserCourseOverviewPage = () => {
         ) : (
           <CourseModulesGrid
             modules={activeModules}
+            courseStatus={courseData.status}
             onOpenModule={(moduleId) =>
               navigate(`/courses/${courseId}/modules/${moduleId}`)
             }
-            renderFooterActions={(m) => {
-              return (
-                <Button
-                  variant={'grid'}
-                  size={'sm'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigate(`/courses/${courseId}/modules/${m.uuid}`)
-                  }}
-                  className={cn(
-                    'bg-linear-to-br h-8',
-                    colorStyles.bg['accent-teal-dark'],
-                    colorStyles.text['accent-teal-dark'],
-                  )}
-                  disabled={courseData.status !== 'live'}
-                >
-                  <span className='font-semibold'>Zobrazit</span>
-                </Button>
-              )
-            }}
           />
         )}
       </section>

@@ -82,7 +82,6 @@ const UserCourseModuleDetailPage = () => {
             { label: courseData.name, path: `/courses/${courseId}` },
             { label: selectedModule.name },
           ]}
-          // cardClassName='shadow-md'
         />
 
         <section>

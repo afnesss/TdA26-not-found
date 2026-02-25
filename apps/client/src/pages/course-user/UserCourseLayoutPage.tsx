@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import NotFoundPage from '../NotFoundPage'
 import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
+import UserCourseFeedSection from './components/UserCourseFeedSection'
 
 const UserCourseLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
@@ -83,7 +84,7 @@ const UserCourseLayoutPage = () => {
 
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
-      <div className='max-w-6xl mx-auto  '>
+      <div className='max-w-6xl mx-auto space-y-5'>
         <Outlet
           context={{
             courseId,
@@ -92,6 +93,7 @@ const UserCourseLayoutPage = () => {
             isConnected,
           }}
         />
+        <UserCourseFeedSection courseId={courseId} initialFeed={courseData.feed ?? []} />
       </div>
     </div>
   )

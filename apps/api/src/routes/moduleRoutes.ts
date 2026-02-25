@@ -11,6 +11,10 @@ import { authMiddleware } from "../middleware/auth";
 import { writeLimiter } from "../middleware/rateLimiter";
 import { validate } from "../middleware/validate";
 import {
+  requireCourseDraft,
+  requireModuleUpdateAllowed,
+} from "../middleware/courseStatus";
+import {
   ModuleCreateRequestSchema,
   ModuleReorderRequestSchema,
   ModuleUpdateRequestSchema,
@@ -25,6 +29,7 @@ router.post(
   authMiddleware,
   writeLimiter,
   validate(ModuleCreateRequestSchema),
+  requireCourseDraft(),
   createModule,
 );
 router.put(
@@ -32,6 +37,7 @@ router.put(
   authMiddleware,
   writeLimiter,
   validate(ModuleUpdateRequestSchema),
+  requireModuleUpdateAllowed(),
   updateModule,
 );
 router.put(
@@ -39,8 +45,15 @@ router.put(
   authMiddleware,
   writeLimiter,
   validate(ModuleReorderRequestSchema),
+  requireCourseDraft(),
   reorderModules,
 );
-router.delete("/:moduleId", authMiddleware, writeLimiter, deleteModule);
+router.delete(
+  "/:moduleId",
+  authMiddleware,
+  writeLimiter,
+  requireCourseDraft(),
+  deleteModule,
+);
 
 export default router;

@@ -5,24 +5,30 @@ import { type CourseDetail, type Quiz } from '@/lib/schemas'
 import { startTransition, useEffect, useState } from 'react'
 import type { QuizStateById } from '../../../lib/types'
 import { useQuizSubmitMutation } from '../utils/quizSubmitMutation'
-import { handleSubmit, isQuizComplete } from '../utils/helperFunctions'
+import { handleSubmitQuiz, isQuizComplete } from '../utils/helperFunctions'
 import quizImg from '@/assets/t-play-blue.svg'
 import UnderlinedText from '@/components/shared/UnderlinedText'
+import type { ModuleDetail } from '@/lib/schemas/module'
+import { useParams } from 'react-router'
 
 type QuizesSectionProps = {
-  courseData?: CourseDetail | null
+  quizzes?: Quiz[]
 }
 
-const QuizesSection = ({ courseData }: QuizesSectionProps) => {
+const QuizesSection = ({ quizzes }: QuizesSectionProps) => {
   const [quizState, setQuizState] = useState<QuizStateById>({})
   const queryMutation = useQuizSubmitMutation(setQuizState)
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
+  const { courseId, moduleId } = useParams<{
+    courseId: string
+    moduleId: string
+  }>()
 
   useEffect(() => {
-    if (!courseData?.quizzes) return
+    if (!quizzes) return
 
     const initialResults: QuizStateById = {}
-    courseData?.quizzes.forEach((quiz) => {
+    quizzes.forEach((quiz) => {
       if (!quiz.uuid) return
 
       initialResults[quiz.uuid] = {
@@ -36,7 +42,7 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
     startTransition(() => {
       setQuizState((prev) => (Object.keys(prev).length ? prev : initialResults))
     })
-  }, [courseData])
+  }, [quizzes])
 
   return (
     <section>
@@ -47,8 +53,8 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
       </Label>
 
       <div className='space-y-4'>
-        {courseData?.quizzes && courseData.quizzes.length > 0 ? (
-          courseData?.quizzes?.map((quiz: Quiz) => (
+        {quizzes && quizzes.length > 0 ? (
+          quizzes?.map((quiz: Quiz) => (
             <QuizComponent
               key={quiz.uuid}
               quiz={quiz}
@@ -75,8 +81,9 @@ const QuizesSection = ({ courseData }: QuizesSectionProps) => {
                 })
               }}
               onSubmit={() =>
-                handleSubmit(
-                  courseData.uuid,
+                handleSubmitQuiz(
+                  courseId!,
+                  moduleId!,
                   quiz.uuid!,
                   quizState,
                   queryMutation,

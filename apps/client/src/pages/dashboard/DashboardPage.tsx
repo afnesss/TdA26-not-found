@@ -202,7 +202,8 @@ const DashboardDesign1 = () => {
   }
 
   const handleEditCourse = (course: CourseSummary) => {
-    navigate(`/dashboard/${course.uuid}#details`)
+    // navigate(`/dashboard/${course.uuid}#details`)
+    navigate(`/dashboard/${course.uuid}`)
   }
 
   const handleAddCourse = () => {

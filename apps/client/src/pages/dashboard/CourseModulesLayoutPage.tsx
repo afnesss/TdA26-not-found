@@ -1,27 +1,30 @@
 import { getCourseById } from '@/api/queries/courseQueries'
-import { getFeed } from '@/api/queries/feedQueries'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { colorStyles } from '@/lib/constants'
 import type { CourseDetail, FeedItem, StatusHistoryEvent } from '@/lib/schemas'
+import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Outlet, useParams } from 'react-router-dom'
 import {
+  useCreatePostMutation,
   useDeletePostMutation,
   useUpdatePostMutation,
 } from '../CoursePage/utils/useFeedMutation'
+import { useFeedPagination } from '../CoursePage/utils/useFeedPagination'
 import { fmt } from '../CoursePage/utils/helperFunctions'
 import type { CourseModulesLayoutContext } from './CourseModulesLayoutContext'
+import DashboardAddButton from './components/DashboardAddButton'
 
 type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const [sideTab, setSideTab] = useState<'feed' | 'history'>('feed')
+  const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 
   const {
     data: courseMeta,
@@ -49,20 +52,25 @@ const CourseModulesLayoutPage = () => {
     }),
   })
 
-  const {
-    data: feedItems,
-    isLoading: feedLoading,
-    isError: feedError,
-    refetch: refetchFeed,
-  } = useQuery<FeedItem[] | null, QueryError>({
-    queryKey: ['course-feed', courseId],
-    queryFn: () => getFeed(courseId!),
-    enabled: Boolean(courseId),
-    networkMode: 'always',
-  })
-
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
+  const {
+    allPosts,
+    loadMorePosts,
+    hasMore,
+    isLoadingMore,
+    paginationError,
+    isLoading: feedLoading,
+    isError: feedError,
+    error: feedErrorObj,
+    refetch: refetchFeed,
+  } = useFeedPagination(courseId ?? '', undefined, Boolean(courseId))
+
+  const isNetworkError = (feedErrorObj as ApiError)?.isNetworkError ?? false
+
+  const { mutateAsync: createPostMutation } = useCreatePostMutation(
+    courseId ?? '',
+  )
   const { mutateAsync: updatePostMutation } = useUpdatePostMutation(
     courseId ?? '',
   )
@@ -97,12 +105,30 @@ const CourseModulesLayoutPage = () => {
   }
 
   const previewMode = courseMeta.status !== 'draft'
+  const canManageFeed =
+    courseMeta.status === 'draft' || courseMeta.status === 'live'
   const courseIndexColor: keyof typeof colorStyles.gradient =
     'accent-teal-light'
 
+  const handleAddPost = () => {
+    if (!canManageFeed || draftPost) return
+
+    setDraftPost({
+      uuid: `temp-${Date.now()}`,
+      type: 'manual',
+      message: '',
+      createdAt: new Date().toISOString(),
+    })
+  }
+
+  const onSaveDraft = async (post: FeedItem) => {
+    await createPostMutation({ message: post.message })
+    setDraftPost(null)
+  }
+
   return (
     <div className='max-w-7xl mx-auto md:px-4'>
-      <div className='pt-2 space-y-5'>
+      <div className='space-y-5'>
         <Outlet
           context={{
             courseId,
@@ -116,7 +142,7 @@ const CourseModulesLayoutPage = () => {
           <div
             className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseIndexColor]}`}
           />
-          <div className='p-4 md:p-5 space-y-4'>
+          <div className='p-3 md:p-5 space-y-4'>
             <div className='flex justify-between gap-3'>
               <div className='flex gap-2'>
                 <Button
@@ -136,15 +162,12 @@ const CourseModulesLayoutPage = () => {
                   Historie
                 </Button>
               </div>
-              {sideTab === 'feed' && (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='rounded-xl border-dashed'
-                >
-                  <Plus className='size-4' />
-                  Přidat příspěvek
-                </Button>
+              {canManageFeed && sideTab === 'feed' && (
+                <DashboardAddButton
+                  label={'P\u0159idat p\u0159\u00edsp\u011bvek'}
+                  onClick={handleAddPost}
+                  disabled={Boolean(draftPost)}
+                />
               )}
             </div>
 
@@ -158,30 +181,69 @@ const CourseModulesLayoutPage = () => {
                   />
                 ) : feedError ? (
                   <StateComp
-                    type={isOffline ? 'network-offline' : 'error'}
-                    onAction={() => refetchFeed()}
-                    message={
-                      isOffline ? undefined : 'Nepodařilo se načíst příspěvky'
+                    type={
+                      isNetworkError || isOffline ? 'network-offline' : 'error'
                     }
+                    message={
+                      isNetworkError || isOffline
+                        ? undefined
+                        : 'Nepodařilo se načíst příspěvky'
+                    }
+                    onAction={() => {
+                      refetchFeed()
+                    }}
                     className='pt-8 pb-0'
                   />
-                ) : feedItems?.length ? (
-                  feedItems.map((item) => (
-                    <FeedItemComp
-                      key={item.uuid}
-                      feedItem={item}
-                      type={previewMode ? 'classic' : 'edit'}
-                      onSave={async (editedFeed) => {
-                        await updatePostMutation({
-                          postId: item.uuid,
-                          data: editedFeed,
-                        })
-                      }}
-                      onDelete={() => {
-                        void deletePostMutation(item.uuid)
-                      }}
-                    />
-                  ))
+                ) : (allPosts && allPosts.length > 0) || draftPost ? (
+                  <>
+                    {draftPost && (
+                      <FeedItemComp
+                        key={draftPost.uuid}
+                        feedItem={draftPost}
+                        type='edit'
+                        isDraft
+                        onSave={onSaveDraft}
+                        onCancelDraft={() => setDraftPost(null)}
+                      />
+                    )}
+                    {allPosts.map((item) => {
+                      if (!item) return
+                      return (
+                        <FeedItemComp
+                          key={item.uuid}
+                          feedItem={item}
+                          type={canManageFeed ? 'edit' : 'classic'}
+                          onSave={async (editedFeed) => {
+                            await updatePostMutation({
+                              postId: item.uuid,
+                              data: editedFeed,
+                            })
+                          }}
+                          onDelete={() => {
+                            deletePostMutation(item.uuid)
+                          }}
+                        />
+                      )
+                    })}
+                    {hasMore && (
+                      <div className='mt-3 text-center'>
+                        <Button
+                          variant='primary'
+                          size='primary'
+                          onClick={() => {
+                            loadMorePosts()
+                          }}
+                          disabled={isLoadingMore}
+                        >
+                          {isLoadingMore
+                            ? 'Načítání...'
+                            : paginationError
+                              ? 'Chyba při načítání'
+                              : 'Načíst další příspěvky'}
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <StateComp
                     type='no-content'

@@ -364,8 +364,7 @@ export async function updateCourse(req: Request, res: Response) {
     res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
-  const isStatusChanged = status && status !== existing[0].status;
-  const nextStatus = status ?? existing[0].status;
+  const currentStatus = existing[0].status;
   const scheduleWasProvided = scheduledFor !== undefined;
   const nextScheduledForDate =
     scheduledFor === null
@@ -373,6 +372,18 @@ export async function updateCourse(req: Request, res: Response) {
       : scheduledFor !== undefined
         ? new Date(scheduledFor)
         : existing[0].scheduledFor;
+  const nextStatus = status ?? currentStatus;
+  const isStatusChanged = Boolean(status && status !== currentStatus);
+
+  const validationError = validateCourseUpdate({
+    currentStatus,
+    nextStatus,
+    nextScheduledForDate,
+    isStatusChanged,
+  });
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
 
   const updated = await db
     .update(courses)
@@ -440,6 +451,55 @@ export async function updateCourse(req: Request, res: Response) {
 
   res.json(updated[0]);
 }
+
+type CourseUpdateValidation = {
+  currentStatus: string;
+  nextStatus: string;
+  nextScheduledForDate: Date | null;
+  isStatusChanged: boolean;
+};
+
+const validateCourseUpdate = ({
+  currentStatus,
+  nextStatus,
+  nextScheduledForDate,
+  isStatusChanged,
+}: CourseUpdateValidation): string | null => {
+  if (nextScheduledForDate && Number.isNaN(nextScheduledForDate.getTime())) {
+    return "Neplatný datum naplánování";
+  }
+
+  if (nextScheduledForDate && nextScheduledForDate.getTime() < Date.now()) {
+    return "Datum naplánování nesmí být v minulosti";
+  }
+
+  if (!isStatusChanged) {
+    return null;
+  }
+
+  if (currentStatus === "archived") {
+    return "Archivovaný kurz nelze měnit";
+  }
+
+  const transitions: Record<string, string[]> = {
+    draft: ["planned", "live"],
+    planned: ["draft", "live"],
+    live: ["paused", "archived"],
+    paused: ["live", "archived"],
+    archived: [],
+  };
+
+  const allowedNext = transitions[currentStatus] ?? [];
+  if (!allowedNext.includes(nextStatus)) {
+    return "Neplatná změna stavu kurzu";
+  }
+
+  if (nextStatus === "planned" && !nextScheduledForDate) {
+    return "Při plánování kurzu zadejte datum";
+  }
+
+  return null;
+};
 
 export async function deleteCourse(req: Request, res: Response) {
   try {

@@ -6,6 +6,7 @@ import { useState } from 'react'
 export const useFeedPagination = (
   courseId: string,
   initialData?: FeedItem[],
+  enabled: boolean = true,
 ) => {
   const {
     data,
@@ -32,6 +33,7 @@ export const useFeedPagination = (
         }
       : undefined,
     networkMode: 'always',
+    enabled,
   })
 
   const [paginationError, setPaginationError] = useState(false)

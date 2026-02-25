@@ -7,9 +7,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Material } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
-import { onError, onErrorWithRollback } from './helperFunctions'
+import { onErrorWithRollback } from './helperFunctions'
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024 // 30MB
+
+const getMaterialsQueryKey = (courseId: string, moduleId: string) => [
+  'materials',
+  courseId,
+  moduleId,
+]
 
 const validateFileSize = (file?: File): void => {
   if (file && file.size > MAX_FILE_SIZE) {
@@ -41,8 +47,9 @@ export type CreateMaterialPayload =
       url: string
       description?: string
     }
-export const useUpdateMutation = (courseId: string) => {
+export const useUpdateMutation = (courseId: string, moduleId: string) => {
   const queryClient = useQueryClient()
+  const materialsQueryKey = getMaterialsQueryKey(courseId, moduleId)
 
   return useMutation<
     Material,
@@ -58,19 +65,17 @@ export const useUpdateMutation = (courseId: string) => {
       data: MaterialDraft
     }) => {
       validateFileSize(data.file)
-      return updateMaterial(courseId, materialId, data)
+      return updateMaterial(courseId, moduleId, materialId, data)
     },
     networkMode: 'always',
     onMutate: async ({ materialId, data }) => {
-      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+      await queryClient.cancelQueries({ queryKey: materialsQueryKey })
 
-      const previousMaterials = queryClient.getQueryData<Material[]>([
-        'materials',
-        courseId,
-      ])
+      const previousMaterials =
+        queryClient.getQueryData<Material[]>(materialsQueryKey)
 
       queryClient.setQueryData<Material[]>(
-        ['materials', courseId],
+        materialsQueryKey,
         (oldMaterials) => {
           if (!oldMaterials) return oldMaterials
           return oldMaterials.map((m) =>
@@ -89,7 +94,7 @@ export const useUpdateMutation = (courseId: string) => {
     },
     onSuccess: (updatedMaterial) => {
       queryClient.setQueryData<Material[]>(
-        ['materials', courseId],
+        materialsQueryKey,
         (oldData) => {
           if (!oldData) return oldData
           return oldData.map((m) =>
@@ -104,7 +109,7 @@ export const useUpdateMutation = (courseId: string) => {
         error,
         'Chyba při aktualizaci materiálu',
         queryClient,
-        ['materials', courseId],
+        materialsQueryKey,
         context?.previousMaterials,
       )
     },
@@ -113,9 +118,11 @@ export const useUpdateMutation = (courseId: string) => {
 
 export const useCreateMutation = (
   courseId: string,
+  moduleId: string,
   setDraftMaterial: (a: Material | null) => void,
 ) => {
   const queryClient = useQueryClient()
+  const materialsQueryKey = getMaterialsQueryKey(courseId, moduleId)
   return useMutation<
     Material,
     ApiError,
@@ -126,16 +133,14 @@ export const useCreateMutation = (
       if (payload.type === 'file') {
         validateFileSize(payload.file)
       }
-      return createMaterial(courseId, payload)
+      return createMaterial(courseId, moduleId, payload)
     },
     networkMode: 'always',
     onMutate: async (data: CreateMaterialPayload) => {
-      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+      await queryClient.cancelQueries({ queryKey: materialsQueryKey })
 
-      const previousMaterials = queryClient.getQueryData<Material[]>([
-        'materials',
-        courseId,
-      ])
+      const previousMaterials =
+        queryClient.getQueryData<Material[]>(materialsQueryKey)
 
       // Only optimistic update for URL type - safe because URL is immediately available
       if (data.type === 'url') {
@@ -148,7 +153,7 @@ export const useCreateMutation = (
         }
 
         queryClient.setQueryData<Material[]>(
-          ['materials', courseId],
+          materialsQueryKey,
           (oldMaterials) => {
             if (!oldMaterials) return oldMaterials
             return [...oldMaterials, optimisticMaterial]
@@ -160,7 +165,7 @@ export const useCreateMutation = (
       return { previousMaterials }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['materials', courseId] })
+      queryClient.invalidateQueries({ queryKey: materialsQueryKey })
       setDraftMaterial(null)
       toast.success('Materiál vytvořen')
     },
@@ -169,32 +174,35 @@ export const useCreateMutation = (
         error,
         error.body?.message || 'Chyba při vytváření materiálu',
         queryClient,
-        ['materials', courseId],
+        materialsQueryKey,
         context?.previousMaterials,
       )
     },
   })
 }
 
-export const useDeleteMaterialMutation = (courseId: string) => {
+export const useDeleteMaterialMutation = (
+  courseId: string,
+  moduleId: string,
+) => {
   const queryClient = useQueryClient()
+  const materialsQueryKey = getMaterialsQueryKey(courseId, moduleId)
   return useMutation<
     void,
     ApiError,
     string,
     { previousMaterials?: Material[] }
   >({
-    mutationFn: (materialId: string) => deleteMaterial(courseId, materialId),
+    mutationFn: (materialId: string) =>
+      deleteMaterial(courseId, moduleId, materialId),
     networkMode: 'always',
     onMutate: async (materialId) => {
-      await queryClient.cancelQueries({ queryKey: ['materials', courseId] })
+      await queryClient.cancelQueries({ queryKey: materialsQueryKey })
 
-      const previousMaterials = queryClient.getQueryData<Material[]>([
-        'materials',
-        courseId,
-      ])
+      const previousMaterials =
+        queryClient.getQueryData<Material[]>(materialsQueryKey)
       queryClient.setQueryData<Material[]>(
-        ['materials', courseId],
+        materialsQueryKey,
         (oldMaterials) => {
           if (!oldMaterials) return oldMaterials
           return oldMaterials.filter((m) => m.uuid !== materialId)
@@ -205,7 +213,7 @@ export const useDeleteMaterialMutation = (courseId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['materials', courseId],
+        queryKey: materialsQueryKey,
       })
       toast.success('Material smazán')
     },
@@ -214,7 +222,7 @@ export const useDeleteMaterialMutation = (courseId: string) => {
         error,
         'Chyba při mazání materialu',
         queryClient,
-        ['materials', courseId],
+        materialsQueryKey,
         context?.previousMaterials,
       )
     },

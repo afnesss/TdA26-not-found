@@ -1,4 +1,4 @@
-import {
+﻿import {
   getCourseModules,
   getModuleByUuid,
   updateModule,
@@ -20,7 +20,6 @@ import type {
 } from '@/lib/schemas/module'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
@@ -32,6 +31,7 @@ import {
 } from '../CoursePage/utils/useMaterialMutation'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
+import DashboardAddButton from './components/DashboardAddButton'
 import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
 import UserModuleTab from './components/ModuleTab'
 import { toast } from 'sonner'
@@ -60,7 +60,9 @@ const CourseModuleDetailPage = () => {
   const [expandedQuizIds, setExpandedQuizIds] = useState<string[]>([])
   const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
   const [moduleName, setModuleName] = useState<string | null>(null)
-  const [moduleDescription, setModuleDescription] = useState<string | null>(null)
+  const [moduleDescription, setModuleDescription] = useState<string | null>(
+    null,
+  )
   const [moduleUpdatedAt, setModuleUpdatedAt] = useState<string | Date>()
   const { courseMeta, previewMode } = useCourseModulesLayoutContext()
 
@@ -163,7 +165,6 @@ const CourseModuleDetailPage = () => {
     moduleId ?? '',
   )
 
-
   useTitle(selectedModule?.name || 'Správa modulů - modul')
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
@@ -207,8 +208,9 @@ const CourseModuleDetailPage = () => {
 
   const currentModuleName = moduleName ?? selectedModule.name
   const currentModuleDescription =
-    moduleDescription ?? (selectedModule.description ?? '')
-  const liveModuleVisibility = courseMeta.status === 'live'
+    moduleDescription ?? selectedModule.description ?? ''
+  const canToggleModuleVisibility =
+    courseMeta.status === 'draft' || courseMeta.status === 'live'
   const canEditModuleInfo = courseMeta.status === 'draft'
   const hasModuleDetailsChanges =
     currentModuleName !== selectedModule.name ||
@@ -280,7 +282,7 @@ const CourseModuleDetailPage = () => {
   return (
     <div className='space-y-4'>
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
-        <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto pb-1'>
+        <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto '>
           {modules.map((m, i) => (
             <UserModuleTab key={m.uuid} module={m} index={i} />
           ))}
@@ -304,7 +306,9 @@ const CourseModuleDetailPage = () => {
           setModuleName(handleCapitalizedInput(value, currentModuleName))
         }}
         onDescriptionChange={(value) => {
-          setModuleDescription(handleCapitalizedInput(value, currentModuleDescription))
+          setModuleDescription(
+            handleCapitalizedInput(value, currentModuleDescription),
+          )
         }}
         disabled={!canEditModuleInfo}
         createdAt={
@@ -321,14 +325,14 @@ const CourseModuleDetailPage = () => {
         }
         topBadges={
           <>
-            {liveModuleVisibility && (
+            {canToggleModuleVisibility && (
               <ModuleVisibilityBadge status={selectedModule.status} />
             )}
           </>
         }
         topActions={
           <div className='flex flex-wrap items-center gap-2 justify-end'>
-            {liveModuleVisibility && (
+            {canToggleModuleVisibility && (
               <ModuleVisibilityActionButton
                 status={selectedModule.status}
                 onClick={() => toggleVisibilityMutation.mutate()}
@@ -362,16 +366,11 @@ const CourseModuleDetailPage = () => {
             <UnderlinedText strokeWidth='4'>Studijní materiály</UnderlinedText>
           </Label>
           {!previewMode && (
-            <Button
-              variant='outline'
-              size='sm'
-              className='rounded-xl border-dashed'
+            <DashboardAddButton
+              label='Přidat materiál'
               onClick={handleAddMaterial}
               disabled={!!draftMaterial}
-            >
-              <Plus className='size-4' />
-              Přidat materiál
-            </Button>
+            />
           )}
         </div>
 
@@ -388,19 +387,19 @@ const CourseModuleDetailPage = () => {
                 />
               )}
               {selectedModule.materials.map((mat) =>
-              courseMeta.status === 'draft' ? (
-                <MaterialCard
-                  key={mat.uuid}
-                  material={mat}
-                  type='edit'
-                  onDelete={async () => handleDeleteMaterial(mat.uuid)}
-                  onSave={async (editedMaterial) =>
-                    handleUpdateMaterial(mat.uuid, editedMaterial)
-                  }
-                />
-              ) : (
-                <MaterialCard key={mat.uuid} material={mat} type='classic' />
-              ),
+                courseMeta.status === 'draft' ? (
+                  <MaterialCard
+                    key={mat.uuid}
+                    material={mat}
+                    type='edit'
+                    onDelete={async () => handleDeleteMaterial(mat.uuid)}
+                    onSave={async (editedMaterial) =>
+                      handleUpdateMaterial(mat.uuid, editedMaterial)
+                    }
+                  />
+                ) : (
+                  <MaterialCard key={mat.uuid} material={mat} type='classic' />
+                ),
               )}
             </>
           ) : (
@@ -420,16 +419,7 @@ const CourseModuleDetailPage = () => {
               Kvízy
             </UnderlinedText>
           </Label>
-          {!previewMode && (
-            <Button
-              variant='outline'
-              size='sm'
-              className='rounded-xl border-dashed'
-            >
-              <Plus className='size-4' />
-              Přidat kvíz
-            </Button>
-          )}
+          {!previewMode && <DashboardAddButton label='Přidat kvíz' />}
         </div>
 
         <div className='space-y-3'>

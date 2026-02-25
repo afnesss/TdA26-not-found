@@ -60,38 +60,6 @@ export const handleMultipleChoice = (
   })
 }
 
-export const submitQuizFun = async ({
-  courseId,
-  quizId,
-  answers,
-  setQuizState,
-}: {
-  courseId: string
-  quizId: string
-  answers: QuizAnswer[]
-  setQuizState: React.Dispatch<React.SetStateAction<QuizStateById>>
-}) => {
-  const raw = await submitQuiz(courseId, quizId, { answers })
-
-  const parsed = QuizSubmitResponseSchema.safeParse(raw)
-
-  if (!parsed.success) {
-    console.error('quizResponseSubmit schema validation failed', parsed.error)
-    throw new Error('Invalid data to submit')
-  }
-
-  setQuizState((prev) => ({
-    ...prev,
-    [quizId]: {
-      ...prev[quizId],
-      status: 'submitted',
-      results: parsed.data,
-      showCorrect: false,
-    },
-  }))
-  return parsed.data
-}
-
 export const isQuizComplete = (
   quizId: string,
   totalQuestions: number,
@@ -111,8 +79,10 @@ export const isQuizComplete = (
 }
 
 type SubmitQuizMutation = ReturnType<typeof useQuizSubmitMutation>
-export const handleSubmit = async (
+
+export const handleSubmitQuiz = async (
   courseId: string,
+  moduleId: string,
   quizId: string,
   quizState: QuizStateById,
   mutation: SubmitQuizMutation,
@@ -120,7 +90,8 @@ export const handleSubmit = async (
   const answers = Object.values(quizState[quizId].answers)
 
   mutation.mutate({
-    courseId: courseId,
+    courseId,
+    moduleId,
     quizId,
     answers,
   })
@@ -239,3 +210,9 @@ export const formatDateWithToday = (
 
   return `${formattedDate}${time}`
 }
+
+export const fmt = (d: string) =>
+  new Date(d).toLocaleString('cs-CZ', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })

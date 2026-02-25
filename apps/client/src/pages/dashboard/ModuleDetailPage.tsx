@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import type { Material } from '@/lib/schemas'
 import type {
   CourseModulesStatus,
   ModuleDetail,
@@ -22,6 +23,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import {
+  type CreateMaterialPayload,
+  type MaterialDraft,
+  useCreateMutation,
+  useDeleteMaterialMutation,
+  useUpdateMutation,
+} from '../CoursePage/utils/useMaterialMutation'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
 import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
@@ -50,8 +58,9 @@ const CourseModuleDetailPage = () => {
   }>()
   const queryClient = useQueryClient()
   const [expandedQuizIds, setExpandedQuizIds] = useState<string[]>([])
-  const [moduleName, setModuleName] = useState('')
-  const [moduleDescription, setModuleDescription] = useState('')
+  const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
+  const [moduleName, setModuleName] = useState<string | null>(null)
+  const [moduleDescription, setModuleDescription] = useState<string | null>(null)
   const [moduleUpdatedAt, setModuleUpdatedAt] = useState<string | Date>()
   const { courseMeta, previewMode } = useCourseModulesLayoutContext()
 
@@ -122,8 +131,8 @@ const CourseModuleDetailPage = () => {
       })
     },
     onSuccess: async (updatedModule) => {
-      setModuleName(updatedModule.name)
-      setModuleDescription(updatedModule.description ?? '')
+      setModuleName(null)
+      setModuleDescription(null)
       setModuleUpdatedAt(updatedModule.updatedAt)
 
       await Promise.all([
@@ -140,16 +149,22 @@ const CourseModuleDetailPage = () => {
     },
   })
 
+  const { mutateAsync: updateMaterialMutation } = useUpdateMutation(
+    courseId ?? '',
+    moduleId ?? '',
+  )
+  const { mutateAsync: createMaterialMutation } = useCreateMutation(
+    courseId ?? '',
+    moduleId ?? '',
+    setDraftMaterial,
+  )
+  const { mutateAsync: deleteMaterialMutation } = useDeleteMaterialMutation(
+    courseId ?? '',
+    moduleId ?? '',
+  )
+
+
   useTitle(selectedModule?.name || 'Správa modulů - modul')
-
-  // useEffect(() => {
-  //   if (!selectedModule) return
-
-  //   // Use a ref to track previous moduleId to avoid unnecessary state updates
-  //   setModuleName(selectedModule.name)
-  //   setModuleDescription(selectedModule.description ?? '')
-  //   setModuleUpdatedAt(selectedModule.updatedAt)
-  // }, [moduleId])
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const isLoading = modulesLoading || moduleLoading
@@ -190,24 +205,75 @@ const CourseModuleDetailPage = () => {
     return <StateComp type='not-found' message='Modul nebyl nalezen' />
   }
 
+  const currentModuleName = moduleName ?? selectedModule.name
+  const currentModuleDescription =
+    moduleDescription ?? (selectedModule.description ?? '')
   const liveModuleVisibility = courseMeta.status === 'live'
   const canEditModuleInfo = courseMeta.status === 'draft'
   const hasModuleDetailsChanges =
-    moduleName !== selectedModule.name ||
-    moduleDescription !== (selectedModule.description ?? '')
+    currentModuleName !== selectedModule.name ||
+    currentModuleDescription !== (selectedModule.description ?? '')
 
   const handleSaveModuleDetails = () => {
     if (
       !canEditModuleInfo ||
       saveModuleDetailsMutation.isPending ||
-      !moduleName.trim()
+      !currentModuleName.trim()
     ) {
       return
     }
 
     saveModuleDetailsMutation.mutate({
-      name: moduleName,
-      description: moduleDescription,
+      name: currentModuleName,
+      description: currentModuleDescription,
+    })
+  }
+
+  const handleUpdateMaterial = async (
+    materialId: string,
+    data: MaterialDraft,
+  ) => {
+    await updateMaterialMutation({ materialId, data })
+  }
+
+  const handleSaveDraft = async (data: MaterialDraft) => {
+    if (!draftMaterial) return
+
+    const payload: CreateMaterialPayload =
+      data.type === 'file'
+        ? {
+            type: 'file',
+            name: data.name || draftMaterial.name || '',
+            file: data.file!,
+            description: data.description || '',
+          }
+        : {
+            type: 'url',
+            name: data.name || draftMaterial.name || '',
+            url: data.url!,
+            description: data.description || '',
+          }
+
+    await createMaterialMutation(payload)
+  }
+
+  const handleCancelDraft = () => {
+    setDraftMaterial(null)
+  }
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    await deleteMaterialMutation(materialId)
+  }
+
+  const handleAddMaterial = () => {
+    if (draftMaterial) return
+
+    setDraftMaterial({
+      uuid: '00000000-0000-0000-0000-000000000000',
+      name: '',
+      description: '',
+      type: 'file',
+      fileUrl: '',
     })
   }
 
@@ -229,16 +295,16 @@ const CourseModuleDetailPage = () => {
             label: 'Moduly',
             path: `/dashboard/${courseId}`,
           },
-          { label: moduleName || selectedModule.name },
+          { label: currentModuleName },
         ]}
         title='Detaily modulu'
-        nameValue={moduleName}
-        descriptionValue={moduleDescription}
+        nameValue={currentModuleName}
+        descriptionValue={currentModuleDescription}
         onNameChange={(value) => {
-          setModuleName(handleCapitalizedInput(value, moduleName))
+          setModuleName(handleCapitalizedInput(value, currentModuleName))
         }}
         onDescriptionChange={(value) => {
-          setModuleDescription(handleCapitalizedInput(value, moduleDescription))
+          setModuleDescription(handleCapitalizedInput(value, currentModuleDescription))
         }}
         disabled={!canEditModuleInfo}
         createdAt={
@@ -281,7 +347,7 @@ const CourseModuleDetailPage = () => {
               disabled={
                 !hasModuleDetailsChanges ||
                 saveModuleDetailsMutation.isPending ||
-                !moduleName.trim()
+                !currentModuleName.trim()
               }
             >
               Uložit změny
@@ -300,6 +366,8 @@ const CourseModuleDetailPage = () => {
               variant='outline'
               size='sm'
               className='rounded-xl border-dashed'
+              onClick={handleAddMaterial}
+              disabled={!!draftMaterial}
             >
               <Plus className='size-4' />
               Přidat materiál
@@ -308,16 +376,33 @@ const CourseModuleDetailPage = () => {
         </div>
 
         <div className='space-y-3'>
-          {selectedModule.materials.length ? (
-            selectedModule.materials.map((mat) => (
-              <MaterialCard
-                key={mat.uuid}
-                material={mat}
-                type='edit'
-                onDelete={async () => Promise.resolve()}
-                onSave={async () => Promise.resolve()}
-              />
-            ))
+          {draftMaterial || selectedModule.materials.length ? (
+            <>
+              {draftMaterial && (
+                <MaterialCard
+                  material={draftMaterial}
+                  type='edit'
+                  isDraft={true}
+                  onSave={handleSaveDraft}
+                  onCancel={handleCancelDraft}
+                />
+              )}
+              {selectedModule.materials.map((mat) =>
+              courseMeta.status === 'draft' ? (
+                <MaterialCard
+                  key={mat.uuid}
+                  material={mat}
+                  type='edit'
+                  onDelete={async () => handleDeleteMaterial(mat.uuid)}
+                  onSave={async (editedMaterial) =>
+                    handleUpdateMaterial(mat.uuid, editedMaterial)
+                  }
+                />
+              ) : (
+                <MaterialCard key={mat.uuid} material={mat} type='classic' />
+              ),
+              )}
+            </>
           ) : (
             <StateComp
               type='no-content'

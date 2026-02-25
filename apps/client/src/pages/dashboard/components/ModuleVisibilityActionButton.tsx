@@ -37,11 +37,14 @@ const ModuleVisibilityActionButton = ({
       disabled={disabled}
     >
       {isActive ? (
-        <Lock className='w-3.5 h-3.5 mr-1' />
+        <Lock className='w-3.5 h-3.5 md:mr-1' />
       ) : (
-        <Unlock className='w-3.5 h-3.5 mr-1' />
+        <Unlock className='w-3.5 h-3.5 md:mr-1' />
       )}
-      {isActive ? 'Skrýt' : 'Aktivovat'}
+      <span className='hidden md:inline-block'>
+        {' '}
+        {isActive ? 'Skrýt' : 'Aktivovat'}
+      </span>
     </Button>
   )
 }

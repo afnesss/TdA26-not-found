@@ -5,26 +5,31 @@ import {
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
+import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
-import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { colorStyles } from '@/lib/constants'
 import type { CourseDetail } from '@/lib/schemas'
-import { cn } from '@/lib/utils'
+import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
 import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
-import { useDeleteModuleMutation } from '@/pages/CoursePage/utils/useModuleMutation'
+import {
+  useCreateModuleMutation,
+  useDeleteModuleMutation,
+} from '@/pages/CoursePage/utils/useModuleMutation'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Edit, Eye } from 'lucide-react'
+import { Eye } from 'lucide-react'
+import type React from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import DashboardAddButton from './components/DashboardAddButton'
 import EditableDetailCard from './components/EditableDetailCard'
-import EditBtn from './components/EditBtn'
-import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
+import ModuleCard, { type DraftModuleForm } from './components/ModuleCard'
 
 type QueryError = Error & { status?: number }
 
@@ -36,6 +41,7 @@ const CourseModulesOverviewPage = () => {
   const [courseDescription, setCourseDescription] = useState(
     courseMeta.description ?? '',
   )
+  const [draftModule, setDraftModule] = useState<DraftModuleForm | null>(null)
 
   const {
     data: course,
@@ -85,6 +91,8 @@ const CourseModulesOverviewPage = () => {
   })
 
   const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId)
+  const { mutate: createModuleMutation, isPending: createModulePending } =
+    useCreateModuleMutation(courseId, () => setDraftModule(null))
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
@@ -103,6 +111,14 @@ const CourseModulesOverviewPage = () => {
   }
 
   const modules = course.modules ?? []
+  const shouldPlaceDraftInExistingLastRow =
+    Boolean(draftModule) && modules.length > 0 && modules.length % 2 === 1
+  const modulesForGrid = shouldPlaceDraftInExistingLastRow
+    ? modules.slice(0, -1)
+    : modules
+  const lastModule = shouldPlaceDraftInExistingLastRow
+    ? modules[modules.length - 1]
+    : null
   const canToggleModuleVisibility =
     courseMeta.status === 'draft' || courseMeta.status === 'live'
   const hasCourseDetailsChanges =
@@ -135,6 +151,24 @@ const CourseModulesOverviewPage = () => {
     toggleModuleVisibilityMutation.mutate({
       moduleId,
       nextStatus: currentStatus === 'active' ? 'passive' : 'active',
+    })
+  }
+
+  const handleAddModuleDraft = () => {
+    if (previewMode || draftModule) return
+    setDraftModule({ name: '', description: '' })
+  }
+
+  const handleCreateModule = () => {
+    if (!draftModule || createModulePending) return
+
+    const trimmedName = draftModule.name.trim()
+    if (!trimmedName) return
+
+    createModuleMutation({
+      name: trimmedName,
+      description: draftModule.description.trim() || undefined,
+      status: 'passive',
     })
   }
 
@@ -203,88 +237,79 @@ const CourseModulesOverviewPage = () => {
           </h2>
 
           {!previewMode && (
-            <DashboardAddButton label='Přidat modul' className='rounded-full' />
+            <DashboardAddButton
+              label='Přidat modul'
+              className='rounded-full'
+              onClick={handleAddModuleDraft}
+              disabled={Boolean(draftModule)}
+            />
           )}
         </div>
 
-        {modules.length === 0 ? (
+        {modules.length === 0 && !draftModule ? (
           <StateComp
             type='no-content'
             message='Kurz zatím nemá žádné moduly'
             className='pt-8'
           />
         ) : (
-          <CourseModulesGrid
-            modules={modules}
-            onOpenModule={handleOpenModule}
-            getIndexBadgeClassName={(m) =>
-              courseMeta.status !== 'live'
-                ? 'bg-primary/30'
-                : m.status === 'active'
-                  ? 'bg-secondary/60'
-                  : 'bg-muted-foreground/20'
-            }
-            renderActions={(m) =>
-              courseMeta.status !== 'draft' ? null : (
-                <>
-                  <EditBtn
-                    icon={Edit}
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      handleOpenModule(m.uuid)
-                    }}
-                    aria-label={`Edit module ${m.name}`}
-                  />
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <DeleteConfirmDialog
-                      itemType='modul'
-                      itemName={m.name}
-                      trigger={
-                        <EditBtn
-                          type='delete'
-                          aria-label={`Delete module ${m.name}`}
-                        />
-                      }
-                      onConfirm={() => {
-                        deleteModuleMutation(m.uuid)
-                      }}
-                    />
-                  </div>
-                </>
-              )
-            }
-            renderFooterActions={(m) => (
-              <>
-                {courseMeta.status !== 'draft' && (
-                  <Button
-                    variant={'grid'}
-                    size={'sm'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      navigate(`/dashboard/${courseId}/modules/${m.uuid}`)
-                    }}
-                    className={cn(
-                      'bg-linear-to-br h-8 text-xs md:text-sm',
-                      colorStyles.bg['accent-teal-dark'],
-                      colorStyles.text['accent-teal-dark'],
-                    )}
-                  >
-                    <span className='font-semibold'>Zobrazit</span>
-                  </Button>
-                )}
-                {canToggleModuleVisibility && (
-                  <ModuleVisibilityActionButton
-                    status={m.status}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleToggleModuleVisibility(m.uuid, m.status)
-                    }}
-                    disabled={toggleModuleVisibilityMutation.isPending}
-                  />
-                )}
-              </>
+          <div className='space-y-4'>
+            {modulesForGrid.length > 0 && (
+              <CourseModulesGrid
+                modules={modulesForGrid}
+                courseStatus={courseMeta.status}
+                onOpenModule={handleOpenModule}
+                canToggleModuleVisibility={canToggleModuleVisibility}
+                isToggleVisibilityPending={
+                  toggleModuleVisibilityMutation.isPending
+                }
+                onDeleteModule={deleteModuleMutation}
+                onToggleModuleVisibility={handleToggleModuleVisibility}
+              />
             )}
-          />
+
+            {lastModule && draftModule && (
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                <ModuleCard
+                  variant='existing'
+                  module={lastModule}
+                  moduleIndex={modules.length}
+                  courseStatus={courseMeta.status}
+                  canToggleModuleVisibility={canToggleModuleVisibility}
+                  isToggleVisibilityPending={
+                    toggleModuleVisibilityMutation.isPending
+                  }
+                  onOpenModule={handleOpenModule}
+                  onDeleteModule={deleteModuleMutation}
+                  onToggleModuleVisibility={handleToggleModuleVisibility}
+                />
+
+                <ModuleCard
+                  variant='draft'
+                  moduleIndex={modules.length + 1}
+                  draftModule={draftModule}
+                  setDraftModule={setDraftModule}
+                  onCreate={handleCreateModule}
+                  onCancel={() => setDraftModule(null)}
+                  isCreating={createModulePending}
+                />
+              </div>
+            )}
+
+            {draftModule && !lastModule && (
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                <ModuleCard
+                  variant='draft'
+                  moduleIndex={modules.length + 1}
+                  draftModule={draftModule}
+                  setDraftModule={setDraftModule}
+                  onCreate={handleCreateModule}
+                  onCancel={() => setDraftModule(null)}
+                  isCreating={createModulePending}
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </>

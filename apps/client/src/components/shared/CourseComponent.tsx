@@ -22,6 +22,7 @@ import EditSaveCancelButtons from './EditSaveCancelButtons'
 import { Textarea } from '../ui/textarea'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { useMediaQuery } from 'usehooks-ts'
+import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
 
 interface CourseClassic {
   type: 'classic'
@@ -249,15 +250,7 @@ const CourseComponent = (props: CourseCompProps) => {
             />
           ) : (
             <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
-              {course.description && course.description.length > 100
-                ? (() => {
-                    let truncated = course.description.slice(0, 100)
-                    if (truncated.endsWith(',')) {
-                      truncated = truncated.slice(0, -1)
-                    }
-                    return truncated + '...'
-                  })()
-                : course.description}
+              {truncateDescription(course.description ?? '')}
             </CardDescription>
           )}
         </CardContent>

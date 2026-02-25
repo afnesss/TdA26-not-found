@@ -108,6 +108,18 @@ export const filterCourses = (
   )
 }
 
+export const truncateDescription = (description?: string): string => {
+  if (!description) return ''
+  if (description.length <= 100) return description
+
+  let truncated = description.slice(0, 100)
+  if (truncated.endsWith(',')) {
+    truncated = truncated.slice(0, -1)
+  }
+
+  return `${truncated}...`
+}
+
 export const sortCoursesByFilter = (
   courses: CourseSummary[],
   selectedFilter: FilterIds,

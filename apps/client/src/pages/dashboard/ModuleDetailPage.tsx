@@ -102,7 +102,7 @@ const CourseModuleDetailPage = () => {
         status: selectedModule.status === 'active' ? 'passive' : 'active',
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (updatedModule) => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ['course-modules', courseId],
@@ -112,6 +112,14 @@ const CourseModuleDetailPage = () => {
         }),
         queryClient.invalidateQueries({ queryKey: ['course', courseId] }),
       ])
+      toast.success(
+        updatedModule.status === 'active'
+          ? 'Modul byl úspěšně aktivován'
+          : 'Modul byl úspěšně skryt',
+      )
+    },
+    onError: () => {
+      toast.error('Chyba při změně stavu modulu')
     },
   })
 

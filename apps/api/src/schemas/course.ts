@@ -49,6 +49,8 @@ export const CourseDetailSchema = z.object({
   modules: z.array(CourseModuleSchema),
   feed: z.array(FeedItemSchema),
   status_history: z.array(StatusHistoryEventSchema).optional(),
+  createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
+  updatedAt: z.date().or(z.string().datetime()).optional(),
 });
 
 export type CourseSummary = z.infer<typeof CourseSummarySchema>;

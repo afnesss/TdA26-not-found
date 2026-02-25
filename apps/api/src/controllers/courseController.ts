@@ -291,7 +291,7 @@ export async function cloneCourse(req: Request, res: Response) {
 
         if (material.type === "file") {
           if (!material.fileUrl) {
-            throw new Error("Zdrojový souborový material nemá fileUrl");
+            throw new Error("Zdrojový souborový materiál nemá fileUrl");
           }
 
           const materialId = uuidv4();
@@ -374,6 +374,9 @@ export async function updateCourse(req: Request, res: Response) {
         : existing[0].scheduledFor;
   const nextStatus = status ?? currentStatus;
   const isStatusChanged = Boolean(status && status !== currentStatus);
+  const shouldClearScheduleOnTransition =
+    currentStatus === "planned" &&
+    (nextStatus === "draft" || nextStatus === "live");
 
   const validationError = validateCourseUpdate({
     currentStatus,
@@ -406,7 +409,9 @@ export async function updateCourse(req: Request, res: Response) {
             ]
           : existing[0].status_history,
       scheduledFor:
-        nextStatus === "live"
+        shouldClearScheduleOnTransition
+          ? null
+          : nextStatus === "live"
           ? null
           : nextStatus === "planned"
             ? nextScheduledForDate
@@ -466,7 +471,7 @@ const validateCourseUpdate = ({
   isStatusChanged,
 }: CourseUpdateValidation): string | null => {
   if (nextScheduledForDate && Number.isNaN(nextScheduledForDate.getTime())) {
-    return "Neplatný datum naplánování";
+    return "Neplatné datum naplánování";
   }
 
   if (nextScheduledForDate && nextScheduledForDate.getTime() < Date.now()) {

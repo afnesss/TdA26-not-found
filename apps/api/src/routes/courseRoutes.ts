@@ -43,12 +43,6 @@ router.put(
   requireCourseUpdateAllowed("uuid"),
   updateCourse,
 );
-router.delete(
-  "/:uuid",
-  authMiddleware,
-  writeLimiter,
-  requireCourseDraft("uuid"),
-  deleteCourse,
-);
+router.delete("/:uuid", authMiddleware, writeLimiter, deleteCourse);
 
 export default router;

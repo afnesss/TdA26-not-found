@@ -89,6 +89,7 @@ export const requireCourseUpdateAllowed = (param?: string) =>
       const hasDescription = req.body?.description !== undefined;
       const hasStatus = req.body?.status !== undefined;
       const hasScheduledFor = req.body?.scheduledFor !== undefined;
+      const isStatusChanged = hasStatus && req.body?.status !== status;
 
       const isStatusOnlyChange =
         hasStatus && !hasName && !hasDescription && !hasScheduledFor;
@@ -96,6 +97,23 @@ export const requireCourseUpdateAllowed = (param?: string) =>
       if (isStatusOnlyChange) {
         // Status change is always allowed regardless of current course status.
         return true;
+      }
+
+      const isScheduleOnlyChange =
+        hasScheduledFor && !hasName && !hasDescription && !hasStatus;
+
+      if (isScheduleOnlyChange) {
+        // Rescheduling is allowed for editable pre-launch states.
+        return status === "draft" || status === "planned";
+      }
+
+      const isStatusAndScheduleChange =
+        hasStatus && hasScheduledFor && !hasName && !hasDescription;
+
+      if (isStatusAndScheduleChange) {
+        // Allow state transitions with schedule updates.
+        // Controller-level validation enforces transition/date rules.
+        return isStatusChanged || status === "draft" || status === "planned";
       }
 
       // Any other course data changes are only allowed in draft.

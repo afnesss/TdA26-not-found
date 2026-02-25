@@ -86,7 +86,10 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [showIncompleteError, setShowIncompleteError] = useState(false)
   const [, startTransition] = useTransition()
-  const { courseId } = useParams<{ courseId: string }>()
+  const { courseId, moduleId } = useParams<{
+    courseId: string
+    moduleId: string
+  }>()
 
   const {
     register,
@@ -110,7 +113,7 @@ const QuizComponent = ({
     refetch: refetchQuizAnalytics,
   } = useQuery<QuizAnalyticsResponse | null>({
     queryKey: ['quizAnalytics', quiz.uuid],
-    queryFn: () => getQuizAnalytics(quiz.uuid!, courseId!),
+    queryFn: () => getQuizAnalytics(courseId!, moduleId!, quiz.uuid!),
     enabled:
       Boolean(courseId) &&
       Boolean(isExpanded) &&

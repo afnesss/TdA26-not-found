@@ -17,6 +17,9 @@ interface StatusActionButtonProps {
   onStatusChange: (newStatus: CourseStatus) => void
   courseColor: string
   className?: string
+  buttonClassName?: string
+  iconClassName?: string
+  labelClassName?: string
   onCopyAsDraft?: () => void
 }
 
@@ -25,6 +28,9 @@ export function StatusActionButtons({
   onStatusChange,
   courseColor,
   className,
+  buttonClassName,
+  iconClassName,
+  labelClassName,
   onCopyAsDraft,
 }: StatusActionButtonProps) {
   const getActions = () => {
@@ -148,10 +154,13 @@ export function StatusActionButtons({
               'h-8 px-3',
               gridColorClasses,
               !action.primary && 'hover:bg-muted',
+              buttonClassName,
             )}
           >
-            <Icon className={cn('w-3.5 h-3.5 mr-1')} />
-            <span className='text-xs font-medium'>{action.label}</span>
+            <Icon className={cn('w-3.5 h-3.5 mr-1', iconClassName)} />
+            <span className={cn('text-xs font-medium', labelClassName)}>
+              {action.label}
+            </span>
           </Button>
         )
       })}

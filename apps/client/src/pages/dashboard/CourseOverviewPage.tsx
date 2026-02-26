@@ -1,12 +1,10 @@
-﻿import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
-import CoursePlanningSection from '@/components/shared/CoursePlanningSection'
+﻿import CoursePlanningSection from '@/components/shared/CoursePlanningSection'
 import {
   CourseStateBadge,
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
 import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
-import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Button } from '@/components/ui/button'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import {
@@ -26,9 +24,9 @@ import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
-import DashboardAddButton from './components/DashboardAddButton'
 import EditableDetailCard from './components/EditableDetailCard'
-import ModuleCard, { type DraftModuleForm } from './components/ModuleCard'
+import ModulesSection from './components/ModulesSection'
+import { type DraftModuleForm } from './components/ModuleCard'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -111,19 +109,6 @@ const CourseModulesOverviewPage = () => {
     )
   }
 
-  const modulesList = modules ?? []
-  const shouldPlaceDraftInExistingLastRow =
-    Boolean(draftModule) &&
-    modulesList.length > 0 &&
-    modulesList.length % 2 === 1
-  const modulesForGrid = shouldPlaceDraftInExistingLastRow
-    ? modulesList.slice(0, -1)
-    : modulesList
-  const lastModule = shouldPlaceDraftInExistingLastRow
-    ? modulesList[modulesList.length - 1]
-    : null
-  const canToggleModuleVisibility =
-    course.status === 'draft' || course.status === 'live'
   const hasCourseDetailsChanges =
     courseName !== course.name ||
     courseDescription !== (course.description ?? '')
@@ -145,8 +130,6 @@ const CourseModulesOverviewPage = () => {
     moduleId: string,
     currentStatus: 'active' | 'passive',
   ) => {
-    if (!canToggleModuleVisibility) return
-
     toggleModuleVisibilityMutation({
       moduleId,
       nextStatus: currentStatus === 'active' ? 'passive' : 'active',
@@ -274,86 +257,20 @@ const CourseModulesOverviewPage = () => {
         }
       />
 
-      <div className='space-y-4'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <h2 className='text-lg md:text-xl font-bold text-neutral-black'>
-            <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-              Moduly kurzu
-            </UnderlinedText>
-          </h2>
-
-          {!previewMode && (
-            <DashboardAddButton
-              label='Přidat modul'
-              className='rounded-full'
-              onClick={handleAddModuleDraft}
-              disabled={Boolean(draftModule)}
-            />
-          )}
-        </div>
-
-        {modulesList.length === 0 && !draftModule ? (
-          <StateComp
-            type='no-content'
-            message='Kurz zatím nemá žádné moduly'
-            className='pt-8'
-          />
-        ) : (
-          <div className='space-y-4'>
-            {modulesForGrid.length > 0 && (
-              <CourseModulesGrid
-                modules={modulesForGrid}
-                courseStatus={course.status}
-                onOpenModule={handleOpenModule}
-                canToggleModuleVisibility={canToggleModuleVisibility}
-                isToggleVisibilityPending={togglePending}
-                onDeleteModule={deleteModuleMutation}
-                onToggleModuleVisibility={handleToggleModuleVisibility}
-              />
-            )}
-
-            {lastModule && draftModule && (
-              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                <ModuleCard
-                  variant='existing'
-                  module={lastModule}
-                  moduleIndex={modulesList.length}
-                  courseStatus={course.status}
-                  canToggleModuleVisibility={canToggleModuleVisibility}
-                  isToggleVisibilityPending={togglePending}
-                  onOpenModule={handleOpenModule}
-                  onDeleteModule={deleteModuleMutation}
-                  onToggleModuleVisibility={handleToggleModuleVisibility}
-                />
-
-                <ModuleCard
-                  variant='draft'
-                  moduleIndex={modulesList.length + 1}
-                  draftModule={draftModule}
-                  setDraftModule={setDraftModule}
-                  onCreate={handleCreateModule}
-                  onCancel={() => setDraftModule(null)}
-                  isCreating={createModulePending}
-                />
-              </div>
-            )}
-
-            {draftModule && !lastModule && (
-              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                <ModuleCard
-                  variant='draft'
-                  moduleIndex={modulesList.length + 1}
-                  draftModule={draftModule}
-                  setDraftModule={setDraftModule}
-                  onCreate={handleCreateModule}
-                  onCancel={() => setDraftModule(null)}
-                  isCreating={createModulePending}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <ModulesSection
+        modules={modules ?? []}
+        courseStatus={course.status}
+        draftModule={draftModule}
+        setDraftModule={setDraftModule}
+        previewMode={previewMode}
+        onAddModule={handleAddModuleDraft}
+        onOpenModule={handleOpenModule}
+        onCreateModule={handleCreateModule}
+        onDeleteModule={deleteModuleMutation}
+        onToggleVisibility={handleToggleModuleVisibility}
+        isCreating={createModulePending}
+        isToggleVisibilityPending={togglePending}
+      />
     </>
   )
 }

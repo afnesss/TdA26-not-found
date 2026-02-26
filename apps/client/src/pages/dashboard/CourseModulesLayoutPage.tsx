@@ -28,29 +28,16 @@ const CourseModulesLayoutPage = () => {
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 
   const {
-    data: courseMeta,
+    data: course,
     isLoading: courseLoading,
     isError: courseError,
     error: courseQueryError,
     refetch: refetchCourse,
-  } = useQuery<
-    CourseDetail,
-    QueryError,
-    CourseModulesLayoutContext['courseMeta']
-  >({
+  } = useQuery<CourseDetail, QueryError>({
     queryKey: ['course', courseId],
     queryFn: () => getCourseById(courseId!),
     enabled: Boolean(courseId),
     networkMode: 'always',
-    select: (course) => ({
-      uuid: course.uuid,
-      name: course.name,
-      description: course.description,
-      status: course.status,
-      createdAt: course.createdAt,
-      updatedAt: course.updatedAt,
-      status_history: course.status_history,
-    }),
   })
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
@@ -80,8 +67,8 @@ const CourseModulesLayoutPage = () => {
   )
 
   const historyItems = useMemo(
-    () => courseMeta?.status_history ?? [],
-    [courseMeta?.status_history],
+    () => course?.status_history ?? [],
+    [course?.status_history],
   )
 
   if (!courseId) {
@@ -92,7 +79,7 @@ const CourseModulesLayoutPage = () => {
     return <StateComp type='no-content' message='Načítání kurzu...' />
   }
 
-  if (courseError || !courseMeta) {
+  if (courseError || !course) {
     const isNotFound = courseQueryError?.status === 404
     return (
       <StateComp
@@ -105,9 +92,9 @@ const CourseModulesLayoutPage = () => {
     )
   }
 
-  const previewMode = courseMeta.status !== 'draft'
+  const previewMode = course.status !== 'draft'
   const canManageFeed =
-    courseMeta.status === 'draft' || courseMeta.status === 'live'
+    course.status === 'draft' || course.status === 'live'
   const courseIndexColor: keyof typeof colorStyles.gradient =
     'accent-teal-light'
 
@@ -133,7 +120,11 @@ const CourseModulesLayoutPage = () => {
         <Outlet
           context={{
             courseId,
-            courseMeta,
+            course,
+            modules: course?.modules,
+            isLoading: courseLoading,
+            isError: courseError,
+            refetchCourse,
             previewMode,
             courseIndexColor,
           }}

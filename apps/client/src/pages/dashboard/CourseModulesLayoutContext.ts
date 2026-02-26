@@ -1,20 +1,17 @@
 import { colorStyles } from '@/lib/constants'
 import type { CourseDetail } from '@/lib/schemas'
+import type { ModuleDetail } from '@/lib/schemas/module'
 import { useOutletContext } from 'react-router-dom'
 
 export type CourseModulesLayoutContext = {
   courseId: string
-  courseMeta: Pick<
-    CourseDetail,
-    | 'uuid'
-    | 'name'
-    | 'description'
-    | 'status'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'status_history'
-  >
+  course: CourseDetail | null
+  modules?: ModuleDetail[]
+  isLoading: boolean
+  isError: boolean
+  refetchCourse: () => void
   previewMode: boolean
+  courseIndexColor: keyof typeof colorStyles.gradient
 }
 
 export const useCourseModulesLayoutContext = () =>

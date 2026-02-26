@@ -1,59 +1,53 @@
-﻿import { getCourseById, updateCourse } from '@/api/queries/courseQueries'
-import { updateModule } from '@/api/queries/moduleQueries'
+﻿import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
+import CoursePlanningSection from '@/components/shared/CoursePlanningSection'
 import {
   CourseStateBadge,
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
-import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
-import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import StateComp from '@/components/shared/StateComp'
+import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
 import UnderlinedText from '@/components/shared/UnderlinedText'
-import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import type { CourseDetail } from '@/lib/schemas'
-import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
-import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
+import {
+  useUpdateCourseMutation,
+  useUpdateCourseStatusMutation,
+} from '@/pages/CoursePage/utils/useCourseMutation'
+import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
+import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import {
   useCreateModuleMutation,
   useDeleteModuleMutation,
+  useToggleModuleMutation,
 } from '@/pages/CoursePage/utils/useModuleMutation'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Eye } from 'lucide-react'
-import type React from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { useMediaQuery } from 'usehooks-ts'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import DashboardAddButton from './components/DashboardAddButton'
 import EditableDetailCard from './components/EditableDetailCard'
 import ModuleCard, { type DraftModuleForm } from './components/ModuleCard'
 
-type QueryError = Error & { status?: number }
-
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const { courseId, previewMode, courseMeta } = useCourseModulesLayoutContext()
-  const [courseName, setCourseName] = useState(courseMeta.name)
+  const isSm = useMediaQuery('(min-width: 640px)')
+  const {
+    courseId,
+    course,
+    modules,
+    isLoading,
+    isError,
+    refetchCourse,
+    previewMode,
+  } = useCourseModulesLayoutContext()
+  const [courseName, setCourseName] = useState(course?.name ?? '')
   const [courseDescription, setCourseDescription] = useState(
-    courseMeta.description ?? '',
+    course?.description ?? '',
   )
   const [draftModule, setDraftModule] = useState<DraftModuleForm | null>(null)
-
-  const {
-    data: course,
-    isError: courseError,
-    isLoading: courseLoading,
-    refetch: refetchCourse,
-  } = useQuery<CourseDetail, QueryError>({
-    queryKey: ['course', courseId],
-    queryFn: () => getCourseById(courseId),
-    enabled: Boolean(courseId),
-    networkMode: 'always',
-  })
+  const queryClient = useQueryClient()
 
   const {
     mutate: updateCourseDetailsMutation,
@@ -63,44 +57,26 @@ const CourseModulesOverviewPage = () => {
     setCourseDescription(updatedCourse.description ?? '')
   })
 
-  const updateCourseStatusMutation = useMutation({
-    mutationFn: (status: CourseStatus) => updateCourse(courseId, { status }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['course', courseId] })
-      await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
-    },
-  })
-
-  const toggleModuleVisibilityMutation = useMutation({
-    mutationFn: ({
-      moduleId,
-      nextStatus,
-    }: {
-      moduleId: string
-      nextStatus: 'active' | 'passive'
-    }) => updateModule(courseId, moduleId, { status: nextStatus }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['course', courseId] })
-      await queryClient.invalidateQueries({
-        queryKey: ['course-modules', courseId],
-      })
-      await queryClient.invalidateQueries({
-        queryKey: ['course-feed', courseId],
-      })
-    },
-  })
-
+  const { mutate: toggleModuleVisibilityMutation, isPending: togglePending } =
+    useToggleModuleMutation(courseId)
+  const { mutate: updateCourseStatusMutation } =
+    useUpdateCourseStatusMutation(courseId)
   const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId)
   const { mutate: createModuleMutation, isPending: createModulePending } =
     useCreateModuleMutation(courseId, () => setDraftModule(null))
 
+  const planningHook = useCoursePlanning({
+    courseId,
+    queryClient,
+  })
+
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
-  if (courseLoading) {
+  if (isLoading) {
     return <StateComp type='no-content' message='Načítání kurzu...' />
   }
 
-  if (courseError || !course) {
+  if (isError || !course) {
     return (
       <StateComp
         type={isOffline ? 'network-offline' : 'error'}
@@ -110,24 +86,47 @@ const CourseModulesOverviewPage = () => {
     )
   }
 
-  const modules = course.modules ?? []
+  const handleCourseStatusChange = (status: CourseStatus) => {
+    if (status === 'planned') {
+      planningHook.openPlanningEditor(course, true)
+      return
+    }
+
+    planningHook.closePlanningEditor()
+    updateCourseStatusMutation(
+      { status },
+      {
+        onSuccess: () => {
+          toast.success(
+            {
+              draft: 'Kurz byl převeden do návrhu',
+              planned: 'Kurz byl naplánován',
+              live: 'Kurz byl spuštěn',
+              paused: 'Kurz byl pozastaven',
+              archived: 'Kurz byl archivován',
+            }[status],
+          )
+        },
+      },
+    )
+  }
+
+  const modulesList = modules ?? []
   const shouldPlaceDraftInExistingLastRow =
-    Boolean(draftModule) && modules.length > 0 && modules.length % 2 === 1
+    Boolean(draftModule) &&
+    modulesList.length > 0 &&
+    modulesList.length % 2 === 1
   const modulesForGrid = shouldPlaceDraftInExistingLastRow
-    ? modules.slice(0, -1)
-    : modules
+    ? modulesList.slice(0, -1)
+    : modulesList
   const lastModule = shouldPlaceDraftInExistingLastRow
-    ? modules[modules.length - 1]
+    ? modulesList[modulesList.length - 1]
     : null
   const canToggleModuleVisibility =
-    courseMeta.status === 'draft' || courseMeta.status === 'live'
+    course.status === 'draft' || course.status === 'live'
   const hasCourseDetailsChanges =
-    courseName !== courseMeta.name ||
-    courseDescription !== (courseMeta.description ?? '')
-
-  const handleCourseStatusChange = (status: CourseStatus) => {
-    updateCourseStatusMutation.mutate(status)
-  }
+    courseName !== course.name ||
+    courseDescription !== (course.description ?? '')
 
   const handleSaveCourseDetails = () => {
     if (previewMode || updateCourseDetailsPending || !courseName.trim()) return
@@ -148,7 +147,7 @@ const CourseModulesOverviewPage = () => {
   ) => {
     if (!canToggleModuleVisibility) return
 
-    toggleModuleVisibilityMutation.mutate({
+    toggleModuleVisibilityMutation({
       moduleId,
       nextStatus: currentStatus === 'active' ? 'passive' : 'active',
     })
@@ -172,10 +171,45 @@ const CourseModulesOverviewPage = () => {
     })
   }
 
+  const planning: CoursePlanningState = {
+    editable: course.status === 'planned',
+    isEditing: planningHook.planningIsEditing,
+    value: planningHook.planningDateTime,
+    error: planningHook.planningError,
+    saving: planningHook.planningSaving,
+    onOpen: () => planningHook.openPlanningEditor(course, false),
+    onChange: (value: string) => {
+      planningHook.setPlanningDateTime(value)
+      if (planningHook.planningError) {
+        planningHook.setPlanningError('')
+      }
+    },
+    onConfirm: planningHook.handlePlanningConfirm,
+    onCancel: planningHook.closePlanningEditor,
+  }
+
+  const statusActions = (
+    <StatusActionButtons
+      currentStatus={course.status}
+      onStatusChange={handleCourseStatusChange}
+      courseColor={'accent-teal-dark'}
+      className='justify-end shrink-0'
+      buttonClassName='md:h-9'
+      labelClassName='text-xs md:text-sm'
+      onCopyAsDraft={() => handleCourseStatusChange('draft')}
+      hideCopyAsDraft={course.status === 'archived'}
+    />
+  )
+
+  const showPlanningForHeader =
+    course.status === 'planned' || planning.isEditing
+  const showPlanningOnSeparateRow = !isSm && showPlanningForHeader
+
   return (
     <>
       <EditableDetailCard
         gradient={'accent-teal-dark'}
+        forceInlineHeaderActions
         breadcrumbItems={[
           { label: 'Správa kurzů', path: '/dashboard' },
           { label: 'Moduly' },
@@ -190,24 +224,38 @@ const CourseModulesOverviewPage = () => {
           setCourseDescription(handleCapitalizedInput(value, courseDescription))
         }}
         disabled={previewMode}
-        createdAt={courseMeta.createdAt}
-        updatedAt={courseMeta.updatedAt}
+        createdAt={course.createdAt}
+        updatedAt={course.updatedAt}
         topBadges={
-          <>
-            <CourseStateBadge status={courseMeta.status} />
-          </>
+          <div className='flex flex-wrap items-center gap-2'>
+            <CourseStateBadge status={course.status} />
+          </div>
+        }
+        headerBottom={
+          showPlanningOnSeparateRow ? (
+            <CoursePlanningSection
+              course={course}
+              state={course.status}
+              planning={planning}
+              hideStatusLabel
+              className='w-fit'
+            />
+          ) : undefined
         }
         topActions={
-          <StatusActionButtons
-            currentStatus={courseMeta.status}
-            onStatusChange={handleCourseStatusChange}
-            courseColor={'accent-teal-dark'}
-            className='justify-end'
-            buttonClassName='md:h-9'
-            labelClassName='text-xs md:text-sm'
-            onCopyAsDraft={() => handleCourseStatusChange('draft')}
-            hideCopyAsDraft={courseMeta.status === 'archived'}
-          />
+          <div className='flex items-center justify-end gap-2'>
+            {!showPlanningOnSeparateRow && showPlanningForHeader && (
+              <CoursePlanningSection
+                course={course}
+                state={course.status}
+                planning={planning}
+                hideStatusLabel
+                className='w-fit min-w-[18rem] shrink-0'
+                rowClassName='justify-end'
+              />
+            )}
+            {statusActions}
+          </div>
         }
         footerActions={
           !previewMode ? (
@@ -246,7 +294,7 @@ const CourseModulesOverviewPage = () => {
           )}
         </div>
 
-        {modules.length === 0 && !draftModule ? (
+        {modulesList.length === 0 && !draftModule ? (
           <StateComp
             type='no-content'
             message='Kurz zatím nemá žádné moduly'
@@ -257,12 +305,10 @@ const CourseModulesOverviewPage = () => {
             {modulesForGrid.length > 0 && (
               <CourseModulesGrid
                 modules={modulesForGrid}
-                courseStatus={courseMeta.status}
+                courseStatus={course.status}
                 onOpenModule={handleOpenModule}
                 canToggleModuleVisibility={canToggleModuleVisibility}
-                isToggleVisibilityPending={
-                  toggleModuleVisibilityMutation.isPending
-                }
+                isToggleVisibilityPending={togglePending}
                 onDeleteModule={deleteModuleMutation}
                 onToggleModuleVisibility={handleToggleModuleVisibility}
               />
@@ -273,12 +319,10 @@ const CourseModulesOverviewPage = () => {
                 <ModuleCard
                   variant='existing'
                   module={lastModule}
-                  moduleIndex={modules.length}
-                  courseStatus={courseMeta.status}
+                  moduleIndex={modulesList.length}
+                  courseStatus={course.status}
                   canToggleModuleVisibility={canToggleModuleVisibility}
-                  isToggleVisibilityPending={
-                    toggleModuleVisibilityMutation.isPending
-                  }
+                  isToggleVisibilityPending={togglePending}
                   onOpenModule={handleOpenModule}
                   onDeleteModule={deleteModuleMutation}
                   onToggleModuleVisibility={handleToggleModuleVisibility}
@@ -286,7 +330,7 @@ const CourseModulesOverviewPage = () => {
 
                 <ModuleCard
                   variant='draft'
-                  moduleIndex={modules.length + 1}
+                  moduleIndex={modulesList.length + 1}
                   draftModule={draftModule}
                   setDraftModule={setDraftModule}
                   onCreate={handleCreateModule}
@@ -300,7 +344,7 @@ const CourseModulesOverviewPage = () => {
               <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
                 <ModuleCard
                   variant='draft'
-                  moduleIndex={modules.length + 1}
+                  moduleIndex={modulesList.length + 1}
                   draftModule={draftModule}
                   setDraftModule={setDraftModule}
                   onCreate={handleCreateModule}

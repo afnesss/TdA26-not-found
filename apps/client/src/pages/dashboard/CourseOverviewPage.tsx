@@ -209,12 +209,10 @@ const CourseModulesOverviewPage = () => {
     <>
       <EditableDetailCard
         gradient={'accent-teal-dark'}
-        forceInlineHeaderActions
         breadcrumbItems={[
           { label: 'Správa kurzů', path: '/dashboard' },
           { label: 'Moduly' },
         ]}
-        title='Detaily kurzu'
         nameValue={courseName}
         descriptionValue={courseDescription}
         onNameChange={(value) => {
@@ -243,7 +241,7 @@ const CourseModulesOverviewPage = () => {
           ) : undefined
         }
         topActions={
-          <div className='flex items-center justify-end gap-2'>
+          <div className='flex items-center gap-2'>
             {!showPlanningOnSeparateRow && showPlanningForHeader && (
               <CoursePlanningSection
                 course={course}

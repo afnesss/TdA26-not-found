@@ -307,7 +307,6 @@ const CourseModuleDetailPage = () => {
           },
           { label: currentModuleName },
         ]}
-        title='Detaily modulu'
         nameValue={currentModuleName}
         descriptionValue={currentModuleDescription}
         onNameChange={(value) => {

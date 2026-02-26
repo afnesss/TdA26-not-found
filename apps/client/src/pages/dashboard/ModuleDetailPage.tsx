@@ -3,16 +3,12 @@
   getModuleByUuid,
   updateModule,
 } from '@/api/queries/moduleQueries'
-import MaterialCard from '@/components/shared/MaterialComponent'
-import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
-import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useTitle } from '@/lib/dynamicTitleHook'
-import type { Material } from '@/lib/schemas'
+import type { Material, Quiz } from '@/lib/schemas'
 import type {
   CourseModulesStatus,
   ModuleDetail,
@@ -20,7 +16,7 @@ import type {
 } from '@/lib/schemas/module'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   type CreateMaterialPayload,
@@ -29,10 +25,16 @@ import {
   useDeleteMaterialMutation,
   useUpdateMutation,
 } from '../CoursePage/utils/useMaterialMutation'
+import {
+  useCreateQuizMutation,
+  useDeleteQuizMutation,
+  useUpdateQuizMutation,
+} from '../CoursePage/utils/useQuizMutation'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
-import DashboardAddButton from './components/DashboardAddButton'
+import MaterialsSection from './components/MaterialsSection'
 import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
+import QuizzesSection from './components/QuizzesSection'
 import UserModuleTab from './components/ModuleTab'
 import { toast } from 'sonner'
 
@@ -59,6 +61,7 @@ const CourseModuleDetailPage = () => {
   const queryClient = useQueryClient()
   const [expandedQuizIds, setExpandedQuizIds] = useState<string[]>([])
   const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
+  const [draftQuiz, setDraftQuiz] = useState<Quiz | null>(null)
   const [moduleName, setModuleName] = useState<string | null>(null)
   const [moduleDescription, setModuleDescription] = useState<string | null>(
     null,
@@ -169,6 +172,15 @@ const CourseModuleDetailPage = () => {
     setDraftMaterial,
   )
   const { mutateAsync: deleteMaterialMutation } = useDeleteMaterialMutation(
+    courseId ?? '',
+    moduleId ?? '',
+  )
+
+  const { mutate: updateQuizMutation, isPending: updateQuizPending } =
+    useUpdateQuizMutation(courseId ?? '', moduleId ?? '')
+  const { mutate: createQuizMutation, isPending: createQuizPending } =
+    useCreateQuizMutation(courseId ?? '', moduleId ?? '', setDraftQuiz)
+  const { mutate: deleteQuizMutation } = useDeleteQuizMutation(
     courseId ?? '',
     moduleId ?? '',
   )
@@ -287,6 +299,61 @@ const CourseModuleDetailPage = () => {
     })
   }
 
+  const handleUpdateQuiz = (quizId: string, editedQuiz: Quiz) => {
+    const cleanedQuiz: Quiz = {
+      ...editedQuiz,
+      averagePercentage: editedQuiz.averagePercentage ?? 0,
+      questions: editedQuiz.questions.map((q) => {
+        if (q.uuid?.startsWith('temp-')) {
+          const { uuid, ...questionWithoutUuid } = q
+          return questionWithoutUuid
+        }
+        return q
+      }),
+    }
+    updateQuizMutation({
+      quizId,
+      data: cleanedQuiz,
+    })
+  }
+
+  const handleCreateQuiz = (editedQuiz: Quiz) => {
+    const cleanedQuiz: Quiz = {
+      ...editedQuiz,
+      uuid: undefined,
+      averagePercentage: 0,
+      questions: editedQuiz.questions.map((q) => {
+        const { uuid, ...questionWithoutUuid } = q
+        return questionWithoutUuid
+      }),
+    }
+    createQuizMutation(cleanedQuiz)
+  }
+
+  const handleAddQuiz = () => {
+    const newDraft: Quiz = {
+      uuid: `temp-${Date.now()}`,
+      title: '',
+      attemptsCount: 0,
+      questions: [
+        {
+          uuid: `temp-${Date.now()}`,
+          type: 'singleChoice',
+          question: '',
+          options: ['', ''],
+          correctIndex: 0,
+        },
+      ],
+    }
+    setDraftQuiz(newDraft)
+  }
+
+  const handleDeleteQuiz = (quizId: string) => {
+    deleteQuizMutation(quizId)
+  }
+
+  const canEditQuizzes = course && course.status === 'draft'
+
   return (
     <div className='space-y-4'>
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
@@ -367,102 +434,39 @@ const CourseModuleDetailPage = () => {
         }
       />
 
-      <section className='space-y-3'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <Label className='font-bold'>
-            <UnderlinedText strokeWidth='4'>Studijní materiály</UnderlinedText>
-          </Label>
-          {!previewMode && (
-            <DashboardAddButton
-              label='Přidat materiál'
-              onClick={handleAddMaterial}
-              disabled={!!draftMaterial}
-            />
-          )}
-        </div>
+      <MaterialsSection
+        materials={selectedModule.materials}
+        draftMaterial={draftMaterial}
+        previewMode={previewMode}
+        canEdit={!!canEditModuleInfo}
+        onAddMaterial={handleAddMaterial}
+        onSaveMaterial={handleUpdateMaterial}
+        onDeleteMaterial={handleDeleteMaterial}
+        onSaveDraft={handleSaveDraft}
+        onCancelDraft={handleCancelDraft}
+      />
 
-        <div className='space-y-3'>
-          {draftMaterial || selectedModule.materials.length ? (
-            <>
-              {draftMaterial && (
-                <MaterialCard
-                  material={draftMaterial}
-                  type='edit'
-                  isDraft={true}
-                  onSave={handleSaveDraft}
-                  onCancel={handleCancelDraft}
-                />
-              )}
-              {selectedModule.materials.map((mat) =>
-                course && course.status === 'draft' ? (
-                  <MaterialCard
-                    key={mat.uuid}
-                    material={mat}
-                    type='edit'
-                    onDelete={async () => handleDeleteMaterial(mat.uuid)}
-                    onSave={async (editedMaterial) =>
-                      handleUpdateMaterial(mat.uuid, editedMaterial)
-                    }
-                  />
-                ) : (
-                  <MaterialCard key={mat.uuid} material={mat} type='classic' />
-                ),
-              )}
-            </>
-          ) : (
-            <StateComp
-              type='no-content'
-              message='Zatím žádné materiály'
-              className='pt-8 pb-0'
-            />
-          )}
-        </div>
-      </section>
-
-      <section className='space-y-4'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <Label className='font-bold mb-0'>
-            <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-              Kvízy
-            </UnderlinedText>
-          </Label>
-          {!previewMode && <DashboardAddButton label='Přidat kvíz' />}
-        </div>
-
-        <div className='space-y-3'>
-          {selectedModule.quizzes.length ? (
-            selectedModule.quizzes.map((quiz) => {
-              const quizId = quiz.uuid
-
-              return (
-                <QuizComponent
-                  key={quiz.uuid}
-                  quiz={quiz}
-                  mode='lecturer'
-                  onSave={() => undefined}
-                  onDelete={() => undefined}
-                  isExpanded={quizId ? expandedQuizIds.includes(quizId) : false}
-                  onToggleExpand={() => {
-                    if (!quizId) return
-
-                    setExpandedQuizIds((prev) =>
-                      prev.includes(quizId)
-                        ? prev.filter((id) => id !== quizId)
-                        : [...prev, quizId],
-                    )
-                  }}
-                />
-              )
-            })
-          ) : (
-            <StateComp
-              type='no-content'
-              message='Zatím žádné kvízy'
-              className='pt-8 pb-0'
-            />
-          )}
-        </div>
-      </section>
+      <QuizzesSection
+        quizzes={selectedModule.quizzes}
+        draftQuiz={draftQuiz}
+        expandedQuizIds={expandedQuizIds}
+        previewMode={previewMode}
+        canEdit={!!canEditQuizzes}
+        isCreating={createQuizPending}
+        isUpdating={updateQuizPending}
+        onAddQuiz={handleAddQuiz}
+        onUpdateQuiz={handleUpdateQuiz}
+        onDeleteQuiz={handleDeleteQuiz}
+        onCreateQuiz={handleCreateQuiz}
+        onCancelDraft={() => setDraftQuiz(null)}
+        onToggleExpand={(quizId) => {
+          setExpandedQuizIds((prev) =>
+            prev.includes(quizId)
+              ? prev.filter((id) => id !== quizId)
+              : [...prev, quizId],
+          )
+        }}
+      />
     </div>
   )
 }

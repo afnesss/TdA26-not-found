@@ -64,7 +64,7 @@ const CourseModuleDetailPage = () => {
     null,
   )
   const [moduleUpdatedAt, setModuleUpdatedAt] = useState<string | Date>()
-  const { courseMeta, previewMode } = useCourseModulesLayoutContext()
+  const { course, previewMode } = useCourseModulesLayoutContext()
 
   const {
     data: modules = [],
@@ -218,8 +218,8 @@ const CourseModuleDetailPage = () => {
   const currentModuleDescription =
     moduleDescription ?? selectedModule.description ?? ''
   const canToggleModuleVisibility =
-    courseMeta.status === 'draft' || courseMeta.status === 'live'
-  const canEditModuleInfo = courseMeta.status === 'draft'
+    course && (course.status === 'draft' || course.status === 'live')
+  const canEditModuleInfo = course && course.status === 'draft'
   const hasModuleDetailsChanges =
     currentModuleName !== selectedModule.name ||
     currentModuleDescription !== (selectedModule.description ?? '')
@@ -395,7 +395,7 @@ const CourseModuleDetailPage = () => {
                 />
               )}
               {selectedModule.materials.map((mat) =>
-                courseMeta.status === 'draft' ? (
+                course && course.status === 'draft' ? (
                   <MaterialCard
                     key={mat.uuid}
                     material={mat}

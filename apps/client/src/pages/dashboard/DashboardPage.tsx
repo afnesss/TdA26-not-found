@@ -21,9 +21,7 @@ import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
 import {
   filterCourses,
-  formatDateTimeLocal,
   sortCoursesByFilter,
-  toDateTimeLocalValue,
 } from '../CoursePage/utils/helperFunctions'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import { toast } from 'sonner'
@@ -36,6 +34,7 @@ import {
 import { useMediaQuery } from 'usehooks-ts'
 import { filterItems } from '@/lib/constants'
 import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
+import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -44,13 +43,6 @@ const DashboardDesign1 = () => {
     useState<Record<CourseStatus, boolean>>(defaultStatusFilters)
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
-
-  const [planningCourseId, setPlanningCourseId] = useState<string | null>(null)
-  const [planningDateTime, setPlanningDateTime] = useState('')
-  const [planningNeedsStatusUpdate, setPlanningNeedsStatusUpdate] =
-    useState(false)
-  const [planningError, setPlanningError] = useState('')
-  const [planningSaving, setPlanningSaving] = useState(false)
   const isMd = useMediaQuery('(min-width: 768px)')
 
   const queryClient = useQueryClient()
@@ -78,110 +70,13 @@ const DashboardDesign1 = () => {
   }
   const { isConnected } = useDashboardCoursesSSE()
 
-  const closePlanningEditor = () => {
-    setPlanningCourseId(null)
-    setPlanningDateTime('')
-    setPlanningNeedsStatusUpdate(false)
-    setPlanningError('')
-    setPlanningSaving(false)
-  }
-
-  const openPlanningEditor = (
-    course: CourseSummary,
-    needsStatusUpdate: boolean,
-  ) => {
-    const existingValue = toDateTimeLocalValue(course.scheduledFor)
-    const defaultDate = new Date()
-    defaultDate.setHours(defaultDate.getHours() + 1)
-    const defaultValue = formatDateTimeLocal(defaultDate)
-
-    setPlanningCourseId(course.uuid)
-    setPlanningDateTime(existingValue || defaultValue)
-    setPlanningNeedsStatusUpdate(needsStatusUpdate)
-    setPlanningError('')
-    setPlanningSaving(false)
-  }
-
-  const handlePlanningConfirm = async () => {
-    if (!planningCourseId) {
-      return
-    }
-
-    if (!planningDateTime) {
-      setPlanningError('Vyberte datum a čas')
-      return
-    }
-
-    const selectedDate = new Date(planningDateTime)
-    if (Number.isNaN(selectedDate.getTime())) {
-      setPlanningError('Neplatný formát data')
-      return
-    }
-
-    const now = new Date()
-    if (selectedDate <= now) {
-      setPlanningError('Datum musí být v budoucnosti')
-      return
-    }
-
-    setPlanningSaving(true)
-
-    try {
-      const payload = planningNeedsStatusUpdate
-        ? {
-            status: 'planned' as CourseStatus,
-            scheduledFor: selectedDate.toISOString(),
-          }
-        : { scheduledFor: selectedDate.toISOString() }
-
-      await updateCourse(planningCourseId, payload)
-      invalidateCourseQueries(planningCourseId)
-
-      toast.success(
-        planningNeedsStatusUpdate
-          ? 'Kurz byl naplánován'
-          : 'Termín kurzu byl změněn',
-      )
-
-      closePlanningEditor()
-    } catch (error) {
-      setPlanningSaving(false)
-      toast.error('Nepodařilo se uložit termín kurzu')
-    }
-  }
+  const planning = useCoursePlanning({ queryClient })
 
   const handleStatusChange = async (
     courseId: string,
     newStatus: CourseStatus,
   ) => {
-    const statusMessages: Record<CourseStatus, string> = {
-      draft: 'Kurz byl převeden do návrhu',
-      planned: 'Kurz byl naplánován',
-      live: 'Kurz byl spuštěn',
-      paused: 'Kurz byl pozastaven',
-      archived: 'Kurz byl archivován',
-    }
-
-    if (newStatus === 'planned') {
-      const course = courses.find((item) => item.uuid === courseId)
-      if (!course) {
-        toast.error('Kurz nebyl nalezen')
-        return
-      }
-
-      openPlanningEditor(course, true)
-      return
-    }
-
-    closePlanningEditor()
-
-    try {
-      await updateCourse(courseId, { status: newStatus })
-      invalidateCourseQueries(courseId)
-      toast.success(statusMessages[newStatus])
-    } catch (error) {
-      toast.error('Nepodařilo se změnit stav kurzu')
-    }
+    await planning.handleStatusChange(courseId, newStatus, courses)
   }
 
   const searchFilteredCourses = filterCourses(courses, searchQuery)
@@ -303,23 +198,7 @@ const DashboardDesign1 = () => {
                 )}
 
                 {displayedCourses.map((course, index) => {
-                  const isPlanningForCourse = planningCourseId === course.uuid
-                  const planning = {
-                    editable: course.status === 'planned',
-                    isEditing: isPlanningForCourse,
-                    value: isPlanningForCourse ? planningDateTime : '',
-                    error: isPlanningForCourse ? planningError : '',
-                    saving: isPlanningForCourse && planningSaving,
-                    onOpen: () => openPlanningEditor(course, false),
-                    onChange: (value: string) => {
-                      setPlanningDateTime(value)
-                      if (planningError) {
-                        setPlanningError('')
-                      }
-                    },
-                    onConfirm: handlePlanningConfirm,
-                    onCancel: closePlanningEditor,
-                  }
+                  const planningState = planning.createPlanningState(course)
                   return (
                     <CourseComponent
                       key={
@@ -333,7 +212,7 @@ const DashboardDesign1 = () => {
                       }}
                       onDelete={() => deleteCourseMutation(course.uuid)}
                       onStatusChange={handleStatusChange}
-                      planning={planning}
+                      planning={planningState}
                       onCopyAsDraft={async (source: CourseSummary) => {
                         cloneCourseMutation({ source })
                       }}

@@ -18,7 +18,10 @@ import { toast } from 'sonner'
 import { onErrorWithRollback } from './helperFunctions'
 
 const getCourseQueryKey = (courseId: string) => ['course', courseId]
-const getCourseModulesQueryKey = (courseId: string) => ['course-modules', courseId]
+const getCourseModulesQueryKey = (courseId: string) => [
+  'course-modules',
+  courseId,
+]
 const getCourseModuleQueryKey = (courseId: string, moduleId: string) => [
   'course-module',
   courseId,
@@ -31,7 +34,9 @@ const invalidateModuleQueries = (
   moduleId?: string,
 ) => {
   queryClient.invalidateQueries({ queryKey: getCourseQueryKey(courseId) })
-  queryClient.invalidateQueries({ queryKey: getCourseModulesQueryKey(courseId) })
+  queryClient.invalidateQueries({
+    queryKey: getCourseModulesQueryKey(courseId),
+  })
   queryClient.invalidateQueries({ queryKey: ['course-feed', courseId] })
   queryClient.invalidateQueries({ queryKey: ['feed-paginated', courseId] })
   if (moduleId) {
@@ -77,7 +82,10 @@ const makeOptimisticModuleDetail = (
   quizzes: [],
 })
 
-const reorderByIds = <T extends { uuid: string }>(items: T[], ids: string[]) => {
+const reorderByIds = <T extends { uuid: string }>(
+  items: T[],
+  ids: string[],
+) => {
   const map = new Map(items.map((item) => [item.uuid, item]))
   const ordered = ids.map((id) => map.get(id)).filter(Boolean) as T[]
   const remaining = items.filter((item) => !ids.includes(item.uuid))
@@ -104,21 +112,27 @@ export const useCreateModuleMutation = (
       await queryClient.cancelQueries({ queryKey: modulesQueryKey })
       await queryClient.cancelQueries({ queryKey: courseQueryKey })
 
-      const previousModules = queryClient.getQueryData<ModuleSummary[]>(
-        modulesQueryKey,
-      )
-      const previousCourse = queryClient.getQueryData<CourseDetail>(courseQueryKey)
+      const previousModules =
+        queryClient.getQueryData<ModuleSummary[]>(modulesQueryKey)
+      const previousCourse =
+        queryClient.getQueryData<CourseDetail>(courseQueryKey)
       const tempId = `temp-${Date.now()}`
       const optimisticSummary = makeOptimisticModuleSummary(data, tempId)
       const optimisticDetail = makeOptimisticModuleDetail(data, tempId)
 
-      queryClient.setQueryData<ModuleSummary[]>(modulesQueryKey, (oldModules) => {
-        if (!oldModules) return oldModules
-        return [...oldModules, optimisticSummary]
-      })
+      queryClient.setQueryData<ModuleSummary[]>(
+        modulesQueryKey,
+        (oldModules) => {
+          if (!oldModules) return oldModules
+          return [...oldModules, optimisticSummary]
+        },
+      )
 
       queryClient.setQueryData<CourseDetail>(courseQueryKey, (oldCourse) =>
-        updateCourseDetailModules(oldCourse, (modules) => [...modules, optimisticDetail]),
+        updateCourseDetailModules(oldCourse, (modules) => [
+          ...modules,
+          optimisticDetail,
+        ]),
       )
 
       return { previousModules, previousCourse }
@@ -167,18 +181,22 @@ export const useUpdateModuleMutation = (courseId: string) => {
       await queryClient.cancelQueries({ queryKey: courseQueryKey })
       await queryClient.cancelQueries({ queryKey: moduleQueryKey })
 
-      const previousModules = queryClient.getQueryData<ModuleSummary[]>(
-        modulesQueryKey,
-      )
-      const previousCourse = queryClient.getQueryData<CourseDetail>(courseQueryKey)
-      const previousModule = queryClient.getQueryData<ModuleDetail>(moduleQueryKey)
+      const previousModules =
+        queryClient.getQueryData<ModuleSummary[]>(modulesQueryKey)
+      const previousCourse =
+        queryClient.getQueryData<CourseDetail>(courseQueryKey)
+      const previousModule =
+        queryClient.getQueryData<ModuleDetail>(moduleQueryKey)
 
-      queryClient.setQueryData<ModuleSummary[]>(modulesQueryKey, (oldModules) => {
-        if (!oldModules) return oldModules
-        return oldModules.map((module) =>
-          module.uuid === moduleId ? { ...module, ...data } : module,
-        )
-      })
+      queryClient.setQueryData<ModuleSummary[]>(
+        modulesQueryKey,
+        (oldModules) => {
+          if (!oldModules) return oldModules
+          return oldModules.map((module) =>
+            module.uuid === moduleId ? { ...module, ...data } : module,
+          )
+        },
+      )
 
       queryClient.setQueryData<CourseDetail>(courseQueryKey, (oldCourse) =>
         updateCourseDetailModules(oldCourse, (modules) =>
@@ -210,7 +228,10 @@ export const useUpdateModuleMutation = (courseId: string) => {
       toast.success('Modul aktualizován')
     },
     onError: (error, variables, context) => {
-      const moduleQueryKey = getCourseModuleQueryKey(courseId, variables.moduleId)
+      const moduleQueryKey = getCourseModuleQueryKey(
+        courseId,
+        variables.moduleId,
+      )
 
       if (context?.previousCourse !== undefined) {
         queryClient.setQueryData(courseQueryKey, context.previousCourse)
@@ -250,15 +271,18 @@ export const useDeleteModuleMutation = (courseId: string) => {
         queryKey: getCourseModuleQueryKey(courseId, moduleId),
       })
 
-      const previousModules = queryClient.getQueryData<ModuleSummary[]>(
-        modulesQueryKey,
-      )
-      const previousCourse = queryClient.getQueryData<CourseDetail>(courseQueryKey)
+      const previousModules =
+        queryClient.getQueryData<ModuleSummary[]>(modulesQueryKey)
+      const previousCourse =
+        queryClient.getQueryData<CourseDetail>(courseQueryKey)
 
-      queryClient.setQueryData<ModuleSummary[]>(modulesQueryKey, (oldModules) => {
-        if (!oldModules) return oldModules
-        return oldModules.filter((module) => module.uuid !== moduleId)
-      })
+      queryClient.setQueryData<ModuleSummary[]>(
+        modulesQueryKey,
+        (oldModules) => {
+          if (!oldModules) return oldModules
+          return oldModules.filter((module) => module.uuid !== moduleId)
+        },
+      )
 
       queryClient.setQueryData<CourseDetail>(courseQueryKey, (oldCourse) =>
         updateCourseDetailModules(oldCourse, (modules) =>
@@ -307,15 +331,18 @@ export const useReorderModulesMutation = (courseId: string) => {
       await queryClient.cancelQueries({ queryKey: modulesQueryKey })
       await queryClient.cancelQueries({ queryKey: courseQueryKey })
 
-      const previousModules = queryClient.getQueryData<ModuleSummary[]>(
-        modulesQueryKey,
-      )
-      const previousCourse = queryClient.getQueryData<CourseDetail>(courseQueryKey)
+      const previousModules =
+        queryClient.getQueryData<ModuleSummary[]>(modulesQueryKey)
+      const previousCourse =
+        queryClient.getQueryData<CourseDetail>(courseQueryKey)
 
-      queryClient.setQueryData<ModuleSummary[]>(modulesQueryKey, (oldModules) => {
-        if (!oldModules) return oldModules
-        return reorderByIds(oldModules, moduleIds)
-      })
+      queryClient.setQueryData<ModuleSummary[]>(
+        modulesQueryKey,
+        (oldModules) => {
+          if (!oldModules) return oldModules
+          return reorderByIds(oldModules, moduleIds)
+        },
+      )
 
       queryClient.setQueryData<CourseDetail>(courseQueryKey, (oldCourse) =>
         updateCourseDetailModules(oldCourse, (modules) =>
@@ -341,6 +368,36 @@ export const useReorderModulesMutation = (courseId: string) => {
         modulesQueryKey,
         context?.previousModules,
       )
+    },
+  })
+}
+
+export const useToggleModuleMutation = (courseId: string) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      moduleId,
+      nextStatus,
+    }: {
+      moduleId: string
+      nextStatus: 'active' | 'passive'
+    }) => updateModule(courseId, moduleId, { status: nextStatus }),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['course', courseId] })
+      await queryClient.invalidateQueries({
+        queryKey: ['course-modules', courseId],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['course-feed', courseId],
+      })
+      toast.success(
+        variables.nextStatus === 'active'
+          ? 'Modul byl úspěšně aktivován'
+          : 'Modul byl úspěšně skryt',
+      )
+    },
+    onError: () => {
+      toast.error('Chyba při změně stavu modulu')
     },
   })
 }

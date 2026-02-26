@@ -22,7 +22,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { Fragment, useEffect, useState, useTransition } from 'react'
+import { Fragment, useEffect, useRef, useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
@@ -46,7 +46,7 @@ type QuestionType = 'singleChoice' | 'multipleChoice'
 
 type QuizComponentProps = {
   quiz: Quiz
-  mode: 'user' | 'lecturer'
+  mode: 'user' | 'lecturer' | 'lecturer-preview'
 
   // User mode props
   userState?: QuizState
@@ -85,11 +85,21 @@ const QuizComponent = ({
   onToggleExpand,
 }: QuizComponentProps) => {
   const [showIncompleteError, setShowIncompleteError] = useState(false)
+  const [showCorrect, setShowCorrect] = useState(false)
   const [, startTransition] = useTransition()
   const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId: string
   }>()
+
+  const [prevQuizUuid, setPrevQuizUuid] = useState(quiz.uuid)
+  const [prevMode, setPrevMode] = useState(mode)
+
+  if (prevQuizUuid !== quiz.uuid || prevMode !== mode) {
+    setPrevQuizUuid(quiz.uuid)
+    setPrevMode(mode)
+    setShowCorrect(false)
+  }
 
   const {
     register,
@@ -127,9 +137,6 @@ const QuizComponent = ({
       onToggleExpand()
     }
   }
-  useEffect(() => {
-    reset(quiz)
-  }, [quiz, reset])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
     const capitalizedTitle = handleCapitalizedInput(
@@ -524,6 +531,9 @@ const QuizComponent = ({
                     setShowIncompleteError(false)
                     onAnswerChange?.(questionId, answer)
                   }}
+                  showCorrectAnswers={
+                    mode === 'lecturer-preview' ? showCorrect : undefined
+                  }
                 />
 
                 {qIndex < (displayQuiz.questions?.length ?? 0) - 1 && (
@@ -620,6 +630,17 @@ const QuizComponent = ({
                     {userState.results.score} / {userState.results.maxScore}
                   </Label>
                 )}
+              </div>
+            ) : mode === 'lecturer-preview' ? (
+              <div className='flex justify-start'>
+                <Button
+                  variant='link'
+                  className='rounded-lg shadow-none'
+                  onClick={() => setShowCorrect((prev) => !prev)}
+                  aria-label='Show correct answers'
+                >
+                  {showCorrect ? 'Skrýt odpovědi' : 'Zobrazit správné odpovědi'}
+                </Button>
               </div>
             ) : (
               <div className='flex justify-end'>

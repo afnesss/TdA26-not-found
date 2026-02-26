@@ -73,7 +73,7 @@ const EditableDetailCard = ({
       <div className='p-4 lg:p-6 -mt-2'>
         {/* Header */}
         <div className='mb-4 space-y-3'>
-          <div className='flex flex-wrap items-start justify-between gap-3'>
+          <div className='flex items-start justify-between gap-3'>
             <div className='flex flex-wrap items-center gap-3 min-w-0'>
               <Breadcrumb items={breadcrumbItems} />
               {topBadges && (

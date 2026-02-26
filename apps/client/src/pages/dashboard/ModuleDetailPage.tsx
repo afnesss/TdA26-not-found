@@ -452,6 +452,7 @@ const CourseModuleDetailPage = () => {
         expandedQuizIds={expandedQuizIds}
         previewMode={previewMode}
         canEdit={!!canEditQuizzes}
+        courseStatus={course!.status}
         isCreating={createQuizPending}
         isUpdating={updateQuizPending}
         onAddQuiz={handleAddQuiz}

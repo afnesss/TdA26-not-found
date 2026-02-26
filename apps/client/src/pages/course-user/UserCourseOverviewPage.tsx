@@ -21,7 +21,7 @@ const UserCourseOverviewPage = () => {
         <div className='flex flex-wrap items-center justify-between gap-3'>
           <Label className='font-bold mb-3'>
             <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-              Aktivní moduly
+              AktivnÃ­ moduly
             </UnderlinedText>
           </Label>
         </div>
@@ -29,7 +29,7 @@ const UserCourseOverviewPage = () => {
         {activeModules.length === 0 ? (
           <StateComp
             type='no-content'
-            message='Kurz zatím nemá žádné aktivní moduly'
+            message='Kurz zatÃ­m nemÃ¡ Å¾Ã¡dnÃ© aktivnÃ­ moduly'
             className='pt-8 pb-0'
           />
         ) : (

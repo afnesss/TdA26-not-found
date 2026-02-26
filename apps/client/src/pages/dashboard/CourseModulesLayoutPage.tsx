@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { colorStyles } from '@/lib/constants'
 import type { CourseDetail, FeedItem, StatusHistoryEvent } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
 import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
@@ -146,17 +147,27 @@ const CourseModulesLayoutPage = () => {
             <div className='flex justify-between gap-3'>
               <div className='flex gap-2'>
                 <Button
-                  variant={sideTab === 'feed' ? 'primary' : 'outline'}
+                  variant='filter'
                   size='sm'
-                  className='rounded-xl'
+                  className={cn(
+                    'whitespace-nowrap rounded-xl',
+                    sideTab === 'feed'
+                      ? 'bg-primary text-background shadow-md'
+                      : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
+                  )}
                   onClick={() => setSideTab('feed')}
                 >
                   Oznámení
                 </Button>
                 <Button
-                  variant={sideTab === 'history' ? 'primary' : 'outline'}
+                  variant='filter'
                   size='sm'
-                  className='rounded-xl'
+                  className={cn(
+                    'whitespace-nowrap rounded-xl',
+                    sideTab === 'history'
+                      ? 'bg-primary text-background shadow-md'
+                      : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
+                  )}
                   onClick={() => setSideTab('history')}
                 >
                   Historie

@@ -196,7 +196,7 @@ const ModuleCard = (props: ModuleCardProps) => {
         </div>
 
         <CardDescription className='w-full mt-1 mb-2 md:mb-3'>
-          {truncateDescription(module.description ?? '')}
+          {truncateDescription(module.description ?? '', 70)}
         </CardDescription>
 
         <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
@@ -213,12 +213,12 @@ const ModuleCard = (props: ModuleCardProps) => {
                 {module.quizzes.length}
               </span>
             </p>
-            {module.updatedAt && module.updatedAt !== module.createdAt && (
+            {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
               <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
                 upraveno{' '}
                 {new Date(String(module.updatedAt)).toLocaleDateString('cs-CZ')}
               </span>
-            )}
+            )} */}
           </div>
           <div className='flex flex-col items-end gap-2'>
             <div className='flex shrink-0 items-center gap-2'>

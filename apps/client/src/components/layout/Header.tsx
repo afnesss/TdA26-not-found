@@ -104,7 +104,7 @@ export default function Header() {
                   queryClient.setQueryData(['auth', 'me'], null)
                   toast.success('Odhlášení úspěšné')
                 } catch (error) {
-                  toast.error('Chyba odhlášení')
+                  toast.error('Chyba při odhlašování')
                 }
               }
               navigate('/login')

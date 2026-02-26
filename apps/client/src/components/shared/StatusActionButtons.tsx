@@ -162,7 +162,12 @@ export function StatusActionButtons({
             )}
           >
             <Icon className={cn('w-3.5 h-3.5 md:mr-1', iconClassName)} />
-            <span className={cn('hidden md:inline text-xs font-medium', labelClassName)}>
+            <span
+              className={cn(
+                'hidden md:inline text-xs font-medium',
+                labelClassName,
+              )}
+            >
               {action.label}
             </span>
           </Button>

@@ -101,13 +101,14 @@ const EditableDetailCard = ({
               <Textarea
                 value={nameValue}
                 onChange={(e) => onNameChange?.(e.target.value)}
-                disabled={disabled}
+                // disabled={disabled}
                 minRows={1}
                 maxRows={2}
                 className={cn(
                   'font-semibold text-base md:text-lg',
-                  disabled && 'bg-muted/20',
+                  disabled && 'bg-muted/20 opacity-80',
                 )}
+                readOnly={disabled}
               />
             </div>
 
@@ -118,10 +119,11 @@ const EditableDetailCard = ({
               <Textarea
                 value={descriptionValue ?? ''}
                 onChange={(e) => onDescriptionChange?.(e.target.value)}
-                disabled={disabled}
+                // disabled={disabled}
                 minRows={1}
                 maxRows={4}
-                className={cn(disabled && 'bg-muted/20')}
+                className={cn(disabled && 'bg-muted/20 opacity-80')}
+                readOnly={disabled}
               />
             </div>
           </div>

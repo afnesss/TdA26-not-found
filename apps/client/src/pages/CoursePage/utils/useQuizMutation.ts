@@ -11,9 +11,17 @@ const getQuizzesQueryKey = (courseId: string, moduleId: string) => [
   moduleId,
 ]
 
+const getCourseModuleQueryKey = (courseId: string, moduleId: string) => [
+  'course-module',
+  courseId,
+  moduleId,
+]
+
 export const useUpdateQuizMutation = (courseId: string, moduleId: string) => {
   const queryClient = useQueryClient()
   const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  // const modulesQueryKey = getCourseModulesQueryKey(courseId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
   return useMutation<
     Quiz,
     ApiError,
@@ -39,6 +47,7 @@ export const useUpdateQuizMutation = (courseId: string, moduleId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
       toast.success('Kvíz aktualizován')
     },
     onError: (
@@ -64,12 +73,16 @@ export const useCreateQuizMutation = (
 ) => {
   const queryClient = useQueryClient()
   const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
+
   return useMutation<Quiz, ApiError, Quiz, { previousQuizzes?: Quiz[] }>({
     mutationFn: async (data: Quiz) =>
       await createQuiz(courseId!, moduleId, data),
     networkMode: 'always',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
+
       setDraftQuiz(null)
       toast.success('Kvíz vytvořen')
     },
@@ -109,6 +122,8 @@ export const useCreateQuizMutation = (
 export const useDeleteQuizMutation = (courseId: string, moduleId: string) => {
   const queryClient = useQueryClient()
   const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
+
   return useMutation<void, ApiError, string, { previousQuizzes?: Quiz[] }>({
     mutationFn: async (quizId: string) => {
       await deleteQuiz(courseId, moduleId, quizId)
@@ -116,6 +131,8 @@ export const useDeleteQuizMutation = (courseId: string, moduleId: string) => {
     networkMode: 'always',
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
+
       toast.success('Kvíz smazán')
     },
     onMutate: async (quizId) => {

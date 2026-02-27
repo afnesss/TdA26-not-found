@@ -71,6 +71,13 @@
       "when": 1771683165471,
       "tag": "0009_lyrical_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772208000000,
+      "tag": "0010_material_interaction_counters",
+      "breakpoints": true
     }
   ]
 }

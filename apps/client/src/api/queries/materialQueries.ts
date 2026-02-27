@@ -1,5 +1,6 @@
 import type {
   FileMaterialCreateRequest,
+  MaterialInteractionAction,
   FileMaterialUpdateRequest,
   Material,
   UrlMaterialCreateRequest,
@@ -93,4 +94,27 @@ export const createMaterial = async (
       body: JSON.stringify(body),
     },
   )
+}
+
+export const trackMaterialInteraction = async (
+  courseId: string,
+  moduleId: string,
+  materialId: string,
+  action: MaterialInteractionAction,
+): Promise<Material> => {
+  return await apiFetch<Material>(
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}/interactions`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    },
+  )
+}
+
+export const getMaterialDownloadUrl = (
+  courseId: string,
+  moduleId: string,
+  materialId: string,
+): string => {
+  return `/api/courses/${courseId}/modules/${moduleId}/materials/${materialId}/download`
 }

@@ -1,4 +1,5 @@
 import type { CourseDetail, CourseStatus, FeedItem } from '@/lib/schemas'
+import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -17,6 +18,47 @@ const updateCourseModules = (
     ...oldData,
     modules: oldData.modules.map(updater),
   }
+}
+
+const parseMaterialPayload = (
+  data: unknown,
+): { moduleId: string; material: CourseMaterial } | null => {
+  if (!data || typeof data !== 'object') return null
+
+  const payload = data as {
+    moduleId?: unknown
+    material?: unknown
+    uuid?: unknown
+  }
+
+  if (typeof payload.moduleId === 'string' && payload.material) {
+    return {
+      moduleId: payload.moduleId,
+      material: payload.material as CourseMaterial,
+    }
+  }
+
+  return null
+}
+
+const parseQuizPayload = (
+  data: unknown,
+): { moduleId: string; quiz: CourseQuiz } | null => {
+  if (!data || typeof data !== 'object') return null
+
+  const payload = data as {
+    moduleId?: unknown
+    quiz?: unknown
+  }
+
+  if (typeof payload.moduleId === 'string' && payload.quiz) {
+    return {
+      moduleId: payload.moduleId,
+      quiz: payload.quiz as CourseQuiz,
+    }
+  }
+
+  return null
 }
 
 export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
@@ -170,6 +212,74 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       )
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
     })
+
+    const updateModuleCaches = (
+      moduleId: string,
+      updateCourseModule: (module: CourseModule) => CourseModule,
+      updateModuleDetail: (module: ModuleDetail) => ModuleDetail,
+    ) => {
+      queryClient.setQueryData<CourseDetail>(['course', courseId], (oldData) => {
+        if (!oldData) return oldData
+        return updateCourseModules(oldData, (module) =>
+          module.uuid === moduleId ? updateCourseModule(module) : module,
+        )
+      })
+
+      queryClient.setQueryData<ModuleDetail>(
+        ['course-module', courseId, moduleId],
+        (oldData) => {
+          if (!oldData) return oldData
+          return updateModuleDetail(oldData)
+        },
+      )
+    }
+
+    const handleMaterialUpdated = (event: MessageEvent) => {
+      const parsed = parseMaterialPayload(JSON.parse(event.data))
+      if (!parsed) return
+
+      updateModuleCaches(
+        parsed.moduleId,
+        (module) => ({
+          ...module,
+          materials: module.materials.map((m) =>
+            m.uuid === parsed.material.uuid ? parsed.material : m,
+          ),
+        }),
+        (moduleDetail) => ({
+          ...moduleDetail,
+          materials: moduleDetail.materials.map((material) =>
+            material.uuid === parsed.material.uuid ? parsed.material : material,
+          ),
+        }),
+      )
+    }
+
+    const handleQuizUpdated = (event: MessageEvent) => {
+      const parsed = parseQuizPayload(JSON.parse(event.data))
+      if (!parsed) return
+
+      updateModuleCaches(
+        parsed.moduleId,
+        (module) => ({
+          ...module,
+          quizzes: module.quizzes.map((quiz) =>
+            quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
+          ),
+        }),
+        (moduleDetail) => ({
+          ...moduleDetail,
+          quizzes: moduleDetail.quizzes.map((quiz) =>
+            quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
+          ),
+        }),
+      )
+    }
+
+    eventSource.addEventListener('material_interaction_updated', handleMaterialUpdated)
+    eventSource.addEventListener('material_updated', handleMaterialUpdated)
+    eventSource.addEventListener('quiz_stats_updated', handleQuizUpdated)
+    eventSource.addEventListener('quiz_updated', handleQuizUpdated)
 
     // // --- Material Updates ---
     // eventSource.addEventListener('material_added', (event) => {

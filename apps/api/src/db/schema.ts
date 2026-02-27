@@ -83,6 +83,9 @@ export const courseMaterials = pgTable("course_materials", {
   // For URL
   url: text("url"),
   faviconUrl: text("favicon_url"),
+  downloadCount: integer("download_count").notNull().default(0),
+  copyCount: integer("copy_count").notNull().default(0),
+  openCount: integer("open_count").notNull().default(0),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

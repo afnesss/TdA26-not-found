@@ -1,5 +1,6 @@
 import type {
   CourseCreateRequest,
+  CourseDashboardAnalytics,
   CourseDetail,
   CourseSummary,
   CourseUpdateRequest,
@@ -13,6 +14,14 @@ export const getCourses = async (userView: boolean = false) => {
 
 export const getCourseById = async (uuid: string): Promise<CourseDetail> => {
   return await apiFetch<CourseDetail>(`/courses/${uuid}`)
+}
+
+export const getCourseDashboardAnalytics = async (
+  uuid: string,
+): Promise<CourseDashboardAnalytics> => {
+  return await apiFetch<CourseDashboardAnalytics>(
+    `/courses/${uuid}/dashboard-analytics`,
+  )
 }
 
 export const updateCourse = async (

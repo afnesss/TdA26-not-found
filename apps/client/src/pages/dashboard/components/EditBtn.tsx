@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { Trash2, type LucideIcon } from 'lucide-react'
+import { Trash2, Eye, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type EditBtnProps = {
@@ -8,7 +8,7 @@ type EditBtnProps = {
   icon?: LucideIcon | React.FunctionComponent<React.SVGProps<SVGSVGElement>>
   onClick?: (e?: React.MouseEvent) => void
   classNameBtn?: string
-  type?: 'delete'
+  type?: 'delete' | 'view'
   iconClassName?: string
   disabled?: boolean
   size?: 'sm' | 'md' | 'lg'
@@ -31,6 +31,8 @@ const EditBtn: React.FC<EditBtnProps> = ({
     if (!IconToRender) IconToRender = Trash2
     textStyle = 'text-destructive'
     hoverStyle = 'hover:bg-destructive/10'
+  } else if (type === 'view') {
+    if (!IconToRender) IconToRender = Eye
   }
 
   const sizeClasses = {

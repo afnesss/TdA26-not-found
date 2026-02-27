@@ -57,9 +57,6 @@ const CoursePlanningSection = ({
         )}
       </div>
 
-      {planning?.error && (
-        <p className='text-xs text-destructive mt-1'>{planning.error}</p>
-      )}
     </div>
   )
 }

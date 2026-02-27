@@ -56,19 +56,25 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
     if (!planningCourseId) return
 
     if (!planningDateTime) {
-      setPlanningError('Vyberte datum a čas')
+      const message = 'Vyberte datum a čas'
+      setPlanningError(message)
+      toast.error(message)
       return
     }
 
     const selectedDate = new Date(planningDateTime)
     if (Number.isNaN(selectedDate.getTime())) {
-      setPlanningError('Neplatný formát data')
+      const message = 'Neplatný formát data'
+      setPlanningError(message)
+      toast.error(message)
       return
     }
 
     const now = new Date()
     if (selectedDate <= now) {
-      setPlanningError('Datum musí být v budoucnosti')
+      const message = 'Datum musí být v budoucnosti'
+      setPlanningError(message)
+      toast.error(message)
       return
     }
 

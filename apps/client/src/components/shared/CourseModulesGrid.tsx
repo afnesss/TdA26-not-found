@@ -1,6 +1,7 @@
 import type { CourseDetail } from '@/lib/schemas'
 import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
 import ModuleCard from '@/pages/dashboard/components/ModuleCard'
+import type { DraggableModuleCard } from '@/pages/dashboard/components/DraggableModuleCard'
 
 type CourseModulesGridProps = {
   modules: CourseModule[]
@@ -13,6 +14,8 @@ type CourseModulesGridProps = {
     moduleId: string,
     currentStatus: CourseModulesStatus,
   ) => void
+  canDragAndDrop?: boolean
+  DraggableCardComponent?: typeof DraggableModuleCard
 }
 
 const CourseModulesGrid = ({
@@ -23,23 +26,34 @@ const CourseModulesGrid = ({
   isToggleVisibilityPending,
   onDeleteModule,
   onToggleModuleVisibility,
+  canDragAndDrop,
+  DraggableCardComponent,
 }: CourseModulesGridProps) => {
   return (
     <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-      {modules.map((module, index) => (
-        <ModuleCard
-          key={module.uuid}
-          variant='existing'
-          module={module}
-          moduleIndex={index + 1}
-          courseStatus={courseStatus}
-          canToggleModuleVisibility={canToggleModuleVisibility}
-          isToggleVisibilityPending={isToggleVisibilityPending}
-          onOpenModule={onOpenModule}
-          onDeleteModule={onDeleteModule}
-          onToggleModuleVisibility={onToggleModuleVisibility}
-        />
-      ))}
+      {modules.map((module, index) => {
+        const commonProps = {
+          module,
+          moduleIndex: index + 1,
+          courseStatus,
+          onOpenModule,
+          canToggleModuleVisibility,
+          isToggleVisibilityPending,
+          onDeleteModule,
+          onToggleModuleVisibility,
+        }
+
+        if (canDragAndDrop && DraggableCardComponent) {
+          return (
+            <DraggableCardComponent
+              key={module.uuid}
+              {...commonProps}
+            />
+          )
+        }
+
+        return <ModuleCard key={module.uuid} variant='existing' {...commonProps} />
+      })}
     </div>
   )
 }

@@ -6,8 +6,11 @@ import type { ModuleDetail } from '@/lib/schemas/module'
 import type { CourseStatus } from '@/components/shared/CourseStateBadge'
 import DashboardAddButton from './DashboardAddButton'
 import ModuleCard, { type DraftModuleForm } from './ModuleCard'
+import { DragDropModulesProvider } from './DragDropModulesProvider'
+import { DraggableModuleCard } from './DraggableModuleCard'
 
 interface ModulesSectionProps {
+  courseId: string
   modules: ModuleDetail[]
   courseStatus: CourseStatus
   draftModule: DraftModuleForm | null
@@ -26,6 +29,7 @@ interface ModulesSectionProps {
 }
 
 const ModulesSection = ({
+  courseId,
   modules,
   courseStatus,
   draftModule,
@@ -40,8 +44,7 @@ const ModulesSection = ({
   isToggleVisibilityPending,
 }: ModulesSectionProps) => {
   const modulesList = modules
-  const canToggleModuleVisibility =
-    courseStatus === 'draft' || courseStatus === 'live'
+  const canToggleModuleVisibility = courseStatus === 'live'
 
   const shouldPlaceDraftInExistingLastRow =
     Boolean(draftModule) &&
@@ -57,6 +60,8 @@ const ModulesSection = ({
     : null
 
   const isEmpty = modulesList.length === 0 && !draftModule
+
+  const canDragAndDrop = courseStatus === 'draft' && modulesList.length > 1
 
   return (
     <section className='space-y-4'>
@@ -86,15 +91,24 @@ const ModulesSection = ({
       ) : (
         <div className='space-y-4'>
           {modulesForGrid.length > 0 && (
-            <CourseModulesGrid
+            <DragDropModulesProvider
+              courseId={courseId!}
               modules={modulesForGrid}
-              courseStatus={courseStatus}
-              onOpenModule={onOpenModule}
-              canToggleModuleVisibility={canToggleModuleVisibility}
-              isToggleVisibilityPending={isToggleVisibilityPending}
-              onDeleteModule={onDeleteModule}
-              onToggleModuleVisibility={onToggleVisibility}
-            />
+            >
+              {(orderedModules) => (
+                <CourseModulesGrid
+                  modules={orderedModules}
+                  courseStatus={courseStatus}
+                  onOpenModule={onOpenModule}
+                  canToggleModuleVisibility={canToggleModuleVisibility}
+                  isToggleVisibilityPending={isToggleVisibilityPending}
+                  onDeleteModule={onDeleteModule}
+                  onToggleModuleVisibility={onToggleVisibility}
+                  canDragAndDrop={canDragAndDrop}
+                  DraggableCardComponent={DraggableModuleCard}
+                />
+              )}
+            </DragDropModulesProvider>
           )}
 
           {lastModule && draftModule && (

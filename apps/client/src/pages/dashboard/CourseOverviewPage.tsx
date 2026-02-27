@@ -12,12 +12,12 @@ import {
   useUpdateCourseStatusMutation,
 } from '@/pages/CoursePage/utils/useCourseMutation'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
-import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import {
   useCreateModuleMutation,
   useDeleteModuleMutation,
   useToggleModuleMutation,
 } from '@/pages/CoursePage/utils/useModuleMutation'
+import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -25,8 +25,8 @@ import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
-import ModulesSection from './components/ModulesSection'
 import { type DraftModuleForm } from './components/ModuleCard'
+import ModulesSection from './components/ModulesSection'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -258,6 +258,7 @@ const CourseModulesOverviewPage = () => {
       />
 
       <ModulesSection
+        courseId={courseId}
         modules={modules ?? []}
         courseStatus={course.status}
         draftModule={draftModule}

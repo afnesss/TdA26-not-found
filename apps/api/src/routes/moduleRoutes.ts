@@ -33,20 +33,20 @@ router.post(
   createModule,
 );
 router.put(
-  "/:moduleId",
-  authMiddleware,
-  writeLimiter,
-  validate(ModuleUpdateRequestSchema),
-  requireModuleUpdateAllowed(),
-  updateModule,
-);
-router.put(
   "/reorder",
   authMiddleware,
   writeLimiter,
   validate(ModuleReorderRequestSchema),
   requireCourseDraft(),
   reorderModules,
+);
+router.put(
+  "/:moduleId",
+  authMiddleware,
+  writeLimiter,
+  validate(ModuleUpdateRequestSchema),
+  requireModuleUpdateAllowed(),
+  updateModule,
 );
 router.delete(
   "/:moduleId",

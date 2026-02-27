@@ -3,7 +3,7 @@ import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
 import EditBtn from './EditBtn'
-import { Edit } from 'lucide-react'
+import { Edit, GripVertical } from 'lucide-react'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Card, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,6 +13,8 @@ import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
 import type { CourseDetail } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
 import { truncateDescription } from '../../CoursePage/utils/helperFunctions'
+import type { DraggableAttributes } from '@dnd-kit/core'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 
 export type DraftModuleForm = {
   name: string
@@ -29,12 +31,18 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   courseStatus: CourseDetail['status']
   canToggleModuleVisibility?: boolean
   isToggleVisibilityPending?: boolean
-  onOpenModule: (moduleId: string) => void
+  onOpenModule?: (moduleId: string) => void
   onDeleteModule?: (moduleId: string) => void
   onToggleModuleVisibility?: (
     moduleId: string,
     currentStatus: CourseModulesStatus,
   ) => void
+  showGripHandle?: boolean
+  gripHandleProps?: {
+    attributes: DraggableAttributes
+    listeners: SyntheticListenerMap | undefined
+  }
+  alwaysShowActions?: boolean
 }
 
 type DraftModuleCardProps = BaseModuleCardProps & {
@@ -131,18 +139,21 @@ const ModuleCard = (props: ModuleCardProps) => {
     onOpenModule,
     onDeleteModule,
     onToggleModuleVisibility,
+    showGripHandle,
+    gripHandleProps,
+    alwaysShowActions,
   } = props
 
   return (
     <Card
       className='border border-border/60 shadow-md bg-background cursor-pointer'
-      onClick={() => onOpenModule(module.uuid)}
+      onClick={() => onOpenModule && onOpenModule(module.uuid)}
       role='button'
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          onOpenModule(module.uuid)
+          onOpenModule?.(module.uuid)
         }
       }}
     >
@@ -166,13 +177,27 @@ const ModuleCard = (props: ModuleCardProps) => {
             </Label>
           </div>
 
-          {courseStatus === 'draft' && onDeleteModule ? (
+          {alwaysShowActions ? (
             <div className='flex shrink-0 items-center gap-2'>
               <EditBtn
                 icon={Edit}
                 onClick={(e) => {
                   e?.stopPropagation()
-                  onOpenModule(module.uuid)
+                }}
+                aria-label={`Edit module ${module.name}`}
+              />
+              <EditBtn
+                type='delete'
+                aria-label={`Delete module ${module.name}`}
+              />
+            </div>
+          ) : courseStatus === 'draft' && onDeleteModule ? (
+            <div className='flex shrink-0 items-center gap-2'>
+              <EditBtn
+                icon={Edit}
+                onClick={(e) => {
+                  e?.stopPropagation()
+                  onOpenModule?.(module.uuid)
                 }}
                 aria-label={`Edit module ${module.name}`}
               />
@@ -195,22 +220,35 @@ const ModuleCard = (props: ModuleCardProps) => {
           ) : null}
         </div>
 
-        <CardDescription className='w-full mt-1 mb-2 md:mb-3'>
-          {truncateDescription(module.description ?? '', 70)}
-        </CardDescription>
+        <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
+          <CardDescription className='flex-1 min-w-0'>
+            {truncateDescription(module.description ?? '', 70)}
+          </CardDescription>
+          {showGripHandle && gripHandleProps && (
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-6 w-6 p-0 shrink-0 ml-auto'
+              {...gripHandleProps.attributes}
+              {...gripHandleProps.listeners}
+            >
+              <GripVertical className='w-4 h-4 text-muted-foreground' />
+            </Button>
+          )}
+        </div>
 
         <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
           <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
             <p className='text-muted-foreground'>
               Materiály:{' '}
               <span className='font-semibold text-neutral-black'>
-                {module.materials.length}
+                {module.materials?.length ?? 0}
               </span>
             </p>
             <p className='text-muted-foreground'>
               Kvízy:{' '}
               <span className='font-semibold text-neutral-black'>
-                {module.quizzes.length}
+                {module.quizzes?.length ?? 0}
               </span>
             </p>
             {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
@@ -228,7 +266,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                   size={'sm'}
                   onClick={(e) => {
                     e.stopPropagation()
-                    onOpenModule(module.uuid)
+                    onOpenModule?.(module.uuid)
                   }}
                   className={cn(
                     'bg-linear-to-br h-8 text-xs md:text-sm',

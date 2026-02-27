@@ -19,9 +19,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, InputProps>(
         ref={ref}
         minRows={minRows}
         maxRows={maxRows}
+        cacheMeasurements={false}
         data-variant={variant}
         data-slot='textarea'
-        className={cn(inputVariants({ variant }), 'resize-none', className)}
+        className={cn(
+          inputVariants({ variant }),
+          'resize-none overflow-hidden transition-[border-color,box-shadow,background-color] duration-300',
+          className,
+        )}
         {...props}
       />
     )

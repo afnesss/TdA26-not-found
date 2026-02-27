@@ -6,9 +6,18 @@ import {
   deleteCourse,
   updateCourse,
 } from '@/api/queries/courseQueries'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { CourseDetail, CourseSummary } from '@/lib/schemas'
+import type { CourseDetail, CourseStatus, CourseSummary } from '@/lib/schemas'
+
+export const invalidateCourseQueries = async (
+  queryClient: QueryClient,
+  courseId: string,
+) => {
+  await queryClient.invalidateQueries({ queryKey: ['course', courseId] })
+  await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+  await queryClient.invalidateQueries({ queryKey: ['courses'] })
+}
 
 export const useDeleteCourseMutation = () => {
   const queryClient = useQueryClient()
@@ -257,6 +266,19 @@ export const useCreateCourseMutation = (
         ['courses'],
         context?.previousCourses,
       )
+    },
+  })
+}
+
+export const useUpdateCourseStatusMutation = (courseId: string) => {
+  const queryClient = useQueryClient()
+  return useMutation<CourseSummary, ApiError, { status: CourseStatus }>({
+    mutationFn: ({ status }) => updateCourse(courseId, { status }),
+    onSuccess: async () => {
+      await invalidateCourseQueries(queryClient, courseId)
+    },
+    onError: () => {
+      toast.error('Chyba při změně stavu')
     },
   })
 }

@@ -54,7 +54,7 @@ const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
                 {isLoadingMore
                   ? 'Načítání...'
                   : paginationError
-                    ? 'Chyba při načítaní'
+                    ? 'Chyba při načítání'
                     : 'Načíst další příspěvky'}
               </Button>
             </div>
@@ -65,7 +65,7 @@ const FeedSection = ({ feed, isConnected }: FeedSectionProps) => {
           img={feedImg}
           iconClassName='w-12 h-12 md:w-13 h-13'
           type='no-content'
-          message='Zatím žádné přispěvky'
+          message='Zatím žádné příspěvky'
           className='pt-8 pb-0'
         />
       )}

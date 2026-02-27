@@ -2,8 +2,8 @@ import { Router } from "express";
 import * as quizController from "../controllers/quizController";
 import { validate } from "../middleware/validate";
 import { QuizSchema, QuizSubmitRequestSchema } from "../schemas/quiz";
-import { quizSubmitLimiter, writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
+import { requireCourseDraft } from "../middleware/courseStatus";
 
 const router = Router({ mergeParams: true });
 
@@ -13,6 +13,7 @@ router.post(
   "/",
   authMiddleware,
   validate(QuizSchema),
+  requireCourseDraft(),
   quizController.createQuiz,
 );
 router.get(
@@ -27,9 +28,15 @@ router.put(
   "/:quizId",
   authMiddleware,
   validate(QuizSchema),
+  requireCourseDraft(),
   quizController.updateQuiz,
 );
-router.delete("/:quizId", authMiddleware, quizController.deleteQuiz);
+router.delete(
+  "/:quizId",
+  authMiddleware,
+  requireCourseDraft(),
+  quizController.deleteQuiz,
+);
 
 router.post(
   "/:quizId/submit",

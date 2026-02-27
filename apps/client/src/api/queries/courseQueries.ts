@@ -11,16 +11,14 @@ export const getCourses = async (userView: boolean = false) => {
   return await apiFetch<CourseSummary[]>(`/courses${params}`)
 }
 
-export const getCourseById = async (
-  uuid: string,
-): Promise<CourseDetail | null> => {
+export const getCourseById = async (uuid: string): Promise<CourseDetail> => {
   return await apiFetch<CourseDetail>(`/courses/${uuid}`)
 }
 
 export const updateCourse = async (
   courseId: string,
   body: CourseUpdateRequest,
-): Promise<CourseSummary | null> => {
+): Promise<CourseSummary> => {
   return await apiFetch<CourseSummary>(`/courses/${courseId}`, {
     method: 'PUT',
     body: JSON.stringify(body),
@@ -29,7 +27,7 @@ export const updateCourse = async (
 
 export const createCourse = async (
   body: CourseCreateRequest,
-): Promise<CourseSummary | null> => {
+): Promise<CourseSummary> => {
   return await apiFetch<CourseSummary>('/courses', {
     method: 'POST',
     body: JSON.stringify(body),

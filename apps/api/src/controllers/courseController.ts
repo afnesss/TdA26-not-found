@@ -16,7 +16,9 @@ import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
 
-export async function getAllCourses(_req: Request, res: Response) {
+export async function getAllCourses(req: Request, res: Response) {
+  const userView = String(req.query.userView ?? "").toLowerCase() === "true";
+
   const allCourses = await db
     .select({
       uuid: courses.uuid,
@@ -24,8 +26,14 @@ export async function getAllCourses(_req: Request, res: Response) {
       description: courses.description,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      scheduledFor: courses.scheduledFor,
+      status_history: courses.status_history,
     })
     .from(courses)
+    .where(
+      userView ? inArray(courses.status, ["planned", "live"]) : undefined,
+    )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -42,6 +50,9 @@ export async function getCourseByUuid(req: Request, res: Response) {
         description: courses.description,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
+        startedAt: courses.startedAt,
+        scheduledFor: courses.scheduledFor,
+        status_history: courses.status_history,
       })
       .from(courses)
       .where(eq(courses.uuid, uuid));
@@ -57,13 +68,18 @@ export async function getCourseByUuid(req: Request, res: Response) {
         name: modules.name,
         description: modules.description,
         status: modules.status,
+        position: modules.position,
         courseId: modules.courseId,
         createdAt: modules.createdAt,
         updatedAt: modules.updatedAt,
       })
       .from(modules)
       .where(eq(modules.courseId, uuid))
-      .orderBy(desc(modules.createdAt), desc(modules.uuid));
+      .orderBy(
+        asc(modules.position),
+        asc(modules.createdAt),
+        asc(modules.uuid),
+      );
 
     const fetchedModules = await Promise.all(
       baseModules.map(async (module) => {
@@ -153,6 +169,9 @@ export async function createCourse(req: Request, res: Response) {
       description: courses.description,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
+      startedAt: courses.startedAt,
+      scheduledFor: courses.scheduledFor,
+      status_history: courses.status_history,
     });
 
   res.status(201).json(newCourse[0]);
@@ -269,7 +288,7 @@ export async function cloneCourse(req: Request, res: Response) {
 
         if (material.type === "file") {
           if (!material.fileUrl) {
-            throw new Error("Zdrojový souborový material nemá fileUrl");
+            throw new Error("Zdrojový souborový materiál nemá fileUrl");
           }
 
           const materialId = uuidv4();
@@ -342,8 +361,7 @@ export async function updateCourse(req: Request, res: Response) {
     res.status(404).json({ message: "Kurz nebyl nalezen" });
     return;
   }
-  const isStatusChanged = status && status !== existing[0].status;
-  const nextStatus = status ?? existing[0].status;
+  const currentStatus = existing[0].status;
   const scheduleWasProvided = scheduledFor !== undefined;
   const nextScheduledForDate =
     scheduledFor === null
@@ -351,6 +369,21 @@ export async function updateCourse(req: Request, res: Response) {
       : scheduledFor !== undefined
         ? new Date(scheduledFor)
         : existing[0].scheduledFor;
+  const nextStatus = status ?? currentStatus;
+  const isStatusChanged = Boolean(status && status !== currentStatus);
+  const shouldClearScheduleOnTransition =
+    currentStatus === "planned" &&
+    (nextStatus === "draft" || nextStatus === "live");
+
+  const validationError = validateCourseUpdate({
+    currentStatus,
+    nextStatus,
+    nextScheduledForDate,
+    isStatusChanged,
+  });
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
 
   const updated = await db
     .update(courses)
@@ -373,7 +406,9 @@ export async function updateCourse(req: Request, res: Response) {
             ]
           : existing[0].status_history,
       scheduledFor:
-        nextStatus === "live"
+        shouldClearScheduleOnTransition
+          ? null
+          : nextStatus === "live"
           ? null
           : nextStatus === "planned"
             ? nextScheduledForDate
@@ -418,6 +453,55 @@ export async function updateCourse(req: Request, res: Response) {
 
   res.json(updated[0]);
 }
+
+type CourseUpdateValidation = {
+  currentStatus: string;
+  nextStatus: string;
+  nextScheduledForDate: Date | null;
+  isStatusChanged: boolean;
+};
+
+const validateCourseUpdate = ({
+  currentStatus,
+  nextStatus,
+  nextScheduledForDate,
+  isStatusChanged,
+}: CourseUpdateValidation): string | null => {
+  if (nextScheduledForDate && Number.isNaN(nextScheduledForDate.getTime())) {
+    return "Neplatné datum naplánování";
+  }
+
+  if (nextScheduledForDate && nextScheduledForDate.getTime() < Date.now()) {
+    return "Datum naplánování nesmí být v minulosti";
+  }
+
+  if (!isStatusChanged) {
+    return null;
+  }
+
+  if (currentStatus === "archived") {
+    return "Archivovaný kurz nelze měnit";
+  }
+
+  const transitions: Record<string, string[]> = {
+    draft: ["planned", "live"],
+    planned: ["draft", "live"],
+    live: ["paused", "archived"],
+    paused: ["live", "archived"],
+    archived: [],
+  };
+
+  const allowedNext = transitions[currentStatus] ?? [];
+  if (!allowedNext.includes(nextStatus)) {
+    return "Neplatná změna stavu kurzu";
+  }
+
+  if (nextStatus === "planned" && !nextScheduledForDate) {
+    return "Při plánování kurzu zadejte datum";
+  }
+
+  return null;
+};
 
 export async function deleteCourse(req: Request, res: Response) {
   try {

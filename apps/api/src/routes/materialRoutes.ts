@@ -9,6 +9,7 @@ import {
 import path from "path";
 import { uploadLimiter, writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
+import { requireCourseDraft } from "../middleware/courseStatus";
 
 const router = Router({ mergeParams: true });
 
@@ -80,6 +81,7 @@ router.post(
   "/",
   authMiddleware,
   uploadLimiter,
+  requireCourseDraft(),
   uploadMiddleware,
   createMaterial,
 );
@@ -87,9 +89,16 @@ router.put(
   "/:materialId",
   authMiddleware,
   writeLimiter,
+  requireCourseDraft(),
   uploadMiddleware,
   updateMaterial,
 );
-router.delete("/:materialId", authMiddleware, writeLimiter, deleteMaterial);
+router.delete(
+  "/:materialId",
+  authMiddleware,
+  writeLimiter,
+  requireCourseDraft(),
+  deleteMaterial,
+);
 
 export default router;

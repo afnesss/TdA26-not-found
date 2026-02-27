@@ -1,7 +1,8 @@
+import { and, desc, eq, sql } from "drizzle-orm";
 import { Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { db } from "../db";
-import { quizzes, quizSubmissions } from "../db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { quizSubmissions, quizzes } from "../db/schema";
 import {
   Question,
   Quiz,
@@ -9,10 +10,6 @@ import {
   QuizSubmitRequest,
   QuizSubmitResponse,
 } from "../schemas/quiz";
-import { v4 as uuidv4 } from "uuid";
-import { createSystemEvent } from "../utils/systemEvent";
-import { sseManager } from "../utils/sseManager";
-import { uuid } from "zod";
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {

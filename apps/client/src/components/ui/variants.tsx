@@ -25,7 +25,7 @@ const buttonVariants = cva(
         ghost:
           'hover:text-primary active-text-primary cursor-pointer text-gray-400 transition-colors',
         tab: 'text-sm md:text-base text-background hover:text-secondary active:text-secondary font-semibold cursor-pointer',
-        link: 'text-xs md:text-sm text-accent-blue underline-offset-2 hover:underline font-semibold cursor-pointer',
+        link: 'text-[11px] sm:text-xs md:text-sm text-accent-blue underline-offset-2 hover:underline font-semibold cursor-pointer',
       },
       size: {
         primary: 'px-5 lg:px-7 py-2 md:py-2.5 lg:py-3.5',

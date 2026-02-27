@@ -1,9 +1,23 @@
 import { createPost, deletePost, updatePost } from '@/api/queries/feedQueries'
 import type { ApiError } from '@/lib/types'
-import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import {
+  QueryClient,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import type { FeedItem } from '@/lib/schemas'
+
+const invalidateQueries = (queryClient: QueryClient, courseId: string) => {
+  queryClient.invalidateQueries({
+    queryKey: ['feed-paginated', courseId],
+  })
+  queryClient.invalidateQueries({
+    queryKey: ['course-feed', courseId],
+  })
+}
 
 export const useCreatePostMutation = (courseId: string) => {
   const queryClient = useQueryClient()
@@ -16,7 +30,9 @@ export const useCreatePostMutation = (courseId: string) => {
     mutationFn: (data: { message: string }) => createPost(courseId, data),
     networkMode: 'always',
     onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
+      await queryClient.cancelQueries({
+        queryKey: ['feed-paginated', courseId],
+      })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
@@ -30,22 +46,23 @@ export const useCreatePostMutation = (courseId: string) => {
         type: 'manual',
       }
 
-      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
-        if (!oldData?.pages) return oldData
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page, index) => 
-            index === 0 ? [optimisticPost, ...page] : page
-          ),
-        }
-      })
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page, index) =>
+              index === 0 ? [optimisticPost, ...page] : page,
+            ),
+          }
+        },
+      )
 
       return { previousFeed }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['feed-paginated', courseId],
-      })
+      invalidateQueries(queryClient, courseId)
       toast.success('Příspěvek vytvořen')
     },
 
@@ -73,29 +90,34 @@ export const useUpdatePostMutation = (courseId: string) => {
       updatePost(courseId, postId, data),
     networkMode: 'always',
     onMutate: async ({ postId, data }) => {
-      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
+      await queryClient.cancelQueries({
+        queryKey: ['feed-paginated', courseId],
+      })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
         courseId,
       ])
 
-      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
-        if (!oldData?.pages) return oldData
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page) => 
-            page.map(item => item.uuid === postId ? { ...item, ...data } : item)
-          ),
-        }
-      })
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) =>
+              page.map((item) =>
+                item.uuid === postId ? { ...item, ...data } : item,
+              ),
+            ),
+          }
+        },
+      )
 
       return { previousFeed }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['feed-paginated', courseId],
-      })
+      invalidateQueries(queryClient, courseId)
       toast.success('Příspěvek uložen')
     },
 
@@ -113,33 +135,41 @@ export const useUpdatePostMutation = (courseId: string) => {
 
 export const useDeletePostMutation = (courseId: string) => {
   const queryClient = useQueryClient()
-  return useMutation<void, ApiError, string, { previousFeed?: InfiniteData<FeedItem[]> }>({
+  return useMutation<
+    void,
+    ApiError,
+    string,
+    { previousFeed?: InfiniteData<FeedItem[]> }
+  >({
     mutationFn: (postId: string) => deletePost(courseId, postId),
     networkMode: 'always',
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({ queryKey: ['feed-paginated', courseId] })
+      await queryClient.cancelQueries({
+        queryKey: ['feed-paginated', courseId],
+      })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
         courseId,
       ])
 
-      queryClient.setQueryData<InfiniteData<FeedItem[]>>(['feed-paginated', courseId], (oldData) => {
-        if (!oldData?.pages) return oldData
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page) => 
-            page.filter(item => item.uuid !== postId)
-          ),
-        }
-      })
+      queryClient.setQueryData<InfiniteData<FeedItem[]>>(
+        ['feed-paginated', courseId],
+        (oldData) => {
+          if (!oldData?.pages) return oldData
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) =>
+              page.filter((item) => item.uuid !== postId),
+            ),
+          }
+        },
+      )
 
       return { previousFeed }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['feed-paginated', courseId],
-      })
+      invalidateQueries(queryClient, courseId)
       toast.success('Přispěvek smazán')
     },
     onError: (error: ApiError, _variables, context) => {

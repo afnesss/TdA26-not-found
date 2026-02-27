@@ -1,24 +1,25 @@
-﻿import { Calendar, Check, X } from 'lucide-react'
+﻿import { Calendar } from 'lucide-react'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas/course'
-import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { formatDateWithToday } from '@/pages/CoursePage/utils/helperFunctions'
+
+export type CoursePlanningState = {
+  editable: boolean
+  isEditing: boolean
+  value: string
+  error: string
+  saving: boolean
+  onOpen: () => void
+  onChange: (value: string) => void
+  onConfirm: () => void
+  onCancel: () => void
+}
 
 type CardDateProps = {
   course: CourseSummary
-  getTime: (date: string) => string
   isDraft?: boolean
   state?: CourseStatus
-  planning?: {
-    editable: boolean
-    isEditing: boolean
-    value: string
-    error: string
-    saving: boolean
-    onOpen: () => void
-    onChange: (value: string) => void
-    onConfirm: () => void
-    onCancel: () => void
-  }
+  planning?: CoursePlanningState
+  hideStatusLabel?: boolean
 }
 
 const CardDate = ({
@@ -26,6 +27,7 @@ const CardDate = ({
   isDraft,
   state = 'draft',
   planning,
+  hideStatusLabel = false,
 }: CardDateProps) => {
   const getStatusLabel = () => {
     if (planning?.isEditing) return
@@ -94,9 +96,11 @@ const CardDate = ({
 
   return (
     <div className='flex flex-col gap-1'>
-      <span className='text-xs text-gray-500'>
-        {isDraft ? 'Nový kurz' : getStatusLabel()}
-      </span>
+      {!hideStatusLabel && (
+        <span className='text-xs text-gray-500'>
+          {isDraft ? 'Nový kurz' : getStatusLabel()}
+        </span>
+      )}
 
       {planning?.isEditing ? (
         <div
@@ -109,17 +113,17 @@ const CardDate = ({
             type='datetime-local'
             value={planning.value}
             onChange={(e) => planning.onChange(e.target.value)}
-            className='h-8 rounded-md border border-input bg-background px-2 text-sm '
+            className='h-8 rounded-md border border-input bg-background px-2 text-xs md:text-sm '
             disabled={planning.saving}
           />
         </div>
       ) : (
-        <div className='flex items-center gap-1.5'>
+        <div className='flex items-center gap-1.5 mr-3'>
           <Calendar size={14} className='text-primary' />
           {planning?.editable ? (
             <button
               type='button'
-              className='text-sm font-medium hover:underline cursor-pointer'
+              className='text-xs md:text-sm font-medium hover:underline cursor-pointer'
               onClick={(e) => {
                 e.stopPropagation()
                 planning.onOpen()

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { MaterialSchema } from './material'
 import { QuizSchema } from './quiz'
 import { FeedItemSchema } from './feed'
+import { CourseModuleSchema } from './module'
 
 export const CourseStatusSchema = z.enum([
   'draft',
@@ -55,10 +56,13 @@ export const CourseDetailSchema = z.object({
   name: z.string(),
   description: z.string().optional().nullable(),
   status: CourseStatusSchema.default('draft'),
-  materials: z.array(MaterialSchema),
-  quizzes: z.array(QuizSchema),
+  modules: z.array(CourseModuleSchema),
   feed: z.array(FeedItemSchema),
   status_history: z.array(StatusHistoryEventSchema).optional(),
+  startedAt: z.date().or(z.string().datetime()).nullable().optional(),
+  scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
+  createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
+  updatedAt: z.date().or(z.string().datetime()),
 })
 
 export type CourseStatus = z.infer<typeof CourseStatusSchema>

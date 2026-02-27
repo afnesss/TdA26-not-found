@@ -8,11 +8,12 @@ import apiFetch from '../client'
 
 export const submitQuiz = async (
   courseId: string,
+  moduleId: string,
   quizId: string,
   body: QuizSubmitRequest,
 ): Promise<QuizSubmitResponse | null> => {
   return await apiFetch<QuizSubmitResponse>(
-    `/courses/${courseId}/quizzes/${quizId}/submit`,
+    `/courses/${courseId}/modules/${moduleId}/quizzes/${quizId}/submit`,
     {
       method: 'POST',
       body: JSON.stringify(body),
@@ -20,45 +21,63 @@ export const submitQuiz = async (
   )
 }
 
-export const getQuizzes = async (courseId: string): Promise<Quiz[] | null> => {
-  return await apiFetch<Quiz[]>(`/courses/${courseId}/quizzes`)
+export const getQuizzes = async (
+  courseId: string,
+  moduleId: string,
+): Promise<Quiz[] | null> => {
+  return await apiFetch<Quiz[]>(
+    `/courses/${courseId}/modules/${moduleId}/quizzes`,
+  )
 }
 
 export const createQuiz = async (
   courseId: string,
+  moduleId: string,
   body: Quiz,
 ): Promise<Quiz> => {
-  return await apiFetch<Quiz>(`/courses/${courseId}/quizzes`, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  })
+  return await apiFetch<Quiz>(
+    `/courses/${courseId}/modules/${moduleId}/quizzes`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+  )
 }
 
 export const updateQuiz = async (
   courseId: string,
+  moduleId: string,
   quizId: string,
   body: Quiz,
 ): Promise<Quiz> => {
-  return await apiFetch<Quiz>(`/courses/${courseId}/quizzes/${quizId}`, {
-    method: 'PUT',
-    body: JSON.stringify(body),
-  })
+  return await apiFetch<Quiz>(
+    `/courses/${courseId}/modules/${moduleId}/quizzes/${quizId}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    },
+  )
 }
 
 export const deleteQuiz = async (
   courseId: string,
+  moduleId: string,
   quizId: string,
-): Promise<Quiz> => {
-  return await apiFetch<Quiz>(`/courses/${courseId}/quizzes/${quizId}`, {
-    method: 'DELETE',
-  })
+): Promise<void> => {
+  return await apiFetch<void>(
+    `/courses/${courseId}/modules/${moduleId}/quizzes/${quizId}`,
+    {
+      method: 'DELETE',
+    },
+  )
 }
 
 export const getQuizAnalytics = async (
-  quizId: string,
   courseId: string,
+  moduleId: string,
+  quizId: string,
 ): Promise<QuizAnalyticsResponse> => {
   return await apiFetch<QuizAnalyticsResponse>(
-    `/courses/${courseId}/quizzes/${quizId}/analytics`,
+    `/courses/${courseId}/modules/${moduleId}/quizzes/${quizId}/analytics`,
   )
 }

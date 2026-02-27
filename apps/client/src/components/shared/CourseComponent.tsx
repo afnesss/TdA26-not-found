@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card'
 import { colorStyles, colors } from '@/lib/constants'
 import type { CourseSummary } from '@/lib/schemas'
-import { cn, getTimeAgo } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { CourseStateBadge } from './CourseStateBadge'
 import { StatusActionButtons } from './StatusActionButtons'
 import { handleCapitalizedInput } from '@/lib/capitalize'
@@ -19,9 +19,12 @@ import { useNavigate } from 'react-router'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
+import CoursePlanningSection from './CoursePlanningSection'
 import { Textarea } from '../ui/textarea'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { useMediaQuery } from 'usehooks-ts'
+import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
+import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 
 interface CourseClassic {
   type: 'classic'
@@ -40,17 +43,7 @@ interface CourseEdit {
   onDelete?: () => void
   onStatusChange?: (courseId: string, newStatus: CourseStatus) => void
   onCopyAsDraft?: (source: CourseSummary) => void
-  planning?: {
-    editable: boolean
-    isEditing: boolean
-    value: string
-    error: string
-    saving: boolean
-    onOpen: () => void
-    onChange: (value: string) => void
-    onConfirm: () => void
-    onCancel: () => void
-  }
+  planning?: CoursePlanningState
 }
 
 type CourseCompProps = CourseClassic | CourseEdit
@@ -144,7 +137,6 @@ const CourseComponent = (props: CourseCompProps) => {
           'cursor-pointer',
         (course.status === 'draft' || course.status === 'archived') &&
           'opacity-70',
-        course.status === 'live' && 'ring-2 ring-secondary/50',
       )}
       onClick={handleCardClick}
     >
@@ -161,15 +153,25 @@ const CourseComponent = (props: CourseCompProps) => {
         {type === 'edit' &&
           (!props.isDraft ? (
             <div className='flex gap-2 md:gap-1.5 items-center'>
-              <EditBtn
-                icon={Edit}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  props.onEdit()
-                }}
-                classNameBtn={cn(course.status === 'draft' ? '' : 'hidden')}
-                aria-label={`Edit course ${course.name}`}
-              />
+              {course.status === 'draft' ? (
+                <EditBtn
+                  icon={Edit}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
+                  }}
+                  aria-label={`Edit course ${course.name}`}
+                />
+              ) : (
+                <EditBtn
+                  type='view'
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
+                  }}
+                  aria-label={`View course ${course.name}`}
+                />
+              )}
               <DeleteConfirmDialog
                 trigger={
                   <EditBtn
@@ -204,7 +206,7 @@ const CourseComponent = (props: CourseCompProps) => {
         <CardContent>
           {/* Název - editovatelný v režimu editace */}
           {state.isEditing ? (
-            <div className='space-y-1 mb-2 md:mb-4'>
+            <div className='space-y-1 mb-2 md:mb-3'>
               <Textarea
                 value={state.tempName}
                 onClick={(e) => e.stopPropagation()}
@@ -241,23 +243,15 @@ const CourseComponent = (props: CourseCompProps) => {
                   tempDescription: capitalizedValue,
                 }))
               }}
-              className='mb-2 md:mb-4 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
+              className='mb-2 md:mb-3 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
               minRows={2}
-              maxRows={5}
+              maxRows={4}
               placeholder='Popis kurzu (volitelné)'
               disabled={state.saving}
             />
           ) : (
             <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
-              {course.description && course.description.length > 100
-                ? (() => {
-                    let truncated = course.description.slice(0, 100)
-                    if (truncated.endsWith(',')) {
-                      truncated = truncated.slice(0, -1)
-                    }
-                    return truncated + '...'
-                  })()
-                : course.description}
+              {truncateDescription(course.description ?? '')}
             </CardDescription>
           )}
         </CardContent>
@@ -267,7 +261,6 @@ const CourseComponent = (props: CourseCompProps) => {
             <div className='flex justify-between w-full items-center'>
               <CardDate
                 course={course}
-                getTime={getTimeAgo}
                 state={course.status}
                 // isDraft={'isDraft' in props && props.isDraft}
               />
@@ -292,52 +285,29 @@ const CourseComponent = (props: CourseCompProps) => {
           )}
 
           {type === 'edit' && (
-            <div className='w-full'>
-              <div className='flex justify-between w-full items-center gap-2'>
-                <CardDate
-                  course={course}
-                  getTime={getTimeAgo}
-                  isDraft={'isDraft' in props && props.isDraft}
-                  state={course.status}
-                  planning={props.planning}
-                />
-
-                {!('isDraft' in props && props.isDraft) &&
-                  !state.isEditing &&
-                  !props.planning?.isEditing &&
-                  props.onStatusChange && (
-                    <StatusActionButtons
-                      currentStatus={course.status}
-                      courseColor={courseColor}
-                      onStatusChange={(newStatus) =>
-                        props.onStatusChange!(course.uuid, newStatus)
-                      }
-                      onCopyAsDraft={() => {
-                        props.onCopyAsDraft?.(course)
-                      }}
-                    />
-                  )}
-
-                {props.planning?.isEditing && (
-                  <EditSaveCancelButtons
-                    className='flex gap-2 items-end'
-                    onSave={() => props.planning?.onConfirm()}
-                    onCancel={() => props.planning?.onCancel()}
-                    saveDisabled={
-                      props.planning.saving || !!props.planning.error
+            <CoursePlanningSection
+              course={course}
+              isDraft={'isDraft' in props && props.isDraft}
+              state={course.status}
+              planning={props.planning}
+              rightActions={
+                !('isDraft' in props && props.isDraft) &&
+                !state.isEditing &&
+                !props.planning?.isEditing &&
+                props.onStatusChange ? (
+                  <StatusActionButtons
+                    currentStatus={course.status}
+                    courseColor={courseColor}
+                    onStatusChange={(newStatus) =>
+                      props.onStatusChange!(course.uuid, newStatus)
                     }
-                    cancelDisabled={props.planning.saving}
-                    saveAriaLabel='Save course'
+                    onCopyAsDraft={() => {
+                      props.onCopyAsDraft?.(course)
+                    }}
                   />
-                )}
-              </div>
-
-              {props.planning?.error && (
-                <p className='text-xs text-destructive mt-1'>
-                  {props.planning.error}
-                </p>
-              )}
-            </div>
+                ) : undefined
+              }
+            />
           )}
         </CardFooter>
       </div>

@@ -8,10 +8,14 @@ import HomePage from './pages/HomePage'
 import MainLayout from './components/layout/MainLayout'
 import CoursesPage from './pages/CoursesPage/CoursesPage'
 import LoginPage from './pages/LoginPage'
-import CoursePage from './pages/CoursePage/ExactCoursePage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ProtectedRoute from './auth/ProtectedRoute'
-import CourseDetailPage from './pages/dashboard/CourseDetailsPage'
+import CourseModuleDetailPage from './pages/dashboard/ModuleDetailPage'
+import CourseModulesLayoutPage from './pages/dashboard/CourseModulesLayoutPage'
+import CourseModulesOverviewPage from './pages/dashboard/CourseOverviewPage'
+import UserCourseLayoutPage from './pages/course-user/UserCourseLayoutPage'
+import UserCourseOverviewPage from './pages/course-user/UserCourseOverviewPage'
+import UserCourseModuleDetailPage from './pages/course-user/UserCourseModuleDetailPage'
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -23,7 +27,13 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path='/courses' element={<CoursesPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
-        <Route path='/courses/:id' element={<CoursePage />}></Route>
+        <Route path='/courses/:courseId/' element={<UserCourseLayoutPage />}>
+          <Route index element={<UserCourseOverviewPage />} />
+          <Route
+            path='modules/:moduleId'
+            element={<UserCourseModuleDetailPage />}
+          />
+        </Route>
 
         <Route
           path='/dashboard'
@@ -33,15 +43,28 @@ function App() {
             </ProtectedRoute>
           }
         ></Route>
-
-        <Route
+        {/* <Route
           path='/dashboard/:courseId'
           element={
             <ProtectedRoute>
               <CourseDetailPage />
             </ProtectedRoute>
           }
-        ></Route>
+        ></Route> */}
+        <Route
+          path='/dashboard/:courseId/'
+          element={
+            <ProtectedRoute>
+              <CourseModulesLayoutPage />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<CourseModulesOverviewPage />} />
+          <Route
+            path='modules/:moduleId'
+            element={<CourseModuleDetailPage />}
+          />
+        </Route>
         <Route path='/terms-of-use' element={<TermsOfUsePage />} />
         <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
         <Route path='*' element={<NotFoundPage />} />

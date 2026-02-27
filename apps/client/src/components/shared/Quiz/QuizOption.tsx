@@ -11,7 +11,7 @@ type QuizOptionProps = {
   option: string
   optIndex: number
   question: Question
-  mode: 'user' | 'lecturer'
+  mode: 'user' | 'lecturer' | 'lecturer-preview'
   selectedCount?: number
 
   // Lecturer mode

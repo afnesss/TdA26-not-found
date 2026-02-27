@@ -1,0 +1,102 @@
+import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
+import StateComp from '@/components/shared/StateComp'
+import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
+import { useTitle } from '@/lib/dynamicTitleHook'
+import { useEffect, useRef } from 'react'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import NotFoundPage from '../NotFoundPage'
+import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
+import UserCourseFeedSection from './components/UserCourseFeedSection'
+
+const UserCourseLayoutPage = () => {
+  const { courseId } = useParams<{ courseId: string }>()
+  const navigate = useNavigate()
+  const redirectedRef = useRef(false)
+  const { isConnected } = useCourseFeedSSE({ courseId: courseId! })
+
+  const {
+    coursesUser,
+    isCoursesUserLoading,
+    courseData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useCoursePageQueries(courseId)
+
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+
+  useTitle(courseData?.name || 'Kurz')
+
+  const hasAccessToCourse = coursesUser.some((c) => c.uuid === courseId)
+  const canEvaluateCourseAccess = !isCoursesUserLoading
+  const shouldShowNotFoundByAccess =
+    canEvaluateCourseAccess && !hasAccessToCourse && !courseData
+
+  useEffect(() => {
+    if (!courseData || redirectedRef.current) return
+
+    const isClosed =
+      courseData.status === 'paused' || courseData.status === 'archived'
+
+    if (!isClosed) return
+
+    redirectedRef.current = true
+    navigate('/courses', { replace: true })
+  }, [courseData, navigate])
+
+  if (!courseId) {
+    return <NotFoundPage />
+  }
+
+  if (isLoading || !canEvaluateCourseAccess) {
+    return <CourseSkeleton />
+  }
+
+  if (shouldShowNotFoundByAccess) {
+    return <NotFoundPage />
+  }
+
+  if (isError || !courseData) {
+    const isNotFound = error?.status === 404
+
+    return (
+      <div className='flex justify-center items-center min-h-[70vh]'>
+        <StateComp
+          type={
+            isNotFound ? 'not-found' : isOffline ? 'network-offline' : 'error'
+          }
+          onAction={() => {
+            if (isNotFound) {
+              navigate('/courses', { replace: true })
+              return
+            }
+            void refetch()
+          }}
+        />
+      </div>
+    )
+  }
+
+  const activeModules = (courseData.modules ?? []).filter(
+    (module) => module.status === 'active',
+  )
+
+  return (
+    <div className='h-full overflow-y-auto hide-scrollbar'>
+      <div className='max-w-6xl mx-auto space-y-5'>
+        <Outlet
+          context={{
+            courseId,
+            courseData,
+            activeModules,
+            isConnected,
+          }}
+        />
+        <UserCourseFeedSection courseId={courseId} initialFeed={courseData.feed ?? []} />
+      </div>
+    </div>
+  )
+}
+
+export default UserCourseLayoutPage

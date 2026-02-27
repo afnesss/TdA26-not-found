@@ -3,10 +3,25 @@ import type { Quiz } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { onError, onErrorWithRollback } from './helperFunctions'
+import { onErrorWithRollback } from './helperFunctions'
 
-export const useUpdateQuizMutation = (courseId: string) => {
+const getQuizzesQueryKey = (courseId: string, moduleId: string) => [
+  'quizzes',
+  courseId,
+  moduleId,
+]
+
+const getCourseModuleQueryKey = (courseId: string, moduleId: string) => [
+  'course-module',
+  courseId,
+  moduleId,
+]
+
+export const useUpdateQuizMutation = (courseId: string, moduleId: string) => {
   const queryClient = useQueryClient()
+  const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  // const modulesQueryKey = getCourseModulesQueryKey(courseId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
   return useMutation<
     Quiz,
     ApiError,
@@ -14,17 +29,14 @@ export const useUpdateQuizMutation = (courseId: string) => {
     { previousQuizzes?: Quiz[] }
   >({
     mutationFn: async ({ quizId, data }: { quizId: string; data: Quiz }) =>
-      await updateQuiz(courseId!, quizId, data),
+      await updateQuiz(courseId!, moduleId, quizId, data),
     networkMode: 'always',
     onMutate: async ({ quizId, data }) => {
-      await queryClient.cancelQueries({ queryKey: ['quizzes', courseId] })
+      await queryClient.cancelQueries({ queryKey: quizzesQueryKey })
 
-      const previousQuizzes = queryClient.getQueryData<Quiz[]>([
-        'quizzes',
-        courseId,
-      ])
+      const previousQuizzes = queryClient.getQueryData<Quiz[]>(quizzesQueryKey)
 
-      queryClient.setQueryData<Quiz[]>(['quizzes', courseId], (oldQuizzes) => {
+      queryClient.setQueryData<Quiz[]>(quizzesQueryKey, (oldQuizzes) => {
         if (!oldQuizzes) return oldQuizzes
         return oldQuizzes.map((q) =>
           q.uuid === quizId ? { ...q, ...data, uuid: quizId } : q,
@@ -34,7 +46,8 @@ export const useUpdateQuizMutation = (courseId: string) => {
       return { previousQuizzes }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
+      queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
       toast.success('Kvíz aktualizován')
     },
     onError: (
@@ -46,7 +59,7 @@ export const useUpdateQuizMutation = (courseId: string) => {
         error,
         'Chyba při ukládání',
         queryClient,
-        ['quizzes', courseId],
+        quizzesQueryKey,
         context?.previousQuizzes,
       )
     },
@@ -55,26 +68,30 @@ export const useUpdateQuizMutation = (courseId: string) => {
 
 export const useCreateQuizMutation = (
   courseId: string,
+  moduleId: string,
   setDraftQuiz: (a: Quiz | null) => void,
 ) => {
   const queryClient = useQueryClient()
+  const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
+
   return useMutation<Quiz, ApiError, Quiz, { previousQuizzes?: Quiz[] }>({
-    mutationFn: async (data: Quiz) => await createQuiz(courseId!, data),
+    mutationFn: async (data: Quiz) =>
+      await createQuiz(courseId!, moduleId, data),
     networkMode: 'always',
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
+      queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
+
       setDraftQuiz(null)
       toast.success('Kvíz vytvořen')
     },
     onMutate: async (data: Quiz) => {
-      await queryClient.cancelQueries({ queryKey: ['quizzes', courseId] })
+      await queryClient.cancelQueries({ queryKey: quizzesQueryKey })
 
-      const previousQuizzes = queryClient.getQueryData<Quiz[]>([
-        'quizzes',
-        courseId,
-      ])
+      const previousQuizzes = queryClient.getQueryData<Quiz[]>(quizzesQueryKey)
 
-      queryClient.setQueryData<Quiz[]>(['quizzes', courseId], (oldQuizzes) => {
+      queryClient.setQueryData<Quiz[]>(quizzesQueryKey, (oldQuizzes) => {
         if (!oldQuizzes) return oldQuizzes
         return [
           ...oldQuizzes,
@@ -95,32 +112,34 @@ export const useCreateQuizMutation = (
         error,
         'Chyba při vytváření kvízu',
         queryClient,
-        ['quizzes', courseId],
+        quizzesQueryKey,
         context?.previousQuizzes,
       )
     },
   })
 }
 
-export const useDeleteQuizMutation = (courseId: string) => {
+export const useDeleteQuizMutation = (courseId: string, moduleId: string) => {
   const queryClient = useQueryClient()
+  const quizzesQueryKey = getQuizzesQueryKey(courseId, moduleId)
+  const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
+
   return useMutation<void, ApiError, string, { previousQuizzes?: Quiz[] }>({
     mutationFn: async (quizId: string) => {
-      await deleteQuiz(courseId, quizId)
+      await deleteQuiz(courseId, moduleId, quizId)
     },
     networkMode: 'always',
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['quizzes', courseId] })
+      queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
+      queryClient.invalidateQueries({ queryKey: moduleQueryKey })
+
       toast.success('Kvíz smazán')
     },
     onMutate: async (quizId) => {
-      await queryClient.cancelQueries({ queryKey: ['quizzes', courseId] })
-      const previousQuizzes = queryClient.getQueryData<Quiz[]>([
-        'quizzes',
-        courseId,
-      ])
+      await queryClient.cancelQueries({ queryKey: quizzesQueryKey })
+      const previousQuizzes = queryClient.getQueryData<Quiz[]>(quizzesQueryKey)
 
-      queryClient.setQueryData<Quiz[]>(['quizzes', courseId], (oldQuizzes) => {
+      queryClient.setQueryData<Quiz[]>(quizzesQueryKey, (oldQuizzes) => {
         if (!oldQuizzes) return oldQuizzes
         return oldQuizzes.filter((quiz) => quiz.uuid !== quizId)
       })
@@ -136,7 +155,7 @@ export const useDeleteQuizMutation = (courseId: string) => {
         error,
         'Chyba při mazání kvízu',
         queryClient,
-        ['quizzes', courseId],
+        quizzesQueryKey,
         context?.previousQuizzes,
       )
     },

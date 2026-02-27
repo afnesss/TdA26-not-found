@@ -21,7 +21,7 @@ type QuestionType = 'singleChoice' | 'multipleChoice'
 type QuizQuestionProps = {
   question: Question
   qIndex: number
-  mode: 'user' | 'lecturer'
+  mode: 'user' | 'lecturer' | 'lecturer-preview'
   questionAnalytics?: QuestionAnalytics
 
   // Lecturer mode
@@ -45,6 +45,7 @@ type QuizQuestionProps = {
     questionId: string,
     answer: { selectedIndex?: number; selectedIndices?: number[] },
   ) => void
+  showCorrectAnswers?: boolean
 }
 
 const QuizQuestion = ({
@@ -62,6 +63,7 @@ const QuizQuestion = ({
   userState,
   onAnswerChange,
   questionError,
+  showCorrectAnswers,
 }: QuizQuestionProps) => {
   // User mode answer logic
   const answer = question.uuid
@@ -71,7 +73,7 @@ const QuizQuestion = ({
     : undefined
 
   const isSubmitted = userState?.status === 'submitted'
-  const showCorrect = userState?.showCorrect
+  const showCorrect = userState?.showCorrect ?? showCorrectAnswers
   const hasOptionErrors = questionError?.options?.some(
     (error) => error !== undefined,
   )

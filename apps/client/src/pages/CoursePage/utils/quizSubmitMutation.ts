@@ -6,9 +6,10 @@ import {
   QuizSubmitResponseSchema,
   type QuizSubmitResponse,
 } from '@/lib/schemas'
+import type { ApiError } from '@/lib/types'
 import type { QuizStateById } from '../../../lib/types'
 import { toast } from 'sonner'
-import { onError, onErrorWithRollback } from './helperFunctions'
+import { onErrorWithRollback } from './helperFunctions'
 
 export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
@@ -17,12 +18,17 @@ export function useQuizSubmitMutation(
 
   const mutation = useMutation<
     QuizSubmitResponse,
-    Error,
-    { courseId: string; quizId: string; answers: QuizAnswer[] },
+    ApiError,
+    {
+      courseId: string
+      moduleId: string
+      quizId: string
+      answers: QuizAnswer[]
+    },
     { previousData?: CourseDetail | undefined }
   >({
-    mutationFn: async ({ courseId, quizId, answers }) => {
-      const raw = await submitQuiz(courseId, quizId, { answers })
+    mutationFn: async ({ courseId, moduleId, quizId, answers }) => {
+      const raw = await submitQuiz(courseId, moduleId, quizId, { answers })
 
       const parsed = QuizSubmitResponseSchema.safeParse(raw)
 
@@ -46,7 +52,7 @@ export function useQuizSubmitMutation(
       return parsed.data
     },
     networkMode: 'always',
-    onMutate: ({ courseId, quizId }) => {
+    onMutate: ({ courseId, moduleId, quizId }) => {
       const previousData = queryClient.getQueryData<CourseDetail | undefined>([
         'course',
         courseId,
@@ -58,10 +64,17 @@ export function useQuizSubmitMutation(
           if (!oldData) return oldData
           return {
             ...oldData,
-            quizzes: oldData.quizzes.map((q) =>
-              q.uuid === quizId
-                ? { ...q, attemptsCount: (q.attemptsCount ?? 0) + 1 }
-                : q,
+            modules: oldData.modules.map((module) =>
+              module.uuid !== moduleId
+                ? module
+                : {
+                    ...module,
+                    quizzes: module.quizzes.map((q) =>
+                      q.uuid === quizId
+                        ? { ...q, attemptsCount: (q.attemptsCount ?? 0) + 1 }
+                        : q,
+                    ),
+                  },
             ),
           }
         },

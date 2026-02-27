@@ -9,12 +9,18 @@ import apiFetch from '../client'
 
 type MaterialBody = FileMaterialUpdateRequest | UrlMaterialUpdateRequest
 
-export const getMaterials = async (courseId: string): Promise<Material[]> => {
-  return await apiFetch<Material[]>(`/courses/${courseId}/materials`)
+export const getMaterials = async (
+  courseId: string,
+  moduleId: string,
+): Promise<Material[]> => {
+  return await apiFetch<Material[]>(
+    `/courses/${courseId}/modules/${moduleId}/materials`,
+  )
 }
 
 export const updateMaterial = async (
   courseId: string,
+  moduleId: string,
   materialId: string,
   body: MaterialBody,
 ): Promise<Material> => {
@@ -25,7 +31,7 @@ export const updateMaterial = async (
     formData.append('file', body.file)
 
     return await apiFetch<Material>(
-      `/courses/${courseId}/materials/${materialId}`,
+      `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
       {
         method: 'PUT',
         body: formData,
@@ -34,7 +40,7 @@ export const updateMaterial = async (
   }
 
   return await apiFetch<Material>(
-    `/courses/${courseId}/materials/${materialId}`,
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
     {
       method: 'PUT',
       body: JSON.stringify(body),
@@ -44,15 +50,20 @@ export const updateMaterial = async (
 
 export const deleteMaterial = async (
   courseId: string,
+  moduleId: string,
   materialId: string,
 ): Promise<void> => {
-  return await apiFetch<void>(`/courses/${courseId}/materials/${materialId}`, {
-    method: 'DELETE',
-  })
+  return await apiFetch<void>(
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
+    {
+      method: 'DELETE',
+    },
+  )
 }
 
 export const createMaterial = async (
   courseId: string,
+  moduleId: string,
   body: FileMaterialCreateRequest | UrlMaterialCreateRequest,
 ): Promise<Material> => {
   if (body.type === 'file') {
@@ -66,14 +77,20 @@ export const createMaterial = async (
     }
     formData.append('file', body.file)
 
-    return await apiFetch<Material>(`/courses/${courseId}/materials`, {
-      method: 'POST',
-      body: formData,
-    })
+    return await apiFetch<Material>(
+      `/courses/${courseId}/modules/${moduleId}/materials`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+    )
   }
 
-  return await apiFetch<Material>(`/courses/${courseId}/materials`, {
-    method: 'POST',
-    body: JSON.stringify(body),
-  })
+  return await apiFetch<Material>(
+    `/courses/${courseId}/modules/${moduleId}/materials`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+  )
 }

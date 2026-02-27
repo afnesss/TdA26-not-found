@@ -1,4 +1,5 @@
 import { getCourseById } from '@/api/queries/courseQueries'
+import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import FeedItemComp from '@/components/shared/FeedItemComp'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
+  useCourseFeedSSE({ courseId: courseId! })
   const [sideTab, setSideTab] = useState<'feed' | 'history'>('feed')
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 

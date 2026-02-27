@@ -1,4 +1,4 @@
-import type { CourseSummary } from '@/lib/schemas'
+import type { CourseDetail, CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -46,6 +46,75 @@ export const useDashboardCoursesSSE = () => {
 
       toast.info(`Kurz ${startedCourse.name} automatický spuštěn`)
     })
+
+    eventSource.addEventListener('material_interaction_updated', (event) => {
+      const payload = JSON.parse(event.data) as {
+        courseId: string
+        moduleId: string
+        material: CourseDetail['modules'][number]['materials'][number]
+      }
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', payload.courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+
+          return {
+            ...oldData,
+            modules: oldData.modules.map((module) =>
+              module.uuid !== payload.moduleId
+                ? module
+                : {
+                    ...module,
+                    materials: module.materials.map((material) =>
+                      material.uuid === payload.material.uuid
+                        ? payload.material
+                        : material,
+                    ),
+                  },
+            ),
+          }
+        },
+      )
+
+      queryClient.invalidateQueries({
+        queryKey: ['course-dashboard-analytics', payload.courseId],
+      })
+    })
+
+    eventSource.addEventListener('quiz_stats_updated', (event) => {
+      const payload = JSON.parse(event.data) as {
+        courseId: string
+        moduleId: string
+        quiz: CourseDetail['modules'][number]['quizzes'][number]
+      }
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', payload.courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+
+          return {
+            ...oldData,
+            modules: oldData.modules.map((module) =>
+              module.uuid !== payload.moduleId
+                ? module
+                : {
+                    ...module,
+                    quizzes: module.quizzes.map((quiz) =>
+                      quiz.uuid === payload.quiz.uuid ? payload.quiz : quiz,
+                    ),
+                  },
+            ),
+          }
+        },
+      )
+
+      queryClient.invalidateQueries({
+        queryKey: ['course-dashboard-analytics', payload.courseId],
+      })
+    })
+
     return () => {
       console.log('SSE dashboard zavirame')
       eventSource.close()

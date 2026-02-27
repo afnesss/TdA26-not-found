@@ -12,8 +12,7 @@ type CourseStatusOptions = {
   predicate?: (status: CourseStatus, req: Request) => boolean;
 };
 
-const DEFAULT_FORBIDDEN_MESSAGE =
-  "Změna není povolena v aktuálním stavu kurzu";
+const DEFAULT_FORBIDDEN_MESSAGE = "Změna není povolena v aktuálním stavu kurzu";
 
 const fetchCourseStatus = async (courseId: string) => {
   const [course] = await db
@@ -137,7 +136,7 @@ export const requireModuleUpdateAllowed = (param?: string) =>
       const isStatusOnlyChange = hasStatus && !hasName && !hasDescription;
 
       if (isStatusOnlyChange) {
-        return status === "draft" || status === "live";
+        return status === "live";
       }
 
       // Any other module detail changes are only allowed in draft.

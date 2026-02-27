@@ -229,8 +229,7 @@ const CourseModuleDetailPage = () => {
   const currentModuleName = moduleName ?? selectedModule.name
   const currentModuleDescription =
     moduleDescription ?? selectedModule.description ?? ''
-  const canToggleModuleVisibility =
-    course && (course.status === 'draft' || course.status === 'live')
+  const canToggleModuleVisibility = course && course.status === 'live'
   const canEditModuleInfo = course && course.status === 'draft'
   const hasModuleDetailsChanges =
     currentModuleName !== selectedModule.name ||

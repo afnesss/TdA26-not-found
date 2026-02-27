@@ -153,15 +153,25 @@ const CourseComponent = (props: CourseCompProps) => {
         {type === 'edit' &&
           (!props.isDraft ? (
             <div className='flex gap-2 md:gap-1.5 items-center'>
-              <EditBtn
-                icon={Edit}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  props.onEdit()
-                }}
-                classNameBtn={cn(course.status === 'draft' ? '' : 'hidden')}
-                aria-label={`Edit course ${course.name}`}
-              />
+              {course.status === 'draft' ? (
+                <EditBtn
+                  icon={Edit}
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
+                  }}
+                  aria-label={`Edit course ${course.name}`}
+                />
+              ) : (
+                <EditBtn
+                  type='view'
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
+                  }}
+                  aria-label={`View course ${course.name}`}
+                />
+              )}
               <DeleteConfirmDialog
                 trigger={
                   <EditBtn

@@ -93,7 +93,7 @@ const CardDate = ({
       showTime,
     )
   }
-
+  const today = new Date().toISOString().split('T')[0]
   return (
     <div className='flex flex-col gap-1'>
       {!hideStatusLabel && (
@@ -111,6 +111,7 @@ const CardDate = ({
         >
           <input
             type='datetime-local'
+            min={today}
             value={planning.value}
             onChange={(e) => planning.onChange(e.target.value)}
             className='h-8 rounded-md border border-input bg-background px-2 text-xs md:text-sm '

@@ -75,11 +75,7 @@ const CourseModulesLayoutPage = () => {
     return <StateComp type='not-found' message='Kurz nebyl nalezen' />
   }
 
-  if (courseLoading) {
-    return <StateComp type='no-content' message='Načítání kurzu...' />
-  }
-
-  if (courseError || !course) {
+  if (!courseLoading && (courseError || !course)) {
     const isNotFound = courseQueryError?.status === 404
     return (
       <StateComp
@@ -92,9 +88,31 @@ const CourseModulesLayoutPage = () => {
     )
   }
 
+  if (courseLoading && !course) {
+    return (
+      <Outlet
+        context={
+          {
+            courseId,
+            course: null,
+            modules: undefined,
+            isLoading: true,
+            isError: false,
+            refetchCourse,
+            previewMode: false,
+            courseIndexColor: 'accent-teal-light',
+          } as CourseModulesLayoutContext
+        }
+      />
+    )
+  }
+
+  if (!course) {
+    return <StateComp type='error' onAction={() => refetchCourse()} />
+  }
+
   const previewMode = course.status !== 'draft'
-  const canManageFeed =
-    course.status === 'draft' || course.status === 'live'
+  const canManageFeed = course.status === 'draft' || course.status === 'live'
   const courseIndexColor: keyof typeof colorStyles.gradient =
     'accent-teal-light'
 
@@ -115,7 +133,7 @@ const CourseModulesLayoutPage = () => {
   }
 
   return (
-    <div className='max-w-7xl mx-auto md:px-4'>
+    <div className='max-w-7xl mx-auto'>
       <div className='space-y-5'>
         <Outlet
           context={{

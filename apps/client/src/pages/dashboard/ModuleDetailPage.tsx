@@ -4,8 +4,14 @@
   updateModule,
 } from '@/api/queries/moduleQueries'
 import StateComp from '@/components/shared/StateComp'
+import {
+  DetailsContentSkeleton,
+  MaterialsContentSkeleton,
+  QuizzesContentSkeleton,
+} from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import type { Material, Quiz } from '@/lib/schemas'
@@ -188,10 +194,7 @@ const CourseModuleDetailPage = () => {
   useTitle(selectedModule?.name || 'Správa modulů - modul')
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
-  const isLoading = modulesLoading || moduleLoading
-  const anyError = modulesQueryError ?? moduleQueryError
-  const hasError = modulesError || moduleError
-  const isNotFound = anyError?.status === 404
+  const isModuleNotFound = moduleQueryError?.status === 404
 
   if (!courseId || !moduleId) {
     return (
@@ -203,12 +206,8 @@ const CourseModuleDetailPage = () => {
     )
   }
 
-  if (isLoading) {
-    return <StateComp type='no-content' message='Načítání modulu...' />
-  }
-
-  if (hasError) {
-    if (isNotFound) {
+  if (!moduleLoading && moduleError) {
+    if (isModuleNotFound) {
       return <StateComp type='not-found' message='Modul nebyl nalezen' />
     }
 
@@ -222,18 +221,18 @@ const CourseModuleDetailPage = () => {
     )
   }
 
-  if (!selectedModule) {
+  if (!moduleLoading && !selectedModule) {
     return <StateComp type='not-found' message='Modul nebyl nalezen' />
   }
 
-  const currentModuleName = moduleName ?? selectedModule.name
+  const currentModuleName = moduleName ?? selectedModule?.name ?? ''
   const currentModuleDescription =
-    moduleDescription ?? selectedModule.description ?? ''
-  const canToggleModuleVisibility = course && course.status === 'live'
-  const canEditModuleInfo = course && course.status === 'draft'
+    moduleDescription ?? selectedModule?.description ?? ''
+  const canToggleModuleVisibility = course?.status === 'live'
+  const canEditModuleInfo = course?.status === 'draft'
   const hasModuleDetailsChanges =
-    currentModuleName !== selectedModule.name ||
-    currentModuleDescription !== (selectedModule.description ?? '')
+    currentModuleName !== (selectedModule?.name ?? '') ||
+    currentModuleDescription !== (selectedModule?.description ?? '')
 
   const handleSaveModuleDetails = () => {
     if (
@@ -357,116 +356,138 @@ const CourseModuleDetailPage = () => {
     <div className='space-y-4'>
       <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
         <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto '>
-          {modules.map((m, i) => (
-            <UserModuleTab key={m.uuid} module={m} index={i} path='dashboard' />
-          ))}
+          {modulesLoading
+            ? [1, 2, 3].map((i) => (
+                <Skeleton key={i} className='h-10 w-28 rounded-xl shrink-0' />
+              ))
+            : !modulesError &&
+              modules.map((m, i) => (
+                <UserModuleTab
+                  key={m.uuid}
+                  module={m}
+                  index={i}
+                  path='dashboard'
+                />
+              ))}
         </div>
       </div>
 
-      <EditableDetailCard
-        gradient='accent-teal'
-        breadcrumbItems={[
-          { label: 'Správa kurzů', path: '/dashboard' },
-          {
-            label: 'Moduly',
-            path: `/dashboard/${courseId}`,
-          },
-          { label: currentModuleName },
-        ]}
-        nameValue={currentModuleName}
-        descriptionValue={currentModuleDescription}
-        onNameChange={(value) => {
-          setModuleName(handleCapitalizedInput(value, currentModuleName))
-        }}
-        onDescriptionChange={(value) => {
-          setModuleDescription(
-            handleCapitalizedInput(value, currentModuleDescription),
-          )
-        }}
-        disabled={!canEditModuleInfo}
-        createdAt={
-          typeof selectedModule.createdAt === 'string'
-            ? selectedModule.createdAt
-            : selectedModule.createdAt?.toISOString()
-        }
-        updatedAt={
-          typeof moduleUpdatedAt === 'string'
-            ? moduleUpdatedAt
-            : moduleUpdatedAt
-              ? moduleUpdatedAt.toISOString()
-              : undefined
-        }
-        topBadges={
-          <>
-            {canToggleModuleVisibility && (
-              <ModuleVisibilityBadge status={selectedModule.status} />
-            )}
-          </>
-        }
-        topActions={
-          <div className='flex flex-wrap items-center gap-2 justify-end'>
-            {canToggleModuleVisibility && (
-              <ModuleVisibilityActionButton
-                status={selectedModule.status}
-                onClick={() => toggleVisibilityMutation.mutate()}
-                disabled={toggleVisibilityMutation.isPending}
-              />
-            )}
-          </div>
-        }
-        footerActions={
-          canEditModuleInfo ? (
-            <Button
-              variant='primary'
-              size='grid'
-              className='w-fit'
-              onClick={handleSaveModuleDetails}
-              disabled={
-                !hasModuleDetailsChanges ||
-                saveModuleDetailsMutation.isPending ||
-                !currentModuleName.trim()
-              }
-            >
-              Uložit změny
-            </Button>
-          ) : undefined
-        }
-      />
+      {moduleLoading || !selectedModule ? (
+        <DetailsContentSkeleton />
+      ) : (
+        <EditableDetailCard
+          gradient='accent-teal'
+          breadcrumbItems={[
+            { label: 'Správa kurzů', path: '/dashboard' },
+            {
+              label: 'Moduly',
+              path: `/dashboard/${courseId}`,
+            },
+            { label: currentModuleName },
+          ]}
+          nameValue={currentModuleName}
+          descriptionValue={currentModuleDescription}
+          onNameChange={(value) => {
+            setModuleName(handleCapitalizedInput(value, currentModuleName))
+          }}
+          onDescriptionChange={(value) => {
+            setModuleDescription(
+              handleCapitalizedInput(value, currentModuleDescription),
+            )
+          }}
+          disabled={!canEditModuleInfo}
+          createdAt={
+            typeof selectedModule.createdAt === 'string'
+              ? selectedModule.createdAt
+              : selectedModule.createdAt?.toISOString()
+          }
+          updatedAt={
+            typeof moduleUpdatedAt === 'string'
+              ? moduleUpdatedAt
+              : moduleUpdatedAt
+                ? moduleUpdatedAt.toISOString()
+                : undefined
+          }
+          topBadges={
+            <>
+              {canToggleModuleVisibility && (
+                <ModuleVisibilityBadge status={selectedModule.status} />
+              )}
+            </>
+          }
+          topActions={
+            <div className='flex flex-wrap items-center gap-2 justify-end'>
+              {canToggleModuleVisibility && (
+                <ModuleVisibilityActionButton
+                  status={selectedModule.status}
+                  onClick={() => toggleVisibilityMutation.mutate()}
+                  disabled={toggleVisibilityMutation.isPending}
+                />
+              )}
+            </div>
+          }
+          footerActions={
+            canEditModuleInfo ? (
+              <Button
+                variant='primary'
+                size='grid'
+                className='w-fit'
+                onClick={handleSaveModuleDetails}
+                disabled={
+                  !hasModuleDetailsChanges ||
+                  saveModuleDetailsMutation.isPending ||
+                  !currentModuleName.trim()
+                }
+              >
+                Uložit změny
+              </Button>
+            ) : undefined
+          }
+        />
+      )}
 
-      <MaterialsSection
-        materials={selectedModule.materials}
-        draftMaterial={draftMaterial}
-        previewMode={previewMode}
-        canEdit={!!canEditModuleInfo}
-        onAddMaterial={handleAddMaterial}
-        onSaveMaterial={handleUpdateMaterial}
-        onDeleteMaterial={handleDeleteMaterial}
-        onSaveDraft={handleSaveDraft}
-        onCancelDraft={handleCancelDraft}
-      />
+      {moduleLoading || !selectedModule ? (
+        <MaterialsContentSkeleton />
+      ) : (
+        <MaterialsSection
+          materials={selectedModule.materials}
+          draftMaterial={draftMaterial}
+          previewMode={previewMode}
+          canEdit={!!canEditModuleInfo}
+          onAddMaterial={handleAddMaterial}
+          onSaveMaterial={handleUpdateMaterial}
+          onDeleteMaterial={handleDeleteMaterial}
+          onSaveDraft={handleSaveDraft}
+          onCancelDraft={handleCancelDraft}
+        />
+      )}
 
-      <QuizzesSection
-        quizzes={selectedModule.quizzes}
-        draftQuiz={draftQuiz}
-        expandedQuizIds={expandedQuizIds}
-        previewMode={previewMode}
-        canEdit={!!canEditQuizzes}
-        courseStatus={course!.status}
-        isCreating={createQuizPending}
-        isUpdating={updateQuizPending}
-        onAddQuiz={handleAddQuiz}
-        onUpdateQuiz={handleUpdateQuiz}
-        onDeleteQuiz={handleDeleteQuiz}
-        onCreateQuiz={handleCreateQuiz}
-        onCancelDraft={() => setDraftQuiz(null)}
-        onToggleExpand={(quizId) => {
-          setExpandedQuizIds((prev) =>
-            prev.includes(quizId)
-              ? prev.filter((id) => id !== quizId)
-              : [...prev, quizId],
-          )
-        }}
-      />
+      {moduleLoading || !selectedModule ? (
+        <QuizzesContentSkeleton />
+      ) : (
+        <QuizzesSection
+          quizzes={selectedModule.quizzes}
+          draftQuiz={draftQuiz}
+          expandedQuizIds={expandedQuizIds}
+          previewMode={previewMode}
+          canEdit={!!canEditQuizzes}
+          courseStatus={course?.status ?? 'draft'}
+          isCreating={createQuizPending}
+          isUpdating={updateQuizPending}
+          onAddQuiz={handleAddQuiz}
+          onUpdateQuiz={handleUpdateQuiz}
+          onDeleteQuiz={handleDeleteQuiz}
+          onCreateQuiz={handleCreateQuiz}
+          onCancelDraft={() => setDraftQuiz(null)}
+          onToggleExpand={(quizId) => {
+            setExpandedQuizIds((prev) =>
+              prev.includes(quizId)
+                ? prev.filter((id) => id !== quizId)
+                : [...prev, quizId],
+            )
+          }}
+        />
+      )}
     </div>
   )
 }

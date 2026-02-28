@@ -148,7 +148,7 @@ const CourseComponent = (props: CourseCompProps) => {
         )}
       />
 
-      <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
+      <div className='flex justify-between items-center gap-2 mx-4 md:mx-5 mt-3'>
         <CourseStateBadge status={course.status} />
         {type === 'edit' &&
           (!props.isDraft ? (

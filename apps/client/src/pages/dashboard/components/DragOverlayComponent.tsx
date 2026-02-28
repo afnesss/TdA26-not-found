@@ -18,8 +18,9 @@ export default function DragOverlayComponent({
       moduleIndex={moduleIndex}
       courseStatus={'draft' as CourseDetail['status']}
       showGripHandle
-      alwaysShowActions
+      alwaysShowActions={false}
       onOpenModule={() => {}}
+      isDragging
     />
   )
 }

@@ -362,7 +362,7 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
         uuid: quiz.uuid,
         title: quiz.title,
         totalAttempts,
-        avegarePercentage: 0,
+        averagePercentage: 0,
         questionAnalytics: [],
       });
     }

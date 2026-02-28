@@ -156,12 +156,16 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
     const { uuid } = req.params;
 
     const [existingCourse] = await db
-      .select({ uuid: courses.uuid })
+      .select({ uuid: courses.uuid, status: courses.status })
       .from(courses)
       .where(eq(courses.uuid, uuid));
 
     if (!existingCourse) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    if (!["live", "paused", "archived"].includes(existingCourse.status)) {
+      return res.status(404).json({ message: "Statistiky nejsou dostupné" });
     }
 
     const courseModules = await db
@@ -183,8 +187,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
         courseId: uuid,
         modulesCount: 0,
         materialsCount: 0,
-        fileMaterialsCount: 0,
-        urlMaterialsCount: 0,
         quizzesCount: 0,
         quizzesWithoutSubmits: 0,
         interactions: 0,
@@ -339,8 +341,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
     const totals = moduleAnalytics.reduce(
       (acc, module) => {
         acc.materialsCount += module.materialsCount;
-        acc.fileMaterialsCount += module.fileMaterialsCount;
-        acc.urlMaterialsCount += module.urlMaterialsCount;
         acc.quizzesCount += module.quizzesCount;
         acc.quizzesWithoutSubmits += module.quizzesWithoutSubmits;
         acc.interactions += module.interactions;
@@ -360,8 +360,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       },
       {
         materialsCount: 0,
-        fileMaterialsCount: 0,
-        urlMaterialsCount: 0,
         quizzesCount: 0,
         quizzesWithoutSubmits: 0,
         interactions: 0,
@@ -379,8 +377,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       courseId: uuid,
       modulesCount: moduleAnalytics.length,
       materialsCount: totals.materialsCount,
-      fileMaterialsCount: totals.fileMaterialsCount,
-      urlMaterialsCount: totals.urlMaterialsCount,
       quizzesCount: totals.quizzesCount,
       quizzesWithoutSubmits: totals.quizzesWithoutSubmits,
       interactions: totals.interactions,

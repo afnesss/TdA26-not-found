@@ -46,6 +46,9 @@ import type { ApiError } from '@/lib/types'
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
+  const analyticsAllowedStatuses: CourseStatus[] = ['live', 'paused', 'archived']
+  const isAnalyticsAllowedStatus = (status: CourseStatus) =>
+    analyticsAllowedStatuses.includes(status)
   const [searchQuery, setSearchQuery] = useState('')
 
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
@@ -106,10 +109,15 @@ const DashboardDesign1 = () => {
     (course) => statusFilters[course.status],
   )
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
+  const analyticsCourses = sortedCourses.filter((course) =>
+    isAnalyticsAllowedStatus(course.status),
+  )
+  const coursesForCurrentMode =
+    dashboardMode === 'analytics' ? analyticsCourses : sortedCourses
 
-  const hasMoreCourses = sortedCourses.length > displayCount
-  const displayedCourses = sortedCourses.slice(0, displayCount)
-  const globalCourses = sortedCourses
+  const hasMoreCourses = coursesForCurrentMode.length > displayCount
+  const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
+  const globalCourses = analyticsCourses
   const courseAnalyticsQueries = useQueries({
     queries: globalCourses.map((course) => ({
       queryKey: ['course-dashboard-analytics', course.uuid],
@@ -129,23 +137,36 @@ const DashboardDesign1 = () => {
     (acc, analytics) => {
       acc.modulesCount += analytics.modulesCount
       acc.materialsCount += analytics.materialsCount
-      acc.fileMaterialsCount += analytics.fileMaterialsCount
-      acc.urlMaterialsCount += analytics.urlMaterialsCount
       acc.quizzesCount += analytics.quizzesCount
       acc.quizzesWithoutSubmits += analytics.quizzesWithoutSubmits
       acc.downloadCount += analytics.downloadCount
       acc.copyCount += analytics.copyCount
       acc.openCount += analytics.openCount
+      acc.fileMaterialsCount += analytics.modules.reduce(
+        (sum, module) => sum + module.fileMaterialsCount,
+        0,
+      )
+      acc.urlMaterialsCount += analytics.modules.reduce(
+        (sum, module) => sum + module.urlMaterialsCount,
+        0,
+      )
       acc.modulesWithoutInteraction += analytics.modulesWithoutInteraction
       acc.lowScoreQuizzes += analytics.lowScoreQuizzes
 
-      if (
-        analytics.averageQuizPercentage !== null &&
-        analytics.quizzesCount > 0
-      ) {
-        acc.quizScoreWeightedSum +=
-          analytics.averageQuizPercentage * analytics.quizzesCount
-        acc.quizScoreWeight += analytics.quizzesCount
+      const courseQuizAttempts = analytics.modules.reduce(
+        (sum, module) => sum + module.quizAttempts,
+        0,
+      )
+      const courseQuizWeightedSum = analytics.modules.reduce((sum, module) => {
+        if (module.averageQuizPercentage == null || module.quizAttempts === 0) {
+          return sum
+        }
+        return sum + module.averageQuizPercentage * module.quizAttempts
+      }, 0)
+
+      if (courseQuizAttempts > 0) {
+        acc.quizScoreWeightedSum += courseQuizWeightedSum
+        acc.quizScoreWeight += courseQuizAttempts
       }
 
       return acc
@@ -167,22 +188,12 @@ const DashboardDesign1 = () => {
     },
   )
 
-  const globalAverageDownloadsPerFile =
-    globalStats.fileMaterialsCount > 0
-      ? globalStats.downloadCount / globalStats.fileMaterialsCount
-      : null
-  const globalAverageCopyPerUrl =
-    globalStats.urlMaterialsCount > 0
-      ? globalStats.copyCount / globalStats.urlMaterialsCount
-      : null
-  const globalAverageOpenPerUrl =
-    globalStats.urlMaterialsCount > 0
-      ? globalStats.openCount / globalStats.urlMaterialsCount
-      : null
   const globalAverageQuizPercentage =
     globalStats.quizScoreWeight > 0
       ? globalStats.quizScoreWeightedSum / globalStats.quizScoreWeight
       : null
+  const formatMetric = (value: number) =>
+    Number.isInteger(value) ? value.toString() : value.toFixed(1)
   const globalStatsLoading =
     dashboardMode === 'global' &&
     courseAnalyticsQueries.some((query) => query.isLoading || query.isFetching)
@@ -295,6 +306,7 @@ const DashboardDesign1 = () => {
               size='sm'
               className='rounded-xl'
               onClick={() => setDashboardMode('analytics')}
+              disabled={!displayedCourses.some((c) => isAnalyticsAllowedStatus(c.status))}
             >
               Analytika
             </Button>
@@ -303,6 +315,7 @@ const DashboardDesign1 = () => {
               size='sm'
               className='rounded-xl'
               onClick={() => setDashboardMode('global')}
+              disabled={globalCourses.length === 0}
             >
               Global
             </Button>
@@ -312,7 +325,12 @@ const DashboardDesign1 = () => {
             <CoursesPageSceleton />
           ) : dashboardMode === 'global' ? (
             <div className='mt-6'>
-              {globalStatsLoading ? (
+              {globalCourses.length === 0 ? (
+                <StateComp
+                  type='no-content'
+                  message='Statistiky jsou dostupné pouze pro live, paused a archived kurzy'
+                />
+              ) : globalStatsLoading ? (
                 <CoursesPageSceleton />
               ) : (
                 <div className='rounded-2xl border bg-card/90 p-6 md:p-7 shadow-sm space-y-6'>
@@ -356,39 +374,17 @@ const DashboardDesign1 = () => {
                       <p className='text-2xl font-semibold leading-tight'>
                         {globalAverageQuizPercentage === null
                           ? '—'
-                          : `${globalAverageQuizPercentage.toFixed(1)}%`}
+                          : `${formatMetric(globalAverageQuizPercentage)}%`}
                       </p>
                     </div>
                   </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
                     <div className='rounded-xl border bg-background/60 p-4'>
                       <p className='text-xs text-muted-foreground'>
-                        Průměr stažení / file
+                        Submity kvízů
                       </p>
                       <p className='text-2xl font-semibold leading-tight'>
-                        {globalAverageDownloadsPerFile === null
-                          ? '—'
-                          : globalAverageDownloadsPerFile.toFixed(1)}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Průměr copy / url
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalAverageCopyPerUrl === null
-                          ? '—'
-                          : globalAverageCopyPerUrl.toFixed(1)}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Průměr open / url
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalAverageOpenPerUrl === null
-                          ? '—'
-                          : globalAverageOpenPerUrl.toFixed(1)}
+                        {globalStats.quizScoreWeight}
                       </p>
                     </div>
                     <div className='rounded-xl border bg-background/60 p-4'>
@@ -427,48 +423,58 @@ const DashboardDesign1 = () => {
             </div>
           ) : (
             <>
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
-                {courseDraft && (
-                  <CourseComponent
-                    key={courseDraft.uuid}
-                    course={courseDraft}
-                    index={0}
-                    type='edit'
-                    isDraft
-                    onSaveDraft={async (data) => {
-                      createCourseMutation(data)
-                    }}
-                    onEdit={() => {
-                      handleEditCourse(courseDraft)
-                    }}
-                    onCancelDraft={() => setCourseDraft(null)}
-                  />
-                )}
-
-                {displayedCourses.map((course, index) => {
-                  const planningState = planning.createPlanningState(course)
-                  return (
+              {dashboardMode === 'analytics' && displayedCourses.length === 0 ? (
+                <StateComp
+                  type='no-content'
+                  message='Žádné kurzy ve stavu live, paused nebo archived'
+                />
+              ) : (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
+                  {courseDraft && dashboardMode !== 'analytics' && (
                     <CourseComponent
-                      key={
-                        course.uuid ?? (course as CourseSummary).uuid ?? index
-                      }
-                      course={course}
-                      index={courseDraft ? index + 1 : index}
+                      key={courseDraft.uuid}
+                      course={courseDraft}
+                      index={0}
                       type='edit'
-                      analyticsMode={dashboardMode === 'analytics'}
+                      isDraft
+                      onSaveDraft={async (data) => {
+                        createCourseMutation(data)
+                      }}
                       onEdit={() => {
-                        handleEditCourse(course)
+                        handleEditCourse(courseDraft)
                       }}
-                      onDelete={() => deleteCourseMutation(course.uuid)}
-                      onStatusChange={handleStatusChange}
-                      planning={planningState}
-                      onCopyAsDraft={async (source: CourseSummary) => {
-                        cloneCourseMutation({ source })
-                      }}
+                      onCancelDraft={() => setCourseDraft(null)}
                     />
-                  )
-                })}
-              </div>
+                  )}
+
+                  {displayedCourses.map((course, index) => {
+                    const planningState = planning.createPlanningState(course)
+                    return (
+                      <CourseComponent
+                        key={
+                          course.uuid ?? (course as CourseSummary).uuid ?? index
+                        }
+                        course={course}
+                        index={courseDraft ? index + 1 : index}
+                        type='edit'
+                        analyticsMode={
+                          dashboardMode === 'analytics' &&
+                          isAnalyticsAllowedStatus(course.status)
+                        }
+                        onEdit={() => {
+                          handleEditCourse(course)
+                        }}
+                        onDelete={() => deleteCourseMutation(course.uuid)}
+                        onStatusChange={handleStatusChange}
+                        planning={planningState}
+                        onCopyAsDraft={async (source: CourseSummary) => {
+                          cloneCourseMutation({ source })
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+              )}
 
               {hasMoreCourses && (
                 <div className='mt-8 text-center'>

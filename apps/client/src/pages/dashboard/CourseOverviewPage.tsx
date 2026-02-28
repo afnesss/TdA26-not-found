@@ -198,43 +198,11 @@ const CourseModulesOverviewPage = () => {
   const showPlanningForHeader =
     course.status === 'planned' || planning.isEditing
   const showPlanningOnSeparateRow = !isSm && showPlanningForHeader
+  const analyticsAllowed =
+    course.status === 'live' ||
+    course.status === 'paused' ||
+    course.status === 'archived'
   const analyticsModules = modules ?? []
-  const analyticsMaterialsCount = analyticsModules.reduce(
-    (sum, module) => sum + module.materials.length,
-    0,
-  )
-  const analyticsQuizzesCount = analyticsModules.reduce(
-    (sum, module) => sum + module.quizzes.length,
-    0,
-  )
-  const analyticsInteractions = analyticsModules.reduce(
-    (sum, module) =>
-      sum +
-      module.materials.reduce(
-        (moduleSum, mat) =>
-          moduleSum +
-          (mat.type === 'file'
-            ? (mat.downloadCount ?? 0)
-            : (mat.openCount ?? 0) + (mat.copyCount ?? 0)),
-        0,
-      ) +
-      module.quizzes.reduce(
-        (moduleQuizSum, quiz) => moduleQuizSum + (quiz.attemptsCount ?? 0),
-        0,
-      ),
-    0,
-  )
-  const analyticsQuizValues = analyticsModules
-    .flatMap((module) => module.quizzes)
-    .map((quiz) => quiz.averagePercentage)
-    .filter((value): value is number => value != null)
-  const analyticsQuizAverage =
-    analyticsQuizValues.length > 0
-      ? Math.round(
-          analyticsQuizValues.reduce((sum, value) => sum + value, 0) /
-            analyticsQuizValues.length,
-        )
-      : null
 
   return (
     <>
@@ -318,21 +286,23 @@ const CourseModulesOverviewPage = () => {
         >
           Obsah
         </Button>
-        <Button
-          variant='filter'
-          size='sm'
-          className={`rounded-xl ${
-            viewMode === 'analytics'
-              ? 'bg-primary text-background hover:bg-primary/90'
-              : ''
-          }`}
-          onClick={() => setViewMode('analytics')}
-        >
-          Analytika
-        </Button>
+        {analyticsAllowed && (
+          <Button
+            variant='filter'
+            size='sm'
+            className={`rounded-xl ${
+              viewMode === 'analytics'
+                ? 'bg-primary text-background hover:bg-primary/90'
+                : ''
+            }`}
+            onClick={() => setViewMode('analytics')}
+          >
+            Analytika
+          </Button>
+        )}
       </div>
 
-      {viewMode === 'content' ? (
+      {viewMode === 'content' || !analyticsAllowed ? (
         <ModulesSection
           courseId={courseId}
           modules={modules ?? []}
@@ -369,8 +339,6 @@ const CourseModulesOverviewPage = () => {
               const moduleQuizzesWithoutSubmits = module.quizzes.filter(
                 (quiz) => (quiz.attemptsCount ?? 0) === 0,
               ).length
-              const moduleInteractions =
-                moduleMaterialInteractions + moduleQuizAttempts
               const moduleQuizValues = module.quizzes
                 .map((quiz) => quiz.averagePercentage)
                 .filter((value): value is number => value != null)
@@ -381,6 +349,31 @@ const CourseModulesOverviewPage = () => {
                         moduleQuizValues.length,
                     )
                   : null
+              const moduleDownloads = module.materials.reduce(
+                (sum, material) =>
+                  sum +
+                  (material.type === 'file'
+                    ? (material.downloadCount ?? 0)
+                    : 0),
+                0,
+              )
+              const moduleCopies = module.materials.reduce(
+                (sum, material) =>
+                  sum +
+                  (material.type === 'url' ? (material.copyCount ?? 0) : 0),
+                0,
+              )
+              const moduleOpens = module.materials.reduce(
+                (sum, material) =>
+                  sum +
+                  (material.type === 'url' ? (material.openCount ?? 0) : 0),
+                0,
+              )
+              const moduleLowScoreQuizzes = module.quizzes.filter((quiz) => {
+                if ((quiz.attemptsCount ?? 0) === 0) return false
+                if (quiz.averagePercentage == null) return false
+                return quiz.averagePercentage < 60
+              }).length
 
               return (
                 <div
@@ -397,92 +390,77 @@ const CourseModulesOverviewPage = () => {
                         {module.quizzes.length}
                       </p>
                     </div>
-                  </div>
-                  <div className='mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2'>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-2'>
-                      <p className='text-[11px] text-muted-foreground'>
-                        Interakce
-                      </p>
-                      <p className='text-sm font-semibold'>
-                        {moduleInteractions}
-                      </p>
-                    </div>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-2'>
-                      <p className='text-[11px] text-muted-foreground'>
-                        Průměr testů
-                      </p>
-                      <p className='text-sm font-semibold'>
-                        {moduleQuizAverage == null
-                          ? '—'
-                          : `${moduleQuizAverage}%`}
-                      </p>
-                    </div>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-2'>
-                      <p className='text-[11px] text-muted-foreground'>
-                        Odeslání
-                      </p>
-                      <p className='text-sm font-semibold'>
-                        {moduleQuizAttempts}
-                      </p>
-                    </div>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-2'>
-                      <p className='text-[11px] text-muted-foreground'>
-                        Kvízy bez submitu
-                      </p>
-                      <p className='text-sm font-semibold'>
-                        {moduleQuizzesWithoutSubmits}
-                      </p>
-                    </div>
+                    <Button
+                      variant='filter'
+                      size='sm'
+                      className='rounded-lg'
+                      onClick={() => handleOpenModule(module.uuid)}
+                    >
+                      Otevřít modul
+                    </Button>
                   </div>
                   <div className='mt-3 grid grid-cols-1 gap-3 text-xs lg:grid-cols-2'>
                     <div className='rounded-lg border border-border/50 bg-muted/20 p-3'>
                       <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
                         Materiály
                       </p>
-                      {module.materials.length === 0 ? (
-                        <p className='text-muted-foreground'>Bez materiálů</p>
-                      ) : (
-                        module.materials.map((mat) => (
-                          <div
-                            key={mat.uuid}
-                            className='flex items-center justify-between gap-3 border-t border-border/40 py-1 first:border-t-0 first:pt-0'
-                          >
-                            <p className='min-w-0 truncate text-foreground/90'>
-                              {mat.name}
-                            </p>
-                            <p className='shrink-0 text-muted-foreground'>
-                              {mat.type === 'file'
-                                ? `Stažení ${mat.downloadCount ?? 0}`
-                                : `Otevření ${mat.openCount ?? 0} • Kopírování ${mat.copyCount ?? 0}`}
-                            </p>
-                          </div>
-                        ))
-                      )}
+                      <div className='space-y-1 text-muted-foreground'>
+                        <p>
+                          Celkem:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {module.materials.length}
+                          </span>
+                        </p>
+                        <p>
+                          Stažení:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleDownloads}
+                          </span>{' '}
+                          • Open:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleOpens}
+                          </span>{' '}
+                          • Copy:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleCopies}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                     <div className='rounded-lg border border-border/50 bg-muted/20 p-3'>
                       <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
                         Testy
                       </p>
-                      {module.quizzes.length === 0 ? (
-                        <p className='text-muted-foreground'>Bez testů</p>
-                      ) : (
-                        module.quizzes.map((quiz) => (
-                          <div
-                            key={quiz.uuid}
-                            className='flex items-center justify-between gap-3 border-t border-border/40 py-1 first:border-t-0 first:pt-0'
-                          >
-                            <p className='min-w-0 truncate text-foreground/90'>
-                              {quiz.title}
-                            </p>
-                            <p className='shrink-0 text-muted-foreground'>
-                              Odeslání {quiz.attemptsCount ?? 0} • Průměr{' '}
-                              {quiz.averagePercentage == null
-                                ? '—'
-                                : `${quiz.averagePercentage}%`}
-                            </p>
-                          </div>
-                        ))
-                      )}
+                      <div className='space-y-1 text-muted-foreground'>
+                        <p>
+                          Celkem:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {module.quizzes.length}
+                          </span>
+                        </p>
+                        <p>
+                          Odeslání:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleQuizAttempts}
+                          </span>{' '}
+                          • Bez submitu:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleQuizzesWithoutSubmits}
+                          </span>
+                        </p>
+                        <p>
+                          Průměr:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleQuizAverage == null
+                              ? '—'
+                              : `${moduleQuizAverage}%`}
+                          </span>{' '}
+                          • Nízké skóre:{' '}
+                          <span className='font-semibold text-foreground'>
+                            {moduleLowScoreQuizzes}
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

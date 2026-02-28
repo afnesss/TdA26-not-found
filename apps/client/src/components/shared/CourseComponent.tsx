@@ -66,7 +66,12 @@ const CourseComponent = (props: CourseCompProps) => {
   })
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
-  const isAnalyticsMode = type === 'edit' && Boolean(props.analyticsMode)
+  const canShowAnalytics =
+    course.status === 'live' ||
+    course.status === 'paused' ||
+    course.status === 'archived'
+  const isAnalyticsMode =
+    type === 'edit' && Boolean(props.analyticsMode) && canShowAnalytics
 
   const {
     data: overviewCourse,
@@ -75,7 +80,8 @@ const CourseComponent = (props: CourseCompProps) => {
   } = useQuery<CourseDashboardAnalytics>({
     queryKey: ['course-dashboard-analytics', course.uuid],
     queryFn: () => getCourseDashboardAnalytics(course.uuid),
-    enabled: isEditableCourseCard && isAnalyticsMode && !state.isEditing,
+    enabled:
+      isEditableCourseCard && isAnalyticsMode && !state.isEditing && canShowAnalytics,
     staleTime: 1000 * 20,
   })
 

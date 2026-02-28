@@ -87,8 +87,6 @@ export const CourseDashboardAnalyticsSchema = z.object({
   courseId: z.string().uuid(),
   modulesCount: z.number().int().nonnegative(),
   materialsCount: z.number().int().nonnegative(),
-  fileMaterialsCount: z.number().int().nonnegative(),
-  urlMaterialsCount: z.number().int().nonnegative(),
   quizzesCount: z.number().int().nonnegative(),
   quizzesWithoutSubmits: z.number().int().nonnegative(),
   interactions: z.number().int().nonnegative(),

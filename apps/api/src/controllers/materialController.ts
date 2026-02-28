@@ -13,6 +13,7 @@ import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { sseManager } from "../utils/sseManager";
+import type { AuthRequest } from "../types/auth";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
@@ -334,7 +335,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
   }
 };
 
-export const trackMaterialInteraction = async (req: Request, res: Response) => {
+export const trackMaterialInteraction = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   try {
     const { moduleId, materialId } = req.params;
     const validation = MaterialInteractionRequestSchema.safeParse(req.body);
@@ -349,6 +353,11 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
     const material = await getMaterialByModuleAndId(moduleId, materialId);
     if (!material) {
       return res.status(404).json({ message: "Materiál nebyl nalezen" });
+    }
+
+    // Logged-in lecturer actions are not counted in analytics.
+    if (req.user) {
+      return res.json(mapMaterial(material));
     }
 
     const updates: {
@@ -406,7 +415,7 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
   }
 };
 
-export const downloadMaterial = async (req: Request, res: Response) => {
+export const downloadMaterial = async (req: AuthRequest, res: Response) => {
   try {
     const { moduleId, materialId } = req.params;
     const material = await getMaterialByModuleAndId(moduleId, materialId);
@@ -419,6 +428,11 @@ export const downloadMaterial = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Tento materiál není dostupný ke stažení" });
+    }
+
+    // Logged-in lecturer actions are not counted in analytics.
+    if (req.user) {
+      return res.redirect(material.fileUrl);
     }
 
     const [updatedMaterial] = await db

@@ -110,7 +110,9 @@ const UserCourseModuleDetailPage = () => {
 
         <section>
           <Label className='font-bold mb-3'>
-            <UnderlinedText strokeWidth='4'>Interaktivní Kvízy</UnderlinedText>
+            <UnderlinedText offset='-bottom-0.5' strokeWidth='4'>
+              Kvízy
+            </UnderlinedText>
           </Label>
 
           <div className='space-y-4'>

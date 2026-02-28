@@ -3,6 +3,7 @@ import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
 import { Fragment } from 'react/jsx-runtime'
+import { truncateDescription } from '@/pages/CoursePage/utils/helperFunctions'
 
 type BreadcrumbItem = {
   label: string
@@ -33,11 +34,17 @@ const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
               onClick={() => (item.path ? navigate(item.path) : undefined)}
               aria-label={item.path ? `Navigate to ${item.label}` : item.label}
             >
-              <span>{item.label}</span>
+              <span className='flex sm:hidden'>
+                {truncateDescription(item.label, 15)}
+              </span>
+              <span className='hidden sm:flex'>{item.label}</span>
             </Button>
 
             {!isLast && (
-              <ChevronRight className='text-accent-blue size-3 sm:mt-0.5 sm:size-4' aria-hidden='true' />
+              <ChevronRight
+                className='text-accent-blue size-3 sm:mt-0.5 sm:size-4'
+                aria-hidden='true'
+              />
             )}
           </Fragment>
         )

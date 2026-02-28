@@ -296,6 +296,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 !props.planning?.isEditing &&
                 props.onStatusChange ? (
                   <StatusActionButtons
+                    className='flex-wrap justify-end'
                     currentStatus={course.status}
                     courseColor={courseColor}
                     onStatusChange={(newStatus) =>

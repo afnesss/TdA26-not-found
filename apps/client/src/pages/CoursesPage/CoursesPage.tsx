@@ -19,13 +19,19 @@ import {
 } from '../CoursePage/utils/helperFunctions'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useCoursesSSE } from '@/api/useCourseSSE'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+
+const COURSES_PAGE_FILTERS_KEY = 'courses-page-filters'
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
-  const [statusFilters, setStatusFilters] = useState<
+  const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
+    `${COURSES_PAGE_FILTERS_KEY}-sort`,
+    'newest',
+  )
+  const [statusFilters, setStatusFilters] = useLocalStorage<
     Record<'live' | 'planned', boolean>
-  >({
+  >(`${COURSES_PAGE_FILTERS_KEY}-status`, {
     live: true,
     planned: true,
   })

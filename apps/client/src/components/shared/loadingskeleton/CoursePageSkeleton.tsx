@@ -1,4 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { MaterialSkeleton } from './MaterialSkeleton'
+import { QuizSkeleton } from './QuizSkeleton'
 
 const CourseSkeleton = () => {
   return (
@@ -22,50 +24,13 @@ const CourseSkeleton = () => {
         {/* materials */}
         <section>
           <Skeleton className='h-8 w-48 mb-4' />
-          <div className='space-y-3'>
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className='bg-background rounded-xl p-4 border border-gray-100'
-              >
-                <div className='flex items-center justify-between gap-4'>
-                  <div className='flex items-center gap-3 flex-1'>
-                    <Skeleton className='w-6 h-6 rounded-lg' />
-                    <div className='flex-1'>
-                      <Skeleton className='h-5 w-48 mb-2' />
-                      <Skeleton className='h-4 w-20' />
-                    </div>
-                  </div>
-                  <Skeleton className='h-10 w-28 rounded-lg' />
-                </div>
-              </div>
-            ))}
-          </div>
+          <MaterialSkeleton count={2} />
         </section>
 
         {/* quizzes  */}
         <section>
           <Skeleton className='h-8 w-32 mb-4' />
-          <div className='space-y-4'>
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className='bg-background rounded-xl shadow-lg border border-gray-100'
-              >
-                <div className='p-5'>
-                  <div className='flex items-center justify-between gap-4'>
-                    <div className='flex items-center gap-4 flex-1'>
-                      <div className='flex-1'>
-                        <Skeleton className='h-6 w-56 mb-3' />
-                        <Skeleton className='h-4 w-32' />
-                      </div>
-                    </div>
-                    <Skeleton className='w-10 h-10 rounded-full' />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <QuizSkeleton count={2} />
         </section>
       </div>
     </div>

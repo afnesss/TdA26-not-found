@@ -93,7 +93,7 @@ const CardDate = ({
       showTime,
     )
   }
-
+  const today = new Date().toISOString().split('T')[0]
   return (
     <div className='flex flex-col gap-1'>
       {!hideStatusLabel && (
@@ -111,6 +111,7 @@ const CardDate = ({
         >
           <input
             type='datetime-local'
+            min={today}
             value={planning.value}
             onChange={(e) => planning.onChange(e.target.value)}
             className='h-8 rounded-md border border-input bg-background px-2 text-xs md:text-sm '
@@ -118,12 +119,12 @@ const CardDate = ({
           />
         </div>
       ) : (
-        <div className='flex items-center gap-1.5 mr-3'>
-          <Calendar size={14} className='text-primary' />
+        <div className='flex items-center gap-1.5 mr-3 shrink-0'>
+          <Calendar size={14} className='text-primary ' />
           {planning?.editable ? (
             <button
               type='button'
-              className='text-xs md:text-sm font-medium hover:underline cursor-pointer'
+              className='text-xs md:text-sm font-medium hover:underline cursor-pointer '
               onClick={(e) => {
                 e.stopPropagation()
                 planning.onOpen()
@@ -132,7 +133,7 @@ const CardDate = ({
               {getDateToDisplay()}
             </button>
           ) : (
-            <span className='text-xs md:text-sm font-medium'>
+            <span className='text-xs md:text-sm font-medium shrink-0'>
               {getDateToDisplay()}
             </span>
           )}

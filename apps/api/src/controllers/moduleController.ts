@@ -9,6 +9,8 @@ import {
 } from "../db/schema";
 import { mapMaterial } from "./materialController";
 import { ModuleReorderRequest } from "../schemas";
+import { sseManager } from "../utils/sseManager";
+import { createSystemEvent } from "../utils/systemEvent";
 
 const MODULE_STATUSES = new Set(["active", "passive"]);
 const moduleSummarySelect = {
@@ -182,7 +184,9 @@ export async function updateModule(req: Request, res: Response) {
     }
 
     if (name !== undefined && !name.trim()) {
-      return res.status(400).json({ message: "Název modulu nesmí být prázdný" });
+      return res
+        .status(400)
+        .json({ message: "Název modulu nesmí být prázdný" });
     }
 
     if (status !== undefined && !MODULE_STATUSES.has(status)) {
@@ -200,6 +204,18 @@ export async function updateModule(req: Request, res: Response) {
       })
       .where(and(eq(modules.uuid, moduleId), eq(modules.courseId, courseId)))
       .returning(moduleSummarySelect);
+
+    const isStatusOnlyChange =
+      status !== undefined && name === undefined && description === undefined;
+
+    if (isStatusOnlyChange && status !== existingModule.status) {
+      sseManager.broadcast(courseId, "module_activated", updatedModule);
+
+      await createSystemEvent(
+        courseId,
+        `Modul "${updatedModule.name}" byl ${status === "active" ? "aktivován" : "skryt"} lektorem`,
+      );
+    }
 
     res.json(updatedModule);
   } catch (error) {

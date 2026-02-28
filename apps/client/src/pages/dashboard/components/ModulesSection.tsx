@@ -99,6 +99,7 @@ const ModulesSection = ({
             <Button
               variant={'outline'}
               size='sm'
+              disabled={modules.length === 0}
               onClick={onToggleReorderMode}
               className='rounded-full'
             >

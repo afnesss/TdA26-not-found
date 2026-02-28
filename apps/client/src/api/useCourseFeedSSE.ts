@@ -1,4 +1,5 @@
 import type { CourseDetail, CourseStatus, FeedItem } from '@/lib/schemas'
+import type { ModuleDetail, ModuleSummary } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -147,9 +148,9 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       console.log('Course updated:', updatedCourse)
 
       if (updatedCourse.status === 'paused') {
-        toast.info(`Kurz "${updatedCourse.name}" pozastaveno lektorem`)
+        toast.info(`Kurz "${updatedCourse.name}" byl pozastaven lektorem`)
       } else if (updatedCourse.status === 'archived') {
-        toast.info(`Kurz "${updatedCourse.name}" dokončeno lektorem`)
+        toast.info(`Kurz "${updatedCourse.name}" byl ukončen lektorem`)
       }
 
       queryClient.setQueryData<CourseDetail>(
@@ -169,6 +170,38 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
         },
       )
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+    })
+
+    // --- Modules ---
+
+    eventSource.addEventListener('module_activated', (event) => {
+      const activatedModule = JSON.parse(event.data)
+      console.log('module activated:', activatedModule)
+
+      queryClient.setQueryData<CourseDetail>(
+        ['course', courseId],
+        (oldData) => {
+          if (!oldData) return oldData
+
+          const isLive = oldData.status === 'live'
+          const isStatusOnlyChange = activatedModule.status !== undefined
+
+          const allowed = isLive && isStatusOnlyChange
+
+          if (!allowed) {
+            console.warn(
+              'Module update not allowed for course status:',
+              oldData.status,
+            )
+            return oldData
+          }
+
+          return updateCourseModules(oldData, (module) => ({
+            ...module,
+            ...(activatedModule as ModuleDetail),
+          }))
+        },
+      )
     })
 
     // // --- Material Updates ---

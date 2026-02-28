@@ -109,6 +109,11 @@ const QuizzesSection = ({
                     if (!quizId) return
                     onToggleExpand(quizId)
                   }}
+                  showAnalytics={
+                    courseStatus === 'live' ||
+                    courseStatus === 'archived' ||
+                    courseStatus === 'paused'
+                  }
                 />
               )
             })}

@@ -1,17 +1,17 @@
 import { Request, Response } from "express";
 import { db } from "../db";
-import { courseMaterials } from "../db/schema";
-import { eq, desc } from "drizzle-orm";
+import { courseMaterials, modules } from "../db/schema";
+import { and, desc, eq, sql } from "drizzle-orm";
 import {
   FileMaterialCreateRequestSchema,
   UrlMaterialCreateRequestSchema,
   FileMaterialUpdateRequestSchema,
   UrlMaterialUpdateRequestSchema,
+  MaterialInteractionRequestSchema,
 } from "../schemas/material";
 import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { createSystemEvent } from "../utils/systemEvent";
 import { sseManager } from "../utils/sseManager";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
@@ -34,6 +34,7 @@ export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
       mimeType: m.mimeType ?? undefined,
       sizeBytes: m.sizeBytes ?? undefined,
       originalFilename: m.originalFilename ?? undefined,
+      downloadCount: m.downloadCount,
     };
   } else {
     return {
@@ -41,8 +42,33 @@ export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
       type: "url",
       url: m.url!,
       faviconUrl: m.faviconUrl ?? undefined,
+      copyCount: m.copyCount,
+      openCount: m.openCount,
     };
   }
+};
+
+const getMaterialByModuleAndId = async (moduleId: string, materialId: string) => {
+  const [material] = await db
+    .select()
+    .from(courseMaterials)
+    .where(
+      and(
+        eq(courseMaterials.moduleId, moduleId),
+        eq(courseMaterials.uuid, materialId),
+      ),
+    );
+
+  return material;
+};
+
+const getCourseIdByModuleId = async (moduleId: string) => {
+  const [module] = await db
+    .select({ courseId: modules.courseId })
+    .from(modules)
+    .where(eq(modules.uuid, moduleId));
+
+  return module?.courseId;
 };
 
 export const getMaterials = async (req: Request, res: Response) => {
@@ -305,6 +331,122 @@ export const updateMaterial = async (req: Request, res: Response) => {
     console.error(error);
     if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+};
+
+export const trackMaterialInteraction = async (req: Request, res: Response) => {
+  try {
+    const { moduleId, materialId } = req.params;
+    const validation = MaterialInteractionRequestSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        message: "Neplatný požadavek",
+        errors: validation.error.format(),
+      });
+    }
+
+    const material = await getMaterialByModuleAndId(moduleId, materialId);
+    if (!material) {
+      return res.status(404).json({ message: "Materiál nebyl nalezen" });
+    }
+
+    const updates: {
+      updatedAt: Date;
+      downloadCount?: any;
+      copyCount?: any;
+      openCount?: any;
+    } = {
+      updatedAt: new Date(),
+    };
+
+    const { action } = validation.data;
+    if (action === "download") {
+      if (material.type !== "file") {
+        return res
+          .status(400)
+          .json({ message: "Akce download je jen pro soubor" });
+      }
+      updates.downloadCount = sql`${courseMaterials.downloadCount} + 1`;
+    } else if (action === "copy") {
+      if (material.type !== "url") {
+        return res.status(400).json({ message: "Akce copy je jen pro URL" });
+      }
+      updates.copyCount = sql`${courseMaterials.copyCount} + 1`;
+    } else {
+      if (material.type !== "url") {
+        return res.status(400).json({ message: "Akce open je jen pro URL" });
+      }
+      updates.openCount = sql`${courseMaterials.openCount} + 1`;
+    }
+
+    const [updatedMaterial] = await db
+      .update(courseMaterials)
+      .set(updates)
+      .where(eq(courseMaterials.uuid, materialId))
+      .returning();
+
+    const courseId = await getCourseIdByModuleId(moduleId);
+    if (courseId) {
+      const payload = {
+        courseId,
+        moduleId,
+        material: mapMaterial(updatedMaterial),
+      };
+      sseManager.broadcast(courseId, "material_interaction_updated", payload);
+      sseManager.broadcast("courses", "material_interaction_updated", payload);
+      sseManager.broadcast(courseId, "material_updated", payload);
+      sseManager.broadcast("courses", "material_updated", payload);
+    }
+
+    return res.json(mapMaterial(updatedMaterial));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+};
+
+export const downloadMaterial = async (req: Request, res: Response) => {
+  try {
+    const { moduleId, materialId } = req.params;
+    const material = await getMaterialByModuleAndId(moduleId, materialId);
+
+    if (!material) {
+      return res.status(404).json({ message: "Materiál nebyl nalezen" });
+    }
+
+    if (material.type !== "file" || !material.fileUrl) {
+      return res
+        .status(400)
+        .json({ message: "Tento materiál není dostupný ke stažení" });
+    }
+
+    const [updatedMaterial] = await db
+      .update(courseMaterials)
+      .set({
+        downloadCount: sql`${courseMaterials.downloadCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(courseMaterials.uuid, materialId))
+      .returning();
+
+    const courseId = await getCourseIdByModuleId(moduleId);
+    if (courseId) {
+      const payload = {
+        courseId,
+        moduleId,
+        material: mapMaterial(updatedMaterial),
+      };
+      sseManager.broadcast(courseId, "material_interaction_updated", payload);
+      sseManager.broadcast("courses", "material_interaction_updated", payload);
+      sseManager.broadcast(courseId, "material_updated", payload);
+      sseManager.broadcast("courses", "material_updated", payload);
+    }
+
+    return res.redirect(material.fileUrl);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
 

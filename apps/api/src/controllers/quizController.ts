@@ -2,7 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../db";
-import { quizSubmissions, quizzes } from "../db/schema";
+import { modules, quizSubmissions, quizzes } from "../db/schema";
 import {
   Question,
   Quiz,
@@ -10,6 +10,16 @@ import {
   QuizSubmitRequest,
   QuizSubmitResponse,
 } from "../schemas/quiz";
+import { sseManager } from "../utils/sseManager";
+
+const getCourseIdByModuleId = async (moduleId: string) => {
+  const [module] = await db
+    .select({ courseId: modules.courseId })
+    .from(modules)
+    .where(eq(modules.uuid, moduleId));
+
+  return module?.courseId;
+};
 
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
@@ -169,7 +179,19 @@ export const updateQuiz = async (req: Request, res: Response) => {
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
     };
-    // sseManager.broadcast(courseId, "quiz_updated", finalQuiz);
+
+    const courseId = await getCourseIdByModuleId(moduleId);
+    if (courseId) {
+      const payload = {
+        courseId,
+        moduleId,
+        quiz: finalQuiz,
+      };
+      sseManager.broadcast(courseId, "quiz_stats_updated", payload);
+      sseManager.broadcast("courses", "quiz_stats_updated", payload);
+      sseManager.broadcast(courseId, "quiz_updated", payload);
+      sseManager.broadcast("courses", "quiz_updated", payload);
+    }
 
     res.json(finalQuiz);
   } catch (error) {
@@ -288,7 +310,18 @@ export const submitQuiz = async (req: Request, res: Response) => {
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
     };
-    // sseManager.broadcast(courseId, "quiz_updated", updatedQuiz);
+    const courseId = await getCourseIdByModuleId(moduleId);
+    if (courseId) {
+      const payload = {
+        courseId,
+        moduleId,
+        quiz: updatedQuiz,
+      };
+      sseManager.broadcast(courseId, "quiz_stats_updated", payload);
+      sseManager.broadcast("courses", "quiz_stats_updated", payload);
+      sseManager.broadcast(courseId, "quiz_updated", payload);
+      sseManager.broadcast("courses", "quiz_updated", payload);
+    }
 
     const response: QuizSubmitResponse = {
       quizUuid: quizId,
@@ -329,7 +362,7 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
         uuid: quiz.uuid,
         title: quiz.title,
         totalAttempts,
-        avegarePercentage: 0,
+        averagePercentage: 0,
         questionAnalytics: [],
       });
     }

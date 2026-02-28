@@ -3,7 +3,9 @@ import multer from "multer";
 import {
   createMaterial,
   deleteMaterial,
+  downloadMaterial,
   getMaterials,
+  trackMaterialInteraction,
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
@@ -77,6 +79,8 @@ const uploadMiddleware = (req: any, res: any, next: any) => {
 };
 
 router.get("/", getMaterials);
+router.get("/:materialId/download", downloadMaterial);
+router.post("/:materialId/interactions", trackMaterialInteraction);
 router.post(
   "/",
   authMiddleware,

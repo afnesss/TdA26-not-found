@@ -65,9 +65,49 @@ export const CourseDetailSchema = z.object({
   updatedAt: z.date().or(z.string().datetime()),
 })
 
+export const DashboardModuleAnalyticsSchema = z.object({
+  uuid: z.string().uuid(),
+  name: z.string(),
+  status: z.enum(['active', 'passive']),
+  materialsCount: z.number().int().nonnegative(),
+  fileMaterialsCount: z.number().int().nonnegative(),
+  urlMaterialsCount: z.number().int().nonnegative(),
+  quizzesCount: z.number().int().nonnegative(),
+  quizzesWithoutSubmits: z.number().int().nonnegative(),
+  interactions: z.number().int().nonnegative(),
+  downloadCount: z.number().int().nonnegative(),
+  copyCount: z.number().int().nonnegative(),
+  openCount: z.number().int().nonnegative(),
+  quizAttempts: z.number().int().nonnegative(),
+  averageQuizPercentage: z.number().min(0).max(100).nullable(),
+  lowScoreQuizzes: z.number().int().nonnegative(),
+})
+
+export const CourseDashboardAnalyticsSchema = z.object({
+  courseId: z.string().uuid(),
+  modulesCount: z.number().int().nonnegative(),
+  materialsCount: z.number().int().nonnegative(),
+  quizzesCount: z.number().int().nonnegative(),
+  quizzesWithoutSubmits: z.number().int().nonnegative(),
+  interactions: z.number().int().nonnegative(),
+  downloadCount: z.number().int().nonnegative(),
+  copyCount: z.number().int().nonnegative(),
+  openCount: z.number().int().nonnegative(),
+  averageQuizPercentage: z.number().min(0).max(100).nullable(),
+  modulesWithoutInteraction: z.number().int().nonnegative(),
+  lowScoreQuizzes: z.number().int().nonnegative(),
+  modules: z.array(DashboardModuleAnalyticsSchema),
+})
+
 export type CourseStatus = z.infer<typeof CourseStatusSchema>
 export type CourseSummary = z.infer<typeof CourseSummarySchema>
 export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>
 export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>
 export type CourseDetail = z.infer<typeof CourseDetailSchema>
 export type StatusHistoryEvent = z.infer<typeof StatusHistoryEventSchema>
+export type DashboardModuleAnalytics = z.infer<
+  typeof DashboardModuleAnalyticsSchema
+>
+export type CourseDashboardAnalytics = z.infer<
+  typeof CourseDashboardAnalyticsSchema
+>

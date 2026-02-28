@@ -151,6 +151,252 @@ export async function getCourseByUuid(req: Request, res: Response) {
   }
 }
 
+export async function getCourseDashboardAnalytics(req: Request, res: Response) {
+  try {
+    const { uuid } = req.params;
+
+    const [existingCourse] = await db
+      .select({ uuid: courses.uuid, status: courses.status })
+      .from(courses)
+      .where(eq(courses.uuid, uuid));
+
+    if (!existingCourse) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    if (!["live", "paused", "archived"].includes(existingCourse.status)) {
+      return res.status(404).json({ message: "Statistiky nejsou dostupné" });
+    }
+
+    const courseModules = await db
+      .select({
+        uuid: modules.uuid,
+        name: modules.name,
+        status: modules.status,
+      })
+      .from(modules)
+      .where(eq(modules.courseId, uuid))
+      .orderBy(
+        asc(modules.position),
+        asc(modules.createdAt),
+        asc(modules.uuid),
+      );
+
+    if (courseModules.length === 0) {
+      return res.json({
+        courseId: uuid,
+        modulesCount: 0,
+        materialsCount: 0,
+        quizzesCount: 0,
+        quizzesWithoutSubmits: 0,
+        interactions: 0,
+        downloadCount: 0,
+        copyCount: 0,
+        openCount: 0,
+        averageQuizPercentage: null,
+        modulesWithoutInteraction: 0,
+        lowScoreQuizzes: 0,
+        modules: [],
+      });
+    }
+
+    const moduleIds = courseModules.map((module) => module.uuid);
+
+    const [materialStats, quizStats] = await Promise.all([
+      db
+        .select({
+          moduleId: courseMaterials.moduleId,
+          materialsCount: sql<number>`count(*)`.mapWith(Number),
+          fileMaterialsCount:
+            sql<number>`
+              count(
+                case when ${courseMaterials.type} = 'file' then 1 else null end
+              )
+            `.mapWith(Number),
+          urlMaterialsCount:
+            sql<number>`
+              count(
+                case when ${courseMaterials.type} = 'url' then 1 else null end
+              )
+            `.mapWith(Number),
+          downloadCount:
+            sql<number>`coalesce(sum(${courseMaterials.downloadCount}), 0)`.mapWith(
+              Number,
+            ),
+          copyCount:
+            sql<number>`coalesce(sum(${courseMaterials.copyCount}), 0)`.mapWith(
+              Number,
+            ),
+          openCount:
+            sql<number>`coalesce(sum(${courseMaterials.openCount}), 0)`.mapWith(
+              Number,
+            ),
+          materialInteractions: sql<number>`
+            coalesce(
+              sum(
+                case
+                  when ${courseMaterials.type} = 'file'
+                  then ${courseMaterials.downloadCount}
+                  else ${courseMaterials.copyCount} + ${courseMaterials.openCount}
+                end
+              ),
+              0
+            )
+          `.mapWith(Number),
+        })
+        .from(courseMaterials)
+        .where(inArray(courseMaterials.moduleId, moduleIds))
+        .groupBy(courseMaterials.moduleId),
+      db
+        .select({
+          moduleId: quizzes.moduleId,
+          quizzesCount:
+            sql<number>`count(distinct ${quizzes.uuid})`.mapWith(Number),
+          quizAttempts: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
+            Number,
+          ),
+          averageQuizPercentage: sql<number>`
+            ROUND(
+              AVG(
+                CASE
+                  WHEN ${quizSubmissions.maxScore} > 0
+                  THEN CAST(${quizSubmissions.score} AS FLOAT)
+                    / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100
+                  ELSE NULL
+                END
+              )
+            )
+          `.mapWith(Number),
+          lowScoreQuizzes:
+            sql<number>`
+              count(
+                distinct case
+                  when ${quizSubmissions.maxScore} > 0
+                    and (
+                      CAST(${quizSubmissions.score} AS FLOAT)
+                      / CAST(${quizSubmissions.maxScore} AS FLOAT) * 100
+                    ) < 60
+                  then ${quizzes.uuid}
+                  else null
+                end
+              )
+            `.mapWith(Number),
+          quizzesWithoutSubmits:
+            sql<number>`
+              count(
+                distinct case
+                  when ${quizSubmissions.uuid} is null
+                  then ${quizzes.uuid}
+                  else null
+                end
+              )
+            `.mapWith(Number),
+        })
+        .from(quizzes)
+        .leftJoin(quizSubmissions, eq(quizzes.uuid, quizSubmissions.quizId))
+        .where(inArray(quizzes.moduleId, moduleIds))
+        .groupBy(quizzes.moduleId),
+    ]);
+
+    const materialStatsByModule = new Map(
+      materialStats.map((row) => [row.moduleId, row]),
+    );
+    const quizStatsByModule = new Map(quizStats.map((row) => [row.moduleId, row]));
+
+    const moduleAnalytics = courseModules.map((module) => {
+      const material = materialStatsByModule.get(module.uuid);
+      const quiz = quizStatsByModule.get(module.uuid);
+
+      const materialsCount = material?.materialsCount ?? 0;
+      const fileMaterialsCount = material?.fileMaterialsCount ?? 0;
+      const urlMaterialsCount = material?.urlMaterialsCount ?? 0;
+      const materialInteractions = material?.materialInteractions ?? 0;
+      const downloadCount = material?.downloadCount ?? 0;
+      const copyCount = material?.copyCount ?? 0;
+      const openCount = material?.openCount ?? 0;
+      const quizzesCount = quiz?.quizzesCount ?? 0;
+      const quizzesWithoutSubmits = quiz?.quizzesWithoutSubmits ?? 0;
+      const quizAttempts = quiz?.quizAttempts ?? 0;
+      const interactions = materialInteractions + quizAttempts;
+
+      return {
+        uuid: module.uuid,
+        name: module.name,
+        status: module.status,
+        materialsCount,
+        fileMaterialsCount,
+        urlMaterialsCount,
+        quizzesCount,
+        quizzesWithoutSubmits,
+        interactions,
+        downloadCount,
+        copyCount,
+        openCount,
+        quizAttempts,
+        averageQuizPercentage: quiz?.averageQuizPercentage ?? null,
+        lowScoreQuizzes: quiz?.lowScoreQuizzes ?? 0,
+      };
+    });
+
+    const totals = moduleAnalytics.reduce(
+      (acc, module) => {
+        acc.materialsCount += module.materialsCount;
+        acc.quizzesCount += module.quizzesCount;
+        acc.quizzesWithoutSubmits += module.quizzesWithoutSubmits;
+        acc.interactions += module.interactions;
+        acc.downloadCount += module.downloadCount;
+        acc.copyCount += module.copyCount;
+        acc.openCount += module.openCount;
+        acc.modulesWithoutInteraction += module.interactions === 0 ? 1 : 0;
+        acc.lowScoreQuizzes += module.lowScoreQuizzes;
+        if (
+          module.averageQuizPercentage != null &&
+          module.quizAttempts > 0
+        ) {
+          acc.quizWeightedSum += module.averageQuizPercentage * module.quizAttempts;
+          acc.quizAttempts += module.quizAttempts;
+        }
+        return acc;
+      },
+      {
+        materialsCount: 0,
+        quizzesCount: 0,
+        quizzesWithoutSubmits: 0,
+        interactions: 0,
+        downloadCount: 0,
+        copyCount: 0,
+        openCount: 0,
+        modulesWithoutInteraction: 0,
+        lowScoreQuizzes: 0,
+        quizWeightedSum: 0,
+        quizAttempts: 0,
+      },
+    );
+
+    return res.json({
+      courseId: uuid,
+      modulesCount: moduleAnalytics.length,
+      materialsCount: totals.materialsCount,
+      quizzesCount: totals.quizzesCount,
+      quizzesWithoutSubmits: totals.quizzesWithoutSubmits,
+      interactions: totals.interactions,
+      downloadCount: totals.downloadCount,
+      copyCount: totals.copyCount,
+      openCount: totals.openCount,
+      averageQuizPercentage:
+        totals.quizAttempts > 0
+          ? Math.round(totals.quizWeightedSum / totals.quizAttempts)
+          : null,
+      modulesWithoutInteraction: totals.modulesWithoutInteraction,
+      lowScoreQuizzes: totals.lowScoreQuizzes,
+      modules: moduleAnalytics,
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard analytics:", error);
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
 export async function createCourse(req: Request, res: Response) {
   const { name, description } = req.body;
 

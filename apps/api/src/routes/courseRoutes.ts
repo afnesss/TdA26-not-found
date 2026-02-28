@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getAllCourses,
   getCourseByUuid,
+  getCourseDashboardAnalytics,
   createCourse,
   cloneCourse,
   updateCourse,
@@ -25,6 +26,7 @@ const router = Router();
 
 router.get("/stream", streamCourses);
 router.get("/", getAllCourses);
+router.get("/:uuid/dashboard-analytics", getCourseDashboardAnalytics);
 router.get("/:uuid", getCourseByUuid);
 
 router.post(

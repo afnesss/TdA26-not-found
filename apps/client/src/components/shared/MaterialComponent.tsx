@@ -1,8 +1,13 @@
 import UploadIcon from '@/assets/upload-black.svg?react'
+import {
+  getMaterialDownloadUrl,
+  trackMaterialInteraction,
+} from '@/api/queries/materialQueries'
 import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   MaterialValidationSchema,
+  type MaterialInteractionAction,
   type Material,
   type MaterialValidation,
 } from '@/lib/schemas'
@@ -13,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Download, Edit, ExternalLink } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useLocation, useParams } from 'react-router'
 import { toast } from 'sonner'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import DeleteConfirmDialog from '../ui/AlertDialog'
@@ -42,6 +48,12 @@ type MaterialCardProps =
 
 const MaterialCard = (props: MaterialCardProps) => {
   const { material, type } = props
+  const { courseId, moduleId } = useParams<{
+    courseId: string
+    moduleId: string
+  }>()
+  const { pathname } = useLocation()
+  const isDashboardPage = pathname.startsWith('/dashboard')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setEditing] = useState(
     'isDraft' in props ? props.isDraft : false,
@@ -70,9 +82,21 @@ const MaterialCard = (props: MaterialCardProps) => {
     defaultValue: material,
   }) as MaterialValidation
 
+  const runInteraction = async (action: MaterialInteractionAction) => {
+    if (!courseId || !moduleId) return
+    if (isDashboardPage) return
+
+    try {
+      await trackMaterialInteraction(courseId, moduleId, material.uuid, action)
+    } catch (error) {
+      console.error('Interaction tracking failed:', error)
+    }
+  }
+
   const handleCopyLink = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url)
+      void runInteraction('copy')
       setCopied(true)
       toast.success('Odkaz zkopírován')
       setTimeout(() => setCopied(false), 1500)
@@ -165,6 +189,15 @@ const MaterialCard = (props: MaterialCardProps) => {
   })
   const displayType =
     'isDraft' in props && props.isDraft ? formValues.type : material.type
+  const showLecturerCounters = isDashboardPage && !isEditing
+  const downloadUrl =
+    material.type === 'file' && courseId && moduleId
+      ? isDashboardPage
+        ? material.fileUrl
+        : getMaterialDownloadUrl(courseId, moduleId, material.uuid)
+      : material.type === 'file'
+        ? material.fileUrl
+        : undefined
   return (
     <div className='bg-background rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg transition-shadow'>
       <div className='flex items-start gap-2 md:gap-4'>
@@ -255,10 +288,10 @@ const MaterialCard = (props: MaterialCardProps) => {
                       />
                     </div>
                   ) : (
-                    <div className='shrink-0'>
+                    <div className='shrink-0 flex flex-col items-end gap-1'>
                       {material.type === 'file' ? (
                         <a
-                          href={material.fileUrl}
+                          href={downloadUrl}
                           download={material.originalFilename || material.name}
                           target='_blank'
                           rel='noopener noreferrer'
@@ -287,6 +320,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                             target='_blank'
                             rel='noopener noreferrer'
                             aria-label={`Open ${material.name} in new tab`}
+                            onClick={() => {
+                              void runInteraction('open')
+                            }}
                           >
                             <EditBtn
                               icon={ExternalLink}
@@ -295,6 +331,17 @@ const MaterialCard = (props: MaterialCardProps) => {
                           </a>
                         </div>
                       )}
+                      {showLecturerCounters &&
+                        (material.type === 'file' ? (
+                          <p className='text-[11px] text-muted-foreground'>
+                            Stažení: {material.downloadCount ?? 0}
+                          </p>
+                        ) : (
+                          <p className='text-[11px] text-muted-foreground text-right'>
+                            Kopírování: {material.copyCount ?? 0} | Otevření:{' '}
+                            {material.openCount ?? 0}
+                          </p>
+                        ))}
                     </div>
                   )}
                 </div>

@@ -19,6 +19,7 @@ export const FileMaterialSchema = z.object({
   mimeType: z.string().optional(),
   sizeBytes: z.number().int().optional(),
   originalFilename: z.string().optional(),
+  downloadCount: z.number().int().nonnegative().optional(),
 })
 
 export const UrlMaterialSchema = z.object({
@@ -28,6 +29,8 @@ export const UrlMaterialSchema = z.object({
   description: z.string().optional(),
   url: z.string().url(),
   faviconUrl: z.string().url().optional(),
+  copyCount: z.number().int().nonnegative().optional(),
+  openCount: z.number().int().nonnegative().optional(),
 })
 
 export const MaterialSchema = z.discriminatedUnion('type', [
@@ -60,6 +63,12 @@ export const UrlMaterialUpdateRequestSchema = z.object({
   description: z.string().optional(),
   url: z.string().url().optional(),
 })
+
+export const MaterialInteractionActionSchema = z.enum([
+  'download',
+  'copy',
+  'open',
+])
 
 export const MaterialValidationSchema = z.discriminatedUnion('type', [
   z.object({
@@ -146,4 +155,7 @@ export type FileMaterialUpdateRequest = z.infer<
 >
 export type UrlMaterialUpdateRequest = z.infer<
   typeof UrlMaterialUpdateRequestSchema
+>
+export type MaterialInteractionAction = z.infer<
+  typeof MaterialInteractionActionSchema
 >

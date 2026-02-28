@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { getCourseDashboardAnalytics } from '@/api/queries/courseQueries'
 import {
   Card,
   CardContent,
@@ -7,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { colorStyles, colors } from '@/lib/constants'
-import type { CourseSummary } from '@/lib/schemas'
+import type { CourseDashboardAnalytics, CourseSummary } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { CourseStateBadge } from './CourseStateBadge'
 import { StatusActionButtons } from './StatusActionButtons'
@@ -15,6 +16,7 @@ import { handleCapitalizedInput } from '@/lib/capitalize'
 import { Edit } from 'lucide-react'
 import type { CourseStatus } from '@/lib/schemas'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
@@ -36,6 +38,7 @@ interface CourseEdit {
   type: 'edit'
   course: CourseSummary
   index: number
+  analyticsMode?: boolean
   isDraft?: true
   onEdit: () => void
   onSaveDraft?: (data: { name: string; description?: string }) => void
@@ -61,6 +64,39 @@ const CourseComponent = (props: CourseCompProps) => {
     nameError: '',
     saving: false,
   })
+  const isEditableCourseCard =
+    type === 'edit' && !('isDraft' in props && props.isDraft)
+  const canShowAnalytics =
+    course.status === 'live' ||
+    course.status === 'paused' ||
+    course.status === 'archived'
+  const isAnalyticsMode =
+    type === 'edit' && Boolean(props.analyticsMode) && canShowAnalytics
+
+  const {
+    data: overviewCourse,
+    isLoading: overviewLoading,
+    isError: overviewError,
+  } = useQuery<CourseDashboardAnalytics>({
+    queryKey: ['course-dashboard-analytics', course.uuid],
+    queryFn: () => getCourseDashboardAnalytics(course.uuid),
+    enabled:
+      isEditableCourseCard && isAnalyticsMode && !state.isEditing && canShowAnalytics,
+    staleTime: 1000 * 20,
+  })
+
+  const averageQuizScore = overviewCourse?.averageQuizPercentage ?? null
+  const overviewMaterialsCount = overviewCourse?.materialsCount ?? 0
+  const overviewQuizzesCount = overviewCourse?.quizzesCount ?? 0
+  const modulesWithoutInteraction = overviewCourse?.modulesWithoutInteraction ?? 0
+  const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
+  const attentionParts: string[] = []
+  if (modulesWithoutInteraction > 0) {
+    attentionParts.push(`moduly bez interakcí ${modulesWithoutInteraction}`)
+  }
+  if (lowScoreQuizzes > 0) {
+    attentionParts.push(`testy s nízkým skóre ${lowScoreQuizzes}`)
+  }
 
   const handleNameChange = (name: string) => {
     const capitalizedName = handleCapitalizedInput(name, state.tempName)
@@ -131,7 +167,7 @@ const CourseComponent = (props: CourseCompProps) => {
     <Card
       key={course.uuid}
       className={cn(
-        'transition-colors',
+        'relative transition-colors',
         ((type === 'edit' && !props.planning?.isEditing) ||
           course.status === 'live') &&
           'cursor-pointer',
@@ -148,63 +184,62 @@ const CourseComponent = (props: CourseCompProps) => {
         )}
       />
 
-      <div className='flex justify-between items-center gap-2 mx-4 md:mx-5 mt-3'>
-        <CourseStateBadge status={course.status} />
-        {type === 'edit' &&
-          (!props.isDraft ? (
-            <div className='flex gap-2 md:gap-1.5 items-center'>
-              {course.status === 'draft' ? (
-                <EditBtn
-                  icon={Edit}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.onEdit()
-                  }}
-                  aria-label={`Edit course ${course.name}`}
-                />
-              ) : (
-                <EditBtn
-                  type='view'
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.onEdit()
-                  }}
-                  aria-label={`View course ${course.name}`}
-                />
-              )}
-              <DeleteConfirmDialog
-                trigger={
+      {!isAnalyticsMode && (
+        <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
+          <CourseStateBadge status={course.status} />
+          {type === 'edit' &&
+            (!props.isDraft ? (
+              <div className='flex gap-2 md:gap-1.5 items-center'>
+                {course.status === 'draft' ? (
                   <EditBtn
-                    type='delete'
-                    onClick={(e) => e?.stopPropagation()}
-                    aria-label={`Delete course ${course.name}`}
+                    icon={Edit}
+                    onClick={(e) => {
+                      e?.stopPropagation()
+                      props.onEdit()
+                    }}
+                    aria-label={`Edit course ${course.name}`}
                   />
-                }
-                itemName={course.name}
-                itemType='kurz'
-                onConfirm={() => {
-                  if (props.onDelete) {
-                    props.onDelete()
+                ) : (
+                  <EditBtn
+                    type='view'
+                    onClick={(e) => {
+                      e?.stopPropagation()
+                      props.onEdit()
+                    }}
+                    aria-label={`View course ${course.name}`}
+                  />
+                )}
+                <DeleteConfirmDialog
+                  trigger={
+                    <EditBtn
+                      type='delete'
+                      onClick={(e) => e?.stopPropagation()}
+                      aria-label={`Delete course ${course.name}`}
+                    />
                   }
-                }}
-              ></DeleteConfirmDialog>
-            </div>
-          ) : (
-            <EditSaveCancelButtons
-              className='space-x-2'
-              onSave={() => saveEdit()}
-              onCancel={cancelEdit}
-              saveDisabled={state.saving || !!state.nameError}
-              cancelDisabled={state.saving}
-              saveAriaLabel='Save course'
-            />
-          ))}
-      </div>
+                  itemName={course.name}
+                  itemType='kurz'
+                  onConfirm={() => {
+                    if (props.onDelete) {
+                      props.onDelete()
+                    }
+                  }}
+                ></DeleteConfirmDialog>
+              </div>
+            ) : (
+              <EditSaveCancelButtons
+                className='space-x-2'
+                onSave={() => saveEdit()}
+                onCancel={cancelEdit}
+                saveDisabled={state.saving || !!state.nameError}
+                cancelDisabled={state.saving}
+                saveAriaLabel='Save course'
+              />
+            ))}
+        </div>
+      )}
       <div className='px-4 pb-4 md:px-6 md:pb-6 pt-2 relative overflow-hidden flex-1 flex flex-col justify-between'>
-        {/* Status badge and actions in top-right corner */}
-
         <CardContent>
-          {/* Název - editovatelný v režimu editace */}
           {state.isEditing ? (
             <div className='space-y-1 mb-2 md:mb-3'>
               <Textarea
@@ -228,7 +263,6 @@ const CourseComponent = (props: CourseCompProps) => {
             <CardTitle className='mb-2 md:mb-4'>{course.name}</CardTitle>
           )}
 
-          {/* Popis - editovatelný v režimu editace */}
           {state.isEditing ? (
             <Textarea
               value={state.tempDescription}
@@ -250,9 +284,11 @@ const CourseComponent = (props: CourseCompProps) => {
               disabled={state.saving}
             />
           ) : (
-            <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
-              {truncateDescription(course.description ?? '')}
-            </CardDescription>
+            !isAnalyticsMode && (
+              <CardDescription className='mb-2 md:mb-4 line-clamp-3'>
+                {truncateDescription(course.description ?? '')}
+              </CardDescription>
+            )
           )}
         </CardContent>
 
@@ -262,7 +298,6 @@ const CourseComponent = (props: CourseCompProps) => {
               <CardDate
                 course={course}
                 state={course.status}
-                // isDraft={'isDraft' in props && props.isDraft}
               />
 
               <Button
@@ -285,30 +320,64 @@ const CourseComponent = (props: CourseCompProps) => {
           )}
 
           {type === 'edit' && (
-            <CoursePlanningSection
-              course={course}
-              isDraft={'isDraft' in props && props.isDraft}
-              state={course.status}
-              planning={props.planning}
-              rightActions={
-                !('isDraft' in props && props.isDraft) &&
+            <>
+              {!('isDraft' in props && props.isDraft) &&
                 !state.isEditing &&
-                !props.planning?.isEditing &&
-                props.onStatusChange ? (
-                  <StatusActionButtons
-                    className='flex-wrap justify-end'
-                    currentStatus={course.status}
-                    courseColor={courseColor}
-                    onStatusChange={(newStatus) =>
-                      props.onStatusChange!(course.uuid, newStatus)
-                    }
-                    onCopyAsDraft={() => {
-                      props.onCopyAsDraft?.(course)
-                    }}
-                  />
-                ) : undefined
-              }
-            />
+                isAnalyticsMode && (
+                  <div className='w-full space-y-2 rounded-lg border border-border/60 p-3'>
+                    <div className='rounded-md bg-muted/40 p-2 text-xs'>
+                      <p className='text-muted-foreground'>Průměrné skóre testů</p>
+                      <p className='font-semibold'>
+                        {averageQuizScore == null ? '—' : `${averageQuizScore}%`}
+                      </p>
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      Objem: moduly {overviewCourse?.modulesCount ?? 0}, materiály{' '}
+                      {overviewMaterialsCount}, testy {overviewQuizzesCount}
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      Potřebuje pozornost:{' '}
+                      {attentionParts.length > 0
+                        ? attentionParts.join(', ')
+                        : 'bez kritických signálů'}
+                    </p>
+                    {overviewLoading && (
+                      <p className='text-xs text-muted-foreground'>Načítání…</p>
+                    )}
+                    {overviewError && (
+                      <p className='text-xs text-destructive'>
+                        Přehled se nepodařilo načíst.
+                      </p>
+                    )}
+                  </div>
+                )}
+              {!isAnalyticsMode && (
+                <CoursePlanningSection
+                  course={course}
+                  isDraft={'isDraft' in props && props.isDraft}
+                  state={course.status}
+                  planning={props.planning}
+                  rightActions={
+                    !('isDraft' in props && props.isDraft) &&
+                    !state.isEditing &&
+                    !props.planning?.isEditing &&
+                    props.onStatusChange ? (
+                      <StatusActionButtons
+                        className='flex-wrap justify-end'
+                        currentStatus={course.status}
+                        courseColor={courseColor}
+                        onStatusChange={(newStatus) =>
+                          props.onStatusChange!(course.uuid, newStatus)
+                        }
+                        onCopyAsDraft={() => {
+                          props.onCopyAsDraft?.(course)
+                        }}
+                      />
+                    ) : undefined
+                  }
+                />
+              )}
+            </>
           )}
         </CardFooter>
       </div>

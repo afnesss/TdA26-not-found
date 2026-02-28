@@ -91,7 +91,9 @@ const QuizQuestion = ({
         <div
           className={cn(
             'flex gap-1.5 md:gap-3 flex-1 min-w-0',
-            mode === 'user' && isSubmitted ? 'items-center' : 'items-start',
+            (mode === 'user' && isSubmitted) || mode === 'lecturer-preview'
+              ? 'items-center'
+              : 'items-start',
           )}
         >
           <span className='font-bold text-background text-base bg-primary w-6 md:w-8 h-6 md:h-8 rounded-full flex items-center justify-center shrink-0'>
@@ -124,15 +126,6 @@ const QuizQuestion = ({
                     />
                   </div>
 
-                  {/* Analytics on large screens - between input and select */}
-                  {questionAnalytics && (
-                    <div className='hidden lg:flex items-center  text-xs lg:text-sm text-gray-600 shrink-0 px-2'>
-                      <span className='font-medium text-accent-teal'>
-                        {questionAnalytics.correctRate.toFixed(0)}% správně
-                      </span>
-                    </div>
-                  )}
-
                   <div className='flex items-center gap-2 shrink-0'>
                     <Label
                       size='sm'
@@ -160,11 +153,6 @@ const QuizQuestion = ({
                     </Select>
 
                     {/* Analytics on small screens - next to select */}
-                    {questionAnalytics && (
-                      <span className='lg:hidden text-xs font-medium text-accent-teal shrink-0'>
-                        {questionAnalytics.correctRate.toFixed(0)}%
-                      </span>
-                    )}
 
                     <EditBtn
                       onClick={onQuestionRemove}
@@ -181,6 +169,13 @@ const QuizQuestion = ({
                       {question.question}
                     </Label>
 
+                    {questionAnalytics && (
+                      <div className='flex items-center  text-xs lg:text-sm text-gray-600 shrink-0 '>
+                        <span className='font-medium text-accent-teal'>
+                          {questionAnalytics.correctRate.toFixed(0)}% správně
+                        </span>
+                      </div>
+                    )}
                     {mode === 'user' && isSubmitted && (
                       <div className='shrink-0'>
                         {userState.results?.correctPerQuestion[qIndex] ? (
@@ -249,7 +244,7 @@ const QuizQuestion = ({
                 question={question}
                 mode={mode}
                 selectedCount={
-                  mode === 'lecturer' ? optionStats?.selectedCount : undefined
+                  questionAnalytics ? optionStats?.selectedCount : undefined
                 }
                 // Lecturer props
                 isCorrect={isCorrect}

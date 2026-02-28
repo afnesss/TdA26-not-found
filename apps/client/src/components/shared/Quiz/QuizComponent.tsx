@@ -66,6 +66,7 @@ type QuizComponentProps = {
   onCancelDraft?: () => void
   isExpanded?: boolean
   onToggleExpand?: () => void
+  showAnalytics?: boolean
 }
 
 const QuizComponent = ({
@@ -83,10 +84,10 @@ const QuizComponent = ({
   onCancelDraft,
   isExpanded,
   onToggleExpand,
+  showAnalytics = false,
 }: QuizComponentProps) => {
   const [showIncompleteError, setShowIncompleteError] = useState(false)
   const [showCorrect, setShowCorrect] = useState(false)
-  const [, startTransition] = useTransition()
   const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId: string
@@ -127,8 +128,8 @@ const QuizComponent = ({
     enabled:
       Boolean(courseId) &&
       Boolean(isExpanded) &&
-      mode === 'lecturer' &&
-      !isDraft &&
+      mode === 'lecturer-preview' &&
+      showAnalytics &&
       (formValues?.attemptsCount ?? 0) > 0,
   })
 
@@ -473,7 +474,7 @@ const QuizComponent = ({
                 <span>{displayQuiz.questions?.length ?? 0} otázek</span>
               </span>
 
-              {mode === 'lecturer' && (displayQuiz.attemptsCount ?? 0) > 0 && (
+              {showAnalytics && (displayQuiz.attemptsCount ?? 0) > 0 && (
                 <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
                   <span>Průměr:</span>
                   <span className='text-accent-teal'>
@@ -508,7 +509,9 @@ const QuizComponent = ({
                   mode={mode}
                   questionError={errors.questions?.[qIndex] as object}
                   questionAnalytics={
-                    mode === 'lecturer' ? questionAnalytics : undefined
+                    mode === 'lecturer-preview' && showAnalytics
+                      ? questionAnalytics
+                      : undefined
                   }
                   onQuestionTextUpdate={(text: string) =>
                     updateQuestionText(qIndex, text)

@@ -118,12 +118,12 @@ const CardDate = ({
           />
         </div>
       ) : (
-        <div className='flex items-center gap-1.5 mr-3'>
-          <Calendar size={14} className='text-primary' />
+        <div className='flex items-center gap-1.5 mr-3 shrink-0'>
+          <Calendar size={14} className='text-primary ' />
           {planning?.editable ? (
             <button
               type='button'
-              className='text-xs md:text-sm font-medium hover:underline cursor-pointer'
+              className='text-xs md:text-sm font-medium hover:underline cursor-pointer '
               onClick={(e) => {
                 e.stopPropagation()
                 planning.onOpen()
@@ -132,7 +132,7 @@ const CardDate = ({
               {getDateToDisplay()}
             </button>
           ) : (
-            <span className='text-xs md:text-sm font-medium'>
+            <span className='text-xs md:text-sm font-medium shrink-0'>
               {getDateToDisplay()}
             </span>
           )}

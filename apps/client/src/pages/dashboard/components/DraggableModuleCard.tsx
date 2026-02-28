@@ -79,7 +79,7 @@ export function DraggableModuleCard({
             moduleIndex={moduleIndex}
             courseStatus={courseStatus}
             showGripHandle
-            alwaysShowActions
+            alwaysShowActions={false}
             gripHandleProps={{ attributes, listeners }}
             {...rest}
           />

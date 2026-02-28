@@ -3,7 +3,7 @@ import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
 import EditBtn from './EditBtn'
-import { Edit, GripVertical } from 'lucide-react'
+import { Edit, Menu } from 'lucide-react'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Card, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -144,18 +144,38 @@ const ModuleCard = (props: ModuleCardProps) => {
     alwaysShowActions,
   } = props
 
+  const isWholeCardDragEnabled = Boolean(gripHandleProps)
+  const cardDragProps =
+    isWholeCardDragEnabled && gripHandleProps
+      ? { ...gripHandleProps.attributes, ...gripHandleProps.listeners }
+      : {}
+
   return (
     <Card
-      className='border border-border/60 shadow-md bg-background cursor-pointer'
-      onClick={() => onOpenModule && onOpenModule(module.uuid)}
-      role='button'
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
+      className={cn(
+        'border border-border/60 shadow-md bg-background',
+        isWholeCardDragEnabled
+          ? 'cursor-grab active:cursor-grabbing'
+          : 'cursor-pointer',
+      )}
+      onClick={() => {
+        if (!isWholeCardDragEnabled) {
           onOpenModule?.(module.uuid)
         }
       }}
+      role={isWholeCardDragEnabled ? undefined : 'button'}
+      tabIndex={isWholeCardDragEnabled ? -1 : 0}
+      onKeyDown={
+        isWholeCardDragEnabled
+          ? undefined
+          : (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onOpenModule?.(module.uuid)
+              }
+            }
+      }
+      {...cardDragProps}
     >
       <div className='p-3 md:px-5 md:py-4 h-full flex flex-col'>
         <div className='flex items-center justify-between gap-3'>
@@ -224,15 +244,13 @@ const ModuleCard = (props: ModuleCardProps) => {
           <CardDescription className='flex-1 min-w-0'>
             {truncateDescription(module.description ?? '', 70)}
           </CardDescription>
-          {showGripHandle && gripHandleProps && (
+          {showGripHandle && (
             <Button
               variant='ghost'
               size='sm'
-              className='h-6 w-6 p-0 shrink-0 ml-auto'
-              {...gripHandleProps.attributes}
-              {...gripHandleProps.listeners}
+              className='h-6 w-6 p-0 shrink-0 ml-auto cursor-grab'
             >
-              <GripVertical className='w-4 h-4 text-muted-foreground' />
+              <Menu className='w-4 h-4 text-muted-foreground' />
             </Button>
           )}
         </div>

@@ -19,7 +19,7 @@ import {
 } from '@/pages/CoursePage/utils/useModuleMutation'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
@@ -45,6 +45,7 @@ const CourseModulesOverviewPage = () => {
     course?.description ?? '',
   )
   const [draftModule, setDraftModule] = useState<DraftModuleForm | null>(null)
+  const [isReorderMode, setIsReorderMode] = useState(false)
   const queryClient = useQueryClient()
 
   const {
@@ -85,6 +86,9 @@ const CourseModulesOverviewPage = () => {
   }
 
   const handleCourseStatusChange = (status: CourseStatus) => {
+    if (status !== 'draft') {
+      setIsReorderMode(false)
+    }
     if (status === 'planned') {
       planningHook.openPlanningEditor(course, true)
       return
@@ -123,7 +127,7 @@ const CourseModulesOverviewPage = () => {
   }
 
   const handleOpenModule = (moduleId: string) => {
-    navigate(`/dashboard/${courseId}/modules/${moduleId}`)
+    if (!isReorderMode) navigate(`/dashboard/${courseId}/modules/${moduleId}`)
   }
 
   const handleToggleModuleVisibility = (
@@ -137,7 +141,7 @@ const CourseModulesOverviewPage = () => {
   }
 
   const handleAddModuleDraft = () => {
-    if (previewMode || draftModule) return
+    if (previewMode || draftModule || isReorderMode) return
     setDraftModule({ name: '', description: '' })
   }
 
@@ -264,6 +268,8 @@ const CourseModulesOverviewPage = () => {
         draftModule={draftModule}
         setDraftModule={setDraftModule}
         previewMode={previewMode}
+        isReorderMode={isReorderMode}
+        onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
         onAddModule={handleAddModuleDraft}
         onOpenModule={handleOpenModule}
         onCreateModule={handleCreateModule}

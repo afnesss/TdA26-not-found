@@ -43,6 +43,7 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
     listeners: SyntheticListenerMap | undefined
   }
   alwaysShowActions?: boolean
+  isDragging?: boolean
 }
 
 type DraftModuleCardProps = BaseModuleCardProps & {
@@ -142,6 +143,7 @@ const ModuleCard = (props: ModuleCardProps) => {
     showGripHandle,
     gripHandleProps,
     alwaysShowActions,
+    isDragging,
   } = props
 
   const isWholeCardDragEnabled = Boolean(gripHandleProps)
@@ -154,9 +156,11 @@ const ModuleCard = (props: ModuleCardProps) => {
     <Card
       className={cn(
         'border border-border/60 shadow-md bg-background',
-        isWholeCardDragEnabled
-          ? 'cursor-grab active:cursor-grabbing'
-          : 'cursor-pointer',
+        isDragging
+          ? 'cursor-grabbing'
+          : isWholeCardDragEnabled
+            ? 'cursor-grab active:cursor-grabbing'
+            : 'cursor-pointer',
       )}
       onClick={() => {
         if (!isWholeCardDragEnabled) {

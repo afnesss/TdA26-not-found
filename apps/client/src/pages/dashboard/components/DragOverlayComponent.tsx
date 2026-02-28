@@ -20,6 +20,7 @@ export default function DragOverlayComponent({
       showGripHandle
       alwaysShowActions={false}
       onOpenModule={() => {}}
+      isDragging
     />
   )
 }

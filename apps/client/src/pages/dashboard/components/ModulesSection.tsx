@@ -10,6 +10,7 @@ import DashboardAddButton from './DashboardAddButton'
 import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
+import { useEffect, useRef } from 'react'
 
 interface ModulesSectionProps {
   courseId: string
@@ -69,6 +70,20 @@ const ModulesSection = ({
 
   const canDragAndDrop =
     courseStatus === 'draft' && isReorderMode && modulesList.length > 1
+
+  const draftCardRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!draftModule || !draftCardRef.current) return
+    const rect = draftCardRef.current.getBoundingClientRect()
+    const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight
+
+    if (!isVisible) {
+      draftCardRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }
+  }, [draftModule])
 
   return (
     <section className='space-y-4'>
@@ -154,15 +169,17 @@ const ModulesSection = ({
                 onToggleModuleVisibility={onToggleVisibility}
               />
 
-              <ModuleCard
-                variant='draft'
-                moduleIndex={modulesList.length + 1}
-                draftModule={draftModule}
-                setDraftModule={setDraftModule}
-                onCreate={onCreateModule}
-                onCancel={() => setDraftModule(null)}
-                isCreating={isCreating}
-              />
+              <div ref={draftCardRef}>
+                <ModuleCard
+                  variant='draft'
+                  moduleIndex={modulesList.length + 1}
+                  draftModule={draftModule}
+                  setDraftModule={setDraftModule}
+                  onCreate={onCreateModule}
+                  onCancel={() => setDraftModule(null)}
+                  isCreating={isCreating}
+                />
+              </div>
             </div>
           )}
 

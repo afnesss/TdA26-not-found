@@ -18,9 +18,6 @@ export const DetailsContentSkeleton = () => {
           <Skeleton className='h-3 w-24' />
         </div>
 
-        {/* Title */}
-        <Skeleton className='h-8 w-48 mb-5' />
-
         {/* Form Fields */}
         <div className='space-y-4 mt-5'>
           {/* Name Field */}
@@ -37,16 +34,10 @@ export const DetailsContentSkeleton = () => {
         </div>
 
         {/* Footer */}
-        <div className='flex flex-col sm:flex-row justify-start sm:justify-between sm:items-center gap-4 pt-8'>
-          <div className='flex flex-row gap-10'>
-            <div>
-              <Skeleton className='h-3 w-24 mb-2' />
-              <Skeleton className='h-5 w-20' />
-            </div>
-            <div>
-              <Skeleton className='h-3 w-24 mb-2' />
-              <Skeleton className='h-5 w-20' />
-            </div>
+        <div className='flex flex-row  justify-between sm:items-center gap-4 pt-8'>
+          <div>
+            <Skeleton className='h-3 w-24 mb-2' />
+            <Skeleton className='h-5 w-20' />
           </div>
           <Skeleton className='h-10 w-32 rounded-xl' />
         </div>

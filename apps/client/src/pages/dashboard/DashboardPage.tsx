@@ -35,12 +35,20 @@ import { useMediaQuery } from 'usehooks-ts'
 import { filterItems } from '@/lib/constants'
 import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import type { ApiError } from '@/lib/types'
+
+const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState<FilterIds>('newest')
-  const [statusFilters, setStatusFilters] =
-    useState<Record<CourseStatus, boolean>>(defaultStatusFilters)
+  const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
+    `${DASHBOARD_PAGE_FILTERS_KEY}-sort`,
+    'newest',
+  )
+  const [statusFilters, setStatusFilters] = useLocalStorage<
+    Record<CourseStatus, boolean>
+  >(`${DASHBOARD_PAGE_FILTERS_KEY}-status`, defaultStatusFilters)
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
@@ -52,10 +60,13 @@ const DashboardDesign1 = () => {
     data: courses = [],
     isLoading: coursesLoading,
     isError: coursesError,
+    isRefetchError: coursesRefetchError,
+    error: coursesQueryError,
     refetch: refetchCourses,
-  } = useQuery<CourseSummary[]>({
+  } = useQuery<CourseSummary[], ApiError>({
     queryKey: ['courses'],
     queryFn: () => getCourses(),
+    networkMode: 'always',
   })
 
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
@@ -93,7 +104,7 @@ const DashboardDesign1 = () => {
   }
 
   const resetStatusFilters = () => {
-    setStatusFilters({ ...defaultStatusFilters })
+    setStatusFilters(defaultStatusFilters)
   }
 
   const handleEditCourse = (course: CourseSummary) => {
@@ -127,6 +138,13 @@ const DashboardDesign1 = () => {
   )
 
   useTitle('Správa kurzů')
+
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+  const isNetworkError =
+    (coursesQueryError as ApiError | undefined)?.isNetworkError ?? false
+  const hasCourseFetchError = coursesError || coursesRefetchError
+  const shouldShowNetworkError =
+    hasCourseFetchError && (isNetworkError || isOffline) && courses.length === 0
 
   const isSearchEmpty = searchQuery.trim() === ''
   const useResetStatusAction = isSearchEmpty && courses.length > 0
@@ -237,16 +255,25 @@ const DashboardDesign1 = () => {
           )}
 
           {!courseDraft &&
-            (!coursesLoading && !coursesError && courses.length === 0 ? (
+            (shouldShowNetworkError ? (
+              <StateComp
+                type='network-offline'
+                onAction={() => refetchCourses()}
+              />
+            ) : !coursesLoading && !coursesError && courses.length === 0 ? (
               <StateComp
                 type='no-content'
                 message='Začněte vytvořením svého prvního kurzu'
               />
             ) : coursesError ? (
               <StateComp
-                type='error'
+                type={shouldShowNetworkError ? 'network-offline' : 'error'}
                 onAction={() => refetchCourses()}
-                message='Nepodařilo se načíst kurzy'
+                message={
+                  shouldShowNetworkError
+                    ? undefined
+                    : 'Nepodařilo se načíst kurzy'
+                }
               />
             ) : (
               filteredCourses.length === 0 &&

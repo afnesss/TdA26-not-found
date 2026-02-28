@@ -53,6 +53,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     moduleId: string
   }>()
   const { pathname } = useLocation()
+  const isDashboardPage = pathname.startsWith('/dashboard')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setEditing] = useState(
     'isDraft' in props ? props.isDraft : false,
@@ -83,6 +84,7 @@ const MaterialCard = (props: MaterialCardProps) => {
 
   const runInteraction = async (action: MaterialInteractionAction) => {
     if (!courseId || !moduleId) return
+    if (isDashboardPage) return
 
     try {
       await trackMaterialInteraction(courseId, moduleId, material.uuid, action)
@@ -187,10 +189,12 @@ const MaterialCard = (props: MaterialCardProps) => {
   })
   const displayType =
     'isDraft' in props && props.isDraft ? formValues.type : material.type
-  const showLecturerCounters = pathname.startsWith('/dashboard') && !isEditing
+  const showLecturerCounters = isDashboardPage && !isEditing
   const downloadUrl =
     material.type === 'file' && courseId && moduleId
-      ? getMaterialDownloadUrl(courseId, moduleId, material.uuid)
+      ? isDashboardPage
+        ? material.fileUrl
+        : getMaterialDownloadUrl(courseId, moduleId, material.uuid)
       : material.type === 'file'
         ? material.fileUrl
         : undefined

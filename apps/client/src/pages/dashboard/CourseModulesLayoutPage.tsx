@@ -58,7 +58,8 @@ const CourseModulesLayoutPage = () => {
 
   const isNetworkError = (feedErrorObj as ApiError)?.isNetworkError ?? false
   const isFeedOfflineError = isNetworkError || isOffline
-  const shouldSuppressFeedNetworkError = isModuleDetailPage && isFeedOfflineError
+  const shouldSuppressFeedNetworkError =
+    isModuleDetailPage && isFeedOfflineError
   const hasCourseError = courseError || !course
 
   const { mutateAsync: createPostMutation } = useCreatePostMutation(
@@ -105,7 +106,9 @@ const CourseModulesLayoutPage = () => {
             isError: false,
             refetchCourse,
             previewMode: false,
-            courseIndexColor: isModuleDetailPage ? 'accent-teal' : 'accent-teal-dark',
+            courseIndexColor: isModuleDetailPage
+              ? 'accent-teal'
+              : 'accent-teal-dark',
           } as CourseModulesLayoutContext
         }
       />
@@ -190,7 +193,8 @@ const CourseModulesLayoutPage = () => {
               </div>
               {canManageFeed && sideTab === 'feed' && (
                 <DashboardAddButton
-                  label={'P\u0159idat p\u0159\u00edsp\u011bvek'}
+                  label={'Přidat příspěvek'}
+                  className='h-fit'
                   onClick={handleAddPost}
                   disabled={Boolean(draftPost)}
                 />

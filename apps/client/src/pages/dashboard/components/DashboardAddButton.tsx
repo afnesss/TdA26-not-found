@@ -18,7 +18,7 @@ const DashboardAddButton = ({
     <Button
       variant='outline'
       size='sm'
-      className={cn('h-8 border-dashed rounded-xl', className)}
+      className={cn(' border-dashed rounded-xl', className)}
       onClick={onClick}
       disabled={disabled}
       aria-label={label}

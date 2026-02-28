@@ -57,6 +57,9 @@ const CourseModulesLayoutPage = () => {
   } = useFeedPagination(courseId ?? '', undefined, Boolean(courseId))
 
   const isNetworkError = (feedErrorObj as ApiError)?.isNetworkError ?? false
+  const isFeedOfflineError = isNetworkError || isOffline
+  const shouldSuppressFeedNetworkError = isModuleDetailPage && isFeedOfflineError
+  const hasCourseError = courseError || !course
 
   const { mutateAsync: createPostMutation } = useCreatePostMutation(
     courseId ?? '',
@@ -194,7 +197,7 @@ const CourseModulesLayoutPage = () => {
               )}
             </div>
 
-            {sideTab === 'feed' ? (
+            {sideTab === 'feed' && !hasCourseError ? (
               <div className='space-y-3'>
                 {feedLoading ? (
                   <StateComp
@@ -203,20 +206,26 @@ const CourseModulesLayoutPage = () => {
                     className='pt-8 pb-0'
                   />
                 ) : feedError ? (
-                  <StateComp
-                    type={
-                      isNetworkError || isOffline ? 'network-offline' : 'error'
-                    }
-                    message={
-                      isNetworkError || isOffline
-                        ? undefined
-                        : 'Nepodařilo se načíst příspěvky'
-                    }
-                    onAction={() => {
-                      refetchFeed()
-                    }}
-                    className='pt-8 pb-0'
-                  />
+                  shouldSuppressFeedNetworkError ? (
+                    <StateComp
+                      type='no-content'
+                      message='Příspěvky nejsou dostupné'
+                      className='pt-8 pb-0'
+                    />
+                  ) : (
+                    <StateComp
+                      type={isFeedOfflineError ? 'network-offline' : 'error'}
+                      message={
+                        isFeedOfflineError
+                          ? undefined
+                          : 'Nepodařilo se načíst příspěvky'
+                      }
+                      onAction={() => {
+                        refetchFeed()
+                      }}
+                      className='pt-8 pb-0'
+                    />
+                  )
                 ) : (allPosts && allPosts.length > 0) || draftPost ? (
                   <>
                     {draftPost && (
@@ -275,6 +284,12 @@ const CourseModulesLayoutPage = () => {
                   />
                 )}
               </div>
+            ) : sideTab === 'feed' && hasCourseError ? (
+              <StateComp
+                type='no-content'
+                message='Příspěvky nejsou dostupné'
+                className='pt-8 pb-0'
+              />
             ) : (
               <div className='space-y-3'>
                 {historyItems.length ? (

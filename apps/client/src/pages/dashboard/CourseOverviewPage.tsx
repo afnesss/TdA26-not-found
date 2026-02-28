@@ -71,12 +71,13 @@ const CourseModulesOverviewPage = () => {
   })
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+  const hasNetworkError = isError || !course
 
   if (isLoading && !course) {
     return <DashboardCourseOverviewSkeleton />
   }
 
-  if (!isLoading && (isError || !course)) {
+  if (!isLoading && hasNetworkError) {
     return (
       <StateComp
         type={isOffline ? 'network-offline' : 'error'}

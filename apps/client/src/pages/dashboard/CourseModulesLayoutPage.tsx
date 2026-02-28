@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Outlet, useParams } from 'react-router-dom'
+import { Outlet, useParams, useMatch } from 'react-router-dom'
 import {
   useCreatePostMutation,
   useDeletePostMutation,
@@ -26,6 +26,8 @@ const CourseModulesLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const [sideTab, setSideTab] = useState<'feed' | 'history'>('feed')
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
+
+  const isModuleDetailPage = useMatch('/dashboard/:courseId/modules/:moduleId')
 
   const {
     data: course,
@@ -100,7 +102,7 @@ const CourseModulesLayoutPage = () => {
             isError: false,
             refetchCourse,
             previewMode: false,
-            courseIndexColor: 'accent-teal-light',
+            courseIndexColor: isModuleDetailPage ? 'accent-teal' : 'accent-teal-dark',
           } as CourseModulesLayoutContext
         }
       />
@@ -113,8 +115,9 @@ const CourseModulesLayoutPage = () => {
 
   const previewMode = course.status !== 'draft'
   const canManageFeed = course.status === 'draft' || course.status === 'live'
-  const courseIndexColor: keyof typeof colorStyles.gradient =
-    'accent-teal-light'
+  const courseIndexColor: keyof typeof colorStyles.gradient = isModuleDetailPage
+    ? 'accent-teal'
+    : 'accent-teal-dark'
 
   const handleAddPost = () => {
     if (!canManageFeed || draftPost) return

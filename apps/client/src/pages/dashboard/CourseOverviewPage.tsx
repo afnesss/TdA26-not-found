@@ -3,6 +3,7 @@ import {
   CourseStateBadge,
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
+import DashboardCourseOverviewSkeleton from '@/components/shared/loadingskeleton/DashboardCourseOverviewSkeleton'
 import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,7 @@ import {
 } from '@/pages/CoursePage/utils/useModuleMutation'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
@@ -71,11 +72,11 @@ const CourseModulesOverviewPage = () => {
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
-  if (isLoading) {
-    return <StateComp type='no-content' message='Načítání kurzu...' />
+  if (isLoading && !course) {
+    return <DashboardCourseOverviewSkeleton />
   }
 
-  if (isError || !course) {
+  if (!isLoading && (isError || !course)) {
     return (
       <StateComp
         type={isOffline ? 'network-offline' : 'error'}
@@ -83,6 +84,10 @@ const CourseModulesOverviewPage = () => {
         message={isOffline ? undefined : 'Nepodařilo se načíst kurz'}
       />
     )
+  }
+
+  if (!course) {
+    return <DashboardCourseOverviewSkeleton />
   }
 
   const handleCourseStatusChange = (status: CourseStatus) => {

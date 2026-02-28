@@ -58,3 +58,36 @@ export function authMiddleware(
     clearAuthCookieAndRespond(res, cookieOptions);
   }
 }
+
+export function optionalAuthMiddleware(
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction,
+) {
+  const token = req.cookies?.token;
+  if (!token) {
+    next();
+    return;
+  }
+
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    next();
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(token, jwtSecret);
+    if (
+      typeof payload === "object" &&
+      payload !== null &&
+      "username" in payload
+    ) {
+      req.user = { username: String((payload as jwt.JwtPayload).username) };
+    }
+  } catch {
+    // Ignore invalid/expired token in optional mode.
+  }
+
+  next();
+}

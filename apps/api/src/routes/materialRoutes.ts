@@ -10,7 +10,7 @@ import {
 } from "../controllers/materialController";
 import path from "path";
 import { uploadLimiter, writeLimiter } from "../middleware/rateLimiter";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
 
 const router = Router({ mergeParams: true });
@@ -79,8 +79,12 @@ const uploadMiddleware = (req: any, res: any, next: any) => {
 };
 
 router.get("/", getMaterials);
-router.get("/:materialId/download", downloadMaterial);
-router.post("/:materialId/interactions", trackMaterialInteraction);
+router.get("/:materialId/download", optionalAuthMiddleware, downloadMaterial);
+router.post(
+  "/:materialId/interactions",
+  optionalAuthMiddleware,
+  trackMaterialInteraction,
+);
 router.post(
   "/",
   authMiddleware,

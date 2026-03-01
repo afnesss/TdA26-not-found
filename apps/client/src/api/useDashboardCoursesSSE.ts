@@ -116,7 +116,7 @@ export const useDashboardCoursesSSE = () => {
     })
 
     return () => {
-      console.log('SSE dashboard zavirame')
+      // console.log('SSE dashboard zavirame')
       eventSource.close()
       setIsConnected(false)
     }

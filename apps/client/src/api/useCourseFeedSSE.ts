@@ -61,7 +61,19 @@ const parseQuizPayload = (
   return null
 }
 
-export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
+type UseCourseFeedSSEOptions = {
+  courseId: string
+  syncModuleActivation?: boolean
+  showNewPostToast?: boolean
+  showSseToasts?: boolean
+}
+
+export const useCourseFeedSSE = ({
+  courseId,
+  syncModuleActivation = true,
+  showNewPostToast = true,
+  showSseToasts = true,
+}: UseCourseFeedSSEOptions) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
 
@@ -98,7 +110,9 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
           }
         },
       )
-      toast.info(newPost.message)
+      if (showSseToasts && showNewPostToast) {
+        toast.info(newPost.message)
+      }
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
         ['feed-paginated', courseId],
@@ -188,9 +202,9 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       const updatedCourse = JSON.parse(event.data)
       console.log('Course updated:', updatedCourse)
 
-      if (updatedCourse.status === 'paused') {
+      if (showSseToasts && updatedCourse.status === 'paused') {
         toast.info(`Kurz "${updatedCourse.name}" byl pozastaven lektorem`)
-      } else if (updatedCourse.status === 'archived') {
+      } else if (showSseToasts && updatedCourse.status === 'archived') {
         toast.info(`Kurz "${updatedCourse.name}" byl ukončen lektorem`)
       }
 
@@ -216,6 +230,8 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
     // --- Modules ---
 
     eventSource.addEventListener('module_activated', (event) => {
+      if (!syncModuleActivation) return
+
       const activatedModule = JSON.parse(event.data)
       console.log('module activated:', activatedModule)
 
@@ -237,10 +253,11 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
             return oldData
           }
 
-          return updateCourseModules(oldData, (module) => ({
-            ...module,
-            ...(activatedModule as ModuleDetail),
-          }))
+          return updateCourseModules(oldData, (module) =>
+            module.uuid === (activatedModule as ModuleDetail).uuid
+              ? { ...module, ...(activatedModule as ModuleDetail) }
+              : module,
+          )
         },
       )
     })
@@ -438,7 +455,7 @@ export const useCourseFeedSSE = ({ courseId }: { courseId: string }) => {
       eventSource.close()
       setIsConnected(false)
     }
-  }, [courseId, queryClient])
+  }, [courseId, queryClient, showNewPostToast, showSseToasts, syncModuleActivation])
 
   return { isConnected }
 }

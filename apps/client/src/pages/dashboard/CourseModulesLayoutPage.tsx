@@ -25,7 +25,12 @@ type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
-  useCourseFeedSSE({ courseId: courseId! })
+  useCourseFeedSSE({
+    courseId: courseId!,
+    syncModuleActivation: false,
+    showNewPostToast: false,
+    showSseToasts: false,
+  })
   const [sideTab, setSideTab] = useState<'feed' | 'history'>('feed')
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 

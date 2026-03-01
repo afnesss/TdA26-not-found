@@ -12,7 +12,10 @@ const UserCourseLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
-  const { isConnected } = useCourseFeedSSE({ courseId: courseId! })
+  const { isConnected } = useCourseFeedSSE({
+    courseId: courseId!,
+    syncModuleActivation: true,
+  })
 
   const {
     coursesUser,

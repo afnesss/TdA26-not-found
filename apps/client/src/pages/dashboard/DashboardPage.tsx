@@ -42,11 +42,18 @@ import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import type { ApiError } from '@/lib/types'
+import DashboardModeTabs from './components/DashboardModeTabs'
+import AnalyticsAttentionAlert from './components/AnalyticsAttentionAlert'
+import AnalyticsStatCard from './components/AnalyticsStatCard'
 
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
-  const analyticsAllowedStatuses: CourseStatus[] = ['live', 'paused', 'archived']
+  const analyticsAllowedStatuses: CourseStatus[] = [
+    'live',
+    'paused',
+    'archived',
+  ]
   const isAnalyticsAllowedStatus = (status: CourseStatus) =>
     analyticsAllowedStatuses.includes(status)
   const [searchQuery, setSearchQuery] = useState('')
@@ -194,9 +201,37 @@ const DashboardDesign1 = () => {
       : null
   const formatMetric = (value: number) =>
     Number.isInteger(value) ? value.toString() : value.toFixed(1)
+  const globalAttentionParts: string[] = []
+  if (globalStats.modulesWithoutInteraction > 0) {
+    globalAttentionParts.push(
+      `Moduly bez interakce: ${globalStats.modulesWithoutInteraction}`,
+    )
+  }
+  if (globalStats.lowScoreQuizzes > 0) {
+    globalAttentionParts.push(
+      `Kvízy s nízkým skóre: ${globalStats.lowScoreQuizzes}`,
+    )
+  }
   const globalStatsLoading =
     dashboardMode === 'global' &&
     courseAnalyticsQueries.some((query) => query.isLoading || query.isFetching)
+  const dashboardTabs: Array<{
+    value: 'content' | 'analytics' | 'global'
+    label: string
+    disabled?: boolean
+  }> = [
+    { value: 'content', label: 'Obsah' },
+    {
+      value: 'analytics',
+      label: 'Statistiky',
+      disabled: analyticsCourses.length === 0,
+    },
+    {
+      value: 'global',
+      label: 'Globalní Statistiky',
+      disabled: globalCourses.length === 0,
+    },
+  ]
 
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
@@ -250,7 +285,7 @@ const DashboardDesign1 = () => {
   return (
     <>
       <div className='max-w-7xl mx-auto'>
-        <div className='space-y-6 pt-3'>
+        <div className='space-y-4'>
           <div className='flex flex-row justify-center items-center'>
             <HintPageText
               text='Správa kurzů'
@@ -292,39 +327,16 @@ const DashboardDesign1 = () => {
             <span className='hidden lg:inline ml-3'>{createButton(false)}</span>
           </div>
 
-          <div className='flex gap-2'>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('content')}
-            >
-              Obsah
-            </Button>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('analytics')}
-              disabled={!displayedCourses.some((c) => isAnalyticsAllowedStatus(c.status))}
-            >
-              Analytika
-            </Button>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('global')}
-              disabled={globalCourses.length === 0}
-            >
-              Global
-            </Button>
-          </div>
+          <DashboardModeTabs
+            value={dashboardMode}
+            tabs={dashboardTabs}
+            onChange={setDashboardMode}
+          />
 
           {coursesLoading ? (
             <CoursesPageSceleton />
           ) : dashboardMode === 'global' ? (
-            <div className='mt-6'>
+            <div>
               {globalCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
@@ -349,87 +361,58 @@ const DashboardDesign1 = () => {
                   </div>
 
                   <div className='grid grid-cols-2 lg:grid-cols-5 gap-3'>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Moduly</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.modulesCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Materiály</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.materialsCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Kvízy</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizzesCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4 col-span-2 lg:col-span-2'>
-                      <p className='text-xs text-muted-foreground'>
-                        Průměrné skóre kvízů
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalAverageQuizPercentage === null
+                    <AnalyticsStatCard
+                      label='Moduly'
+                      value={globalStats.modulesCount}
+                    />
+                    <AnalyticsStatCard
+                      label='Materiály'
+                      value={globalStats.materialsCount}
+                    />
+                    <AnalyticsStatCard
+                      label='Kvízy'
+                      value={globalStats.quizzesCount}
+                    />
+                    <AnalyticsStatCard
+                      className='col-span-2 lg:col-span-2'
+                      label='Průměrné skóre kvízů'
+                      value={
+                        globalAverageQuizPercentage === null
                           ? '—'
-                          : `${formatMetric(globalAverageQuizPercentage)}%`}
-                      </p>
-                    </div>
+                          : `${formatMetric(globalAverageQuizPercentage)}%`
+                      }
+                    />
                   </div>
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Submity kvízů
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizScoreWeight}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Kvízy bez submitu
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizzesWithoutSubmits}
-                      </p>
-                    </div>
+                    <AnalyticsStatCard
+                      label='Odeslání kvízů'
+                      value={globalStats.quizScoreWeight}
+                    />
+                    <AnalyticsStatCard
+                      label='Kvízy bez odeslání'
+                      value={globalStats.quizzesWithoutSubmits}
+                    />
                   </div>
 
-                  {(globalStats.modulesWithoutInteraction > 0 ||
-                    globalStats.lowScoreQuizzes > 0) && (
-                    <div className='flex flex-wrap gap-2'>
-                      {globalStats.modulesWithoutInteraction > 0 && (
-                        <div className='rounded-full border px-3 py-1.5 text-sm'>
-                          Moduly bez interakce:{' '}
-                          <span className='font-semibold'>
-                            {globalStats.modulesWithoutInteraction}
-                          </span>
-                        </div>
-                      )}
-                      {globalStats.lowScoreQuizzes > 0 && (
-                        <div className='rounded-full border px-3 py-1.5 text-sm'>
-                          Kvízy s nízkým skóre:{' '}
-                          <span className='font-semibold'>
-                            {globalStats.lowScoreQuizzes}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  {globalAttentionParts.length > 0 && (
+                    <AnalyticsAttentionAlert
+                      message={globalAttentionParts.join(', ')}
+                      className='mt-0 text-xs'
+                    />
                   )}
                 </div>
               )}
             </div>
           ) : (
             <>
-              {dashboardMode === 'analytics' && displayedCourses.length === 0 ? (
+              {dashboardMode === 'analytics' &&
+              displayedCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
                   message='Žádné kurzy ve stavu live, paused nebo archived'
                 />
               ) : (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>
                   {courseDraft && dashboardMode !== 'analytics' && (
                     <CourseComponent
                       key={courseDraft.uuid}
@@ -477,7 +460,7 @@ const DashboardDesign1 = () => {
               )}
 
               {hasMoreCourses && (
-                <div className='mt-8 text-center'>
+                <div className='mt-4 text-center'>
                   <Button
                     variant='primary'
                     size='primary'

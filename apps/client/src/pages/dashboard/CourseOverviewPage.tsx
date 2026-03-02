@@ -26,8 +26,11 @@ import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
-import { type DraftModuleForm } from './components/ModuleCard'
+import ModuleCard, { type DraftModuleForm } from './components/ModuleCard'
 import ModulesSection from './components/ModulesSection'
+import { Label } from '@/components/ui/label'
+import UnderlinedText from '@/components/shared/UnderlinedText'
+import DashboardModeTabs from './components/DashboardModeTabs'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -203,6 +206,13 @@ const CourseModulesOverviewPage = () => {
     course.status === 'paused' ||
     course.status === 'archived'
   const analyticsModules = modules ?? []
+  const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
+    [
+      { value: 'content', label: 'Obsah' },
+      ...(analyticsAllowed
+        ? [{ value: 'analytics' as const, label: 'Analytika' }]
+        : []),
+    ]
 
   return (
     <>
@@ -273,35 +283,6 @@ const CourseModulesOverviewPage = () => {
         }
       />
 
-      <div className='flex gap-2'>
-        <Button
-          variant='filter'
-          size='sm'
-          className={`rounded-xl ${
-            viewMode === 'content'
-              ? 'bg-primary text-background hover:bg-primary/90'
-              : ''
-          }`}
-          onClick={() => setViewMode('content')}
-        >
-          Obsah
-        </Button>
-        {analyticsAllowed && (
-          <Button
-            variant='filter'
-            size='sm'
-            className={`rounded-xl ${
-              viewMode === 'analytics'
-                ? 'bg-primary text-background hover:bg-primary/90'
-                : ''
-            }`}
-            onClick={() => setViewMode('analytics')}
-          >
-            Analytika
-          </Button>
-        )}
-      </div>
-
       {viewMode === 'content' || !analyticsAllowed ? (
         <ModulesSection
           courseId={courseId}
@@ -319,153 +300,40 @@ const CourseModulesOverviewPage = () => {
           onToggleVisibility={handleToggleModuleVisibility}
           isCreating={createModulePending}
           isToggleVisibilityPending={togglePending}
+          headerRightSlot={
+            <DashboardModeTabs
+              value={viewMode}
+              tabs={overviewTabs}
+              onChange={setViewMode}
+            />
+          }
         />
       ) : (
         <section className='space-y-4'>
-          <div className='space-y-3'>
-            {analyticsModules.map((module) => {
-              const moduleMaterialInteractions = module.materials.reduce(
-                (sum, mat) =>
-                  sum +
-                  (mat.type === 'file'
-                    ? (mat.downloadCount ?? 0)
-                    : (mat.openCount ?? 0) + (mat.copyCount ?? 0)),
-                0,
-              )
-              const moduleQuizAttempts = module.quizzes.reduce(
-                (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
-                0,
-              )
-              const moduleQuizzesWithoutSubmits = module.quizzes.filter(
-                (quiz) => (quiz.attemptsCount ?? 0) === 0,
-              ).length
-              const moduleQuizValues = module.quizzes
-                .map((quiz) => quiz.averagePercentage)
-                .filter((value): value is number => value != null)
-              const moduleQuizAverage =
-                moduleQuizValues.length > 0
-                  ? Math.round(
-                      moduleQuizValues.reduce((sum, value) => sum + value, 0) /
-                        moduleQuizValues.length,
-                    )
-                  : null
-              const moduleDownloads = module.materials.reduce(
-                (sum, material) =>
-                  sum +
-                  (material.type === 'file'
-                    ? (material.downloadCount ?? 0)
-                    : 0),
-                0,
-              )
-              const moduleCopies = module.materials.reduce(
-                (sum, material) =>
-                  sum +
-                  (material.type === 'url' ? (material.copyCount ?? 0) : 0),
-                0,
-              )
-              const moduleOpens = module.materials.reduce(
-                (sum, material) =>
-                  sum +
-                  (material.type === 'url' ? (material.openCount ?? 0) : 0),
-                0,
-              )
-              const moduleLowScoreQuizzes = module.quizzes.filter((quiz) => {
-                if ((quiz.attemptsCount ?? 0) === 0) return false
-                if (quiz.averagePercentage == null) return false
-                return quiz.averagePercentage < 60
-              }).length
-
-              return (
-                <div
-                  key={module.uuid}
-                  className='rounded-xl border border-border/70 bg-background p-3 shadow-sm transition hover:shadow-md'
-                >
-                  <div className='flex flex-wrap items-center justify-between gap-2'>
-                    <div>
-                      <p className='text-sm font-semibold leading-tight'>
-                        {module.name}
-                      </p>
-                      <p className='text-xs text-muted-foreground'>
-                        Materiály {module.materials.length} • Testy{' '}
-                        {module.quizzes.length}
-                      </p>
-                    </div>
-                    <Button
-                      variant='filter'
-                      size='sm'
-                      className='rounded-lg'
-                      onClick={() => handleOpenModule(module.uuid)}
-                    >
-                      Otevřít modul
-                    </Button>
-                  </div>
-                  <div className='mt-3 grid grid-cols-1 gap-3 text-xs lg:grid-cols-2'>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-3'>
-                      <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
-                        Materiály
-                      </p>
-                      <div className='space-y-1 text-muted-foreground'>
-                        <p>
-                          Celkem:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {module.materials.length}
-                          </span>
-                        </p>
-                        <p>
-                          Stažení:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleDownloads}
-                          </span>{' '}
-                          • Open:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleOpens}
-                          </span>{' '}
-                          • Copy:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleCopies}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className='rounded-lg border border-border/50 bg-muted/20 p-3'>
-                      <p className='mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
-                        Testy
-                      </p>
-                      <div className='space-y-1 text-muted-foreground'>
-                        <p>
-                          Celkem:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {module.quizzes.length}
-                          </span>
-                        </p>
-                        <p>
-                          Odeslání:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleQuizAttempts}
-                          </span>{' '}
-                          • Bez submitu:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleQuizzesWithoutSubmits}
-                          </span>
-                        </p>
-                        <p>
-                          Průměr:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleQuizAverage == null
-                              ? '—'
-                              : `${moduleQuizAverage}%`}
-                          </span>{' '}
-                          • Nízké skóre:{' '}
-                          <span className='font-semibold text-foreground'>
-                            {moduleLowScoreQuizzes}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+          <div className='flex flex-wrap items-center justify-between gap-3'>
+            <Label className='font-bold text-lg md:text-xl text-neutral-black'>
+              <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
+                Moduly kurzu
+              </UnderlinedText>
+            </Label>
+            <DashboardModeTabs
+              value={viewMode}
+              tabs={overviewTabs}
+              onChange={setViewMode}
+            />
+          </div>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 '>
+            {analyticsModules.map((module, moduleIndex) => (
+              <ModuleCard
+                key={module.uuid}
+                variant='existing'
+                module={module}
+                moduleIndex={moduleIndex + 1}
+                courseStatus={course.status}
+                onOpenModule={handleOpenModule}
+                analyticsMode
+              />
+            ))}
           </div>
         </section>
       )}

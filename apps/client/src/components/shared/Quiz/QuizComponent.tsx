@@ -565,7 +565,7 @@ const QuizComponent = ({
           )}
 
           {/* Footer Actions */}
-          <div className='flex flex-col lg:mx-10 pt-4 border-t-2 border-gray-100'>
+          <div className='flex flex-col lg:mx-10 pt-3 border-t-2 border-gray-100'>
             {mode === 'user' ? (
               <div className='flex flex-row items-center justify-between'>
                 <div className='flex flex-col gap-1'>
@@ -600,22 +600,22 @@ const QuizComponent = ({
                         </span>
                       </Button>
                     </div>
-
-                    <Button
-                      variant='link'
-                      className='rounded-lg shadow-none'
-                      disabled={userState?.status !== 'submitted'}
-                      onClick={onToggleShowCorrect}
-                      aria-label={
-                        userState?.showCorrect
-                          ? 'Hide correct answers'
-                          : 'Show correct answers'
-                      }
-                    >
-                      {userState?.showCorrect
-                        ? 'Skrýt odpovědi'
-                        : 'Zobrazit odpovědi'}
-                    </Button>
+                    {userState?.status === 'submitted' && (
+                      <Button
+                        variant='link'
+                        className='rounded-lg shadow-none'
+                        onClick={onToggleShowCorrect}
+                        aria-label={
+                          userState?.showCorrect
+                            ? 'Hide correct answers'
+                            : 'Show correct answers'
+                        }
+                      >
+                        {userState?.showCorrect
+                          ? 'Skrýt odpovědi'
+                          : 'Zobrazit odpovědi'}
+                      </Button>
+                    )}
                   </div>
                   {showIncompleteError && (
                     <p className='error-text'>

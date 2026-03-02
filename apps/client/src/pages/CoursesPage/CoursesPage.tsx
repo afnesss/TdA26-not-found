@@ -182,7 +182,7 @@ const CoursesPage = () => {
 
               {/* Load More button */}
               {hasMoreCourses && (
-                <div className='mt-8 text-center'>
+                <div className='mt-4 text-center'>
                   <Button
                     variant='primary'
                     size='primary'

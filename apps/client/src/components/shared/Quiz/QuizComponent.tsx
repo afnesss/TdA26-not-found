@@ -57,6 +57,7 @@ type QuizComponentProps = {
   ) => void
   onSubmit?: () => void
   onToggleShowCorrect?: () => void
+  onReset?: () => void
   isSubmitting?: boolean
   isSubmitDisabled?: boolean
 
@@ -77,6 +78,7 @@ const QuizComponent = ({
   onAnswerChange,
   onSubmit,
   onToggleShowCorrect,
+  onReset,
   isSubmitting,
   isSubmitDisabled,
   onSave,
@@ -144,6 +146,17 @@ const QuizComponent = ({
           }
         >
           {userState?.showCorrect ? 'Skrýt odpovědi' : 'Zobrazit odpovědi'}
+        </Button>
+      )}
+
+      {userState?.status === 'submitted' && onReset && (
+        <Button
+          variant='primary'
+          size='grid'
+          className='w-fit'
+          onClick={onReset}
+        >
+          Začít znovu
         </Button>
       )}
     </div>

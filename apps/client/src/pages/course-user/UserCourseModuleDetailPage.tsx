@@ -18,6 +18,10 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
 import UserModuleTab from '../dashboard/components/ModuleTab'
 import SummarySection from '../CoursePage/components/SummarySection'
+import {
+  clearQuizSubmission,
+  getQuizSubmission,
+} from '../CoursePage/utils/quizSubmissionStorage'
 
 const UserCourseModuleDetailPage = () => {
   const { courseId, moduleId } = useParams<{
@@ -41,10 +45,17 @@ const UserCourseModuleDetailPage = () => {
     selectedModule.quizzes.forEach((quiz) => {
       if (!quiz.uuid) return
 
+      const stored = getQuizSubmission(quiz.uuid)
+
       initialResults[quiz.uuid] = {
-        status: 'idle',
-        answers: {},
+        status: stored ? 'submitted' : 'idle',
+        answers: stored
+          ? Object.fromEntries(
+              stored.answers.map((answer) => [answer.uuid, answer]),
+            )
+          : {},
         showCorrect: false,
+        results: stored?.results,
       }
     })
 
@@ -152,6 +163,17 @@ const UserCourseModuleDetailPage = () => {
                       quizMutation,
                     )
                   }
+                  onReset={() => {
+                    clearQuizSubmission(quiz.uuid!)
+                    setQuizState((prev) => ({
+                      ...prev,
+                      [quiz.uuid!]: {
+                        status: 'idle' as const,
+                        answers: {},
+                        showCorrect: false,
+                      },
+                    }))
+                  }}
                   onToggleShowCorrect={() => {
                     setQuizState((prev) => {
                       const currentQuizState = prev[quiz.uuid!] || {

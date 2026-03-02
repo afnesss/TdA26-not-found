@@ -8,8 +8,11 @@ import { useQuizSubmitMutation } from '../utils/quizSubmitMutation'
 import { handleSubmitQuiz, isQuizComplete } from '../utils/helperFunctions'
 import quizImg from '@/assets/t-play-blue.svg'
 import UnderlinedText from '@/components/shared/UnderlinedText'
-import type { ModuleDetail } from '@/lib/schemas/module'
 import { useParams } from 'react-router'
+import {
+  clearQuizSubmission,
+  getQuizSubmission,
+} from '../utils/quizSubmissionStorage'
 
 type QuizesSectionProps = {
   quizzes?: Quiz[]
@@ -31,10 +34,17 @@ const QuizesSection = ({ quizzes }: QuizesSectionProps) => {
     quizzes.forEach((quiz) => {
       if (!quiz.uuid) return
 
+      const stored = getQuizSubmission(quiz.uuid)
+
       initialResults[quiz.uuid] = {
-        status: 'idle',
-        answers: {},
+        status: stored ? 'submitted' : 'idle',
+        answers: stored
+          ? Object.fromEntries(
+              stored.answers.map((answer) => [answer.uuid, answer]),
+            )
+          : {},
         showCorrect: false,
+        results: stored?.results,
       }
     })
     if (Object.keys(initialResults).length === 0) return
@@ -89,6 +99,17 @@ const QuizesSection = ({ quizzes }: QuizesSectionProps) => {
                   queryMutation,
                 )
               }
+              onReset={() => {
+                clearQuizSubmission(quiz.uuid!)
+                setQuizState((prev) => ({
+                  ...prev,
+                  [quiz.uuid!]: {
+                    status: 'idle',
+                    answers: {},
+                    showCorrect: false,
+                  },
+                }))
+              }}
               onToggleShowCorrect={() => {
                 setQuizState((prev) => {
                   const currentQuizState = prev[quiz.uuid!] || {

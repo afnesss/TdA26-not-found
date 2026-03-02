@@ -15,6 +15,8 @@ import { Label } from '@/components/ui/label'
 import { truncateDescription } from '../../CoursePage/utils/helperFunctions'
 import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
+import AnalyticsStatCard from './AnalyticsStatCard'
 
 export type DraftModuleForm = {
   name: string
@@ -29,6 +31,7 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   variant: 'existing'
   module: CourseModule
   courseStatus: CourseDetail['status']
+  analyticsMode?: boolean
   canToggleModuleVisibility?: boolean
   isToggleVisibilityPending?: boolean
   onOpenModule?: (moduleId: string) => void
@@ -135,6 +138,7 @@ const ModuleCard = (props: ModuleCardProps) => {
     module,
     moduleIndex,
     courseStatus,
+    analyticsMode,
     canToggleModuleVisibility,
     isToggleVisibilityPending,
     onOpenModule,
@@ -151,6 +155,64 @@ const ModuleCard = (props: ModuleCardProps) => {
     isWholeCardDragEnabled && gripHandleProps
       ? { ...gripHandleProps.attributes, ...gripHandleProps.listeners }
       : {}
+  const isAnalyticsMode = Boolean(analyticsMode)
+
+  const moduleQuizAttempts = module.quizzes.reduce(
+    (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
+    0,
+  )
+  const moduleQuizzesWithoutSubmits = module.quizzes.filter(
+    (quiz) => (quiz.attemptsCount ?? 0) === 0,
+  ).length
+  const moduleQuizValues = module.quizzes
+    .map((quiz) => quiz.averagePercentage)
+    .filter((value): value is number => value != null)
+  const moduleQuizQuestionsTotal = module.quizzes.reduce(
+    (sum, quiz) => sum + quiz.questions.length,
+    0,
+  )
+  const moduleQuizAverage =
+    moduleQuizValues.length > 0
+      ? Math.round(
+          moduleQuizValues.reduce((sum, value) => sum + value, 0) /
+            moduleQuizValues.length,
+        )
+      : null
+  const moduleDownloads = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'file' ? (material.downloadCount ?? 0) : 0),
+    0,
+  )
+  const moduleCopies = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'url' ? (material.copyCount ?? 0) : 0),
+    0,
+  )
+  const moduleOpens = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'url' ? (material.openCount ?? 0) : 0),
+    0,
+  )
+  const moduleMaterialsWithoutInteraction = module.materials.filter(
+    (material) =>
+      material.type === 'file'
+        ? (material.downloadCount ?? 0) === 0
+        : (material.openCount ?? 0) + (material.copyCount ?? 0) === 0,
+  ).length
+  const moduleLowScoreQuizzes = module.quizzes.filter((quiz) => {
+    if ((quiz.attemptsCount ?? 0) === 0) return false
+    if (quiz.averagePercentage == null) return false
+    return quiz.averagePercentage < 60
+  }).length
+  const quizAttentionParts: string[] = []
+  if (moduleQuizzesWithoutSubmits > 0) {
+    quizAttentionParts.push(`Kvízy bez submitu: ${moduleQuizzesWithoutSubmits}`)
+  }
+  if (moduleLowScoreQuizzes > 0) {
+    quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)
+  }
+  const materialsHasAttention = moduleMaterialsWithoutInteraction > 0
+  const quizHasAttention = quizAttentionParts.length > 0
 
   return (
     <Card
@@ -201,7 +263,23 @@ const ModuleCard = (props: ModuleCardProps) => {
             </Label>
           </div>
 
-          {alwaysShowActions ? (
+          {isAnalyticsMode ? (
+            <Button
+              variant='grid'
+              size='sm'
+              className={cn(
+                'bg-linear-to-br h-8 text-xs md:text-sm',
+                colorStyles.bg['accent-teal-dark'],
+                colorStyles.text['accent-teal-dark'],
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenModule?.(module.uuid)
+              }}
+            >
+              <span className='font-semibold'>Zobrazit</span>
+            </Button>
+          ) : alwaysShowActions ? (
             <div className='flex shrink-0 items-center gap-2'>
               <EditBtn
                 icon={Edit}
@@ -244,74 +322,153 @@ const ModuleCard = (props: ModuleCardProps) => {
           ) : null}
         </div>
 
-        <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
-          <CardDescription className='flex-1 min-w-0'>
-            {truncateDescription(module.description ?? '', 70)}
-          </CardDescription>
-          {showGripHandle && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-6 w-6 p-0 shrink-0 ml-auto cursor-grab'
-            >
-              <Menu className='w-4 h-4 text-muted-foreground' />
-            </Button>
-          )}
-        </div>
-
-        <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
-          <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
-            <p className='text-muted-foreground'>
-              Materiály:{' '}
-              <span className='font-semibold text-neutral-black'>
-                {module.materials?.length ?? 0}
-              </span>
-            </p>
-            <p className='text-muted-foreground'>
-              Kvízy:{' '}
-              <span className='font-semibold text-neutral-black'>
-                {module.quizzes?.length ?? 0}
-              </span>
-            </p>
-            {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
-              <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
-                upraveno{' '}
-                {new Date(String(module.updatedAt)).toLocaleDateString('cs-CZ')}
-              </span>
-            )} */}
-          </div>
-          <div className='flex flex-col items-end gap-2'>
-            <div className='flex shrink-0 items-center gap-2'>
-              {courseStatus !== 'draft' && (
-                <Button
-                  variant={'grid'}
-                  size={'sm'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onOpenModule?.(module.uuid)
-                  }}
-                  className={cn(
-                    'bg-linear-to-br h-8 text-xs md:text-sm',
-                    colorStyles.bg['accent-teal-dark'],
-                    colorStyles.text['accent-teal-dark'],
+        {isAnalyticsMode ? (
+          <div className='mt-2.5 pt-2.5 border-t w-full'>
+            <div className='w-full rounded-lg bg-muted/20 overflow-hidden'>
+              <div className='grid grid-cols-2 divide-x divide-border/70'>
+                <div className='pr-2 flex flex-col gap-2 h-full'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      Materiály
+                    </span>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                      Celkem {module.materials.length}
+                    </span>
+                  </div>
+                  <div className='grid grid-cols-3 gap-1.5 w-full'>
+                    {[
+                      { label: 'Stažení', value: moduleDownloads },
+                      { label: 'Otevření', value: moduleOpens },
+                      { label: 'Kopie', value: moduleCopies },
+                    ].map(({ label, value }) => (
+                      <AnalyticsStatCard
+                        key={label}
+                        label={label}
+                        value={value}
+                      />
+                    ))}
+                  </div>
+                  {materialsHasAttention && (
+                    <AnalyticsAttentionAlert
+                      message={`Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`}
+                    />
                   )}
-                >
-                  <span className='font-semibold'>Zobrazit</span>
-                </Button>
-              )}
-              {canToggleModuleVisibility && onToggleModuleVisibility && (
-                <ModuleVisibilityActionButton
-                  status={module.status}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleModuleVisibility(module.uuid, module.status)
-                  }}
-                  disabled={Boolean(isToggleVisibilityPending)}
-                />
-              )}
+                </div>
+
+                <div className='pl-2 flex flex-col gap-2 h-full'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      Kvízy
+                    </span>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                      Celkem {module.quizzes.length}
+                    </span>
+                  </div>
+                  <div className='grid grid-cols-3 gap-1.5 w-full'>
+                    {[
+                      {
+                        label: 'Průměr',
+                        value:
+                          moduleQuizAverage == null
+                            ? '—'
+                            : `${moduleQuizAverage}%`,
+                      },
+                      {
+                        label: 'Odeslání',
+                        value: moduleQuizAttempts,
+                      },
+                      {
+                        label: 'Otázky',
+                        value: moduleQuizQuestionsTotal,
+                      },
+                    ].map(({ label, value }) => (
+                      <AnalyticsStatCard
+                        key={label}
+                        label={label}
+                        value={value}
+                        labelClassName='text-center'
+                      />
+                    ))}
+                  </div>
+                  {quizHasAttention && (
+                    <AnalyticsAttentionAlert message={quizAttentionParts.join(', ')} />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
+              <CardDescription className='flex-1 min-w-0'>
+                {truncateDescription(module.description ?? '', 70)}
+              </CardDescription>
+              {showGripHandle && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-6 w-6 p-0 shrink-0 ml-auto cursor-grab'
+                >
+                  <Menu className='w-4 h-4 text-muted-foreground' />
+                </Button>
+              )}
+            </div>
+
+            <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
+              <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
+                <p className='text-muted-foreground'>
+                  Materiály:{' '}
+                  <span className='font-semibold text-neutral-black'>
+                    {module.materials?.length ?? 0}
+                  </span>
+                </p>
+                <p className='text-muted-foreground'>
+                  Kvízy:{' '}
+                  <span className='font-semibold text-neutral-black'>
+                    {module.quizzes?.length ?? 0}
+                  </span>
+                </p>
+                {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
+                  <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
+                    upraveno{' '}
+                    {new Date(String(module.updatedAt)).toLocaleDateString('cs-CZ')}
+                  </span>
+                )} */}
+              </div>
+              <div className='flex flex-col items-end gap-2'>
+                <div className='flex shrink-0 items-center gap-2'>
+                  {courseStatus !== 'draft' && (
+                    <Button
+                      variant={'grid'}
+                      size={'sm'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenModule?.(module.uuid)
+                      }}
+                      className={cn(
+                        'bg-linear-to-br h-8 text-xs md:text-sm',
+                        colorStyles.bg['accent-teal-dark'],
+                        colorStyles.text['accent-teal-dark'],
+                      )}
+                    >
+                      <span className='font-semibold'>Zobrazit</span>
+                    </Button>
+                  )}
+                  {canToggleModuleVisibility && onToggleModuleVisibility && (
+                    <ModuleVisibilityActionButton
+                      status={module.status}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleModuleVisibility(module.uuid, module.status)
+                      }}
+                      disabled={Boolean(isToggleVisibilityPending)}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   )

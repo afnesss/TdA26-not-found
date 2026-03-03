@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+﻿import { Button } from '@/components/ui/button'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
@@ -161,6 +161,8 @@ const ModuleCard = (props: ModuleCardProps) => {
     (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
     0,
   )
+  const hasMaterials = module.materials.length > 0
+  const hasQuizzes = module.quizzes.length > 0
   const moduleQuizzesWithoutSubmits = module.quizzes.filter(
     (quiz) => (quiz.attemptsCount ?? 0) === 0,
   ).length
@@ -211,8 +213,9 @@ const ModuleCard = (props: ModuleCardProps) => {
   if (moduleLowScoreQuizzes > 0) {
     quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)
   }
-  const materialsHasAttention = moduleMaterialsWithoutInteraction > 0
-  const quizHasAttention = quizAttentionParts.length > 0
+  const materialsHasAttention =
+    hasMaterials && moduleMaterialsWithoutInteraction > 0
+  const quizHasAttention = hasQuizzes && quizAttentionParts.length > 0
 
   return (
     <Card
@@ -335,22 +338,35 @@ const ModuleCard = (props: ModuleCardProps) => {
                       Celkem {module.materials.length}
                     </span>
                   </div>
-                  <div className='grid grid-cols-3 gap-1.5 w-full'>
-                    {[
-                      { label: 'Stažení', value: moduleDownloads },
-                      { label: 'Otevření', value: moduleOpens },
-                      { label: 'Kopie', value: moduleCopies },
-                    ].map(({ label, value }) => (
-                      <AnalyticsStatCard
-                        key={label}
-                        label={label}
-                        value={value}
-                      />
-                    ))}
-                  </div>
+                  {hasMaterials ? (
+                    <div className='grid grid-cols-3 gap-1.5 w-full'>
+                      {[
+                        { label: 'Stažení', value: moduleDownloads },
+                        { label: 'Otevření', value: moduleOpens },
+                        { label: 'Kopie', value: moduleCopies },
+                      ].map(({ label, value }) => (
+                        <AnalyticsStatCard
+                          key={label}
+                          label={label}
+                          value={value}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center'>
+                      <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
+                        Žádné materiály
+                      </p>
+                      <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
+                        Interakce se zobrazí po přidání materiálů.
+                      </p>
+                    </div>
+                  )}
                   {materialsHasAttention && (
                     <AnalyticsAttentionAlert
-                      message={`Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`}
+                      messages={[
+                        `Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`,
+                      ]}
                     />
                   )}
                 </div>
@@ -364,34 +380,45 @@ const ModuleCard = (props: ModuleCardProps) => {
                       Celkem {module.quizzes.length}
                     </span>
                   </div>
-                  <div className='grid grid-cols-3 gap-1.5 w-full'>
-                    {[
-                      {
-                        label: 'Průměr',
-                        value:
-                          moduleQuizAverage == null
-                            ? '—'
-                            : `${moduleQuizAverage}%`,
-                      },
-                      {
-                        label: 'Odeslání',
-                        value: moduleQuizAttempts,
-                      },
-                      {
-                        label: 'Otázky',
-                        value: moduleQuizQuestionsTotal,
-                      },
-                    ].map(({ label, value }) => (
-                      <AnalyticsStatCard
-                        key={label}
-                        label={label}
-                        value={value}
-                        labelClassName='text-center'
-                      />
-                    ))}
-                  </div>
+                  {hasQuizzes ? (
+                    <div className='grid grid-cols-3 gap-1.5 w-full'>
+                      {[
+                        {
+                          label: 'Průměr',
+                          value:
+                            moduleQuizAverage == null
+                              ? '-'
+                              : `${moduleQuizAverage}%`,
+                        },
+                        {
+                          label: 'Odeslání',
+                          value: moduleQuizAttempts,
+                        },
+                        {
+                          label: 'Otázky',
+                          value: moduleQuizQuestionsTotal,
+                        },
+                      ].map(({ label, value }) => (
+                        <AnalyticsStatCard
+                          key={label}
+                          label={label}
+                          value={value}
+                          labelClassName='text-center'
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center'>
+                      <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
+                        Žádné kvízy
+                      </p>
+                      <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
+                        Statistiky se zobrazí po přidání kvízů.
+                      </p>
+                    </div>
+                  )}
                   {quizHasAttention && (
-                    <AnalyticsAttentionAlert message={quizAttentionParts.join(', ')} />
+                    <AnalyticsAttentionAlert messages={quizAttentionParts} />
                   )}
                 </div>
               </div>
@@ -475,3 +502,4 @@ const ModuleCard = (props: ModuleCardProps) => {
 }
 
 export default ModuleCard
+

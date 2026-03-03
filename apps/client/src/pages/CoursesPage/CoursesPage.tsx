@@ -83,7 +83,7 @@ const CoursesPage = () => {
     <div className='h-full'>
       {/* Hero */}
       <div className='max-w-7xl mx-auto lg:px-4 '>
-        <div className='flex flex-row md:justify-center justify-between items-center mb-3 w-full md:w-auto'>
+        <div className='flex flex-row md:justify-center justify-between items-center mb-4 w-full md:w-auto'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpenText}
@@ -125,7 +125,7 @@ const CoursesPage = () => {
         </div>
 
         {/* Kurzy Grid */}
-        <div className=' relative py-3 md:py-4'>
+        <div className=' relative '>
           {isLoading ? (
             <CoursesPageSceleton />
           ) : (

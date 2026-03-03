@@ -10,6 +10,7 @@ import HintPageText from '@/components/shared/HintPageText'
 import FilterDropdown from '@/components/shared/FilterDropdown'
 import { Button } from '@/components/ui/button'
 import {
+  colorStyles,
   defaultStatusFilters,
   statusFilterItems,
   type FilterIds,
@@ -20,7 +21,14 @@ import type {
   CourseSummary,
 } from '@/lib/schemas'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, BookOpenText } from 'lucide-react'
+import {
+  Plus,
+  BookOpenText,
+  CheckCircle2,
+  Download,
+  Copy,
+  ExternalLink,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import CourseComponent from '../../components/shared/CourseComponent'
@@ -43,8 +51,11 @@ import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import type { ApiError } from '@/lib/types'
 import DashboardModeTabs from './components/DashboardModeTabs'
+import DonutOverviewSection from '@/components/shared/Statistics/DonutOverviewSection'
+import { CourseStateBadge } from '@/components/shared/CourseStateBadge'
 import AnalyticsAttentionAlert from './components/AnalyticsAttentionAlert'
-import AnalyticsStatCard from './components/AnalyticsStatCard'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
@@ -102,8 +113,6 @@ const DashboardDesign1 = () => {
   }
   const { isConnected } = useDashboardCoursesSSE()
 
-  const planning = useCoursePlanning({ queryClient })
-
   const handleStatusChange = async (
     courseId: string,
     newStatus: CourseStatus,
@@ -116,6 +125,9 @@ const DashboardDesign1 = () => {
     (course) => statusFilters[course.status],
   )
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
+  const allAnalyticsCourses = courses.filter((course) =>
+    isAnalyticsAllowedStatus(course.status),
+  )
   const analyticsCourses = sortedCourses.filter((course) =>
     isAnalyticsAllowedStatus(course.status),
   )
@@ -124,7 +136,7 @@ const DashboardDesign1 = () => {
 
   const hasMoreCourses = coursesForCurrentMode.length > displayCount
   const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
-  const globalCourses = analyticsCourses
+  const globalCourses = allAnalyticsCourses
   const courseAnalyticsQueries = useQueries({
     queries: globalCourses.map((course) => ({
       queryKey: ['course-dashboard-analytics', course.uuid],
@@ -195,23 +207,75 @@ const DashboardDesign1 = () => {
     },
   )
 
+  const globalCourseStatusCounts = courses.reduce(
+    (acc, course) => {
+      if (course.status === 'draft') acc.draft += 1
+      if (course.status === 'planned') acc.planned += 1
+      if (course.status === 'live') acc.live += 1
+      if (course.status === 'paused') acc.paused += 1
+      if (course.status === 'archived') acc.archived += 1
+      return acc
+    },
+    { draft: 0, planned: 0, live: 0, paused: 0, archived: 0 },
+  )
+
+  const allAttentionItems = [
+    // Critical — broken content state
+    {
+      label: 'Live kurzy bez modulů',
+      value: globalCourses.filter(
+        (c) =>
+          c.status === 'live' &&
+          /* you'd need moduleCount on CourseSummary or derive from analytics */ 0,
+      ).length,
+      severity: 'critical' as const,
+      hint: 'Kurz je živý, ale nemá žádný obsah',
+    },
+    // High — nobody is submitting anything
+    {
+      label: 'Kvízy bez submitu',
+      value: globalStats.quizzesWithoutSubmits,
+      severity:
+        globalStats.quizzesCount > 0 &&
+        globalStats.quizzesWithoutSubmits === globalStats.quizzesCount
+          ? ('critical' as const)
+          : ('warning' as const),
+    },
+    // Warning — engagement gaps
+    {
+      label: 'Moduly bez interakce',
+      value: globalStats.modulesWithoutInteraction,
+      severity: 'warning' as const,
+    },
+    {
+      label: 'Kvízy s nízkým skóre',
+      value: globalStats.lowScoreQuizzes,
+      severity: 'warning' as const,
+      hint: 'Průměrné skóre pod 60 %',
+    },
+  ].filter((item) => item.value > 0)
+
+  const planning = useCoursePlanning({ queryClient })
   const globalAverageQuizPercentage =
     globalStats.quizScoreWeight > 0
       ? globalStats.quizScoreWeightedSum / globalStats.quizScoreWeight
       : null
   const formatMetric = (value: number) =>
     Number.isInteger(value) ? value.toString() : value.toFixed(1)
-  const globalAttentionParts: string[] = []
-  if (globalStats.modulesWithoutInteraction > 0) {
-    globalAttentionParts.push(
-      `Moduly bez interakce: ${globalStats.modulesWithoutInteraction}`,
-    )
-  }
-  if (globalStats.lowScoreQuizzes > 0) {
-    globalAttentionParts.push(
-      `Kvízy s nízkým skóre: ${globalStats.lowScoreQuizzes}`,
-    )
-  }
+  const globalAttentionItems = [
+    {
+      label: 'Moduly bez interakce',
+      value: globalStats.modulesWithoutInteraction,
+    },
+    {
+      label: 'Kvízy s nízkým skóre',
+      value: globalStats.lowScoreQuizzes,
+    },
+    {
+      label: 'Kvízy bez submitu',
+      value: globalStats.quizzesWithoutSubmits,
+    },
+  ].filter((item) => item.value > 0)
   const globalStatsLoading =
     dashboardMode === 'global' &&
     courseAnalyticsQueries.some((query) => query.isLoading || query.isFetching)
@@ -345,61 +409,158 @@ const DashboardDesign1 = () => {
               ) : globalStatsLoading ? (
                 <CoursesPageSceleton />
               ) : (
-                <div className='rounded-2xl border bg-card/90 p-6 md:p-7 shadow-sm space-y-6'>
-                  <div className='flex flex-col gap-2 md:flex-row md:items-end md:justify-between'>
-                    <div>
-                      <p className='text-xs uppercase tracking-wide text-muted-foreground'>
-                        Global Analytics
-                      </p>
-                      <h3 className='text-2xl font-semibold'>
+                <div className='rounded-2xl bg-card/90 shadow-sm overflow-hidden'>
+                  <div
+                    className={cn(
+                      'h-1.5 bg-linear-to-r',
+                      colorStyles.gradient['accent-teal'],
+                    )}
+                  />
+
+                  <div className='p-4 md:p-5 space-y-4'>
+                    {/* 1. HEADER */}
+                    <div className='flex items-center justify-between gap-2'>
+                      <Label size='lg' className='font-bold'>
                         Souhrn všech kurzů
-                      </h3>
+                      </Label>
+                      <span className='rounded-full bg-accent-teal-dark/10 px-2 py-0.5 text-sm font-semibold text-accent-teal-dark'>
+                        Celkem {courses.length}
+                      </span>
                     </div>
-                    <p className='text-sm text-muted-foreground'>
-                      Kurzy v souhrnu: {globalCourses.length}
-                    </p>
-                  </div>
 
-                  <div className='grid grid-cols-2 lg:grid-cols-5 gap-3'>
-                    <AnalyticsStatCard
-                      label='Moduly'
-                      value={globalStats.modulesCount}
-                    />
-                    <AnalyticsStatCard
-                      label='Materiály'
-                      value={globalStats.materialsCount}
-                    />
-                    <AnalyticsStatCard
-                      label='Kvízy'
-                      value={globalStats.quizzesCount}
-                    />
-                    <AnalyticsStatCard
-                      className='col-span-2 lg:col-span-2'
-                      label='Průměrné skóre kvízů'
-                      value={
-                        globalAverageQuizPercentage === null
-                          ? '—'
-                          : `${formatMetric(globalAverageQuizPercentage)}%`
-                      }
-                    />
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                    <AnalyticsStatCard
-                      label='Odeslání kvízů'
-                      value={globalStats.quizScoreWeight}
-                    />
-                    <AnalyticsStatCard
-                      label='Kvízy bez odeslání'
-                      value={globalStats.quizzesWithoutSubmits}
-                    />
-                  </div>
+                    {/* 2. STATUS ROW */}
+                    <div className='grid grid-cols-6 gap-2 md:grid-cols-5'>
+                      {[
+                        {
+                          status: 'draft' as const,
+                          value: globalCourseStatusCounts.draft,
+                          stateClassName: 'brightness-90 saturate-150',
+                        },
+                        {
+                          status: 'planned' as const,
+                          value: globalCourseStatusCounts.planned,
+                        },
+                        {
+                          status: 'live' as const,
+                          value: globalCourseStatusCounts.live,
+                        },
+                        {
+                          status: 'paused' as const,
+                          value: globalCourseStatusCounts.paused,
+                        },
+                        {
+                          status: 'archived' as const,
+                          value: globalCourseStatusCounts.archived,
+                          stateClassName: 'brightness-90 saturate-150',
+                        },
+                      ].map(({ status, value, stateClassName = '' }, index) => (
+                        <div
+                          key={status}
+                          className={cn(
+                            'flex flex-wrap items-center justify-center sm:justify-between gap-2 rounded-lg bg-muted px-2.5 py-1.5 md:col-span-1',
+                            index < 3 ? 'col-span-2' : 'col-span-3',
+                          )}
+                        >
+                          <CourseStateBadge
+                            status={status}
+                            className={cn(
+                              'px-1.5 py-0.5 text-[10px] md:px-2 md:text-xs',
+                              stateClassName,
+                            )}
+                          />
+                          <span className='text-sm font-semibold leading-none text-foreground tabular-nums'>
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-                  {globalAttentionParts.length > 0 && (
-                    <AnalyticsAttentionAlert
-                      message={globalAttentionParts.join(', ')}
-                      className='mt-0 text-xs'
-                    />
-                  )}
+                    <div className='flex gap-3 items-stretch'>
+                      <div className='basis-2/5'>
+                        <DonutOverviewSection
+                          percent={Math.min(
+                            100,
+                            Math.max(0, globalAverageQuizPercentage ?? 0),
+                          )}
+                          centerValue={
+                            globalAverageQuizPercentage === null
+                              ? '—'
+                              : `${formatMetric(globalAverageQuizPercentage)}%`
+                          }
+                          footerLabel='Průměrné skóre'
+                          footerSubLabel={`${globalStats.quizScoreWeight} odeslání`}
+                          className='h-full w-full'
+                        />
+                      </div>
+
+                      <div className='flex flex-col gap-1.5 basis-3/5'>
+                        <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1'>
+                          <span className='text-base font-semibold leading-none text-foreground tabular-nums'>
+                            {globalStats.modulesCount}
+                          </span>
+                          <span className='text-xs md:text-sm mt-0.5 text-muted-foreground'>
+                            Moduly
+                          </span>
+                        </div>
+
+                        <div className='grid grid-cols-2 gap-1.5 flex-1'>
+                          <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1'>
+                            <span className='text-sm md:text-base font-semibold leading-none text-foreground tabular-nums'>
+                              {globalStats.materialsCount}
+                            </span>
+                            <span className='text-xs md:text-sm mt-0.5 text-muted-foreground'>
+                              Materiály
+                            </span>
+                            <div className='mt-1 flex items-center gap-2 text-xs md:text-sm text-muted-foreground'>
+                              <span className='inline-flex items-center gap-1'>
+                                <Download className='h-3 w-3' />
+                                <span className='tabular-nums text-primary font-semibold'>
+                                  {globalStats.downloadCount}
+                                </span>
+                              </span>
+                              <span className='inline-flex items-center gap-1'>
+                                <Copy className='h-3 w-3' />
+                                <span className='tabular-nums text-primary font-semibold'>
+                                  {globalStats.copyCount}
+                                </span>
+                              </span>
+                              <span className='inline-flex items-center gap-1'>
+                                <ExternalLink className='h-3 w-3' />
+                                <span className='tabular-nums text-primary font-semibold'>
+                                  {globalStats.openCount}
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                          <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1'>
+                            <span className='text-sm md:text-base font-semibold leading-none text-foreground tabular-nums'>
+                              {globalStats.quizzesCount}
+                            </span>
+                            <span className='text-xs md:text-sm mt-0.5 text-muted-foreground'>
+                              Kvízy
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 5. ATTENTION BAR */}
+                    {globalAttentionItems.length > 0 ? (
+                      <AnalyticsAttentionAlert
+                        className='mt-0 rounded-lg px-2.5 py-1.5 text-xs'
+                        messages={globalAttentionItems.map(
+                          (item) => `${item.label}: ${item.value}`,
+                        )}
+                      />
+                    ) : (
+                      <div className='rounded-lg px-2.5 py-1.5 text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
+                        <CheckCircle2 className='w-3.5 h-3.5 shrink-0' />
+                        <span className='font-medium'>
+                          Bez kritických signálů
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

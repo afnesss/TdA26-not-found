@@ -22,7 +22,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
-import { Fragment, useEffect, useRef, useState, useTransition } from 'react'
+import { Fragment, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
@@ -71,7 +71,7 @@ type QuizComponentProps = {
   showAnalytics?: boolean
 }
 
-const QuizComponent = ({
+const QuizComponentInner = ({
   quiz,
   mode,
   userState,
@@ -98,17 +98,21 @@ const QuizComponent = ({
     moduleId: string
   }>()
 
-  const [prevQuizUuid, setPrevQuizUuid] = useState(quiz.uuid)
-  const [prevMode, setPrevMode] = useState(mode)
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting: isSubmittingNew, isDirty },
+    setValue,
+    getValues,
+    reset,
+  } = useForm<Quiz>({
+    resolver: zodResolver(QuizValidationSchema),
+    defaultValues: quiz,
+    mode: 'onSubmit',
+  })
 
-  if (prevQuizUuid !== quiz.uuid || prevMode !== mode) {
-    setPrevQuizUuid(quiz.uuid)
-    setPrevMode(mode)
-    setShowCorrect(false)
-    setPageIndex(0)
-  }
-
-  const UserActions = () => (
+  const userActions = (
     <div className='flex flex-wrap items-center gap-3 md:gap-6 justify-end'>
       {userState?.status !== 'submitted' && (
         <div
@@ -142,7 +146,9 @@ const QuizComponent = ({
           className='rounded-lg shadow-none'
           onClick={onToggleShowCorrect}
           aria-label={
-            userState?.showCorrect ? 'Hide correct answers' : 'Show correct answers'
+            userState?.showCorrect
+              ? 'Hide correct answers'
+              : 'Show correct answers'
           }
         >
           {userState?.showCorrect ? 'Skrýt odpovědi' : 'Zobrazit odpovědi'}
@@ -162,33 +168,15 @@ const QuizComponent = ({
     </div>
   )
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors, isSubmitting: isSubmittingNew, isDirty },
-    setValue,
-    getValues,
-    reset,
-  } = useForm<Quiz>({
-    resolver: zodResolver(QuizValidationSchema),
-    defaultValues: quiz,
-    mode: 'onSubmit',
-  })
-
   const formValues = useWatch({ control, defaultValue: quiz })
   const displayQuiz = mode === 'lecturer' ? formValues : quiz
   const totalQuestions = displayQuiz.questions?.length ?? 0
   const pageCount = Math.max(1, Math.ceil(totalQuestions / pageSize))
-  const safePageIndex = Math.min(pageIndex, pageCount - 1)
+  const clampPage = (page: number) => Math.max(0, Math.min(page, pageCount - 1))
+  const safePageIndex = clampPage(pageIndex)
   const startIndex = safePageIndex * pageSize
   const endIndex = startIndex + pageSize
-  const {
-    data: quizAnalytics,
-    isError: analyticsError,
-    isLoading: analyticsLoading,
-    refetch: refetchQuizAnalytics,
-  } = useQuery<QuizAnalyticsResponse | null>({
+  const { data: quizAnalytics } = useQuery<QuizAnalyticsResponse | null>({
     queryKey: ['quizAnalytics', quiz.uuid],
     queryFn: () => getQuizAnalytics(courseId!, moduleId!, quiz.uuid!),
     enabled:
@@ -205,11 +193,6 @@ const QuizComponent = ({
     }
   }
 
-  useEffect(() => {
-    if (pageIndex !== safePageIndex) {
-      setPageIndex(safePageIndex)
-    }
-  }, [pageIndex, safePageIndex])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
     const capitalizedTitle = handleCapitalizedInput(
@@ -360,7 +343,7 @@ const QuizComponent = ({
 
   const handleSave = handleSubmit((data: Quiz) => {
     onSave?.(data)
-    // Don't reset here - let useEffect handle it when quiz prop updates
+    // Don't reset here - the component remounts on quiz/mode change
   })
 
   return (
@@ -567,67 +550,72 @@ const QuizComponent = ({
         <div className='p-3 md:p-5 space-y-4 border-t border-gray-100 bg-gray-50/50'>
           {/* Questions */}
           {displayQuiz.questions
-            ?.slice(mode === 'user' ? startIndex : 0, mode === 'user' ? endIndex : undefined)
+            ?.slice(
+              mode === 'user' ? startIndex : 0,
+              mode === 'user' ? endIndex : undefined,
+            )
             .map((origQuestion, localIndex) => {
-            const qIndex = mode === 'user' ? startIndex + localIndex : localIndex
-            const question = origQuestion as Question
-            const questionAnalytics = quizAnalytics?.questionAnalytics.find(
-              (qa) => qa.uuid === question.uuid,
-            )
-            return (
-              <Fragment key={question.uuid ?? qIndex}>
-                <QuizQuestion
-                  question={question}
-                  qIndex={qIndex}
-                  mode={mode}
-                  questionError={errors.questions?.[qIndex] as object}
-                  questionAnalytics={
-                    mode === 'lecturer-preview' && showAnalytics
-                      ? questionAnalytics
-                      : undefined
-                  }
-                  onQuestionTextUpdate={(text: string) =>
-                    updateQuestionText(qIndex, text)
-                  }
-                  onQuestionTypeChange={(type) =>
-                    updateQuestionType(qIndex, type)
-                  }
-                  onQuestionRemove={() => removeQuestion(qIndex)}
-                  onOptionUpdate={(optIndex, value) =>
-                    updateOption(qIndex, optIndex, value)
-                  }
-                  onOptionRemove={(optIndex) => removeOption(qIndex, optIndex)}
-                  onCorrectToggle={(optIndex) =>
-                    toggleCorrectAnswer(qIndex, optIndex)
-                  }
-                  onAddOption={() => addOption(qIndex)}
-                  // user props
-                  userState={userState}
-                  onAnswerChange={(questionId, answer) => {
-                    setShowIncompleteError(false)
-                    onAnswerChange?.(questionId, answer)
-                  }}
-                  showCorrectAnswers={
-                    mode === 'lecturer-preview' ? showCorrect : undefined
-                  }
-                />
+              const qIndex =
+                mode === 'user' ? startIndex + localIndex : localIndex
+              const question = origQuestion as Question
+              const questionAnalytics = quizAnalytics?.questionAnalytics.find(
+                (qa) => qa.uuid === question.uuid,
+              )
+              return (
+                <Fragment key={question.uuid ?? qIndex}>
+                  <QuizQuestion
+                    question={question}
+                    qIndex={qIndex}
+                    mode={mode}
+                    questionError={errors.questions?.[qIndex] as object}
+                    questionAnalytics={
+                      mode === 'lecturer-preview' && showAnalytics
+                        ? questionAnalytics
+                        : undefined
+                    }
+                    onQuestionTextUpdate={(text: string) =>
+                      updateQuestionText(qIndex, text)
+                    }
+                    onQuestionTypeChange={(type) =>
+                      updateQuestionType(qIndex, type)
+                    }
+                    onQuestionRemove={() => removeQuestion(qIndex)}
+                    onOptionUpdate={(optIndex, value) =>
+                      updateOption(qIndex, optIndex, value)
+                    }
+                    onOptionRemove={(optIndex) =>
+                      removeOption(qIndex, optIndex)
+                    }
+                    onCorrectToggle={(optIndex) =>
+                      toggleCorrectAnswer(qIndex, optIndex)
+                    }
+                    onAddOption={() => addOption(qIndex)}
+                    // user props
+                    userState={userState}
+                    onAnswerChange={(questionId, answer) => {
+                      setShowIncompleteError(false)
+                      onAnswerChange?.(questionId, answer)
+                    }}
+                    showCorrectAnswers={
+                      mode === 'lecturer-preview' ? showCorrect : undefined
+                    }
+                  />
 
-                {localIndex <
-                  (mode === 'user'
-                    ? Math.min(pageSize, totalQuestions - startIndex) - 1
-                    : (displayQuiz.questions?.length ?? 0) - 1) && (
-                  <hr className='border-b border mt-2 border-gray-100' />
-                )}
-              </Fragment>
-            )
-          })}
+                  {localIndex <
+                    (mode === 'user'
+                      ? Math.min(pageSize, totalQuestions - startIndex) - 1
+                      : (displayQuiz.questions?.length ?? 0) - 1) && (
+                    <hr className='border-b border mt-2 border-gray-100' />
+                  )}
+                </Fragment>
+              )
+            })}
 
           <QuizPageSwitcher
             pageCount={pageCount}
             currentPage={safePageIndex}
-            onPageChange={setPageIndex}
+            onPageChange={(page) => setPageIndex(clampPage(page))}
           />
-
 
           {mode === 'lecturer' && (
             <Button
@@ -669,7 +657,7 @@ const QuizComponent = ({
                   )}
                 </div>
 
-                <UserActions />
+                {userActions}
               </div>
             ) : mode === 'lecturer-preview' ? (
               <div className='flex justify-start'>
@@ -706,6 +694,11 @@ const QuizComponent = ({
       )}
     </div>
   )
+}
+
+const QuizComponent = (props: QuizComponentProps) => {
+  const resetKey = `${props.quiz.uuid}-${props.mode}`
+  return <QuizComponentInner key={resetKey} {...props} />
 }
 
 export default QuizComponent

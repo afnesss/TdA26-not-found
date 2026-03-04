@@ -79,10 +79,13 @@ const CourseModulesLayoutPage = () => {
     courseId ?? '',
   )
 
-  const historyItems = useMemo(
-    () => course?.status_history ?? [],
-    [course?.status_history],
-  )
+  const historyItems = useMemo(() => {
+    const items = course?.status_history ?? []
+    return [...items].sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    )
+  }, [course?.status_history])
 
   if (!courseId) {
     return <StateComp type='not-found' message='Kurz nebyl nalezen' />

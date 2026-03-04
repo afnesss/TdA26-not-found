@@ -29,24 +29,23 @@ const TermsOfUsePage = () => {
             <div className='space-y-2 flex-col flex'>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  2.1 Registrace:
+                  2.1 Veřejný přístup:
                 </span>{' '}
-                Pro přístup k některým funkcím platformy je nutná registrace.
-                Zavazujete se poskytovat pravdivé a aktuální informace.
+                Platforma je veřejně dostupná pro všechny uživatele bez nutnosti
+                registrace nebo přihlášení.
               </LegalText>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  2.2 Bezpečnost účtu:
+                  2.2 Správa platformy:
                 </span>{' '}
-                Jste odpovědní za zachování důvěrnosti přihlašovacích údajů a za
-                všechny aktivity prováděné pod vaším účtem.
+                Platformu spravuje jeden lektor, který má přístup k
+                administrátorským funkcím pro správu kurzů a obsahu.
               </LegalText>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  2.3 Oprávnění:
+                  2.3 Studenti:
                 </span>{' '}
-                Platforma nabízí různé role (student, lektor, administrátor).
-                Každá role má specifická oprávnění a odpovědnosti.
+                Studenti přistupují k platformě veřejně bez omezení.
               </LegalText>
             </div>
           </LegalSection>
@@ -68,47 +67,10 @@ const TermsOfUsePage = () => {
                 distribuce nebo komerční využití bez výslovného souhlasu je
                 zakázáno.
               </LegalText>
-              <LegalText>
-                <span className='font-semibold text-foreground'>
-                  3.3 Uživatelský obsah:
-                </span>{' '}
-                Nahráním vlastního obsahu (diskusní příspěvky, odpovědi)
-                udělujete platformě právo tento obsah používat pro vzdělávací
-                účely.
-              </LegalText>
             </div>
           </LegalSection>
 
-          <LegalSection title='4. Pravidla chování'>
-            <div className='space-y-3'>
-              <LegalText>Při používání platformy se zavazujete:</LegalText>
-              <ul className='list-disc list-inside space-y-2 ml-4'>
-                <LegalText className='block'>
-                  <li>
-                    Respektovat ostatní uživatele a udržovat konstruktivní
-                    atmosféru
-                  </li>
-                </LegalText>
-                <LegalText className='block'>
-                  <li>
-                    Nezveřejňovat obsah, který je urážlivý, nezákonný nebo
-                    porušuje práva třetích stran
-                  </li>
-                </LegalText>
-                <LegalText className='block'>
-                  <li>
-                    Nepokoušet se o neoprávněný přístup k systému nebo datům
-                    jiných uživatelů
-                  </li>
-                </LegalText>
-                <LegalText className='block'>
-                  <li>Nešířit spam, reklamy nebo jiný nevyžádaný obsah</li>
-                </LegalText>
-              </ul>
-            </div>
-          </LegalSection>
-
-          <LegalSection title='5. Ochrana osobních údajů'>
+          <LegalSection title='4. Ochrana osobních údajů'>
             <LegalText>
               Zpracování vašich osobních údajů je detailně popsáno v našich
               Zásadách ochrany osobních údajů. Používáním platformy souhlasíte
@@ -117,11 +79,11 @@ const TermsOfUsePage = () => {
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='6. Omezení odpovědnosti'>
+          <LegalSection title='5. Omezení odpovědnosti'>
             <div className='space-y-2 flex flex-col'>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  6.1 Dostupnost služeb:
+                  5.1 Dostupnost služeb:
                 </span>{' '}
                 Snažíme se zajistit nepřetržitou dostupnost platformy, ale
                 nemůžeme garantovat stoprocentní dostupnost. Platforma může být
@@ -129,14 +91,14 @@ const TermsOfUsePage = () => {
               </LegalText>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  6.2 Obsah třetích stran:
+                  5.2 Obsah třetích stran:
                 </span>{' '}
                 Platforma může obsahovat odkazy na externí zdroje. Nejsme
                 odpovědní za obsah těchto externích stránek.
               </LegalText>
               <LegalText>
                 <span className='font-semibold text-foreground'>
-                  6.3 Vzdělávací účely:
+                  5.3 Vzdělávací účely:
                 </span>{' '}
                 Obsah platformy je poskytován pouze pro vzdělávací účely a
                 nenahrazuje profesionální poradenství.
@@ -144,46 +106,27 @@ const TermsOfUsePage = () => {
             </div>
           </LegalSection>
 
-          <LegalSection title='7. Změny podmínek'>
+          <LegalSection title='6. Změny podmínek'>
             <LegalText>
-              Vyhrazujeme si právo tyto podmínky kdykoliv upravit. O podstatných
-              změnách vás budeme informovat prostřednictvím platformy nebo
-              e-mailem. Pokračováním v používání platformy po zveřejnění změn
-              vyjadřujete souhlas s aktualizovanými podmínkami.
+              Vyhrazujeme si právo tyto podmínky kdykoliv upravit. Doporučujeme
+              pravidelně kontrolovat tyto podmínky. Pokračováním v používání
+              platformy po zveřejnění změn vyjadřujete souhlas s aktualizovanými
+              podmínkami.
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='8. Ukončení přístupu'>
+          <LegalSection title='7. Ukončení přístupu'>
             <LegalText>
-              Máme právo pozastavit nebo ukončit váš přístup k platformě v
-              případě porušení těchto podmínek nebo za účelem ochrany platformy
-              a jejích uživatelů. Váš účet můžete kdykoli sami zrušit
-              kontaktováním naší podpory.
+              Máme právo pozastavit nebo ukončit přístup k platformě v případě
+              porušení těchto podmínek nebo za účelem ochrany platformy.
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='9. Rozhodné právo'>
+          <LegalSection title='8. Kontaktní informace'>
             <LegalText>
-              Tyto podmínky se řídí právním řádem České republiky. Případné
-              spory budou řešeny u příslušných soudů České republiky.
+              V případě dotazů týkajících se těchto podmínek nás prosím
+              kontaktujte na emailu: info@thinkdifferent.academy
             </LegalText>
-          </LegalSection>
-
-          <LegalSection title='10. Kontaktní informace'>
-            <div className='space-y-3'>
-              <LegalText>
-                V případě dotazů týkajících se těchto podmínek nás prosím
-                kontaktujte:
-              </LegalText>
-              <div className='bg-accent-teal/10 rounded-lg p-4 space-y-2 mt-2'>
-                <LegalText className='font-semibold block'>
-                  Think Different Academy
-                </LegalText>
-                <LegalText className='block'>
-                  Email: info@thinkdifferent.academy
-                </LegalText>
-              </div>
-            </div>
           </LegalSection>
 
           <section className='pt-4 border-t border-gray-200'>

@@ -10,6 +10,7 @@ import type { ApiError } from '@/lib/types'
 import type { QuizStateById } from '../../../lib/types'
 import { toast } from 'sonner'
 import { onErrorWithRollback } from './helperFunctions'
+import { setQuizSubmission } from './quizSubmissionStorage'
 
 export function useQuizSubmitMutation(
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
@@ -49,6 +50,7 @@ export function useQuizSubmitMutation(
           showCorrect: false,
         },
       }))
+      setQuizSubmission(quizId, parsed.data, answers)
       return parsed.data
     },
     networkMode: 'always',

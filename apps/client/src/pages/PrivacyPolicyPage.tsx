@@ -30,20 +30,11 @@ const PrivacyPolicyPage = () => {
           </LegalSection>
 
           <LegalSection title='2. Správce osobních údajů'>
-            <div className='space-y-2 flex-col flex'>
-              <LegalText>
-                Správcem vašich osobních údajů je Think Different Academy,
-                nezisková organizace.
-              </LegalText>
-              <div className='bg-accent-teal/10 rounded-lg p-4 space-y-2 mt-2'>
-                <LegalText className='font-semibold block'>
-                  Kontaktní údaje správce:
-                </LegalText>
-                <LegalText className='block'>
-                  Email: info@thinkdifferent.academy
-                </LegalText>
-              </div>
-            </div>
+            <LegalText>
+              Správcem vašich osobních údajů je Think Different Academy,
+              nezisková organizace. V případě dotazů nás prosím kontaktujte na
+              emailu: info@thinkdifferent.academy
+            </LegalText>
           </LegalSection>
 
           <LegalSection title='3. Jaké osobní údaje shromažďujeme'>
@@ -63,13 +54,6 @@ const PrivacyPolicyPage = () => {
                 Základní technické informace o přístupu k platformě pro
                 zajištění jejího fungování.
               </LegalText>
-              <LegalText>
-                <span className='font-semibold text-foreground'>
-                  3.3 Komunikační data:
-                </span>{' '}
-                Obsah vaší komunikace s námi, zpětná vazba a dotazy zaslané přes
-                e-mail.
-              </LegalText>
             </div>
           </LegalSection>
 
@@ -87,9 +71,6 @@ const PrivacyPolicyPage = () => {
                     Ukládání studijních výsledků a odpovědí na kvízy pro účely
                     vzdělávání
                   </li>
-                </LegalText>
-                <LegalText className='block'>
-                  <li>Komunikace týkající se kurzů a technické podpory</li>
                 </LegalText>
                 <LegalText className='block'>
                   <li>Zlepšování kvality vzdělávacího obsahu a služeb</li>
@@ -231,17 +212,7 @@ const PrivacyPolicyPage = () => {
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='10. Děti a nezletilí'>
-            <LegalText>
-              Naše služby jsou určeny osobám starším 13 let. Pokud jste mladší
-              než 16 let, potřebujete souhlas zákonného zástupce pro použití
-              platformy. Vědomě neshromažďujeme osobní údaje dětí mladších 13
-              let bez souhlasu zákonného zástupce. Pokud zjistíme, že jsme
-              takové údaje získali, neprodleně je smažeme.
-            </LegalText>
-          </LegalSection>
-
-          <LegalSection title='11. Mezinárodní přenosy dat'>
+          <LegalSection title='10. Mezinárodní přenosy dat'>
             <LegalText>
               Vaše osobní údaje jsou primárně zpracovávány v Evropské unii.
               Pokud dochází k přenosu dat mimo EU, zajišťujeme odpovídající
@@ -250,35 +221,25 @@ const PrivacyPolicyPage = () => {
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='12. Změny zásad ochrany osobních údajů'>
+          <LegalSection title='11. Změny zásad ochrany osobních údajů'>
             <LegalText>
-              Tyto zásady můžeme čas od času aktualizovat. O významných změnách
-              vás budeme informovat prostřednictvím oznámení na platformě.
-              Doporučujeme pravidelně kontrolovat tyto zásady, abyste byli
-              informováni o tom, jak chráníme vaše údaje.
+              Tyto zásady můžeme čas od času aktualizovat. Doporučujeme
+              pravidelně kontrolovat tyto zásady, abyste byli informováni o tom,
+              jak chráníme vaše údaje.
             </LegalText>
           </LegalSection>
 
-          <LegalSection title='13. Kontakt a podání stížnosti'>
-            <div className='space-y-2 flex-col flex'>
-              <LegalText>
-                Máte-li jakékoli dotazy ohledně zpracování vašich osobních údajů
-                nebo chcete uplatnit svá práva, kontaktujte nás:
-              </LegalText>
-              <div className='bg-accent-teal/10 rounded-lg p-4 space-y-2 mt-2'>
-                <LegalText className='block'>
-                  Email: privacy@thinkdifferent.academy
-                </LegalText>
-                <LegalText className='block'>
-                  Email: info@thinkdifferent.academy
-                </LegalText>
-              </div>
-              <LegalText className='mt-3'>
-                Máte také právo podat stížnost u Úřadu pro ochranu osobních
-                údajů (www.uoou.cz), pokud se domníváte, že zpracování vašich
-                osobních údajů porušuje platné právní předpisy.
-              </LegalText>
-            </div>
+          <LegalSection title='12. Kontakt a podání stížnosti'>
+            <LegalText>
+              Máte-li jakékoli dotazy ohledně zpracování vašich osobních údajů
+              nebo chcete uplatnit svá práva, kontaktujte nás na emailu:
+              info@thinkdifferent.academy
+            </LegalText>
+            <LegalText className='mt-3'>
+              Máte také právo podat stížnost u Úřadu pro ochranu osobních údajů
+              (www.uoou.cz), pokud se domníváte, že zpracování vašich osobních
+              údajů porušuje platné právní předpisy.
+            </LegalText>
           </LegalSection>
 
           <section className='pt-4 border-t border-gray-200'>

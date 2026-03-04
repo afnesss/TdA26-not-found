@@ -27,6 +27,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
+import QuizPageSwitcher from './QuizPageSwitcher'
 
 const isDirtyText = (className?: string) => {
   return (
@@ -56,6 +57,7 @@ type QuizComponentProps = {
   ) => void
   onSubmit?: () => void
   onToggleShowCorrect?: () => void
+  onReset?: () => void
   isSubmitting?: boolean
   isSubmitDisabled?: boolean
 
@@ -76,6 +78,7 @@ const QuizComponent = ({
   onAnswerChange,
   onSubmit,
   onToggleShowCorrect,
+  onReset,
   isSubmitting,
   isSubmitDisabled,
   onSave,
@@ -88,6 +91,8 @@ const QuizComponent = ({
 }: QuizComponentProps) => {
   const [showIncompleteError, setShowIncompleteError] = useState(false)
   const [showCorrect, setShowCorrect] = useState(false)
+  const [pageIndex, setPageIndex] = useState(0)
+  const pageSize = 10
   const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId: string
@@ -100,7 +105,62 @@ const QuizComponent = ({
     setPrevQuizUuid(quiz.uuid)
     setPrevMode(mode)
     setShowCorrect(false)
+    setPageIndex(0)
   }
+
+  const UserActions = () => (
+    <div className='flex flex-wrap items-center gap-3 md:gap-6 justify-end'>
+      {userState?.status !== 'submitted' && (
+        <div
+          onClick={(e) => {
+            if (isSubmitDisabled && userState?.status !== 'submitted') {
+              e.preventDefault()
+              setShowIncompleteError(true)
+            }
+          }}
+        >
+          <Button
+            variant='primary'
+            size='grid'
+            className='w-fit'
+            disabled={isSubmitDisabled || isSubmitting || isSubmittingNew}
+            onClick={() => {
+              setShowIncompleteError(false)
+              onSubmit?.()
+            }}
+            aria-label='Submit quiz answers'
+          >
+            <span className='sm:hidden'>Odeslat</span>
+            <span className='hidden sm:inline'>Odeslat odpovědi</span>
+          </Button>
+        </div>
+      )}
+
+      {userState?.status === 'submitted' && (
+        <Button
+          variant='link'
+          className='rounded-lg shadow-none'
+          onClick={onToggleShowCorrect}
+          aria-label={
+            userState?.showCorrect ? 'Hide correct answers' : 'Show correct answers'
+          }
+        >
+          {userState?.showCorrect ? 'Skrýt odpovědi' : 'Zobrazit odpovědi'}
+        </Button>
+      )}
+
+      {userState?.status === 'submitted' && onReset && (
+        <Button
+          variant='primary'
+          size='grid'
+          className='w-fit'
+          onClick={onReset}
+        >
+          Začít znovu
+        </Button>
+      )}
+    </div>
+  )
 
   const {
     register,
@@ -117,6 +177,12 @@ const QuizComponent = ({
   })
 
   const formValues = useWatch({ control, defaultValue: quiz })
+  const displayQuiz = mode === 'lecturer' ? formValues : quiz
+  const totalQuestions = displayQuiz.questions?.length ?? 0
+  const pageCount = Math.max(1, Math.ceil(totalQuestions / pageSize))
+  const safePageIndex = Math.min(pageIndex, pageCount - 1)
+  const startIndex = safePageIndex * pageSize
+  const endIndex = startIndex + pageSize
   const {
     data: quizAnalytics,
     isError: analyticsError,
@@ -138,6 +204,12 @@ const QuizComponent = ({
       onToggleExpand()
     }
   }
+
+  useEffect(() => {
+    if (pageIndex !== safePageIndex) {
+      setPageIndex(safePageIndex)
+    }
+  }, [pageIndex, safePageIndex])
   // Lecturer edit functions
   const updateTitle = (title: string) => {
     const capitalizedTitle = handleCapitalizedInput(
@@ -290,8 +362,6 @@ const QuizComponent = ({
     onSave?.(data)
     // Don't reset here - let useEffect handle it when quiz prop updates
   })
-
-  const displayQuiz = mode === 'lecturer' ? formValues : quiz
 
   return (
     <div className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
@@ -496,7 +566,10 @@ const QuizComponent = ({
       {isExpanded && (
         <div className='p-3 md:p-5 space-y-4 border-t border-gray-100 bg-gray-50/50'>
           {/* Questions */}
-          {displayQuiz.questions?.map((origQuestion, qIndex) => {
+          {displayQuiz.questions
+            ?.slice(mode === 'user' ? startIndex : 0, mode === 'user' ? endIndex : undefined)
+            .map((origQuestion, localIndex) => {
+            const qIndex = mode === 'user' ? startIndex + localIndex : localIndex
             const question = origQuestion as Question
             const questionAnalytics = quizAnalytics?.questionAnalytics.find(
               (qa) => qa.uuid === question.uuid,
@@ -539,12 +612,22 @@ const QuizComponent = ({
                   }
                 />
 
-                {qIndex < (displayQuiz.questions?.length ?? 0) - 1 && (
+                {localIndex <
+                  (mode === 'user'
+                    ? Math.min(pageSize, totalQuestions - startIndex) - 1
+                    : (displayQuiz.questions?.length ?? 0) - 1) && (
                   <hr className='border-b border mt-2 border-gray-100' />
                 )}
               </Fragment>
             )
           })}
+
+          <QuizPageSwitcher
+            pageCount={pageCount}
+            currentPage={safePageIndex}
+            onPageChange={setPageIndex}
+          />
+
 
           {mode === 'lecturer' && (
             <Button
@@ -567,56 +650,18 @@ const QuizComponent = ({
           {/* Footer Actions */}
           <div className='flex flex-col lg:mx-10 pt-3 border-t-2 border-gray-100'>
             {mode === 'user' ? (
-              <div className='flex flex-row items-center justify-between'>
-                <div className='flex flex-col gap-1'>
-                  <div className='flex items-center gap-3 md:gap-10 flex-row'>
-                    <div
-                      onClick={(e) => {
-                        if (
-                          isSubmitDisabled &&
-                          userState?.status !== 'submitted'
-                        ) {
-                          e.preventDefault()
-                          setShowIncompleteError(true)
-                        }
-                      }}
+              <div className='flex items-center justify-between gap-4'>
+                <div className='flex flex-col gap-2'>
+                  {userState?.status === 'submitted' && userState.results && (
+                    <Label
+                      className='text-primary flex items-center gap-3'
+                      size={'lg'}
                     >
-                      <Button
-                        variant='primary'
-                        size='grid'
-                        className='w-fit'
-                        disabled={
-                          isSubmitDisabled || isSubmitting || isSubmittingNew
-                        }
-                        onClick={() => {
-                          setShowIncompleteError(false)
-                          onSubmit?.()
-                        }}
-                        aria-label='Submit quiz answers'
-                      >
-                        <span className='sm:hidden'>Odeslat</span>
-                        <span className='hidden sm:inline'>
-                          Odeslat odpovědi
-                        </span>
-                      </Button>
-                    </div>
-                    {userState?.status === 'submitted' && (
-                      <Button
-                        variant='link'
-                        className='rounded-lg shadow-none'
-                        onClick={onToggleShowCorrect}
-                        aria-label={
-                          userState?.showCorrect
-                            ? 'Hide correct answers'
-                            : 'Show correct answers'
-                        }
-                      >
-                        {userState?.showCorrect
-                          ? 'Skrýt odpovědi'
-                          : 'Zobrazit odpovědi'}
-                      </Button>
-                    )}
-                  </div>
+                      <CheckCircle size={20} className='hidden sm:block' />
+                      {userState.results.score} / {userState.results.maxScore}
+                    </Label>
+                  )}
+
                   {showIncompleteError && (
                     <p className='error-text'>
                       Zodpovězte prosím všechny otázky
@@ -624,15 +669,7 @@ const QuizComponent = ({
                   )}
                 </div>
 
-                {userState?.status === 'submitted' && userState.results && (
-                  <Label
-                    className='text-primary flex items-center gap-3'
-                    size={'lg'}
-                  >
-                    <CheckCircle size={20} className='hidden sm:block' />
-                    {userState.results.score} / {userState.results.maxScore}
-                  </Label>
-                )}
+                <UserActions />
               </div>
             ) : mode === 'lecturer-preview' ? (
               <div className='flex justify-start'>

@@ -38,9 +38,12 @@ const Footer = () => {
           </div>
         </div>
 
-        <span className='w-full  sm:w-auto sm:text-right whitespace-nowrap'>
+        <a
+          href='mailto:info@thinkdifferent.academy'
+          className='hover:text-secondary transition-colors'
+        >
           info@thinkdifferent.academy
-        </span>
+        </a>
       </div>
     </footer>
   )

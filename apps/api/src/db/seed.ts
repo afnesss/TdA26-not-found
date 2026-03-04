@@ -135,23 +135,16 @@ const sampleCourses = [
 const moduleBlueprints = [
   {
     position: 1,
-    name: "Modul 1: Základy",
+    name: "Modul 1: Start a orientace",
     description:
       "Úvodní tematický blok se základními pojmy, orientací v kurzu a prvními studijními materiály.",
     status: "active" as const,
   },
   {
     position: 2,
-    name: "Modul 2: Klíčové koncepty",
+    name: "Modul 2: Praktická cvičení a miniprojekt",
     description:
       "Procvičování a prohloubení hlavních konceptů pomocí cvičení, diskuze a průběžného ověření znalostí.",
-    status: "passive" as const,
-  },
-  {
-    position: 3,
-    name: "Modul 3: Projekt a závěrečné shrnutí",
-    description:
-      "Závěrečný blok zaměřený na projektové zadání, doplňkové zdroje a souhrnné ověření znalostí.",
     status: "passive" as const,
   },
 ];
@@ -203,7 +196,6 @@ export async function seed() {
     const moduleByPosition = new Map(createdModules.map((m) => [m.position, m.uuid]));
     const module1Id = moduleByPosition.get(1)!;
     const module2Id = moduleByPosition.get(2)!;
-    const module3Id = moduleByPosition.get(3)!;
 
     const materials = [
       {
@@ -262,18 +254,18 @@ export async function seed() {
         faviconUrl: "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
       },
       {
-        moduleId: module3Id,
+        moduleId: module2Id,
         type: "file" as const,
-        name: "Pokyny k projektu",
+        name: "Pokyny k miniprojektu",
         description:
-          "Podrobný dokument s požadavky na závěrečný projekt, kritérii hodnocení a procesem odevzdání.",
+          "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
         fileUrl: "/api/uploads/project-guidelines.txt",
         mimeType: "text/plain",
         sizeBytes: 1024 * 900,
         originalFilename: "project-guidelines.txt",
       },
       {
-        moduleId: module3Id,
+        moduleId: module2Id,
         type: "url" as const,
         name: "Externí zdroje kurzu",
         description: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
@@ -358,46 +350,6 @@ export async function seed() {
           },
         ],
       },
-      {
-        moduleId: module3Id,
-        title: "Zkušební kvíz k závěrečné zkoušce",
-        questions: [
-          {
-            uuid: uuidv4(),
-            type: "singleChoice",
-            question:
-              "Jaká je časová složitost vyhledávání prvku ve vyváženém binárním vyhledávacím stromu?",
-            options: ["O(n)", "O(log n)", "O(1)", "O(n^2)"],
-            correctIndex: 1,
-          },
-          {
-            uuid: uuidv4(),
-            type: "multipleChoice",
-            question: "Které z těchto jsou principy čistého kódu?",
-            options: ["Čitelnost", "Udržovatelnost", "Škálovatelnost", "Obfuskace"],
-            correctIndices: [0, 1, 2],
-          },
-          {
-            uuid: uuidv4(),
-            type: "singleChoice",
-            question: "Jaký je účel cizího klíče v relační databázi?",
-            options: [
-              "Vynucovat referenční integritu",
-              "Jednoznačně identifikovat záznam",
-              "Zrychlit načítání dat",
-              "Definovat primární klíč",
-            ],
-            correctIndex: 0,
-          },
-          {
-            uuid: uuidv4(),
-            type: "multipleChoice",
-            question: "Modely cloudových služeb zahrnují:",
-            options: ["IaaS", "PaaS", "SaaS", "DaaS"],
-            correctIndices: [0, 1, 2],
-          },
-        ],
-      },
     ];
 
     await db.insert(quizzes).values(quizzesData);
@@ -411,12 +363,6 @@ export async function seed() {
       },
       {
         courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový materiál: Oficiální sylabus kurzu",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 28),
-      },
-      {
-        courseId: course.uuid,
         type: "manual" as const,
         message:
           "Připomínka: První živá diskuze je naplánována na příští úterý. Připravte si své otázky!",
@@ -424,22 +370,10 @@ export async function seed() {
       },
       {
         courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový kvíz: Modul 1: Kvíz ze základů",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20),
-      },
-      {
-        courseId: course.uuid,
         type: "manual" as const,
         message:
           "Konzultační hodiny tento týden: Pondělí 14-15 a Středa 11-12. Přijďte prodiskutovat cokoliv!",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15),
-      },
-      {
-        courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový materiál: Prezentace z přednášky - Týden 1: Úvod",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10),
       },
       {
         courseId: course.uuid,
@@ -452,22 +386,10 @@ export async function seed() {
       },
       {
         courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový materiál: Cvičení - Modul 2: Datové struktury",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5),
-      },
-      {
-        courseId: course.uuid,
         type: "manual" as const,
         message:
           "Příští týden nás čeká hostem přednáška: 'Budoucnost AI v softwarovém inženýrství'. Podrobnosti brzy.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3),
-      },
-      {
-        courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový kvíz: Modul 2: Hodnocení klíčových konceptů",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1),
       },
       {
         courseId: course.uuid,
@@ -481,12 +403,6 @@ export async function seed() {
         type: "manual" as const,
         message: "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      },
-      {
-        courseId: course.uuid,
-        type: "system" as const,
-        message: "Přidán nový materiál: Pokyny k projektu",
-        createdAt: new Date(Date.now() - 1000 * 60 * 30),
       },
       {
         courseId: course.uuid,

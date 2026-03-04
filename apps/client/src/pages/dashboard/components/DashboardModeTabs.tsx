@@ -61,16 +61,13 @@ const ToggleSwitch = <T extends string>({
         role='switch'
         aria-checked={isSecondaryActive}
         aria-label='Toggle statistics mode'
-        disabled={isDisabled}
         className={cn(
-          'relative inline-flex h-3 md:h-4 w-8 md:w-10 items-center rounded-full border transition-all duration-200 mr-0.5',
+          'relative inline-flex h-3 md:h-4 w-8 md:w-10 cursor-pointer items-center rounded-full border transition-all duration-200 mr-0.5',
           isSecondaryActive
             ? 'bg-primary border-primary'
             : 'bg-primary/15 border-primary/30',
-          isDisabled && 'opacity-50 cursor-not-allowed',
         )}
         onClick={() => {
-          if (targetTab.disabled) return
           onChange(targetTab.value)
         }}
       >

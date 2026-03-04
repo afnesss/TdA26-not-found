@@ -82,8 +82,8 @@ const CoursesPage = () => {
   return (
     <div className='h-full'>
       {/* Hero */}
-      <div className='max-w-7xl mx-auto lg:px-4 pt-3'>
-        <div className='flex flex-row md:justify-center justify-between items-center mb-3 w-full md:w-auto'>
+      <div className='max-w-7xl mx-auto lg:px-4 '>
+        <div className='flex flex-row md:justify-center justify-between items-center mb-4 w-full md:w-auto'>
           <HintPageText
             text='Dostupné kurzy'
             icon={BookOpenText}
@@ -125,7 +125,7 @@ const CoursesPage = () => {
         </div>
 
         {/* Kurzy Grid */}
-        <div className=' relative py-3 md:py-4'>
+        <div className=' relative '>
           {isLoading ? (
             <CoursesPageSceleton />
           ) : (
@@ -158,7 +158,9 @@ const CoursesPage = () => {
                     setSearchQuery('')
                     setDisplayCount(9)
                   }}
-                  actionText={useResetStatusAction ? 'Zrušit filtry' : undefined}
+                  actionText={
+                    useResetStatusAction ? 'Zrušit filtry' : undefined
+                  }
                 />
               ) : isError ? (
                 <StateComp
@@ -180,7 +182,7 @@ const CoursesPage = () => {
 
               {/* Load More button */}
               {hasMoreCourses && (
-                <div className='mt-8 text-center'>
+                <div className='mt-4 text-center'>
                   <Button
                     variant='primary'
                     size='primary'

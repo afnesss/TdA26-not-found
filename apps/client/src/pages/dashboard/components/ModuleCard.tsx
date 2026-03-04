@@ -1,9 +1,16 @@
-import { Button } from '@/components/ui/button'
+﻿import { Button } from '@/components/ui/button'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
 import EditBtn from './EditBtn'
-import { Edit, Menu } from 'lucide-react'
+import {
+  CheckCircle2,
+  Copy,
+  Download,
+  Edit,
+  ExternalLink,
+  Menu,
+} from 'lucide-react'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Card, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,6 +22,23 @@ import { Label } from '@/components/ui/label'
 import { truncateDescription } from '../../CoursePage/utils/helperFunctions'
 import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
+import AnalyticsStatCard from './AnalyticsStatCard'
+
+const formatCzechCount = (
+  count: number,
+  one: string,
+  few: string,
+  many: string,
+) => {
+  const abs = Math.abs(count)
+  const lastTwo = abs % 100
+  if (lastTwo >= 11 && lastTwo <= 14) return `${count} ${many}`
+  const last = abs % 10
+  if (last === 1) return `${count} ${one}`
+  if (last >= 2 && last <= 4) return `${count} ${few}`
+  return `${count} ${many}`
+}
 
 export type DraftModuleForm = {
   name: string
@@ -29,6 +53,7 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   variant: 'existing'
   module: CourseModule
   courseStatus: CourseDetail['status']
+  analyticsMode?: boolean
   canToggleModuleVisibility?: boolean
   isToggleVisibilityPending?: boolean
   onOpenModule?: (moduleId: string) => void
@@ -135,6 +160,7 @@ const ModuleCard = (props: ModuleCardProps) => {
     module,
     moduleIndex,
     courseStatus,
+    analyticsMode,
     canToggleModuleVisibility,
     isToggleVisibilityPending,
     onOpenModule,
@@ -151,6 +177,67 @@ const ModuleCard = (props: ModuleCardProps) => {
     isWholeCardDragEnabled && gripHandleProps
       ? { ...gripHandleProps.attributes, ...gripHandleProps.listeners }
       : {}
+  const isAnalyticsMode = Boolean(analyticsMode)
+
+  const moduleQuizAttempts = module.quizzes.reduce(
+    (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
+    0,
+  )
+  const hasMaterials = module.materials.length > 0
+  const hasQuizzes = module.quizzes.length > 0
+  const moduleQuizzesWithoutSubmits = module.quizzes.filter(
+    (quiz) => (quiz.attemptsCount ?? 0) === 0,
+  ).length
+  const moduleQuizValues = module.quizzes
+    .map((quiz) => quiz.averagePercentage)
+    .filter((value): value is number => value != null)
+  const moduleQuizQuestionsTotal = module.quizzes.reduce(
+    (sum, quiz) => sum + quiz.questions.length,
+    0,
+  )
+  const moduleQuizAverage =
+    moduleQuizValues.length > 0
+      ? Math.round(
+          moduleQuizValues.reduce((sum, value) => sum + value, 0) /
+            moduleQuizValues.length,
+        )
+      : null
+  const moduleDownloads = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'file' ? (material.downloadCount ?? 0) : 0),
+    0,
+  )
+  const moduleCopies = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'url' ? (material.copyCount ?? 0) : 0),
+    0,
+  )
+  const moduleOpens = module.materials.reduce(
+    (sum, material) =>
+      sum + (material.type === 'url' ? (material.openCount ?? 0) : 0),
+    0,
+  )
+  const moduleMaterialsWithoutInteraction = module.materials.filter(
+    (material) =>
+      material.type === 'file'
+        ? (material.downloadCount ?? 0) === 0
+        : (material.openCount ?? 0) + (material.copyCount ?? 0) === 0,
+  ).length
+  const moduleLowScoreQuizzes = module.quizzes.filter((quiz) => {
+    if ((quiz.attemptsCount ?? 0) === 0) return false
+    if (quiz.averagePercentage == null) return false
+    return quiz.averagePercentage < 60
+  }).length
+  const quizAttentionParts: string[] = []
+  if (moduleQuizzesWithoutSubmits > 0) {
+    quizAttentionParts.push(`Kvízy bez submitu: ${moduleQuizzesWithoutSubmits}`)
+  }
+  if (moduleLowScoreQuizzes > 0) {
+    quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)
+  }
+  const materialsHasAttention =
+    hasMaterials && moduleMaterialsWithoutInteraction > 0
+  const quizHasAttention = hasQuizzes && quizAttentionParts.length > 0
 
   return (
     <Card
@@ -201,7 +288,23 @@ const ModuleCard = (props: ModuleCardProps) => {
             </Label>
           </div>
 
-          {alwaysShowActions ? (
+          {isAnalyticsMode ? (
+            <Button
+              variant='grid'
+              size='sm'
+              className={cn(
+                'bg-linear-to-br h-8 text-xs md:text-sm',
+                colorStyles.bg['accent-teal-dark'],
+                colorStyles.text['accent-teal-dark'],
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenModule?.(module.uuid)
+              }}
+            >
+              <span className='font-semibold'>Zobrazit</span>
+            </Button>
+          ) : alwaysShowActions ? (
             <div className='flex shrink-0 items-center gap-2'>
               <EditBtn
                 icon={Edit}
@@ -244,74 +347,204 @@ const ModuleCard = (props: ModuleCardProps) => {
           ) : null}
         </div>
 
-        <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
-          <CardDescription className='flex-1 min-w-0'>
-            {truncateDescription(module.description ?? '', 70)}
-          </CardDescription>
-          {showGripHandle && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-6 w-6 p-0 shrink-0 ml-auto cursor-grab'
-            >
-              <Menu className='w-4 h-4 text-muted-foreground' />
-            </Button>
-          )}
-        </div>
-
-        <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
-          <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
-            <p className='text-muted-foreground'>
-              Materiály:{' '}
-              <span className='font-semibold text-neutral-black'>
-                {module.materials?.length ?? 0}
-              </span>
-            </p>
-            <p className='text-muted-foreground'>
-              Kvízy:{' '}
-              <span className='font-semibold text-neutral-black'>
-                {module.quizzes?.length ?? 0}
-              </span>
-            </p>
-            {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
-              <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
-                upraveno{' '}
-                {new Date(String(module.updatedAt)).toLocaleDateString('cs-CZ')}
-              </span>
-            )} */}
-          </div>
-          <div className='flex flex-col items-end gap-2'>
-            <div className='flex shrink-0 items-center gap-2'>
-              {courseStatus !== 'draft' && (
-                <Button
-                  variant={'grid'}
-                  size={'sm'}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onOpenModule?.(module.uuid)
-                  }}
-                  className={cn(
-                    'bg-linear-to-br h-8 text-xs md:text-sm',
-                    colorStyles.bg['accent-teal-dark'],
-                    colorStyles.text['accent-teal-dark'],
+        {isAnalyticsMode ? (
+          <div className='mt-2.5 pt-2.5 border-t w-full'>
+            <div className='w-full rounded-lg bg-muted/20 overflow-hidden'>
+              <div className='grid grid-cols-2 divide-x divide-border/70'>
+                <div className='pr-2 flex flex-col gap-2 h-full'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      Materiály
+                    </span>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                      Celkem {module.materials.length}
+                    </span>
+                  </div>
+                  {hasMaterials ? (
+                    <div className='grid grid-cols-3 gap-1.5 w-full items-stretch flex-1'>
+                      {[
+                        {
+                          label: <Download className='h-3 w-3' />,
+                          value: moduleDownloads,
+                        },
+                        {
+                          label: <ExternalLink className='h-3 w-3' />,
+                          value: moduleOpens,
+                        },
+                        {
+                          label: <Copy className='h-3 w-3' />,
+                          value: moduleCopies,
+                        },
+                      ].map(({ label, value }, index) => (
+                        <AnalyticsStatCard
+                          key={index}
+                          label={label}
+                          value={value}
+                          className='h-full flex-col items-center sm:flex-row sm:items-center sm:justify-center'
+                          valueClassName='sm:ml-1'
+                          inline
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
+                      <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
+                        Žádné materiály
+                      </p>
+                      <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
+                        Interakce se zobrazí po přidání materiálů.
+                      </p>
+                    </div>
                   )}
-                >
-                  <span className='font-semibold'>Zobrazit</span>
-                </Button>
-              )}
-              {canToggleModuleVisibility && onToggleModuleVisibility && (
-                <ModuleVisibilityActionButton
-                  status={module.status}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onToggleModuleVisibility(module.uuid, module.status)
-                  }}
-                  disabled={Boolean(isToggleVisibilityPending)}
-                />
-              )}
+                  {materialsHasAttention ? (
+                    <AnalyticsAttentionAlert
+                      messages={[
+                        `Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`,
+                      ]}
+                    />
+                  ) : (
+                    hasMaterials && (
+                      <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
+                        <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
+                        <span className='font-medium'>
+                          Bez kritických signálů
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <div className='pl-2 flex flex-col gap-2 h-full'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <span className='text-xs font-semibold text-muted-foreground'>
+                      Kvízy
+                    </span>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                      Celkem {module.quizzes.length}
+                    </span>
+                  </div>
+                  {hasQuizzes ? (
+                    <div className='grid grid-cols-3 gap-1.5 w-full items-stretch flex-1'>
+                      {[
+                        {
+                          label: 'Průměr:',
+                          value:
+                            moduleQuizAverage == null
+                              ? '-'
+                              : `${moduleQuizAverage}%`,
+                        },
+                        {
+                          label: 'Odeslání:',
+                          value: moduleQuizAttempts,
+                        },
+                        {
+                          label: 'Otázky:',
+                          value: moduleQuizQuestionsTotal,
+                        },
+                      ].map(({ label, value }) => (
+                        <AnalyticsStatCard
+                          key={label}
+                          label={label}
+                          value={value}
+                          className='h-full flex-col items-center sm:flex-row sm:items-center sm:justify-center'
+                          labelClassName='whitespace-nowrap text-center sm:text-center'
+                          valueClassName='sm:ml-1'
+                          inline
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
+                      <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
+                        Žádné kvízy
+                      </p>
+                      <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
+                        Statistiky se zobrazí po přidání kvízů.
+                      </p>
+                    </div>
+                  )}
+                  {quizHasAttention ? (
+                    <AnalyticsAttentionAlert messages={quizAttentionParts} />
+                  ) : (
+                    hasQuizzes && (
+                      <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
+                        <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
+                        <span className='font-medium'>
+                          Bez kritických signálů
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
+              <CardDescription className='flex-1 min-w-0'>
+                {truncateDescription(module.description ?? '', 70)}
+              </CardDescription>
+              {showGripHandle && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='h-6 w-6 p-0 shrink-0 ml-auto cursor-grab'
+                >
+                  <Menu className='w-4 h-4 text-muted-foreground' />
+                </Button>
+              )}
+            </div>
+
+            <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
+              <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
+                <p className='text-muted-foreground'>
+                  Materiály:{' '}
+                  <span className='font-semibold text-neutral-black'>
+                    {module.materials?.length ?? 0}
+                  </span>
+                </p>
+                <p className='text-muted-foreground'>
+                  Kvízy:{' '}
+                  <span className='font-semibold text-neutral-black'>
+                    {module.quizzes?.length ?? 0}
+                  </span>
+                </p>
+              </div>
+              <div className='flex flex-col items-end gap-2'>
+                <div className='flex shrink-0 items-center gap-2'>
+                  {courseStatus !== 'draft' && (
+                    <Button
+                      variant={'grid'}
+                      size={'sm'}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenModule?.(module.uuid)
+                      }}
+                      className={cn(
+                        'bg-linear-to-br h-8 text-xs md:text-sm',
+                        colorStyles.bg['accent-teal-dark'],
+                        colorStyles.text['accent-teal-dark'],
+                      )}
+                    >
+                      <span className='font-semibold'>Zobrazit</span>
+                    </Button>
+                  )}
+                  {canToggleModuleVisibility && onToggleModuleVisibility && (
+                    <ModuleVisibilityActionButton
+                      status={module.status}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleModuleVisibility(module.uuid, module.status)
+                      }}
+                      disabled={Boolean(isToggleVisibilityPending)}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   )

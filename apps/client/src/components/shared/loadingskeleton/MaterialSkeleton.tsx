@@ -6,7 +6,7 @@ type MaterialSkeletonProps = {
 
 export const MaterialSkeleton = ({ count = 3 }: MaterialSkeletonProps) => {
   return (
-    <section className='space-y-1'>
+    <section className='max-w-7xl mx-auto space-y-1'>
       {/* Header with title and add button */}
       <div className='flex items-center justify-between gap-3'>
         <Skeleton className='h-6 w-40' />

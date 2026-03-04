@@ -648,7 +648,7 @@ const QuizComponent = ({
           )}
 
           {/* Footer Actions */}
-          <div className='flex flex-col lg:mx-10 pt-4 border-t-2 border-gray-100'>
+          <div className='flex flex-col lg:mx-10 pt-3 border-t-2 border-gray-100'>
             {mode === 'user' ? (
               <div className='flex items-center justify-between gap-4'>
                 <div className='flex flex-col gap-2'>

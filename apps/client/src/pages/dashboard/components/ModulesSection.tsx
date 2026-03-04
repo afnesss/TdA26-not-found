@@ -10,7 +10,7 @@ import DashboardAddButton from './DashboardAddButton'
 import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 interface ModulesSectionProps {
   courseId: string
@@ -31,6 +31,7 @@ interface ModulesSectionProps {
   ) => void
   isCreating: boolean
   isToggleVisibilityPending: boolean
+  headerRightSlot?: ReactNode
 }
 
 const ModulesSection = ({
@@ -49,6 +50,7 @@ const ModulesSection = ({
   onToggleVisibility,
   isCreating,
   isToggleVisibilityPending,
+  headerRightSlot,
 }: ModulesSectionProps) => {
   const modulesList = modules
   const canToggleModuleVisibility = courseStatus === 'live'
@@ -95,6 +97,7 @@ const ModulesSection = ({
         </Label>
 
         <div className='flex items-center gap-2'>
+          {headerRightSlot}
           {courseStatus === 'draft' && !previewMode && (
             <Button
               variant={'outline'}
@@ -131,7 +134,7 @@ const ModulesSection = ({
         <StateComp
           type='no-content'
           message='Kurz zatím nemá žádné moduly'
-          className='pt-8'
+          className='py-8'
         />
       ) : (
         <div className='space-y-4'>

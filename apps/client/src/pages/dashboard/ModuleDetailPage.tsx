@@ -51,7 +51,7 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
     variant='secondary'
     className={cn(
       status === 'active'
-        ? 'bg-secondary/30 text-secondary-foreground'
+        ? 'bg-secondary/50 text-secondary-foreground'
         : 'bg-muted text-muted-foreground',
     )}
   >
@@ -354,23 +354,25 @@ const CourseModuleDetailPage = () => {
 
   return (
     <div className='space-y-4'>
-      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
-        <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto '>
-          {modulesLoading
-            ? [1, 2, 3].map((i) => (
-                <Skeleton key={i} className='h-10 w-28 rounded-xl shrink-0' />
-              ))
-            : !modulesError &&
-              modules.map((m, i) => (
-                <UserModuleTab
-                  key={m.uuid}
-                  module={m}
-                  index={i}
-                  path='dashboard'
-                />
-              ))}
+      {modules.length > 1 && (
+        <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6'>
+          <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto '>
+            {modulesLoading
+              ? [1, 2, 3].map((i) => (
+                  <Skeleton key={i} className='h-10 w-28 rounded-xl shrink-0' />
+                ))
+              : !modulesError &&
+                modules.map((m, i) => (
+                  <UserModuleTab
+                    key={m.uuid}
+                    module={m}
+                    index={i}
+                    path='dashboard'
+                  />
+                ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {moduleLoading || !selectedModule ? (
         <DetailsContentSkeleton />

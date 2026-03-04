@@ -15,6 +15,10 @@ const UserCourseOverviewPage = () => {
       <SummarySection
         name={courseData.name}
         description={courseData.description ?? undefined}
+        breadcrumbs={[
+          { label: 'Kurzy', path: '/courses' },
+          { label: courseData.name },
+        ]}
       />
 
       <section>

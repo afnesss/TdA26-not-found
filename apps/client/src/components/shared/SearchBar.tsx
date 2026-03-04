@@ -2,11 +2,13 @@ import React, { type SetStateAction } from 'react'
 import { Search } from 'lucide-react'
 import { Input } from '../ui/input'
 import { cn } from '@/lib/utils'
+import type { ReactNode } from 'react'
 
 type SearchBarProps = {
   searchQuery: string
   setSearchQuery: (value: SetStateAction<string>) => void
   count?: string
+  rightAdornment?: ReactNode
   className?: string
 }
 
@@ -14,6 +16,7 @@ const SearchBar = ({
   searchQuery,
   setSearchQuery,
   count,
+  rightAdornment,
   className,
 }: SearchBarProps) => {
   return (
@@ -23,12 +26,20 @@ const SearchBar = ({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder='Vyhledat kurz...'
-        className='pl-10! md:pl-12! pr-10 md:pr-12 '
+        className={cn(
+          'pl-10! md:pl-12!',
+          count || rightAdornment ? 'pr-17 sm:pr-12' : 'pr-10 md:pr-12',
+        )}
       />
-      {count && (
-        <span className='lg:hidden absolute right-4 top-1/2 -translate-y-1/2 bg-primary text-background px-1.5 md:px-2 py-0.5 rounded-full text-xs font-bold'>
-          {count}
-        </span>
+      {(count || rightAdornment) && (
+        <div className='sm:hidden absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2'>
+          {count && (
+            <span className='bg-primary text-background px-1.5 py-0.5 rounded-full text-xs font-bold'>
+              {count}
+            </span>
+          )}
+          {rightAdornment}
+        </div>
       )}
     </div>
   )

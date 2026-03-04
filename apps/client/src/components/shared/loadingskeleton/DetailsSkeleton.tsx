@@ -7,7 +7,7 @@ import { FeedSkeleton } from './FeedSkeleton'
 
 export const DetailsContentSkeleton = () => {
   return (
-    <Card className='bg-background rounded-xl shadow-md overflow-hidden'>
+    <Card className='mx-auto max-w-7xl bg-background rounded-xl shadow-md overflow-hidden'>
       <div className='h-2 bg-gray-200 rounded-none' />
 
       <div className='p-4 lg:p-6 -mt-2'>

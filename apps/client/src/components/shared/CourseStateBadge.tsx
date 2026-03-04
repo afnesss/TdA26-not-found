@@ -33,7 +33,7 @@ const statusConfig: Record<
   },
   archived: {
     label: 'Archivováno',
-    className: 'bg-muted/50 text-muted-foreground',
+    className: 'bg-muted text-muted-foreground',
   },
 }
 

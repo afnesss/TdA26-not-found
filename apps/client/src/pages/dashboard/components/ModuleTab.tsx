@@ -25,6 +25,7 @@ const UserModuleTab = ({ module, index, path = 'courses' }: ModuleTabProps) => {
         moduleId === module.uuid
           ? 'bg-primary text-background shadow-md'
           : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
+        'max-sm:w-8 ',
       )}
       onClick={() => navigate(`/${path}/${courseId}/modules/${module.uuid}`)}
     >
@@ -34,7 +35,7 @@ const UserModuleTab = ({ module, index, path = 'courses' }: ModuleTabProps) => {
         >
           {index + 1}.
         </span>
-        <span className='max-w-44 truncate'>{module.name}</span>
+        <span className='hidden md:block max-w-20 truncate'>{module.name}</span>
       </span>
     </Button>
   )

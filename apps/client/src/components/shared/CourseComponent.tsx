@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
 import { getCourseDashboardAnalytics } from '@/api/queries/courseQueries'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -7,26 +7,30 @@ import {
   CardFooter,
   CardTitle,
 } from '@/components/ui/card'
-import { colorStyles, colors } from '@/lib/constants'
-import type { CourseDashboardAnalytics, CourseSummary } from '@/lib/schemas'
-import { cn } from '@/lib/utils'
-import { CourseStateBadge } from './CourseStateBadge'
-import { StatusActionButtons } from './StatusActionButtons'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { Edit } from 'lucide-react'
-import type { CourseStatus } from '@/lib/schemas'
-import { useState } from 'react'
+import { colorStyles, colors } from '@/lib/constants'
+import type {
+  CourseDashboardAnalytics,
+  CourseStatus,
+  CourseSummary,
+} from '@/lib/schemas'
+import { cn } from '@/lib/utils'
+import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery } from '@tanstack/react-query'
+import { Edit } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import CardDate from '../../pages/CoursesPage/components/CardDate'
-import EditBtn from '../../pages/dashboard/components/EditBtn'
-import EditSaveCancelButtons from './EditSaveCancelButtons'
-import CoursePlanningSection from './CoursePlanningSection'
-import { Textarea } from '../ui/textarea'
-import DeleteConfirmDialog from '../ui/AlertDialog'
 import { useMediaQuery } from 'usehooks-ts'
 import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
-import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
+import CardDate from '../../pages/CoursesPage/components/CardDate'
+import EditBtn from '../../pages/dashboard/components/EditBtn'
+import DeleteConfirmDialog from '../ui/AlertDialog'
+import { Textarea } from '../ui/textarea'
+import CoursePlanningSection from './CoursePlanningSection'
+import { CourseStateBadge } from './CourseStateBadge'
+import EditSaveCancelButtons from './EditSaveCancelButtons'
+import AnalyticsSection from './Statistics/StatisticsCourseSesction'
+import { StatusActionButtons } from './StatusActionButtons'
 
 interface CourseClassic {
   type: 'classic'
@@ -38,7 +42,7 @@ interface CourseEdit {
   type: 'edit'
   course: CourseSummary
   index: number
-  analyticsMode?: boolean
+  statisticsMode?: boolean
   isDraft?: true
   onEdit: () => void
   onSaveDraft?: (data: { name: string; description?: string }) => void
@@ -50,6 +54,8 @@ interface CourseEdit {
 }
 
 type CourseCompProps = CourseClassic | CourseEdit
+
+// ─── Course component ─────────────────────────────────────────────────────────
 
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
@@ -64,6 +70,7 @@ const CourseComponent = (props: CourseCompProps) => {
     nameError: '',
     saving: false,
   })
+
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
   const canShowAnalytics =
@@ -71,7 +78,7 @@ const CourseComponent = (props: CourseCompProps) => {
     course.status === 'paused' ||
     course.status === 'archived'
   const isAnalyticsMode =
-    type === 'edit' && Boolean(props.analyticsMode) && canShowAnalytics
+    type === 'edit' && Boolean(props.statisticsMode) && canShowAnalytics
 
   const {
     data: overviewCourse,
@@ -81,21 +88,39 @@ const CourseComponent = (props: CourseCompProps) => {
     queryKey: ['course-dashboard-analytics', course.uuid],
     queryFn: () => getCourseDashboardAnalytics(course.uuid),
     enabled:
-      isEditableCourseCard && isAnalyticsMode && !state.isEditing && canShowAnalytics,
+      isEditableCourseCard &&
+      isAnalyticsMode &&
+      !state.isEditing &&
+      canShowAnalytics,
     staleTime: 1000 * 20,
   })
 
   const averageQuizScore = overviewCourse?.averageQuizPercentage ?? null
+  const overviewModulesCount = overviewCourse?.modulesCount ?? 0
+  const overviewActiveModulesCount =
+    overviewCourse?.modules.filter((module) => module.status === 'active')
+      .length ?? 0
   const overviewMaterialsCount = overviewCourse?.materialsCount ?? 0
   const overviewQuizzesCount = overviewCourse?.quizzesCount ?? 0
-  const modulesWithoutInteraction = overviewCourse?.modulesWithoutInteraction ?? 0
+  const overviewDownloadCount = overviewCourse?.downloadCount ?? 0
+  const overviewCopyCount = overviewCourse?.copyCount ?? 0
+  const overviewOpenCount = overviewCourse?.openCount ?? 0
+  const overviewCompletions =
+    overviewCourse?.modules.reduce((sum, m) => sum + m.quizAttempts, 0) ?? 0
+  const modulesWithoutInteraction =
+    overviewCourse?.modulesWithoutInteraction ?? 0
+  const quizzesWithoutSubmits = overviewCourse?.quizzesWithoutSubmits ?? 0
   const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
+
   const attentionParts: string[] = []
   if (modulesWithoutInteraction > 0) {
-    attentionParts.push(`moduly bez interakcí ${modulesWithoutInteraction}`)
+    attentionParts.push(`Moduly bez interakcí: ${modulesWithoutInteraction}`)
+  }
+  if (modulesWithoutInteraction === 0 && quizzesWithoutSubmits > 0) {
+    attentionParts.push(`Kvízy bez submitu: ${quizzesWithoutSubmits}`)
   }
   if (lowScoreQuizzes > 0) {
-    attentionParts.push(`testy s nízkým skóre ${lowScoreQuizzes}`)
+    attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)
   }
 
   const handleNameChange = (name: string) => {
@@ -184,60 +209,72 @@ const CourseComponent = (props: CourseCompProps) => {
         )}
       />
 
-      {!isAnalyticsMode && (
-        <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
-          <CourseStateBadge status={course.status} />
-          {type === 'edit' &&
-            (!props.isDraft ? (
-              <div className='flex gap-2 md:gap-1.5 items-center'>
-                {course.status === 'draft' ? (
-                  <EditBtn
-                    icon={Edit}
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      props.onEdit()
-                    }}
-                    aria-label={`Edit course ${course.name}`}
-                  />
-                ) : (
-                  <EditBtn
-                    type='view'
-                    onClick={(e) => {
-                      e?.stopPropagation()
-                      props.onEdit()
-                    }}
-                    aria-label={`View course ${course.name}`}
-                  />
-                )}
-                <DeleteConfirmDialog
-                  trigger={
-                    <EditBtn
-                      type='delete'
-                      onClick={(e) => e?.stopPropagation()}
-                      aria-label={`Delete course ${course.name}`}
-                    />
-                  }
-                  itemName={course.name}
-                  itemType='kurz'
-                  onConfirm={() => {
-                    if (props.onDelete) {
-                      props.onDelete()
-                    }
+      <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
+        <CourseStateBadge status={course.status} />
+        {type === 'edit' &&
+          (!props.isDraft ? (
+            <div className='flex gap-2 md:gap-1.5 items-center'>
+              {isAnalyticsMode ? (
+                <EditBtn
+                  type='view'
+                  onClick={(e) => {
+                    e?.stopPropagation()
+                    props.onEdit()
                   }}
-                ></DeleteConfirmDialog>
-              </div>
-            ) : (
-              <EditSaveCancelButtons
-                className='space-x-2'
-                onSave={() => saveEdit()}
-                onCancel={cancelEdit}
-                saveDisabled={state.saving || !!state.nameError}
-                cancelDisabled={state.saving}
-                saveAriaLabel='Save course'
-              />
-            ))}
-        </div>
-      )}
+                  aria-label={`View course ${course.name}`}
+                />
+              ) : (
+                <>
+                  {course.status === 'draft' ? (
+                    <EditBtn
+                      icon={Edit}
+                      onClick={(e) => {
+                        e?.stopPropagation()
+                        props.onEdit()
+                      }}
+                      aria-label={`Edit course ${course.name}`}
+                    />
+                  ) : (
+                    <EditBtn
+                      type='view'
+                      onClick={(e) => {
+                        e?.stopPropagation()
+                        props.onEdit()
+                      }}
+                      aria-label={`View course ${course.name}`}
+                    />
+                  )}
+                  <DeleteConfirmDialog
+                    trigger={
+                      <EditBtn
+                        type='delete'
+                        onClick={(e) => e?.stopPropagation()}
+                        aria-label={`Delete course ${course.name}`}
+                      />
+                    }
+                    itemName={course.name}
+                    itemType='kurz'
+                    onConfirm={() => {
+                      if (props.onDelete) {
+                        props.onDelete()
+                      }
+                    }}
+                  />
+                </>
+              )}
+            </div>
+          ) : (
+            <EditSaveCancelButtons
+              className='space-x-2'
+              onSave={() => saveEdit()}
+              onCancel={cancelEdit}
+              saveDisabled={state.saving || !!state.nameError}
+              cancelDisabled={state.saving}
+              saveAriaLabel='Save course'
+            />
+          ))}
+      </div>
+
       <div className='px-4 pb-4 md:px-6 md:pb-6 pt-2 relative overflow-hidden flex-1 flex flex-col justify-between'>
         <CardContent>
           {state.isEditing ? (
@@ -295,11 +332,7 @@ const CourseComponent = (props: CourseCompProps) => {
         <CardFooter className='flex-col items-start gap-2'>
           {type === 'classic' && (
             <div className='flex justify-between w-full items-center'>
-              <CardDate
-                course={course}
-                state={course.status}
-              />
-
+              <CardDate course={course} state={course.status} />
               <Button
                 variant={'grid'}
                 size={'grid'}
@@ -324,32 +357,20 @@ const CourseComponent = (props: CourseCompProps) => {
               {!('isDraft' in props && props.isDraft) &&
                 !state.isEditing &&
                 isAnalyticsMode && (
-                  <div className='w-full space-y-2 rounded-lg border border-border/60 p-3'>
-                    <div className='rounded-md bg-muted/40 p-2 text-xs'>
-                      <p className='text-muted-foreground'>Průměrné skóre testů</p>
-                      <p className='font-semibold'>
-                        {averageQuizScore == null ? '—' : `${averageQuizScore}%`}
-                      </p>
-                    </div>
-                    <p className='text-xs text-muted-foreground'>
-                      Objem: moduly {overviewCourse?.modulesCount ?? 0}, materiály{' '}
-                      {overviewMaterialsCount}, testy {overviewQuizzesCount}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      Potřebuje pozornost:{' '}
-                      {attentionParts.length > 0
-                        ? attentionParts.join(', ')
-                        : 'bez kritických signálů'}
-                    </p>
-                    {overviewLoading && (
-                      <p className='text-xs text-muted-foreground'>Načítání…</p>
-                    )}
-                    {overviewError && (
-                      <p className='text-xs text-destructive'>
-                        Přehled se nepodařilo načíst.
-                      </p>
-                    )}
-                  </div>
+                <AnalyticsSection
+                  score={averageQuizScore}
+                  completions={overviewCompletions}
+                  modules={overviewModulesCount}
+                  activeModules={overviewActiveModulesCount}
+                  materials={overviewMaterialsCount}
+                  quizzes={overviewQuizzesCount}
+                  materialDownloads={overviewDownloadCount}
+                  materialCopies={overviewCopyCount}
+                  materialOpens={overviewOpenCount}
+                  attention={attentionParts}
+                  isLoading={overviewLoading}
+                  isError={overviewError}
+                />
                 )}
               {!isAnalyticsMode && (
                 <CoursePlanningSection

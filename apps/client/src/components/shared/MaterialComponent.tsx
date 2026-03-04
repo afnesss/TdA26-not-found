@@ -26,6 +26,15 @@ import { Textarea } from '../ui/textarea'
 import MaterialIcon from './MaterialIcon'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
 
+const countStyle = (count: number): string => {
+  return cn(
+    'absolute -top-1.5 -right-1.5 w-4 h-4 px-0.5 text-xs  rounded-full font-semibold shrink-0   text-center',
+    count === 0
+      ? 'bg-muted-foreground/10 text-muted-foreground/60'
+      : 'text-accent-teal bg-accent-teal/20',
+  )
+}
+
 type MaterialCardProps =
   | {
       material: Material
@@ -288,7 +297,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       />
                     </div>
                   ) : (
-                    <div className='shrink-0 flex flex-col items-end gap-1'>
+                    <div className='shrink-0 flex items-center gap-1'>
                       {material.type === 'file' ? (
                         <a
                           href={downloadUrl}
@@ -296,52 +305,82 @@ const MaterialCard = (props: MaterialCardProps) => {
                           target='_blank'
                           rel='noopener noreferrer'
                           aria-label={`Download ${material.name}`}
+                          className='relative'
                         >
                           <EditBtn
                             icon={Download}
                             aria-label={`Download ${material.name}`}
                           />
+                          {showLecturerCounters &&
+                            (material.downloadCount ?? 0) >= 0 && (
+                              <span
+                                className={countStyle(
+                                  material.downloadCount ?? 0,
+                                )}
+                              >
+                                {(material.downloadCount ?? 0) > 99
+                                  ? '99+'
+                                  : material.downloadCount}
+                              </span>
+                            )}
                         </a>
                       ) : (
-                        <div className='flex items-center'>
-                          <EditBtn
-                            icon={copied ? Check : Copy}
-                            classNameBtn='mr-1 hover:bg-gray-100'
-                            iconClassName={
-                              copied ? 'text-secondary size-4' : ''
-                            }
-                            onClick={() => handleCopyLink(material.url)}
-                            aria-label={
-                              copied ? 'Link copied' : 'Copy link to clipboard'
-                            }
-                          />
-                          <a
-                            href={material.url}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            aria-label={`Open ${material.name} in new tab`}
-                            onClick={() => {
-                              void runInteraction('open')
-                            }}
-                          >
+                        <>
+                          <div className='relative'>
                             <EditBtn
-                              icon={ExternalLink}
-                              aria-label={`Open ${material.name} in new tab`}
+                              icon={copied ? Check : Copy}
+                              classNameBtn='hover:bg-gray-100'
+                              iconClassName={
+                                copied ? 'text-secondary size-4' : ''
+                              }
+                              onClick={() => handleCopyLink(material.url)}
+                              aria-label={
+                                copied
+                                  ? 'Link copied'
+                                  : 'Copy link to clipboard'
+                              }
                             />
-                          </a>
-                        </div>
+                            {showLecturerCounters &&
+                              (material.copyCount ?? 0) >= 0 && (
+                                <span
+                                  className={countStyle(
+                                    material.copyCount ?? 0,
+                                  )}
+                                >
+                                  {(material.copyCount ?? 0) > 99
+                                    ? '99+'
+                                    : material.copyCount}
+                                </span>
+                              )}
+                          </div>
+                          <div className='relative'>
+                            <a
+                              href={material.url}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              aria-label={`Open ${material.name} in new tab`}
+                              onClick={() => void runInteraction('open')}
+                            >
+                              <EditBtn
+                                icon={ExternalLink}
+                                aria-label={`Open ${material.name} in new tab`}
+                              />
+                            </a>
+                            {showLecturerCounters &&
+                              (material.openCount ?? 0) >= 0 && (
+                                <span
+                                  className={countStyle(
+                                    material.openCount ?? 0,
+                                  )}
+                                >
+                                  {(material.openCount ?? 0) > 99
+                                    ? '99+'
+                                    : material.openCount}
+                                </span>
+                              )}
+                          </div>
+                        </>
                       )}
-                      {showLecturerCounters &&
-                        (material.type === 'file' ? (
-                          <p className='text-[11px] text-muted-foreground'>
-                            Stažení: {material.downloadCount ?? 0}
-                          </p>
-                        ) : (
-                          <p className='text-[11px] text-muted-foreground text-right'>
-                            Kopírování: {material.copyCount ?? 0} | Otevření:{' '}
-                            {material.openCount ?? 0}
-                          </p>
-                        ))}
                     </div>
                   )}
                 </div>
@@ -449,7 +488,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                 ) : errors.root?.file ? (
                   <p className='error-text'>{errors.root.file.message}</p>
                 ) : (
-                  <div className='flex gap-1 text-xs flex-col sm:flex-row sm:items-end sm:text-sm text-gray-500'>
+                  <div className='flex gap-1 text-xs flex-row sm:items-end sm:text-sm text-gray-500'>
                     <span className='font-medium'>Současný soubor:</span>
                     <span className='truncate'>
                       {material.type === 'file' && material.originalFilename}

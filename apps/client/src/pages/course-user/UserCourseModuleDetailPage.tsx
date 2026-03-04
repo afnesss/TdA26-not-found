@@ -77,14 +77,15 @@ const UserCourseModuleDetailPage = () => {
 
   return (
     <>
-      <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-3'>
-        <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto'>
-          {activeModules.map((module, index) => (
-            <UserModuleTab key={module.uuid} module={module} index={index} />
-          ))}
+      {activeModules.length > 1 && (
+        <div className='relative flex flex-col gap-2 md:flex-row md:items-center md:gap-6 mb-3'>
+          <div className='flex gap-2 sm:gap-3 flex-wrap sm:flex-nowrap md:flex-1 overflow-x-auto'>
+            {activeModules.map((module, index) => (
+              <UserModuleTab key={module.uuid} module={module} index={index} />
+            ))}
+          </div>
         </div>
-      </div>
-
+      )}
       <div className='space-y-5'>
         <SummarySection
           name={selectedModule.name}

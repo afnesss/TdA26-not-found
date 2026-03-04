@@ -1,54 +1,52 @@
 ﻿import {
-  cloneCourse,
   getCourseDashboardAnalytics,
   getCourses,
-  updateCourse,
 } from '@/api/queries/courseQueries'
+import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
+import FilterDropdown from '@/components/shared/FilterDropdown'
+import HintPageText from '@/components/shared/HintPageText'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
-import HintPageText from '@/components/shared/HintPageText'
-import FilterDropdown from '@/components/shared/FilterDropdown'
 import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
   defaultStatusFilters,
+  filterItems,
   statusFilterItems,
   type FilterIds,
 } from '@/lib/constants'
-import type {
-  CourseDashboardAnalytics,
-  CourseStatus,
-  CourseSummary,
-} from '@/lib/schemas'
+import { useTitle } from '@/lib/dynamicTitleHook'
+import type { CourseStatus, CourseSummary } from '@/lib/schemas'
+import type { ApiError } from '@/lib/types'
+import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, BookOpenText } from 'lucide-react'
+import { BookOpenText, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
+import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
 import {
   filterCourses,
   sortCoursesByFilter,
 } from '../CoursePage/utils/helperFunctions'
-import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
-import { toast } from 'sonner'
-import { useTitle } from '@/lib/dynamicTitleHook'
 import {
   useCloneCourseMutation,
   useCreateCourseMutation,
   useDeleteCourseMutation,
 } from '../CoursePage/utils/useCourseMutation'
-import { useMediaQuery } from 'usehooks-ts'
-import { filterItems } from '@/lib/constants'
-import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
-import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
-import type { ApiError } from '@/lib/types'
+import DashboardModeTabs from './components/DashboardModeTabs'
 
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
-  const analyticsAllowedStatuses: CourseStatus[] = ['live', 'paused', 'archived']
-  const isAnalyticsAllowedStatus = (status: CourseStatus) =>
-    analyticsAllowedStatuses.includes(status)
+  const statisticsAllowedStatuses: CourseStatus[] = [
+    'live',
+    'paused',
+    'archived',
+  ]
+  const isStatisticsAllowedStatus = (status: CourseStatus) =>
+    statisticsAllowedStatuses.includes(status)
   const [searchQuery, setSearchQuery] = useState('')
 
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
@@ -59,9 +57,9 @@ const DashboardDesign1 = () => {
     Record<CourseStatus, boolean>
   >(`${DASHBOARD_PAGE_FILTERS_KEY}-status`, defaultStatusFilters)
 
-  const [dashboardMode, setDashboardMode] = useState<
-    'content' | 'analytics' | 'global'
-  >('content')
+  const [dashboardMode, setDashboardMode] = useLocalStorage<
+    'content' | 'analytics'
+  >('dashboard-analytics-mode', 'content')
 
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
@@ -88,14 +86,7 @@ const DashboardDesign1 = () => {
     useCreateCourseMutation(setCourseDraft)
   const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation()
 
-  const invalidateCourseQueries = (courseId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['courses'] })
-    queryClient.invalidateQueries({ queryKey: ['courses-user'] })
-    queryClient.invalidateQueries({ queryKey: ['course', courseId] })
-  }
   const { isConnected } = useDashboardCoursesSSE()
-
-  const planning = useCoursePlanning({ queryClient })
 
   const handleStatusChange = async (
     courseId: string,
@@ -109,94 +100,48 @@ const DashboardDesign1 = () => {
     (course) => statusFilters[course.status],
   )
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
-  const analyticsCourses = sortedCourses.filter((course) =>
-    isAnalyticsAllowedStatus(course.status),
+  const statisticsCourses = sortedCourses.filter((course) =>
+    isStatisticsAllowedStatus(course.status),
   )
   const coursesForCurrentMode =
-    dashboardMode === 'analytics' ? analyticsCourses : sortedCourses
+    dashboardMode === 'analytics' ? statisticsCourses : sortedCourses
 
   const hasMoreCourses = coursesForCurrentMode.length > displayCount
   const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
-  const globalCourses = analyticsCourses
-  const courseAnalyticsQueries = useQueries({
-    queries: globalCourses.map((course) => ({
+  const displayedStatisticsQueries = useQueries({
+    queries: displayedCourses.map((course) => ({
       queryKey: ['course-dashboard-analytics', course.uuid],
       queryFn: () => getCourseDashboardAnalytics(course.uuid),
-      enabled: dashboardMode === 'global',
+      enabled:
+        dashboardMode === 'analytics' &&
+        isStatisticsAllowedStatus(course.status),
+      staleTime: 1000 * 20,
     })),
   })
 
-  const loadedAnalytics = courseAnalyticsQueries
-    .map((query) => query.data)
-    .filter(
-      (analytics): analytics is CourseDashboardAnalytics =>
-        analytics !== undefined,
+  const isStatisticsModeLoading =
+    dashboardMode === 'analytics' &&
+    displayedCourses.length > 0 &&
+    displayedStatisticsQueries.some(
+      (query) => query.isLoading && query.data === undefined,
     )
 
-  const globalStats = loadedAnalytics.reduce(
-    (acc, analytics) => {
-      acc.modulesCount += analytics.modulesCount
-      acc.materialsCount += analytics.materialsCount
-      acc.quizzesCount += analytics.quizzesCount
-      acc.quizzesWithoutSubmits += analytics.quizzesWithoutSubmits
-      acc.downloadCount += analytics.downloadCount
-      acc.copyCount += analytics.copyCount
-      acc.openCount += analytics.openCount
-      acc.fileMaterialsCount += analytics.modules.reduce(
-        (sum, module) => sum + module.fileMaterialsCount,
-        0,
-      )
-      acc.urlMaterialsCount += analytics.modules.reduce(
-        (sum, module) => sum + module.urlMaterialsCount,
-        0,
-      )
-      acc.modulesWithoutInteraction += analytics.modulesWithoutInteraction
-      acc.lowScoreQuizzes += analytics.lowScoreQuizzes
+  const planning = useCoursePlanning({ queryClient })
 
-      const courseQuizAttempts = analytics.modules.reduce(
-        (sum, module) => sum + module.quizAttempts,
-        0,
-      )
-      const courseQuizWeightedSum = analytics.modules.reduce((sum, module) => {
-        if (module.averageQuizPercentage == null || module.quizAttempts === 0) {
-          return sum
-        }
-        return sum + module.averageQuizPercentage * module.quizAttempts
-      }, 0)
-
-      if (courseQuizAttempts > 0) {
-        acc.quizScoreWeightedSum += courseQuizWeightedSum
-        acc.quizScoreWeight += courseQuizAttempts
-      }
-
-      return acc
-    },
+  const dashboardTabs: Array<{
+    value: 'content' | 'statistics' | 'global'
+    label: string
+    disabled?: boolean
+  }> = [
+    { value: 'content', label: 'Obsah' },
     {
-      modulesCount: 0,
-      materialsCount: 0,
-      fileMaterialsCount: 0,
-      urlMaterialsCount: 0,
-      quizzesCount: 0,
-      quizzesWithoutSubmits: 0,
-      downloadCount: 0,
-      copyCount: 0,
-      openCount: 0,
-      modulesWithoutInteraction: 0,
-      lowScoreQuizzes: 0,
-      quizScoreWeightedSum: 0,
-      quizScoreWeight: 0,
+      value: 'statistics',
+      label: 'Statistiky',
+      disabled: statisticsCourses.length === 0,
     },
-  )
-
-  const globalAverageQuizPercentage =
-    globalStats.quizScoreWeight > 0
-      ? globalStats.quizScoreWeightedSum / globalStats.quizScoreWeight
-      : null
-  const formatMetric = (value: number) =>
-    Number.isInteger(value) ? value.toString() : value.toFixed(1)
-  const globalStatsLoading =
-    dashboardMode === 'global' &&
-    courseAnalyticsQueries.some((query) => query.isLoading || query.isFetching)
+  ]
+  const dashboardTabsValue =
+    dashboardMode === 'analytics' ? 'statistics' : 'content'
 
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
@@ -207,7 +152,6 @@ const DashboardDesign1 = () => {
   }
 
   const handleEditCourse = (course: CourseSummary) => {
-    // navigate(`/dashboard/${course.uuid}#details`)
     navigate(`/dashboard/${course.uuid}`)
   }
 
@@ -227,6 +171,7 @@ const DashboardDesign1 = () => {
     <Button
       variant='primary'
       size='grid'
+      disabled={dashboardMode === 'analytics'}
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
       aria-label='Vytvořit kurz'
@@ -247,11 +192,23 @@ const DashboardDesign1 = () => {
 
   const isSearchEmpty = searchQuery.trim() === ''
   const useResetStatusAction = isSearchEmpty && courses.length > 0
+  const statusFilterCheckboxes = statusFilterItems.map((item) => ({
+    label: item.label,
+    value: item.value,
+    checked: statusFilters[item.value],
+    onCheckedChange: (checked: boolean) => {
+      setStatusFilters((prev) => ({
+        ...prev,
+        [item.value]: checked,
+      }))
+    },
+  }))
+
   return (
     <>
       <div className='max-w-7xl mx-auto'>
-        <div className='space-y-6 pt-3'>
-          <div className='flex flex-row justify-center items-center'>
+        <div className='space-y-4'>
+          <div className='flex  items-center justify-center gap-2 md:gap-3'>
             <HintPageText
               text='Správa kurzů'
               icon={BookOpenText}
@@ -261,24 +218,25 @@ const DashboardDesign1 = () => {
               }
               className='hidden lg:inline-flex'
             />
-            <FilterDropdown
-              items={filterItems}
-              selectedValue={selectedFilter}
-              onSelect={setSelectedFilter}
-              statusCheckboxes={statusFilterItems.map((item) => ({
-                label: item.label,
-                value: item.value,
-                checked: statusFilters[item.value],
-                onCheckedChange: (checked) => {
-                  setStatusFilters((prev) => ({
-                    ...prev,
-                    [item.value]: checked,
-                  }))
-                },
-              }))}
-              align={isMd ? 'center' : 'start'}
-              width='w-35 md:w-40'
+            <DashboardModeTabs
+              value={dashboardTabsValue}
+              tabs={dashboardTabs}
+              onChange={(next) =>
+                setDashboardMode(next === 'statistics' ? 'analytics' : 'content')
+              }
+              className='shrink-0'
             />
+            <div className='hidden sm:block'>
+              <FilterDropdown
+                items={filterItems}
+                selectedValue={selectedFilter}
+                onSelect={setSelectedFilter}
+                statusCheckboxes={statusFilterCheckboxes}
+                align={isMd ? 'center' : 'start'}
+                width='w-35 md:w-40'
+                triggerClassName='bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
+              />
+            </div>
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -286,150 +244,37 @@ const DashboardDesign1 = () => {
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
               }
-              className='flex-1 lg:flex-initial'
-            />
-            <span className='lg:hidden ml-3'>{createButton(true)}</span>
-            <span className='hidden lg:inline ml-3'>{createButton(false)}</span>
-          </div>
-
-          <div className='flex gap-2'>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('content')}
-            >
-              Obsah
-            </Button>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('analytics')}
-              disabled={!displayedCourses.some((c) => isAnalyticsAllowedStatus(c.status))}
-            >
-              Analytika
-            </Button>
-            <Button
-              variant='filter'
-              size='sm'
-              className='rounded-xl'
-              onClick={() => setDashboardMode('global')}
-              disabled={globalCourses.length === 0}
-            >
-              Global
-            </Button>
-          </div>
-
-          {coursesLoading ? (
-            <CoursesPageSceleton />
-          ) : dashboardMode === 'global' ? (
-            <div className='mt-6'>
-              {globalCourses.length === 0 ? (
-                <StateComp
-                  type='no-content'
-                  message='Statistiky jsou dostupné pouze pro live, paused a archived kurzy'
+              rightAdornment={
+                <FilterDropdown
+                  items={filterItems}
+                  selectedValue={selectedFilter}
+                  onSelect={setSelectedFilter}
+                  statusCheckboxes={statusFilterCheckboxes}
+                  align='end'
+                  width='w-35 md:w-40'
+                  triggerClassName='!bg-transparent !text-primary !h-auto !w-auto !min-w-0 !p-0 border-0 shadow-none hover:!bg-transparent shrink-0'
                 />
-              ) : globalStatsLoading ? (
-                <CoursesPageSceleton />
-              ) : (
-                <div className='rounded-2xl border bg-card/90 p-6 md:p-7 shadow-sm space-y-6'>
-                  <div className='flex flex-col gap-2 md:flex-row md:items-end md:justify-between'>
-                    <div>
-                      <p className='text-xs uppercase tracking-wide text-muted-foreground'>
-                        Global Analytics
-                      </p>
-                      <h3 className='text-2xl font-semibold'>
-                        Souhrn všech kurzů
-                      </h3>
-                    </div>
-                    <p className='text-sm text-muted-foreground'>
-                      Kurzy v souhrnu: {globalCourses.length}
-                    </p>
-                  </div>
+              }
+              className='flex-1 min-w-50 lg:flex-initial'
+            />
 
-                  <div className='grid grid-cols-2 lg:grid-cols-5 gap-3'>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Moduly</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.modulesCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Materiály</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.materialsCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>Kvízy</p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizzesCount}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4 col-span-2 lg:col-span-2'>
-                      <p className='text-xs text-muted-foreground'>
-                        Průměrné skóre kvízů
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalAverageQuizPercentage === null
-                          ? '—'
-                          : `${formatMetric(globalAverageQuizPercentage)}%`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Submity kvízů
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizScoreWeight}
-                      </p>
-                    </div>
-                    <div className='rounded-xl border bg-background/60 p-4'>
-                      <p className='text-xs text-muted-foreground'>
-                        Kvízy bez submitu
-                      </p>
-                      <p className='text-2xl font-semibold leading-tight'>
-                        {globalStats.quizzesWithoutSubmits}
-                      </p>
-                    </div>
-                  </div>
+            <span className='lg:hidden'>{createButton(true)}</span>
+            <span className='hidden lg:inline-flex'>{createButton(false)}</span>
+          </div>
 
-                  {(globalStats.modulesWithoutInteraction > 0 ||
-                    globalStats.lowScoreQuizzes > 0) && (
-                    <div className='flex flex-wrap gap-2'>
-                      {globalStats.modulesWithoutInteraction > 0 && (
-                        <div className='rounded-full border px-3 py-1.5 text-sm'>
-                          Moduly bez interakce:{' '}
-                          <span className='font-semibold'>
-                            {globalStats.modulesWithoutInteraction}
-                          </span>
-                        </div>
-                      )}
-                      {globalStats.lowScoreQuizzes > 0 && (
-                        <div className='rounded-full border px-3 py-1.5 text-sm'>
-                          Kvízy s nízkým skóre:{' '}
-                          <span className='font-semibold'>
-                            {globalStats.lowScoreQuizzes}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          {coursesLoading || isStatisticsModeLoading ? (
+            <CoursesPageSceleton />
           ) : (
             <>
-              {dashboardMode === 'analytics' && displayedCourses.length === 0 ? (
+              {dashboardMode === 'analytics' &&
+              filteredCourses.length > 0 &&
+              displayedCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
                   message='Žádné kurzy ve stavu live, paused nebo archived'
                 />
               ) : (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mt-6 lg:mt-7'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>
                   {courseDraft && dashboardMode !== 'analytics' && (
                     <CourseComponent
                       key={courseDraft.uuid}
@@ -457,9 +302,9 @@ const DashboardDesign1 = () => {
                         course={course}
                         index={courseDraft ? index + 1 : index}
                         type='edit'
-                        analyticsMode={
+                        statisticsMode={
                           dashboardMode === 'analytics' &&
-                          isAnalyticsAllowedStatus(course.status)
+                          isStatisticsAllowedStatus(course.status)
                         }
                         onEdit={() => {
                           handleEditCourse(course)
@@ -477,7 +322,7 @@ const DashboardDesign1 = () => {
               )}
 
               {hasMoreCourses && (
-                <div className='mt-8 text-center'>
+                <div className='mt-4 text-center'>
                   <Button
                     variant='primary'
                     size='primary'

@@ -354,19 +354,27 @@ const CourseModulesOverviewPage = () => {
               />
             )}
           </div>
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 '>
-            {analyticsModules.map((module, moduleIndex) => (
-              <ModuleCard
-                key={module.uuid}
-                variant='existing'
-                module={module}
-                moduleIndex={moduleIndex + 1}
-                courseStatus={course.status}
-                onOpenModule={handleOpenModule}
-                analyticsMode
-              />
-            ))}
-          </div>
+          {analyticsModules.length === 0 ? (
+            <StateComp
+              type='no-content'
+              message='Kurz zatím nemá žádné moduly'
+              className='py-8'
+            />
+          ) : (
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 '>
+              {analyticsModules.map((module, moduleIndex) => (
+                <ModuleCard
+                  key={module.uuid}
+                  variant='existing'
+                  module={module}
+                  moduleIndex={moduleIndex + 1}
+                  courseStatus={course.status}
+                  onOpenModule={handleOpenModule}
+                  analyticsMode
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </>

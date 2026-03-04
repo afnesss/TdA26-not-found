@@ -23,7 +23,7 @@ const AnalyticsStatCard = ({
       className={cn(
         'border',
         inline
-          ? 'rounded-md bg-muted/70 px-2 py-1 flex items-center justify-center gap-1 min-w-10 border-transparent'
+          ? 'rounded-md bg-muted/70 px-2 py-1 flex items-center gap-1 min-w-10 border-transparent'
           : 'rounded-md bg-muted/70 px-2 py-1 flex flex-col items-center min-w-10 border-transparent',
         className,
       )}

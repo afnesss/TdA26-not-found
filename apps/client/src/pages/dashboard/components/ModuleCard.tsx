@@ -361,7 +361,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     </span>
                   </div>
                   {hasMaterials ? (
-                    <div className='grid grid-cols-3 gap-1.5 w-full'>
+                    <div className='grid grid-cols-3 gap-1.5 w-full items-stretch flex-1'>
                       {[
                         {
                           label: <Download className='h-3 w-3' />,
@@ -380,12 +380,14 @@ const ModuleCard = (props: ModuleCardProps) => {
                           key={index}
                           label={label}
                           value={value}
+                          className='h-full flex-col items-center sm:flex-row sm:items-center sm:justify-center'
+                          valueClassName='sm:ml-1'
                           inline
                         />
                       ))}
                     </div>
                   ) : (
-                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center'>
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
                       <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
                         Žádné materiály
                       </p>
@@ -422,7 +424,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     </span>
                   </div>
                   {hasQuizzes ? (
-                    <div className='grid grid-cols-3 gap-1.5 w-full'>
+                    <div className='grid grid-cols-3 gap-1.5 w-full items-stretch flex-1'>
                       {[
                         {
                           label: 'Průměr:',
@@ -444,15 +446,15 @@ const ModuleCard = (props: ModuleCardProps) => {
                           key={label}
                           label={label}
                           value={value}
-                          className='flex-col items-center sm:flex-row sm:items-center'
-                          labelClassName='justify-center text-center leading-tight sm:justify-start sm:text-left'
+                          className='h-full flex-col items-center sm:flex-row sm:items-center sm:justify-center'
+                          labelClassName='whitespace-nowrap text-center sm:text-center'
                           valueClassName='sm:ml-1'
                           inline
                         />
                       ))}
                     </div>
                   ) : (
-                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center'>
+                    <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
                       <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
                         Žádné kvízy
                       </p>

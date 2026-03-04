@@ -77,7 +77,9 @@ const CoursesPage = () => {
   useTitle('Kurzy')
 
   const isSearchEmpty = searchQuery.trim() === ''
-  const useResetStatusAction = isSearchEmpty && courses.length > 0
+  const isDefaultFilters =
+    selectedFilter === 'newest' && statusFilters.live && statusFilters.planned
+  const useResetStatusAction = isSearchEmpty && !isDefaultFilters
 
   return (
     <div className='h-full'>
@@ -148,20 +150,27 @@ const CoursesPage = () => {
 
               {/* Empty state */}
               {displayedCourses.length === 0 && !isLoading && !isError ? (
-                <StateComp
-                  type='empty-search'
-                  onAction={() => {
-                    if (useResetStatusAction) {
-                      resetStatusFilters()
-                      return
+                courses.length === 0 && isSearchEmpty && isDefaultFilters ? (
+                  <StateComp
+                    message='Žádné kurzy k zobrazení'
+                    type='no-content'
+                  />
+                ) : (
+                  <StateComp
+                    type='empty-search'
+                    onAction={() => {
+                      if (useResetStatusAction) {
+                        resetStatusFilters()
+                        return
+                      }
+                      setSearchQuery('')
+                      setDisplayCount(9)
+                    }}
+                    actionText={
+                      useResetStatusAction ? 'Zrušit filtry' : undefined
                     }
-                    setSearchQuery('')
-                    setDisplayCount(9)
-                  }}
-                  actionText={
-                    useResetStatusAction ? 'Zrušit filtry' : undefined
-                  }
-                />
+                  />
+                )
               ) : isError ? (
                 <StateComp
                   type='error'
@@ -169,16 +178,7 @@ const CoursesPage = () => {
                     refetch()
                   }}
                 />
-              ) : (
-                !isLoading &&
-                !isError &&
-                courses.length === 0 && (
-                  <StateComp
-                    message='Žádné kurzy k zobrazení'
-                    type='no-content'
-                  />
-                )
-              )}
+              ) : null}
 
               {/* Load More button */}
               {hasMoreCourses && (

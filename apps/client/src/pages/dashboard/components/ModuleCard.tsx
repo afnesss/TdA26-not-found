@@ -3,7 +3,7 @@ import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
 import EditBtn from './EditBtn'
-import { Edit, Menu } from 'lucide-react'
+import { CheckCircle2, Edit, Menu } from 'lucide-react'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Card, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -362,12 +362,21 @@ const ModuleCard = (props: ModuleCardProps) => {
                       </p>
                     </div>
                   )}
-                  {materialsHasAttention && (
+                  {materialsHasAttention ? (
                     <AnalyticsAttentionAlert
                       messages={[
                         `Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`,
                       ]}
                     />
+                  ) : (
+                    hasMaterials && (
+                      <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
+                        <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
+                        <span className='font-medium'>
+                          Bez kritických signálů
+                        </span>
+                      </div>
+                    )
                   )}
                 </div>
 
@@ -417,8 +426,17 @@ const ModuleCard = (props: ModuleCardProps) => {
                       </p>
                     </div>
                   )}
-                  {quizHasAttention && (
+                  {quizHasAttention ? (
                     <AnalyticsAttentionAlert messages={quizAttentionParts} />
+                  ) : (
+                    hasQuizzes && (
+                      <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
+                        <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
+                        <span className='font-medium'>
+                          Bez kritických signálů
+                        </span>
+                      </div>
+                    )
                   )}
                 </div>
               </div>

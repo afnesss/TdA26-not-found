@@ -20,7 +20,7 @@ import {
 } from '@/pages/CoursePage/utils/useModuleMutation'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
@@ -44,14 +44,23 @@ const CourseModulesOverviewPage = () => {
     refetchCourse,
     previewMode,
   } = useCourseModulesLayoutContext()
-  const [courseName, setCourseName] = useState(course?.name ?? '')
-  const [courseDescription, setCourseDescription] = useState(
-    course?.description ?? '',
+
+  const [courseName, setCourseName] = useState<string | null>(null)
+  const [courseDescription, setCourseDescription] = useState<string | null>(
+    null,
   )
   const [viewMode, setViewMode] = useState<'content' | 'analytics'>('content')
   const [draftModule, setDraftModule] = useState<DraftModuleForm | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const queryClient = useQueryClient()
+
+  // Track previous courseId to reset local edits when navigating to a different course
+  const prevCourseUuidRef = useRef<string | undefined>(undefined)
+  if (course?.uuid !== prevCourseUuidRef.current) {
+    prevCourseUuidRef.current = course?.uuid
+    if (courseName !== null) setCourseName(null)
+    if (courseDescription !== null) setCourseDescription(null)
+  }
 
   const {
     mutate: updateCourseDetailsMutation,
@@ -95,6 +104,9 @@ const CourseModulesOverviewPage = () => {
     return <DashboardCourseOverviewSkeleton />
   }
 
+  const currentCourseName = courseName ?? course.name
+  const currentCourseDescription = courseDescription ?? course.description ?? ''
+
   const handleCourseStatusChange = (status: CourseStatus) => {
     if (status !== 'draft') {
       setIsReorderMode(false)
@@ -124,15 +136,16 @@ const CourseModulesOverviewPage = () => {
   }
 
   const hasCourseDetailsChanges =
-    courseName !== course.name ||
-    courseDescription !== (course.description ?? '')
+    currentCourseName !== course.name ||
+    currentCourseDescription !== (course.description ?? '')
 
   const handleSaveCourseDetails = () => {
-    if (previewMode || updateCourseDetailsPending || !courseName.trim()) return
+    if (previewMode || updateCourseDetailsPending || !currentCourseName.trim())
+      return
 
     updateCourseDetailsMutation({
-      name: courseName,
-      description: courseDescription || undefined,
+      name: currentCourseName,
+      description: currentCourseDescription || undefined,
     })
   }
 
@@ -210,9 +223,11 @@ const CourseModulesOverviewPage = () => {
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
     [
-      ...(showContentTab ? [{ value: 'content' as const, label: 'Obsah' }] : []),
+      ...(showContentTab
+        ? [{ value: 'content' as const, label: 'Obsah' }]
+        : []),
       ...(analyticsAllowed
-        ? [{ value: 'analytics' as const, label: 'Analytika' }]
+        ? [{ value: 'analytics' as const, label: 'Statistiky' }]
         : []),
     ]
 
@@ -222,15 +237,17 @@ const CourseModulesOverviewPage = () => {
         gradient={'accent-teal-dark'}
         breadcrumbItems={[
           { label: 'Správa kurzů', path: '/dashboard' },
-          { label: 'Moduly' },
+          { label: currentCourseName },
         ]}
-        nameValue={courseName}
-        descriptionValue={courseDescription}
+        nameValue={currentCourseName}
+        descriptionValue={currentCourseDescription}
         onNameChange={(value) => {
-          setCourseName(handleCapitalizedInput(value, courseName))
+          setCourseName(handleCapitalizedInput(value, currentCourseName))
         }}
         onDescriptionChange={(value) => {
-          setCourseDescription(handleCapitalizedInput(value, courseDescription))
+          setCourseDescription(
+            handleCapitalizedInput(value, currentCourseDescription),
+          )
         }}
         disabled={previewMode}
         createdAt={course.createdAt}
@@ -276,7 +293,7 @@ const CourseModulesOverviewPage = () => {
               disabled={
                 !hasCourseDetailsChanges ||
                 updateCourseDetailsPending ||
-                !courseName.trim()
+                !currentCourseName.trim()
               }
             >
               Uložit změny
@@ -303,7 +320,7 @@ const CourseModulesOverviewPage = () => {
           isCreating={createModulePending}
           isToggleVisibilityPending={togglePending}
           headerRightSlot={
-            overviewTabs.length > 0 ? (
+            overviewTabs.length > 1 ? (
               <DashboardModeTabs
                 value={viewMode}
                 tabs={overviewTabs}
@@ -320,7 +337,7 @@ const CourseModulesOverviewPage = () => {
                 Moduly kurzu
               </UnderlinedText>
             </Label>
-            {overviewTabs.length > 0 && (
+            {overviewTabs.length > 1 && (
               <DashboardModeTabs
                 value={viewMode}
                 tabs={overviewTabs}

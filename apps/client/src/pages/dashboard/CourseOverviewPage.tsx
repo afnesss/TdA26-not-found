@@ -32,6 +32,7 @@ import ModulesSection from './components/ModulesSection'
 import { Label } from '@/components/ui/label'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import DashboardModeTabs from './components/DashboardModeTabs'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -45,6 +46,10 @@ const CourseModulesOverviewPage = () => {
     refetchCourse,
     previewMode,
   } = useCourseModulesLayoutContext()
+
+  useTitle(
+    course?.name ? `Správa kurzů - ${course.name}` : 'Správa kurzů - kurz',
+  )
 
   const [courseName, setCourseName] = useState<string | null>(null)
   const [courseDescription, setCourseDescription] = useState<string | null>(

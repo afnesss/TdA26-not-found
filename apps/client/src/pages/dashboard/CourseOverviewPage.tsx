@@ -8,6 +8,7 @@ import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
 import { Button } from '@/components/ui/button'
 import { handleCapitalizedInput } from '@/lib/capitalize'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
   useUpdateCourseMutation,
   useUpdateCourseStatusMutation,
@@ -49,7 +50,10 @@ const CourseModulesOverviewPage = () => {
   const [courseDescription, setCourseDescription] = useState<string | null>(
     null,
   )
-  const [viewMode, setViewMode] = useState<'content' | 'analytics'>('content')
+  const [viewMode, setViewMode] = useLocalStorage<'content' | 'analytics'>(
+    'dashboard-analytics-mode',
+    'content',
+  )
   const [draftModule, setDraftModule] = useState<DraftModuleForm | null>(null)
   const [isReorderMode, setIsReorderMode] = useState(false)
   const queryClient = useQueryClient()

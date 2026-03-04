@@ -3,7 +3,14 @@ import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
 import EditBtn from './EditBtn'
-import { CheckCircle2, Edit, Menu } from 'lucide-react'
+import {
+  CheckCircle2,
+  Copy,
+  Download,
+  Edit,
+  ExternalLink,
+  Menu,
+} from 'lucide-react'
 import DeleteConfirmDialog from '@/components/ui/AlertDialog'
 import { Card, CardDescription } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -17,6 +24,21 @@ import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
 import AnalyticsStatCard from './AnalyticsStatCard'
+
+const formatCzechCount = (
+  count: number,
+  one: string,
+  few: string,
+  many: string,
+) => {
+  const abs = Math.abs(count)
+  const lastTwo = abs % 100
+  if (lastTwo >= 11 && lastTwo <= 14) return `${count} ${many}`
+  const last = abs % 10
+  if (last === 1) return `${count} ${one}`
+  if (last >= 2 && last <= 4) return `${count} ${few}`
+  return `${count} ${many}`
+}
 
 export type DraftModuleForm = {
   name: string
@@ -341,14 +363,24 @@ const ModuleCard = (props: ModuleCardProps) => {
                   {hasMaterials ? (
                     <div className='grid grid-cols-3 gap-1.5 w-full'>
                       {[
-                        { label: 'Stažení', value: moduleDownloads },
-                        { label: 'Otevření', value: moduleOpens },
-                        { label: 'Kopie', value: moduleCopies },
-                      ].map(({ label, value }) => (
+                        {
+                          label: <Download className='h-3 w-3' />,
+                          value: moduleDownloads,
+                        },
+                        {
+                          label: <ExternalLink className='h-3 w-3' />,
+                          value: moduleOpens,
+                        },
+                        {
+                          label: <Copy className='h-3 w-3' />,
+                          value: moduleCopies,
+                        },
+                      ].map(({ label, value }, index) => (
                         <AnalyticsStatCard
-                          key={label}
+                          key={index}
                           label={label}
                           value={value}
+                          inline
                         />
                       ))}
                     </div>
@@ -393,18 +425,18 @@ const ModuleCard = (props: ModuleCardProps) => {
                     <div className='grid grid-cols-3 gap-1.5 w-full'>
                       {[
                         {
-                          label: 'Průměr',
+                          label: 'Průměr:',
                           value:
                             moduleQuizAverage == null
                               ? '-'
                               : `${moduleQuizAverage}%`,
                         },
                         {
-                          label: 'Odeslání',
+                          label: 'Odeslání:',
                           value: moduleQuizAttempts,
                         },
                         {
-                          label: 'Otázky',
+                          label: 'Otázky:',
                           value: moduleQuizQuestionsTotal,
                         },
                       ].map(({ label, value }) => (
@@ -412,7 +444,10 @@ const ModuleCard = (props: ModuleCardProps) => {
                           key={label}
                           label={label}
                           value={value}
-                          labelClassName='text-center'
+                          className='flex-col items-center sm:flex-row sm:items-center'
+                          labelClassName='justify-center text-center leading-tight sm:justify-start sm:text-left'
+                          valueClassName='sm:ml-1'
+                          inline
                         />
                       ))}
                     </div>
@@ -473,12 +508,6 @@ const ModuleCard = (props: ModuleCardProps) => {
                     {module.quizzes?.length ?? 0}
                   </span>
                 </p>
-                {/* {module.updatedAt && module.updatedAt !== module.createdAt && (
-                  <span className='text-[10px] md:text-xs text-muted-foreground/60 italic'>
-                    upraveno{' '}
-                    {new Date(String(module.updatedAt)).toLocaleDateString('cs-CZ')}
-                  </span>
-                )} */}
               </div>
               <div className='flex flex-col items-end gap-2'>
                 <div className='flex shrink-0 items-center gap-2'>
@@ -520,4 +549,3 @@ const ModuleCard = (props: ModuleCardProps) => {
 }
 
 export default ModuleCard
-

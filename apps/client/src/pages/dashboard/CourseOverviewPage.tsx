@@ -205,10 +205,12 @@ const CourseModulesOverviewPage = () => {
     course.status === 'live' ||
     course.status === 'paused' ||
     course.status === 'archived'
+  const showContentTab =
+    course.status !== 'draft' && course.status !== 'planned'
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
     [
-      { value: 'content', label: 'Obsah' },
+      ...(showContentTab ? [{ value: 'content' as const, label: 'Obsah' }] : []),
       ...(analyticsAllowed
         ? [{ value: 'analytics' as const, label: 'Analytika' }]
         : []),
@@ -301,11 +303,13 @@ const CourseModulesOverviewPage = () => {
           isCreating={createModulePending}
           isToggleVisibilityPending={togglePending}
           headerRightSlot={
-            <DashboardModeTabs
-              value={viewMode}
-              tabs={overviewTabs}
-              onChange={setViewMode}
-            />
+            overviewTabs.length > 0 ? (
+              <DashboardModeTabs
+                value={viewMode}
+                tabs={overviewTabs}
+                onChange={setViewMode}
+              />
+            ) : undefined
           }
         />
       ) : (
@@ -316,11 +320,13 @@ const CourseModulesOverviewPage = () => {
                 Moduly kurzu
               </UnderlinedText>
             </Label>
-            <DashboardModeTabs
-              value={viewMode}
-              tabs={overviewTabs}
-              onChange={setViewMode}
-            />
+            {overviewTabs.length > 0 && (
+              <DashboardModeTabs
+                value={viewMode}
+                tabs={overviewTabs}
+                onChange={setViewMode}
+              />
+            )}
           </div>
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 '>
             {analyticsModules.map((module, moduleIndex) => (

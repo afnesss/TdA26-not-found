@@ -42,7 +42,7 @@ interface CourseEdit {
   type: 'edit'
   course: CourseSummary
   index: number
-  analyticsMode?: boolean
+  statisticsMode?: boolean
   isDraft?: true
   onEdit: () => void
   onSaveDraft?: (data: { name: string; description?: string }) => void
@@ -78,7 +78,7 @@ const CourseComponent = (props: CourseCompProps) => {
     course.status === 'paused' ||
     course.status === 'archived'
   const isAnalyticsMode =
-    type === 'edit' && Boolean(props.analyticsMode) && canShowAnalytics
+    type === 'edit' && Boolean(props.statisticsMode) && canShowAnalytics
 
   const {
     data: overviewCourse,
@@ -103,11 +103,15 @@ const CourseComponent = (props: CourseCompProps) => {
     overviewCourse?.modules.reduce((sum, m) => sum + m.quizAttempts, 0) ?? 0
   const modulesWithoutInteraction =
     overviewCourse?.modulesWithoutInteraction ?? 0
+  const quizzesWithoutSubmits = overviewCourse?.quizzesWithoutSubmits ?? 0
   const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
 
   const attentionParts: string[] = []
   if (modulesWithoutInteraction > 0) {
     attentionParts.push(`Moduly bez interakcí: ${modulesWithoutInteraction}`)
+  }
+  if (modulesWithoutInteraction === 0 && quizzesWithoutSubmits > 0) {
+    attentionParts.push(`Kvízy bez submitu: ${quizzesWithoutSubmits}`)
   }
   if (lowScoreQuizzes > 0) {
     attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)

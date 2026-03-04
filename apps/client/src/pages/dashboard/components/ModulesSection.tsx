@@ -134,7 +134,7 @@ const ModulesSection = ({
         <StateComp
           type='no-content'
           message='Kurz zatím nemá žádné moduly'
-          className='pt-8'
+          className='py-8'
         />
       ) : (
         <div className='space-y-4'>

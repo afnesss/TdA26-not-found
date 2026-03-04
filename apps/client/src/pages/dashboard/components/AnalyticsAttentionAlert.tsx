@@ -1,17 +1,17 @@
 import { cn } from '@/lib/utils'
 import { AlertCircle } from 'lucide-react'
 
-type AnalyticsAttentionAlertProps = {
+type StatisticsAttentionAlertProps = {
   message?: string
   messages?: string[]
   className?: string
 }
 
-const AnalyticsAttentionAlert = ({
+const StatisticsAttentionAlert = ({
   message,
   messages,
   className,
-}: AnalyticsAttentionAlertProps) => {
+}: StatisticsAttentionAlertProps) => {
   const normalizedMessages = (
     messages?.length
       ? messages
@@ -53,4 +53,4 @@ const AnalyticsAttentionAlert = ({
   )
 }
 
-export default AnalyticsAttentionAlert
+export default StatisticsAttentionAlert

@@ -103,22 +103,26 @@ const CourseModulesLayoutPage = () => {
 
   if (courseLoading && !course) {
     return (
-      <Outlet
-        context={
-          {
-            courseId,
-            course: null,
-            modules: undefined,
-            isLoading: true,
-            isError: false,
-            refetchCourse,
-            previewMode: false,
-            courseIndexColor: isModuleDetailPage
-              ? 'accent-teal'
-              : 'accent-teal-dark',
-          } as CourseModulesLayoutContext
-        }
-      />
+      <div className='max-w-7xl mx-auto'>
+        <div className='space-y-5'>
+          <Outlet
+            context={
+              {
+                courseId,
+                course: null,
+                modules: undefined,
+                isLoading: true,
+                isError: false,
+                refetchCourse,
+                previewMode: false,
+                courseIndexColor: isModuleDetailPage
+                  ? 'accent-teal'
+                  : 'accent-teal-dark',
+              } as CourseModulesLayoutContext
+            }
+          />
+        </div>
+      </div>
     )
   }
 

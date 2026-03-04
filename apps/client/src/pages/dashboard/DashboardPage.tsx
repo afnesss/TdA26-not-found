@@ -222,7 +222,9 @@ const DashboardDesign1 = () => {
               value={dashboardTabsValue}
               tabs={dashboardTabs}
               onChange={(next) =>
-                setDashboardMode(next === 'statistics' ? 'analytics' : 'content')
+                setDashboardMode(
+                  next === 'statistics' ? 'analytics' : 'content',
+                )
               }
               className='shrink-0'
             />
@@ -271,7 +273,7 @@ const DashboardDesign1 = () => {
               displayedCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
-                  message='Žádné kurzy ve stavu live, paused nebo archived'
+                  message='Žádné kurzy s dostupnou statistikou'
                 />
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>

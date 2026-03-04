@@ -1,7 +1,9 @@
 import Breadcrumb from '@/components/shared/Breadcrumb'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import iconIdea from '@/assets/t-idea-blue.svg'
 import { cn } from '@/lib/utils'
+import { useEffect, useRef, useState } from 'react'
 
 type SummaryBreadcrumbItem = {
   label: string
@@ -14,6 +16,8 @@ interface SummarySectionProps {
   breadcrumbs?: SummaryBreadcrumbItem[]
   className?: string
   cardClassName?: string
+
+  collapsedLines?: number
 }
 
 const defaultBreadcrumbs: SummaryBreadcrumbItem[] = [
@@ -27,7 +31,43 @@ const SummarySection = ({
   breadcrumbs = defaultBreadcrumbs,
   className,
   cardClassName,
+
+  collapsedLines = 2,
 }: SummarySectionProps) => {
+  const descriptionRef = useRef<HTMLParagraphElement>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [canExpand, setCanExpand] = useState(false)
+
+  useEffect(() => {
+    if (isExpanded || !description) return
+
+    const element = descriptionRef.current
+    if (!element) return
+
+    const measure = () => {
+      const isOverflowing = element.scrollHeight > element.clientHeight + 1
+      setCanExpand(isOverflowing)
+    }
+
+    measure()
+
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => measure())
+        : null
+
+    if (observer) {
+      observer.observe(element)
+    } else {
+      window.addEventListener('resize', measure)
+    }
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [description, isExpanded])
+
   return (
     <section className={cn(className)}>
       <div
@@ -49,9 +89,28 @@ const SummarySection = ({
             <img src={iconIdea} className='w-11 h-11 md:w-12 md:h-13 '></img>
           </div>
           {description && (
-            <p className='text-gray-600 text-sm md:text-base leading-relaxed '>
-              {description}
-            </p>
+            <div className='space-y-1'>
+              <p
+                ref={descriptionRef}
+                className={cn(
+                  'text-gray-600 text-sm md:text-base leading-relaxed',
+
+                  !isExpanded && `line-clamp-${collapsedLines}`,
+                )}
+              >
+                {description}
+              </p>
+              {canExpand && (
+                <Button
+                  variant='link'
+                  size='default'
+                  className='h-auto p-0'
+                  onClick={() => setIsExpanded((prev) => !prev)}
+                >
+                  {isExpanded ? 'Zobrazit méně' : 'Zobrazit více'}
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>

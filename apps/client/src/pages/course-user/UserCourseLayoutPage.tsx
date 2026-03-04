@@ -5,14 +5,19 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
 import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
 import UserCourseFeedSection from './components/UserCourseFeedSection'
 
 const UserCourseLayoutPage = () => {
-  const { courseId } = useParams<{ courseId: string }>()
+  const { courseId, moduleId } = useParams<{
+    courseId: string
+    moduleId?: string
+  }>()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
+  const moduleRedirectRef = useRef<string | null>(null)
   const queryClient = useQueryClient()
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
@@ -54,6 +59,22 @@ const UserCourseLayoutPage = () => {
     }
     navigate('/courses', { replace: true })
   }, [courseData, courseId, navigate, queryClient])
+
+  useEffect(() => {
+    if (!courseData || !courseId || !moduleId) return
+
+    const currentModule = courseData.modules?.find(
+      (module) => module.uuid === moduleId,
+    )
+
+    if (!currentModule || currentModule.status === 'active') return
+
+    if (moduleRedirectRef.current === moduleId) return
+
+    moduleRedirectRef.current = moduleId
+    // toast.info('Modul byl skryt lektorem')
+    navigate(`/courses/${courseId}`, { replace: true })
+  }, [courseData, courseId, moduleId, navigate])
 
   if (!courseId) {
     return <NotFoundPage />
@@ -103,7 +124,10 @@ const UserCourseLayoutPage = () => {
             isConnected,
           }}
         />
-        <UserCourseFeedSection courseId={courseId} initialFeed={courseData.feed ?? []} />
+        <UserCourseFeedSection
+          courseId={courseId}
+          initialFeed={courseData.feed ?? []}
+        />
       </div>
     </div>
   )

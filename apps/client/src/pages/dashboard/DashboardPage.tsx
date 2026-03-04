@@ -16,11 +16,7 @@ import {
   type FilterIds,
 } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
-import type {
-  CourseDashboardAnalytics,
-  CourseStatus,
-  CourseSummary,
-} from '@/lib/schemas'
+import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -104,9 +100,6 @@ const DashboardDesign1 = () => {
     (course) => statusFilters[course.status],
   )
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
-  const allStatisticsCourses = courses.filter((course) =>
-    isStatisticsAllowedStatus(course.status),
-  )
   const statisticsCourses = sortedCourses.filter((course) =>
     isStatisticsAllowedStatus(course.status),
   )
@@ -115,20 +108,22 @@ const DashboardDesign1 = () => {
 
   const hasMoreCourses = coursesForCurrentMode.length > displayCount
   const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
-  const globalCourses = allStatisticsCourses
-  const courseStatisticsQueries = useQueries({
-    queries: globalCourses.map((course) => ({
-      queryKey: ['course-dashboard-statistics', course.uuid],
+  const displayedStatisticsQueries = useQueries({
+    queries: displayedCourses.map((course) => ({
+      queryKey: ['course-dashboard-analytics', course.uuid],
       queryFn: () => getCourseDashboardAnalytics(course.uuid),
-      enabled: dashboardMode === 'global',
+      enabled:
+        dashboardMode === 'statistics' &&
+        isStatisticsAllowedStatus(course.status),
+      staleTime: 1000 * 20,
     })),
   })
 
-  const loadedStatistics = courseStatisticsQueries
-    .map((query) => query.data)
-    .filter(
-      (statistics): statistics is CourseDashboardAnalytics =>
-        statistics !== undefined,
+  const isStatisticsModeLoading =
+    dashboardMode === 'statistics' &&
+    displayedCourses.length > 0 &&
+    displayedStatisticsQueries.some(
+      (query) => query.isLoading && query.data === undefined,
     )
 
   const planning = useCoursePlanning({ queryClient })
@@ -195,11 +190,23 @@ const DashboardDesign1 = () => {
 
   const isSearchEmpty = searchQuery.trim() === ''
   const useResetStatusAction = isSearchEmpty && courses.length > 0
+  const statusFilterCheckboxes = statusFilterItems.map((item) => ({
+    label: item.label,
+    value: item.value,
+    checked: statusFilters[item.value],
+    onCheckedChange: (checked: boolean) => {
+      setStatusFilters((prev) => ({
+        ...prev,
+        [item.value]: checked,
+      }))
+    },
+  }))
+
   return (
     <>
       <div className='max-w-7xl mx-auto'>
         <div className='space-y-4'>
-          <div className='flex flex-row justify-center items-center'>
+          <div className='flex  items-center justify-center gap-2 md:gap-3'>
             <HintPageText
               text='Správa kurzů'
               icon={BookOpenText}
@@ -209,24 +216,23 @@ const DashboardDesign1 = () => {
               }
               className='hidden lg:inline-flex'
             />
-            <FilterDropdown
-              items={filterItems}
-              selectedValue={selectedFilter}
-              onSelect={setSelectedFilter}
-              statusCheckboxes={statusFilterItems.map((item) => ({
-                label: item.label,
-                value: item.value,
-                checked: statusFilters[item.value],
-                onCheckedChange: (checked) => {
-                  setStatusFilters((prev) => ({
-                    ...prev,
-                    [item.value]: checked,
-                  }))
-                },
-              }))}
-              align={isMd ? 'center' : 'start'}
-              width='w-35 md:w-40'
+            <DashboardModeTabs
+              value={dashboardMode}
+              tabs={dashboardTabs}
+              onChange={setDashboardMode}
+              className='shrink-0'
             />
+            <div className='hidden sm:block'>
+              <FilterDropdown
+                items={filterItems}
+                selectedValue={selectedFilter}
+                onSelect={setSelectedFilter}
+                statusCheckboxes={statusFilterCheckboxes}
+                align={isMd ? 'center' : 'start'}
+                width='w-35 md:w-40'
+                triggerClassName='bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
+              />
+            </div>
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -234,19 +240,25 @@ const DashboardDesign1 = () => {
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
               }
-              className='flex-1 lg:flex-initial'
+              rightAdornment={
+                <FilterDropdown
+                  items={filterItems}
+                  selectedValue={selectedFilter}
+                  onSelect={setSelectedFilter}
+                  statusCheckboxes={statusFilterCheckboxes}
+                  align='end'
+                  width='w-35 md:w-40'
+                  triggerClassName='!bg-transparent !text-primary !h-auto !w-auto !min-w-0 !p-0 border-0 shadow-none hover:!bg-transparent shrink-0'
+                />
+              }
+              className='flex-1 min-w-50 lg:flex-initial'
             />
-            <span className='lg:hidden ml-3'>{createButton(true)}</span>
-            <span className='hidden lg:inline ml-3'>{createButton(false)}</span>
+
+            <span className='lg:hidden'>{createButton(true)}</span>
+            <span className='hidden lg:inline-flex'>{createButton(false)}</span>
           </div>
 
-          <DashboardModeTabs
-            value={dashboardMode}
-            tabs={dashboardTabs}
-            onChange={setDashboardMode}
-          />
-
-          {coursesLoading ? (
+          {coursesLoading || isStatisticsModeLoading ? (
             <CoursesPageSceleton />
           ) : (
             <>

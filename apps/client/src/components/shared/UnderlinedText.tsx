@@ -18,9 +18,11 @@ const UnderlinedText = ({
 }: UnderlinedTextProps) => {
   return (
     <span className={`relative inline-block ${className}`}>
-      {children}
+      <span className='relative z-10'>{children}</span>
       <svg
-        className={cn(`absolute left-0 w-full overflow-visible ${offset}`)}
+        className={cn(
+          `absolute left-0 w-full overflow-visible ${offset} z-0 pointer-events-none`,
+        )}
         height={height}
         viewBox='0 0 400 12'
         preserveAspectRatio='none'

@@ -51,7 +51,7 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
     variant='secondary'
     className={cn(
       status === 'active'
-        ? 'bg-secondary/30 text-secondary-foreground'
+        ? 'bg-secondary/50 text-secondary-foreground'
         : 'bg-muted text-muted-foreground',
     )}
   >

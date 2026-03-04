@@ -174,6 +174,7 @@ const DashboardDesign1 = () => {
     <Button
       variant='primary'
       size='grid'
+      disabled={dashboardMode === 'statistics'}
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
       aria-label='Vytvořit kurz'

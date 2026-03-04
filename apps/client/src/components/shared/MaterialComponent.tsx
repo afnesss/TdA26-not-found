@@ -28,8 +28,10 @@ import EditSaveCancelButtons from './EditSaveCancelButtons'
 
 const countStyle = (count: number): string => {
   return cn(
-    'absolute -top-1.5 -right-1.5 min-w-4 h-4 px-0.5 rounded-full bg-accent-teal text-background text-[9px] font-semibold leading-4 text-center tabular-nums pointer-events-none',
-    count === 0 ? 'bg-muted-foreground/30' : 'bg-primary',
+    'absolute -top-1.5 -right-1.5 w-4 h-4 px-0.5 text-xs  rounded-full font-semibold shrink-0   text-center',
+    count === 0
+      ? 'bg-muted-foreground/10 text-muted-foreground/60'
+      : 'text-accent-teal bg-accent-teal/20',
   )
 }
 

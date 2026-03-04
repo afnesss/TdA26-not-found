@@ -24,7 +24,7 @@ const StatisticsAttentionAlert = ({
   return (
     <div
       className={cn(
-        'mt-auto rounded-md px-2.5 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-destructive/10 text-destructive w-full',
+        'mt-auto rounded-md px-1 sm:px-2.5 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-destructive/10 text-destructive w-full',
         className,
       )}
     >

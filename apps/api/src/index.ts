@@ -36,6 +36,7 @@ app.use(
 );
 
 app.use(cookieParser());
+app.set("trust proxy", 1);
 app.use(generalLimiter);
 
 // Skip body parsing for multipart requests (handled by multer)

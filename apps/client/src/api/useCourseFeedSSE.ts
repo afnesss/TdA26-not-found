@@ -325,6 +325,9 @@ export const useCourseFeedSSE = ({
           ),
         }),
       )
+      queryClient.invalidateQueries({
+        queryKey: ['quizAnalytics', parsed.quiz.uuid],
+      })
     }
 
     eventSource.addEventListener(
@@ -455,7 +458,13 @@ export const useCourseFeedSSE = ({
       eventSource.close()
       setIsConnected(false)
     }
-  }, [courseId, queryClient, showNewPostToast, showSseToasts, syncModuleActivation])
+  }, [
+    courseId,
+    queryClient,
+    showNewPostToast,
+    showSseToasts,
+    syncModuleActivation,
+  ])
 
   return { isConnected }
 }

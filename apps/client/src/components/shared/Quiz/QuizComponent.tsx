@@ -184,7 +184,7 @@ const QuizComponentInner = ({
       Boolean(isExpanded) &&
       mode === 'lecturer-preview' &&
       showAnalytics &&
-      (formValues?.attemptsCount ?? 0) > 0,
+      (displayQuiz.attemptsCount ?? 0) > 0,
   })
 
   const toggleExpand = () => {

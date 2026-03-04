@@ -1,13 +1,32 @@
-﻿import { CheckCircle2 } from 'lucide-react'
+﻿import { CheckCircle2, Copy, Download, ExternalLink } from 'lucide-react'
 import AnalyticsAttentionAlert from '@/pages/dashboard/components/AnalyticsAttentionAlert'
 import DonutOverviewSection from './DonutOverviewSection'
+
+const getCzechNoun = (
+  count: number,
+  one: string,
+  few: string,
+  many: string,
+) => {
+  const abs = Math.abs(count)
+  const lastTwo = abs % 100
+  if (lastTwo >= 11 && lastTwo <= 14) return many
+  const last = abs % 10
+  if (last === 1) return one
+  if (last >= 2 && last <= 4) return few
+  return many
+}
 
 interface AnalyticsSectionProps {
   score: number | null
   completions: number
   modules: number
+  activeModules: number
   materials: number
   quizzes: number
+  materialDownloads: number
+  materialCopies: number
+  materialOpens: number
   attention: string[]
   isLoading?: boolean
   isError?: boolean
@@ -17,8 +36,12 @@ const AnalyticsSection = ({
   score,
   completions,
   modules,
+  activeModules,
   materials,
   quizzes,
+  materialDownloads,
+  materialCopies,
+  materialOpens,
   attention,
   isLoading,
   isError,
@@ -58,32 +81,62 @@ const AnalyticsSection = ({
         </div>
 
         <div className='flex flex-col gap-1.5' style={{ flex: '1 1 0' }}>
-          <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1'>
-            <span className='text-base font-semibold leading-none text-foreground'>
-              {modules}
-            </span>
+          <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1 min-h-12'>
             <span className='text-xs md:text-sm text-muted-foreground'>
-              Moduly
+              Moduly:{' '}
+              <span className='text-sm font-semibold leading-none text-foreground'>
+                {modules}
+              </span>
+            </span>
+            <span className='text-[10px] md:text-xs text-muted-foreground/80'>
+              {activeModules}{' '}
+              {getCzechNoun(
+                activeModules,
+                'aktivní modul',
+                'aktivní moduly',
+                'aktivních modulů',
+              )}
             </span>
           </div>
 
           <div className='grid grid-cols-2 gap-1.5' style={{ flex: 1 }}>
-            {[
-              { label: 'Materiály', value: materials },
-              { label: 'Kvízy', value: quizzes },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1'
-              >
-                <span className='text-sm md:text-base font-semibold leading-none text-foreground'>
-                  {value}
+            <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1 min-h-12'>
+              <span className='text-xs md:text-sm text-muted-foreground'>
+                Materiály:{' '}
+                <span className='text-sm  font-semibold leading-none text-foreground'>
+                  {materials}
                 </span>
-                <span className='text-xs md:text-sm text-muted-foreground'>
-                  {label}
+              </span>
+              <div className='mt-0.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[9px] md:text-[10px]'>
+                <span className='inline-flex items-center gap-0.5 text-muted-foreground'>
+                  <Download className='h-3 w-3' />
+                  <span className='font-semibold text-primary'>
+                    {materialDownloads}
+                  </span>
+                </span>
+                <span className='inline-flex items-center gap-0.5 text-muted-foreground'>
+                  <ExternalLink className='h-3 w-3' />
+                  <span className='font-semibold text-primary'>
+                    {materialOpens}
+                  </span>
+                </span>
+                <span className='inline-flex items-center gap-0.5 text-muted-foreground'>
+                  <Copy className='h-3 w-3' />
+                  <span className='font-semibold text-primary'>
+                    {materialCopies}
+                  </span>
                 </span>
               </div>
-            ))}
+            </div>
+
+            <div className='rounded-lg flex flex-col items-center justify-center bg-muted py-1.5 px-1 min-h-12'>
+              <span className='text-xs md:text-sm text-muted-foreground'>
+                Kvízy:{' '}
+                <span className='text-sm  font-semibold leading-none text-foreground'>
+                  {quizzes}
+                </span>
+              </span>
+            </div>
           </div>
 
           {hasAttention ? (

@@ -57,9 +57,9 @@ const DashboardDesign1 = () => {
     Record<CourseStatus, boolean>
   >(`${DASHBOARD_PAGE_FILTERS_KEY}-status`, defaultStatusFilters)
 
-  const [dashboardMode, setDashboardMode] = useState<
-    'content' | 'statistics' | 'global'
-  >('content')
+  const [dashboardMode, setDashboardMode] = useLocalStorage<
+    'content' | 'analytics'
+  >('dashboard-analytics-mode', 'content')
 
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
@@ -104,7 +104,7 @@ const DashboardDesign1 = () => {
     isStatisticsAllowedStatus(course.status),
   )
   const coursesForCurrentMode =
-    dashboardMode === 'statistics' ? statisticsCourses : sortedCourses
+    dashboardMode === 'analytics' ? statisticsCourses : sortedCourses
 
   const hasMoreCourses = coursesForCurrentMode.length > displayCount
   const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
@@ -113,14 +113,14 @@ const DashboardDesign1 = () => {
       queryKey: ['course-dashboard-analytics', course.uuid],
       queryFn: () => getCourseDashboardAnalytics(course.uuid),
       enabled:
-        dashboardMode === 'statistics' &&
+        dashboardMode === 'analytics' &&
         isStatisticsAllowedStatus(course.status),
       staleTime: 1000 * 20,
     })),
   })
 
   const isStatisticsModeLoading =
-    dashboardMode === 'statistics' &&
+    dashboardMode === 'analytics' &&
     displayedCourses.length > 0 &&
     displayedStatisticsQueries.some(
       (query) => query.isLoading && query.data === undefined,
@@ -140,6 +140,8 @@ const DashboardDesign1 = () => {
       disabled: statisticsCourses.length === 0,
     },
   ]
+  const dashboardTabsValue =
+    dashboardMode === 'analytics' ? 'statistics' : 'content'
 
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
@@ -169,7 +171,7 @@ const DashboardDesign1 = () => {
     <Button
       variant='primary'
       size='grid'
-      disabled={dashboardMode === 'statistics'}
+      disabled={dashboardMode === 'analytics'}
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
       aria-label='Vytvořit kurz'
@@ -217,9 +219,11 @@ const DashboardDesign1 = () => {
               className='hidden lg:inline-flex'
             />
             <DashboardModeTabs
-              value={dashboardMode}
+              value={dashboardTabsValue}
               tabs={dashboardTabs}
-              onChange={setDashboardMode}
+              onChange={(next) =>
+                setDashboardMode(next === 'statistics' ? 'analytics' : 'content')
+              }
               className='shrink-0'
             />
             <div className='hidden sm:block'>
@@ -262,7 +266,7 @@ const DashboardDesign1 = () => {
             <CoursesPageSceleton />
           ) : (
             <>
-              {dashboardMode === 'statistics' &&
+              {dashboardMode === 'analytics' &&
               filteredCourses.length > 0 &&
               displayedCourses.length === 0 ? (
                 <StateComp
@@ -271,7 +275,7 @@ const DashboardDesign1 = () => {
                 />
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>
-                  {courseDraft && dashboardMode !== 'statistics' && (
+                  {courseDraft && dashboardMode !== 'analytics' && (
                     <CourseComponent
                       key={courseDraft.uuid}
                       course={courseDraft}
@@ -299,7 +303,7 @@ const DashboardDesign1 = () => {
                         index={courseDraft ? index + 1 : index}
                         type='edit'
                         statisticsMode={
-                          dashboardMode === 'statistics' &&
+                          dashboardMode === 'analytics' &&
                           isStatisticsAllowedStatus(course.status)
                         }
                         onEdit={() => {

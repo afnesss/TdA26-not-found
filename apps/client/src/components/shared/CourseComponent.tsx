@@ -97,8 +97,14 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const averageQuizScore = overviewCourse?.averageQuizPercentage ?? null
   const overviewModulesCount = overviewCourse?.modulesCount ?? 0
+  const overviewActiveModulesCount =
+    overviewCourse?.modules.filter((module) => module.status === 'active')
+      .length ?? 0
   const overviewMaterialsCount = overviewCourse?.materialsCount ?? 0
   const overviewQuizzesCount = overviewCourse?.quizzesCount ?? 0
+  const overviewDownloadCount = overviewCourse?.downloadCount ?? 0
+  const overviewCopyCount = overviewCourse?.copyCount ?? 0
+  const overviewOpenCount = overviewCourse?.openCount ?? 0
   const overviewCompletions =
     overviewCourse?.modules.reduce((sum, m) => sum + m.quizAttempts, 0) ?? 0
   const modulesWithoutInteraction =
@@ -351,16 +357,20 @@ const CourseComponent = (props: CourseCompProps) => {
               {!('isDraft' in props && props.isDraft) &&
                 !state.isEditing &&
                 isAnalyticsMode && (
-                  <AnalyticsSection
-                    score={averageQuizScore}
-                    completions={overviewCompletions}
-                    modules={overviewModulesCount}
-                    materials={overviewMaterialsCount}
-                    quizzes={overviewQuizzesCount}
-                    attention={attentionParts}
-                    isLoading={overviewLoading}
-                    isError={overviewError}
-                  />
+                <AnalyticsSection
+                  score={averageQuizScore}
+                  completions={overviewCompletions}
+                  modules={overviewModulesCount}
+                  activeModules={overviewActiveModulesCount}
+                  materials={overviewMaterialsCount}
+                  quizzes={overviewQuizzesCount}
+                  materialDownloads={overviewDownloadCount}
+                  materialCopies={overviewCopyCount}
+                  materialOpens={overviewOpenCount}
+                  attention={attentionParts}
+                  isLoading={overviewLoading}
+                  isError={overviewError}
+                />
                 )}
               {!isAnalyticsMode && (
                 <CoursePlanningSection

@@ -2,6 +2,7 @@ import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import StateComp from '@/components/shared/StateComp'
 import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import NotFoundPage from '../NotFoundPage'
@@ -12,6 +13,7 @@ const UserCourseLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
+  const queryClient = useQueryClient()
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
     syncModuleActivation: true,
@@ -20,6 +22,7 @@ const UserCourseLayoutPage = () => {
   const {
     coursesUser,
     isCoursesUserLoading,
+    isCoursesUserFetching,
     courseData,
     isLoading,
     isError,
@@ -32,7 +35,8 @@ const UserCourseLayoutPage = () => {
   useTitle(courseData?.name || 'Kurz')
 
   const hasAccessToCourse = coursesUser.some((c) => c.uuid === courseId)
-  const canEvaluateCourseAccess = !isCoursesUserLoading
+  const canEvaluateCourseAccess =
+    !isCoursesUserLoading && !isCoursesUserFetching
   const shouldShowNotFoundByAccess =
     canEvaluateCourseAccess && !hasAccessToCourse && !courseData
 
@@ -45,8 +49,11 @@ const UserCourseLayoutPage = () => {
     if (!isClosed) return
 
     redirectedRef.current = true
+    if (courseId) {
+      queryClient.removeQueries({ queryKey: ['course', courseId] })
+    }
     navigate('/courses', { replace: true })
-  }, [courseData, navigate])
+  }, [courseData, courseId, navigate, queryClient])
 
   if (!courseId) {
     return <NotFoundPage />

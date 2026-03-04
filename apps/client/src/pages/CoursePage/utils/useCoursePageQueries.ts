@@ -37,9 +37,11 @@ const fetchCourse = async (id: string): Promise<CourseDetail> => {
 }
 
 export const useCoursePageQueries = (id?: string) => {
-  const { data: coursesUser = [], isLoading: isCoursesUserLoading } = useQuery<
-    CourseSummary[]
-  >({
+  const {
+    data: coursesUser = [],
+    isLoading: isCoursesUserLoading,
+    isFetching: isCoursesUserFetching,
+  } = useQuery<CourseSummary[]>({
     queryKey: ['courses-user'],
     queryFn: () => getCourses(true),
     enabled: Boolean(id),
@@ -62,6 +64,7 @@ export const useCoursePageQueries = (id?: string) => {
   return {
     coursesUser,
     isCoursesUserLoading,
+    isCoursesUserFetching,
     courseData,
     isLoading,
     isError,

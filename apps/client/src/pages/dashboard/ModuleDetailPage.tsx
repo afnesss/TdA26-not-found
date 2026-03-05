@@ -382,7 +382,7 @@ const CourseModuleDetailPage = () => {
           breadcrumbItems={[
             { label: 'Správa kurzů', path: '/dashboard' },
             {
-              label: 'Moduly',
+              label: course?.name ?? 'Kurz',
               path: `/dashboard/${courseId}`,
             },
             { label: currentModuleName },

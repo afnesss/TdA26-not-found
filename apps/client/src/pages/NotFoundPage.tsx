@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { useTitle } from '@/lib/dynamicTitleHook'
 
 const NotFoundPage = () => {
   const navigate = useNavigate()
 
+  useTitle('Stránka nenalezena - 404')
   const handleGoBack = () => {
     navigate('/courses')
   }

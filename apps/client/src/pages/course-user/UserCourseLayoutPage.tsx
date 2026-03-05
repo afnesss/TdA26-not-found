@@ -48,8 +48,7 @@ const UserCourseLayoutPage = () => {
   useEffect(() => {
     if (!courseData || redirectedRef.current) return
 
-    const isClosed =
-      courseData.status === 'paused' || courseData.status === 'archived'
+    const isClosed = courseData.status !== 'live'
 
     if (!isClosed) return
 
@@ -81,6 +80,10 @@ const UserCourseLayoutPage = () => {
   }
 
   if (isLoading || !canEvaluateCourseAccess) {
+    return <CourseSkeleton />
+  }
+
+  if (courseData && courseData.status !== 'live') {
     return <CourseSkeleton />
   }
 

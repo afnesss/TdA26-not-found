@@ -14,6 +14,7 @@ import {
   isQuizComplete,
 } from '../CoursePage/utils/helperFunctions'
 import quizImg from '@/assets/t-play-blue.svg'
+import thinkIconUrl from '@/assets/t-think-blue1.svg'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
 import UserModuleTab from '../dashboard/components/ModuleTab'
@@ -90,6 +91,14 @@ const UserCourseModuleDetailPage = () => {
         <SummarySection
           name={selectedModule.name}
           description={selectedModule.description ?? undefined}
+          rightSlot={
+            <img
+              src={thinkIconUrl}
+              className='w-7 h-7 md:w-8 md:h-8 opacity-90 shrink-0'
+              alt=''
+              aria-hidden='true'
+            />
+          }
           breadcrumbs={[
             { label: 'Kurzy', path: '/courses' },
             { label: courseData.name, path: `/courses/${courseId}` },
@@ -228,4 +237,3 @@ const UserCourseModuleDetailPage = () => {
 }
 
 export default UserCourseModuleDetailPage
-

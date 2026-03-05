@@ -37,6 +37,7 @@ import {
   useUpdateQuizMutation,
 } from '../CoursePage/utils/useQuizMutation'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
+import thinkIconUrl from '@/assets/t-think-blue1.svg'
 import EditableDetailCard from './components/EditableDetailCard'
 import MaterialsSection from './components/MaterialsSection'
 import ModuleVisibilityActionButton from './components/ModuleVisibilityActionButton'
@@ -387,6 +388,14 @@ const CourseModuleDetailPage = () => {
             },
             { label: currentModuleName },
           ]}
+          noActionsSlot={
+            <img
+              src={thinkIconUrl}
+              className='w-7 h-7 md:w-8 md:h-8 opacity-90'
+              alt=''
+              aria-hidden='true'
+            />
+          }
           nameValue={currentModuleName}
           descriptionValue={currentModuleDescription}
           onNameChange={(value) => {
@@ -418,15 +427,15 @@ const CourseModuleDetailPage = () => {
             </>
           }
           topActions={
-            <div className='flex flex-wrap items-center gap-2 justify-end'>
-              {canToggleModuleVisibility && (
+            canToggleModuleVisibility ? (
+              <div className='flex flex-wrap items-center gap-2 justify-end'>
                 <ModuleVisibilityActionButton
                   status={selectedModule.status}
                   onClick={() => toggleVisibilityMutation.mutate()}
                   disabled={toggleVisibilityMutation.isPending}
                 />
-              )}
-            </div>
+              </div>
+            ) : undefined
           }
           footerActions={
             canEditModuleInfo ? (

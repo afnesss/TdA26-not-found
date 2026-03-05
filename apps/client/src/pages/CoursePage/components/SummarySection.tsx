@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import iconIdea from '@/assets/t-idea-blue.svg'
 import { cn } from '@/lib/utils'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 type SummaryBreadcrumbItem = {
   label: string
@@ -16,6 +16,7 @@ interface SummarySectionProps {
   breadcrumbs?: SummaryBreadcrumbItem[]
   className?: string
   cardClassName?: string
+  rightSlot?: ReactNode
 
   collapsedLines?: number
 }
@@ -31,6 +32,7 @@ const SummarySection = ({
   breadcrumbs = defaultBreadcrumbs,
   className,
   cardClassName,
+  rightSlot,
 
   collapsedLines = 2,
 }: SummarySectionProps) => {
@@ -78,7 +80,7 @@ const SummarySection = ({
       >
         <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
 
-        <div className='px-3 md:px-6 py-4 gap-1 sm:gap-2 flex flex-col'>
+        <div className='p-4 lg:p-6 -mt-2 gap-1 sm:gap-2 flex flex-col'>
           <div className='flex gap-1 justify-between '>
             <div className='flex flex-col gap-1 sm:gap-2'>
               <Breadcrumb items={breadcrumbs} />
@@ -86,7 +88,14 @@ const SummarySection = ({
                 {name}
               </Label>
             </div>
-            <img src={iconIdea} className='w-11 h-11 md:w-12 md:h-13 '></img>
+            {rightSlot ?? (
+              <img
+                src={iconIdea}
+                className='w-8 h-8 md:w-9 md:h-9 opacity-90 shrink-0'
+                alt=''
+                aria-hidden='true'
+              />
+            )}
           </div>
           {description && (
             <div className='space-y-1'>

@@ -220,19 +220,6 @@ const CourseModulesOverviewPage = () => {
     onCancel: planningHook.closePlanningEditor,
   }
 
-  const statusActions = (
-    <StatusActionButtons
-      currentStatus={course.status}
-      onStatusChange={handleCourseStatusChange}
-      courseColor={'accent-teal-dark'}
-      className='justify-end shrink-0'
-      buttonClassName='md:h-9'
-      labelClassName='text-xs md:text-sm'
-      onCopyAsDraft={() => handleCourseStatusChange('draft')}
-      hideCopyAsDraft={course.status === 'archived'}
-    />
-  )
-
   const showPlanningForHeader =
     course.status === 'planned' || planning.isEditing
   const showPlanningOnSeparateRow = !isSm && showPlanningForHeader
@@ -252,6 +239,22 @@ const CourseModulesOverviewPage = () => {
         ? [{ value: 'analytics' as const, label: 'Statistiky' }]
         : []),
     ]
+  const showPlanningInHeader =
+    !showPlanningOnSeparateRow && showPlanningForHeader
+  const showStatusActions = course.status !== 'archived'
+  const statusActions = (
+    <StatusActionButtons
+      currentStatus={course.status}
+      onStatusChange={handleCourseStatusChange}
+      courseColor={'accent-teal-dark'}
+      className='justify-end shrink-0'
+      buttonClassName='md:h-9'
+      labelClassName='text-xs md:text-sm'
+      onCopyAsDraft={() => handleCourseStatusChange('draft')}
+      hideCopyAsDraft={course.status === 'archived'}
+    />
+  )
+  const hasTopActions = showPlanningInHeader || showStatusActions
 
   return (
     <>
@@ -291,19 +294,21 @@ const CourseModulesOverviewPage = () => {
           ) : undefined
         }
         topActions={
-          <div className='flex items-center gap-2'>
-            {!showPlanningOnSeparateRow && showPlanningForHeader && (
-              <CoursePlanningSection
-                course={course}
-                state={course.status}
-                planning={planning}
-                hideStatusLabel
-                className='w-fit min-w-[18rem] shrink-0'
-                rowClassName='justify-end'
-              />
-            )}
-            {statusActions}
-          </div>
+          hasTopActions ? (
+            <div className='flex items-center gap-2'>
+              {showPlanningInHeader && (
+                <CoursePlanningSection
+                  course={course}
+                  state={course.status}
+                  planning={planning}
+                  hideStatusLabel
+                  className='w-fit min-w-[18rem] shrink-0'
+                  rowClassName='justify-end'
+                />
+              )}
+              {showStatusActions && statusActions}
+            </div>
+          ) : undefined
         }
         footerActions={
           !previewMode ? (

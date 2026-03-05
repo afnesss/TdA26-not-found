@@ -4,7 +4,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
+import { Children, type ReactNode } from 'react'
+import thinkIconUrl from '@/assets/t-idea-blue.svg'
 
 type BreadcrumbItem = {
   label: string
@@ -22,6 +23,7 @@ type EditableDetailCardProps = {
   topActions?: ReactNode
   headerBottom?: ReactNode
   footerActions?: ReactNode
+  noActionsSlot?: ReactNode
   nameValue: string
   descriptionValue?: string
   createdAt?: string | Date
@@ -54,6 +56,7 @@ const EditableDetailCard = ({
   topActions,
   headerBottom,
   footerActions,
+  noActionsSlot,
   nameValue,
   descriptionValue,
   createdAt,
@@ -64,6 +67,7 @@ const EditableDetailCard = ({
     updatedAt &&
     createdAt &&
     new Date(createdAt).getTime() !== new Date(updatedAt).getTime()
+  const hasTopActions = Boolean(topActions && Children.count(topActions) > 0)
 
   return (
     <Card className='border border-border/60 shadow-md bg-background rounded-xl cursor-auto'>
@@ -83,8 +87,19 @@ const EditableDetailCard = ({
               )}
             </div>
 
-            {topActions && (
+            {hasTopActions ? (
               <div className='flex flex-wrap items-end gap-2'>{topActions}</div>
+            ) : (
+              <div className='shrink-0'>
+                {noActionsSlot ?? (
+                  <img
+                    src={thinkIconUrl}
+                    className='w-8 h-8 md:w-9 md:h-9 opacity-90'
+                    alt=''
+                    aria-hidden='true'
+                  />
+                )}
+              </div>
             )}
           </div>
 

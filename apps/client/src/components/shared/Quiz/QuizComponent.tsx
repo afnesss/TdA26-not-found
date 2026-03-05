@@ -62,7 +62,7 @@ type QuizComponentProps = {
   isSubmitDisabled?: boolean
 
   // Lecturer mode props
-  onSave?: (quiz: Quiz) => void
+  onSave?: (quiz: Quiz) => void | Promise<void>
   onDelete?: () => void | Promise<void>
   isDraft?: boolean
   onCancelDraft?: () => void
@@ -176,6 +176,7 @@ const QuizComponentInner = ({
   const safePageIndex = clampPage(pageIndex)
   const startIndex = safePageIndex * pageSize
   const endIndex = startIndex + pageSize
+  const shouldPaginate = mode !== 'lecturer'
   const { data: quizAnalytics } = useQuery<QuizAnalyticsResponse | null>({
     queryKey: ['quizAnalytics', quiz.uuid],
     queryFn: () => getQuizAnalytics(courseId!, moduleId!, quiz.uuid!),
@@ -341,9 +342,13 @@ const QuizComponentInner = ({
     )
   }
 
-  const handleSave = handleSubmit((data: Quiz) => {
-    onSave?.(data)
-    // Don't reset here - the component remounts on quiz/mode change
+  const handleSave = handleSubmit(async (data: Quiz) => {
+    await onSave?.(data)
+    // Clear dirty state after successful save
+    reset(data)
+    if (mode === 'lecturer' && !isDraft && onToggleExpand) {
+      onToggleExpand()
+    }
   })
 
   return (
@@ -551,12 +556,13 @@ const QuizComponentInner = ({
           {/* Questions */}
           {displayQuiz.questions
             ?.slice(
-              mode === 'user' ? startIndex : 0,
-              mode === 'user' ? endIndex : undefined,
+              shouldPaginate ? startIndex : 0,
+              shouldPaginate ? endIndex : undefined,
             )
             .map((origQuestion, localIndex) => {
-              const qIndex =
-                mode === 'user' ? startIndex + localIndex : localIndex
+              const qIndex = shouldPaginate
+                ? startIndex + localIndex
+                : localIndex
               const question = origQuestion as Question
               const questionAnalytics = quizAnalytics?.questionAnalytics.find(
                 (qa) => qa.uuid === question.uuid,
@@ -602,7 +608,7 @@ const QuizComponentInner = ({
                   />
 
                   {localIndex <
-                    (mode === 'user'
+                    (shouldPaginate
                       ? Math.min(pageSize, totalQuestions - startIndex) - 1
                       : (displayQuiz.questions?.length ?? 0) - 1) && (
                     <hr className='border-b border mt-2 border-gray-100' />
@@ -611,11 +617,13 @@ const QuizComponentInner = ({
               )
             })}
 
-          <QuizPageSwitcher
-            pageCount={pageCount}
-            currentPage={safePageIndex}
-            onPageChange={(page) => setPageIndex(clampPage(page))}
-          />
+          {shouldPaginate && (
+            <QuizPageSwitcher
+              pageCount={pageCount}
+              currentPage={safePageIndex}
+              onPageChange={(page) => setPageIndex(clampPage(page))}
+            />
+          )}
 
           {mode === 'lecturer' && (
             <Button

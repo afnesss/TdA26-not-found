@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import type { Quiz } from '@/lib/schemas'
 import type { CourseStatus } from '@/components/shared/CourseStateBadge'
 import DashboardAddButton from './DashboardAddButton'
+import quizImg from '@/assets/t-play-blue.svg'
 
 interface QuizzesSectionProps {
   quizzes: Quiz[]
@@ -63,6 +64,7 @@ const QuizzesSection = ({
         {isEmpty ? (
           <StateComp
             type='no-content'
+            img={quizImg}
             message='Zatím žádné kvízy'
             className='pt-8 pb-0'
           />

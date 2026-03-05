@@ -15,18 +15,14 @@ import {
   startIntervalScheduler,
   stopIntervalScheduler,
 } from "./utils/courseScheduler";
+import { httpLogger, logger } from "./utils/logger";
 
 const app = express();
 const port = process.env.PORT;
-// const sessionSecret = process.env.SESSION_SECRET;
 
 if (!port) {
   throw new Error("PORT is undefined or is not set in .env file");
 }
-
-// if (!sessionSecret) {
-//   throw new Error("SESSION_SECRET in undefined or is not set in .env file");
-// }
 
 app.use(
   cors({
@@ -39,6 +35,8 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 app.use(generalLimiter);
 
+app.use(httpLogger);
+
 // Skip body parsing for multipart requests (handled by multer)
 app.use((req, res, next) => {
   if (req.headers["content-type"]?.startsWith("multipart/form-data")) {
@@ -46,19 +44,6 @@ app.use((req, res, next) => {
   }
   express.json({ limit: "50mb" })(req, res, next);
 });
-
-// app.use(
-//   session({
-//     secret: sessionSecret,
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//       secure: process.env.NODE_ENV === "production",
-//       httpOnly: true,
-//       maxAge: 24 * 60 * 60 * 1000,
-//     },
-//   })
-// );
 
 app.get("/", (req, res) => {
   res.json({ organization: "Student Cyber Games" });
@@ -86,7 +71,8 @@ app.use(
     res: express.Response,
     next: express.NextFunction,
   ) => {
-    console.error("Unhandled error:", err);
+    const requestId = (req as { id?: string }).id ?? "unknown";
+    logger.error({ err, requestId }, "Unhandled error");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   },
 );
@@ -96,30 +82,28 @@ async function start() {
     await seed();
   } catch (error: any) {
     if (error?.code === "42P07" || error?.cause?.code === "42P07") {
-      console.warn(
-        "Migration warning: table already exists — continuing startup.",
-      );
+      logger.warn("Migration warning: table already exists � continuing startup.");
     } else {
-      console.error("Failed to start server:", error);
+      logger.error({ err: error }, "Failed to start server");
       process.exit(1);
     }
   }
 
   try {
     const server = app.listen(port, () => {
-      console.log(`Server is listening on port ${port}`);
+      logger.info(`Server is listening on port ${port}`);
     });
     startIntervalScheduler();
 
     const shutdown = (signal: string) => {
-      console.log(`[shutdown] Received ${signal}, stopping gracefully...`);
+      logger.info(`[shutdown] Received ${signal}, stopping gracefully...`);
       stopIntervalScheduler();
       server.close((err) => {
         if (err) {
-          console.error("[shutdown] Error while closing server:", err);
+          logger.error({ err }, "[shutdown] Error while closing server");
           process.exit(1);
         }
-        console.log("[shutdown] HTTP server closed");
+        logger.info("[shutdown] HTTP server closed");
         process.exit(0);
       });
     };
@@ -127,10 +111,15 @@ async function start() {
     process.on("SIGINT", () => shutdown("SIGINT"));
     process.on("SIGTERM", () => shutdown("SIGTERM"));
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.error({ err: error }, "Failed to start server");
     stopIntervalScheduler();
     process.exit(1);
   }
 }
 
 start();
+
+
+
+
+

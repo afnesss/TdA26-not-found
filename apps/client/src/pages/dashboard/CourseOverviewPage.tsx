@@ -21,7 +21,7 @@ import {
 } from '@/pages/CoursePage/utils/useModuleMutation'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
@@ -65,11 +65,17 @@ const CourseModulesOverviewPage = () => {
 
   // Track previous courseId to reset local edits when navigating to a different course
   const prevCourseUuidRef = useRef<string | undefined>(undefined)
-  if (course?.uuid !== prevCourseUuidRef.current) {
-    prevCourseUuidRef.current = course?.uuid
-    if (courseName !== null) setCourseName(null)
-    if (courseDescription !== null) setCourseDescription(null)
-  }
+  const prevCourseStatusRef = useRef<CourseStatus | undefined>(undefined)
+
+  useEffect(() => {
+    if (course?.uuid !== prevCourseUuidRef.current) {
+      prevCourseUuidRef.current = course?.uuid
+      if (courseName !== null) setCourseName(null)
+      if (courseDescription !== null) setCourseDescription(null)
+      prevCourseStatusRef.current = undefined
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course?.uuid])
 
   const {
     mutate: updateCourseDetailsMutation,
@@ -91,7 +97,14 @@ const CourseModulesOverviewPage = () => {
     courseId,
     queryClient,
   })
-
+  useEffect(() => {
+    if (!course) return
+    const prevStatus = prevCourseStatusRef.current
+    if (prevStatus && prevStatus === 'planned' && course.status === 'live') {
+      toast.info(`Kurz ${course.name} automatický spuštěn`)
+    }
+    prevCourseStatusRef.current = course.status
+  }, [course])
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const hasNetworkError = isError || !course
 

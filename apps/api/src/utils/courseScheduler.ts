@@ -45,6 +45,8 @@ const runCheck = async () => {
       for (const c of newLiveCourse) {
         sseManager.broadcast("courses", "course_upserted", c);
         sseManager.broadcast("courses", "course_auto_started", c);
+        // Keep course-specific dashboards in sync.
+        sseManager.broadcast(c.uuid, "course_updated", c);
       }
     }
   } catch (error) {

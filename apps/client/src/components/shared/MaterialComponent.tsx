@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   MaterialValidationSchema,
+  type CourseStatus,
   type MaterialInteractionAction,
   type Material,
   type MaterialValidation,
@@ -39,10 +40,12 @@ type MaterialCardProps =
   | {
       material: Material
       type: 'classic'
+      courseStatus?: CourseStatus
     }
   | {
       material: Material
       type: 'edit'
+      courseStatus?: CourseStatus
       isDraft?: boolean
       onDelete?: () => Promise<void>
       onCancel?: () => void
@@ -198,7 +201,12 @@ const MaterialCard = (props: MaterialCardProps) => {
   })
   const displayType =
     'isDraft' in props && props.isDraft ? formValues.type : material.type
-  const showLecturerCounters = isDashboardPage && !isEditing
+  const showLecturerCounters =
+    isDashboardPage &&
+    !isEditing &&
+    (props.courseStatus === 'live' ||
+      props.courseStatus === 'paused' ||
+      props.courseStatus === 'archived')
   const downloadUrl =
     material.type === 'file' && courseId && moduleId
       ? isDashboardPage

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "../db";
 import { feedItems } from "../db/schema";
+import { logger } from "../utils/logger";
 import { eq, desc, and, lt } from "drizzle-orm";
 import { sseManager } from "../utils/sseManager";
 
@@ -22,7 +23,7 @@ export const getFeed = async (req: Request, res: Response) => {
 
     res.json(items);
   } catch (error) {
-    console.error("Error fetching feed:", error);
+    logger.error({ err: error }, "Failed to fetch feed");
     res.status(500).json({ message: "Nepodařilo se načíst příspěvky" });
   }
 };
@@ -45,7 +46,7 @@ export const createPost = async (req: Request, res: Response) => {
 
     res.status(201).json(newItem);
   } catch (error) {
-    console.error("Error creating post:", error);
+    logger.error({ err: error }, "Failed to create post");
     res.status(500).json({ message: "Nepodařilo se vytvořit příspěvek" });
   }
 };
@@ -73,7 +74,7 @@ export const updatePost = async (req: Request, res: Response) => {
 
     res.json(updatedItem);
   } catch (error) {
-    console.error("Error updating post:", error);
+    logger.error({ err: error }, "Failed to update post");
     res.status(500).json({ message: "Nepodařilo se upravit příspěvek" });
   }
 };
@@ -95,7 +96,7 @@ export const deletePost = async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error("Error deleting post:", error);
+    logger.error({ err: error }, "Failed to delete post");
     res.status(500).json({ message: "Nepodařilo se smazat příspěvek" });
   }
 };

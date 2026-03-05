@@ -15,6 +15,7 @@ import {
 import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
+import { logger } from "../utils/logger";
 
 export async function getAllCourses(req: Request, res: Response) {
   const userView = String(req.query.userView ?? "").toLowerCase() === "true";
@@ -146,7 +147,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
       feed: fetchedFeed,
     });
   } catch (error) {
-    console.error("Error fetching course:", error);
+    logger.error({ err: error }, "Failed to fetch course");
     res.status(404).json({ message: "Kurz nebyl nalezen" });
   }
 }
@@ -392,7 +393,7 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       modules: moduleAnalytics,
     });
   } catch (error) {
-    console.error("Error fetching dashboard analytics:", error);
+    logger.error({ err: error }, "Failed to fetch dashboard analytics");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -592,7 +593,7 @@ export async function cloneCourse(req: Request, res: Response) {
     for (const filePath of copiedFilePaths) {
       await fs.unlink(filePath).catch(() => undefined);
     }
-    console.error("Error cloning course:", error);
+    logger.error({ err: error }, "Failed to clone course");
     return res.status(500).json({ message: "Nepodařilo se zkopírovat kurz" });
   }
 }
@@ -770,7 +771,7 @@ export async function deleteCourse(req: Request, res: Response) {
     return res.status(204).send();
   } catch (error) {
     // Explicit server error handling for DB/runtime failures.
-    console.error("Error deleting course:", error);
+    logger.error({ err: error }, "Failed to delete course");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -783,3 +784,4 @@ export const streamCourses = (req: Request, res: Response) => {
 
   sseManager.addClient("courses", res);
 };
+

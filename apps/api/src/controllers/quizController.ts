@@ -11,6 +11,7 @@ import {
   QuizSubmitResponse,
 } from "../schemas/quiz";
 import { sseManager } from "../utils/sseManager";
+import { logger } from "../utils/logger";
 
 const getCourseIdByModuleId = async (moduleId: string) => {
   const [module] = await db
@@ -56,7 +57,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -93,7 +94,7 @@ export const createQuiz = async (req: Request, res: Response) => {
     // Return with attemptsCount 0 and no average yet
     res.status(201).json(createdQuiz);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -128,7 +129,7 @@ export const getQuiz = async (req: Request, res: Response) => {
 
     res.json(quiz);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -195,7 +196,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
 
     res.json(finalQuiz);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -224,7 +225,7 @@ export const deleteQuiz = async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -333,7 +334,7 @@ export const submitQuiz = async (req: Request, res: Response) => {
 
     res.json(response);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -432,7 +433,8 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
       questionAnalytics,
     });
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
+

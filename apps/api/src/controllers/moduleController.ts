@@ -11,6 +11,7 @@ import { mapMaterial } from "./materialController";
 import { ModuleReorderRequest } from "../schemas";
 import { sseManager } from "../utils/sseManager";
 import { createSystemEvent } from "../utils/systemEvent";
+import { logger } from "../utils/logger";
 
 const MODULE_STATUSES = new Set(["active", "passive"]);
 const moduleSummarySelect = {
@@ -95,7 +96,7 @@ export async function getModules(req: Request, res: Response) {
 
     res.json(moduleSummaries);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -111,7 +112,7 @@ export async function getModuleByUuid(req: Request, res: Response) {
 
     res.json(detailedModule);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -160,7 +161,7 @@ export async function createModule(req: Request, res: Response) {
 
     res.status(201).json(newModule);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -219,7 +220,7 @@ export async function updateModule(req: Request, res: Response) {
 
     res.json(updatedModule);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -261,7 +262,7 @@ export async function deleteModule(req: Request, res: Response) {
       return res.status(404).json({ message: "Modul nebyl nalezen" });
     }
 
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
@@ -325,7 +326,8 @@ export async function reorderModules(req: Request, res: Response) {
       return res.status(400).json({ message: "Neplatný seznam modulů" });
     }
 
-    console.error(error);
+    logger.error({ err: error }, "Module request failed");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
+

@@ -13,11 +13,14 @@ import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { sseManager } from "../utils/sseManager";
+import { logger } from "../utils/logger";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
 // Ensure upload directory exists
-fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(console.error);
+fs.mkdir(UPLOAD_DIR, { recursive: true }).catch((err) =>
+  logger.error({ err }, "Failed to ensure upload directory"),
+);
 
 export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
   const base = {
@@ -83,7 +86,7 @@ export const getMaterials = async (req: Request, res: Response) => {
 
     res.json(materials.map(mapMaterial));
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -118,7 +121,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 
       if (!validation.success) {
         // Cleanup uploaded file if validation fails
-        await fs.unlink(req.file.path).catch(console.error);
+        await fs.unlink(req.file.path).catch((err) => logger.warn({ err }, "Failed to cleanup uploaded file"));
         return res.status(400).json({
           message: "Zkontrolujte prosím zadané údaje",
           errors: validation.error.format(),
@@ -179,7 +182,7 @@ export const createMaterial = async (req: Request, res: Response) => {
         const urlObj = new URL(url);
         faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
       } catch (e) {
-        console.error("Failed to parse URL for favicon", e);
+        logger.warn({ err: e }, "Failed to parse URL for favicon");
       }
 
       const [material] = await db
@@ -204,7 +207,7 @@ export const createMaterial = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Neplatný typ materiálu" });
     }
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     if (req.file) {
       await fs.unlink(req.file.path).catch(() => {});
     }
@@ -253,7 +256,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
           if (oldFilename) {
             await fs
               .unlink(path.join(UPLOAD_DIR, oldFilename))
-              .catch(console.error);
+              .catch((err) => logger.warn({ err }, "Failed to remove file"));
           }
         }
 
@@ -328,7 +331,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
       res.json(mappedUpdated);
     }
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     if (req.file) await fs.unlink(req.file.path).catch(() => {});
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
@@ -401,7 +404,7 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
 
     return res.json(mapMaterial(updatedMaterial));
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -445,7 +448,7 @@ export const downloadMaterial = async (req: Request, res: Response) => {
 
     return res.redirect(material.fileUrl);
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
@@ -473,7 +476,7 @@ export const deleteMaterial = async (req: Request, res: Response) => {
       if (oldFilename) {
         await fs
           .unlink(path.join(UPLOAD_DIR, oldFilename))
-          .catch(console.error);
+          .catch((err) => logger.warn({ err }, "Failed to remove file"));
       }
     }
 
@@ -487,7 +490,9 @@ export const deleteMaterial = async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    logger.error({ err: error }, "Material request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
+
+

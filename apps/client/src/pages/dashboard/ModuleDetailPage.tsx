@@ -456,6 +456,7 @@ const CourseModuleDetailPage = () => {
           draftMaterial={draftMaterial}
           previewMode={previewMode}
           canEdit={!!canEditModuleInfo}
+          courseStatus={course?.status}
           onAddMaterial={handleAddMaterial}
           onSaveMaterial={handleUpdateMaterial}
           onDeleteMaterial={handleDeleteMaterial}

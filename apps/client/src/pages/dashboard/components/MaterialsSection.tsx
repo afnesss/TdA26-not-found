@@ -2,7 +2,7 @@ import MaterialCard from '@/components/shared/MaterialComponent'
 import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Label } from '@/components/ui/label'
-import type { Material } from '@/lib/schemas'
+import type { CourseStatus, Material } from '@/lib/schemas'
 import type { MaterialDraft } from '../../CoursePage/utils/useMaterialMutation'
 import DashboardAddButton from './DashboardAddButton'
 
@@ -11,6 +11,7 @@ interface MaterialsSectionProps {
   draftMaterial: Material | null
   previewMode: boolean
   canEdit: boolean
+  courseStatus?: CourseStatus
   onAddMaterial: () => void
   onSaveMaterial: (materialId: string, data: MaterialDraft) => Promise<void>
   onDeleteMaterial: (materialId: string) => Promise<void>
@@ -23,6 +24,7 @@ const MaterialsSection = ({
   draftMaterial,
   previewMode,
   canEdit,
+  courseStatus,
   onAddMaterial,
   onSaveMaterial,
   onDeleteMaterial,
@@ -59,6 +61,7 @@ const MaterialsSection = ({
               <MaterialCard
                 material={draftMaterial}
                 type='edit'
+                courseStatus={courseStatus}
                 isDraft={true}
                 onSave={onSaveDraft}
                 onCancel={onCancelDraft}
@@ -70,11 +73,17 @@ const MaterialsSection = ({
                   key={mat.uuid}
                   material={mat}
                   type='edit'
+                  courseStatus={courseStatus}
                   onDelete={() => onDeleteMaterial(mat.uuid)}
                   onSave={(editedMaterial) => onSaveMaterial(mat.uuid, editedMaterial)}
                 />
               ) : (
-                <MaterialCard key={mat.uuid} material={mat} type='classic' />
+                <MaterialCard
+                  key={mat.uuid}
+                  material={mat}
+                  type='classic'
+                  courseStatus={courseStatus}
+                />
               ),
             )}
           </>

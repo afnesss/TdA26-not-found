@@ -22,6 +22,14 @@ const UserCourseLayoutPage = () => {
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
     syncModuleActivation: true,
+    onCourseRemoved: () => {
+      if (redirectedRef.current) return
+      redirectedRef.current = true
+      if (courseId) {
+        queryClient.removeQueries({ queryKey: ['course', courseId] })
+      }
+      navigate('/courses', { replace: true })
+    },
   })
 
   const {

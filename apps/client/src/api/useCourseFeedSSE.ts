@@ -1,4 +1,9 @@
-import type { CourseDetail, CourseStatus, FeedItem } from '@/lib/schemas'
+import type {
+  CourseDetail,
+  CourseStatus,
+  CourseSummary,
+  FeedItem,
+} from '@/lib/schemas'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
@@ -66,6 +71,9 @@ type UseCourseFeedSSEOptions = {
   syncModuleActivation?: boolean
   showNewPostToast?: boolean
   showSseToasts?: boolean
+  onCourseRemoved?: (
+    payload: { uuid?: string; name?: string; status?: string } | string,
+  ) => void
 }
 
 export const useCourseFeedSSE = ({
@@ -73,6 +81,7 @@ export const useCourseFeedSSE = ({
   syncModuleActivation = true,
   showNewPostToast = true,
   showSseToasts = true,
+  onCourseRemoved,
 }: UseCourseFeedSSEOptions) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
@@ -227,6 +236,44 @@ export const useCourseFeedSSE = ({
         },
       )
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+    })
+
+    eventSource.addEventListener('course_removed', (event) => {
+      const payload = JSON.parse(event.data) as
+        | { uuid?: string; name?: string; status?: string }
+        | string
+      const payloadData = typeof payload === 'string' ? undefined : payload
+      const removedCourseId =
+        typeof payload === 'string'
+          ? payload
+          : payloadData?.uuid ?? courseId
+
+      const removedCourseName = payloadData?.name
+      const removedCourseStatus = payloadData?.status
+
+      if (
+        showSseToasts &&
+        removedCourseStatus !== 'paused' &&
+        removedCourseStatus !== 'archived'
+      ) {
+        toast.info(
+          removedCourseName
+            ? `Kurz "${removedCourseName}" byl odstraněn lektorem`
+            : 'Kurz byl odstraněn lektorem',
+        )
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
+        if (!oldData) return oldData
+        if (!removedCourseId) return oldData
+        return oldData.filter((course) => course.uuid !== removedCourseId)
+      })
+
+      queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+
+      if (onCourseRemoved) {
+        onCourseRemoved(payload)
+      }
     })
 
     // --- Modules ---
@@ -471,7 +518,6 @@ export const useCourseFeedSSE = ({
 
   return { isConnected }
 }
-
 
 
 

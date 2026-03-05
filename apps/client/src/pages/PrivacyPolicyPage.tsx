@@ -244,7 +244,7 @@ const PrivacyPolicyPage = () => {
 
           <section className='pt-4 border-t border-gray-200'>
             <Label variant='descriptionSmall' size='sm' className='italic'>
-              Tyto zásady jsou platné od 1. listopadu 2025.
+              Tyto zásady jsou platné od 1. prosince 2025.
             </Label>
           </section>
         </div>

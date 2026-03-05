@@ -214,7 +214,7 @@ const UserCourseModuleDetailPage = () => {
             ) : (
               <StateComp
                 img={quizImg}
-                iconClassName='w-12 h-12 md:w-14 h-14'
+                iconClassName='w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16'
                 type='no-content'
                 message='Zatím žádné kvízy'
                 className='pt-8 pb-0'
@@ -228,3 +228,4 @@ const UserCourseModuleDetailPage = () => {
 }
 
 export default UserCourseModuleDetailPage
+

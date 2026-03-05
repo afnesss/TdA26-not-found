@@ -65,6 +65,7 @@ const QuizzesSection = ({
           <StateComp
             type='no-content'
             img={quizImg}
+            iconClassName='w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16'
             message='Zatím žádné kvízy'
             className='pt-8 pb-0'
           />

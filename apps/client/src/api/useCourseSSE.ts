@@ -19,7 +19,8 @@ export const useCoursesSSE = () => {
     eventSource.onerror = (err) => {
       if (isDev) console.log(' Course SSE error')
       if (isDev) console.error(' Course SSE onerror:', err)
-      if (isDev) console.error('EventSource readyState:', eventSource.readyState)
+      if (isDev)
+        console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
       eventSource.close()
     }
@@ -75,15 +76,19 @@ export const useCoursesSSE = () => {
         .getQueryData<CourseSummary[]>(['courses-user'])
         ?.find((course) => course.uuid === courseIdToDelete)
 
-      const removedCourseName =
-        payloadData?.name ?? existingCourse?.name
+      const removedCourseName = payloadData?.name ?? existingCourse?.name
       const removedCourseStatus = payloadData?.status ?? existingCourse?.status
 
       if (removedCourseName && removedCourseStatus === 'paused') {
         toast.info(`Kurz "${removedCourseName}" pozastaveno lektorem`)
-      }
-      if (removedCourseName && removedCourseStatus === 'archived') {
+      } else if (removedCourseName && removedCourseStatus === 'archived') {
         toast.info(`Kurz "${removedCourseName}" dokončeno lektorem`)
+      } else {
+        toast.info(
+          removedCourseName
+            ? `Kurz "${removedCourseName}" byl odstraněn lektorem`
+            : 'Kurz byl odstraněn lektorem',
+        )
       }
 
       queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
@@ -104,7 +109,3 @@ export const useCoursesSSE = () => {
   }, [queryClient])
   return { isConnected }
 }
-
-
-
-

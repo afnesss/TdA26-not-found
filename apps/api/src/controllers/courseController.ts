@@ -33,9 +33,7 @@ export async function getAllCourses(req: Request, res: Response) {
       status_history: courses.status_history,
     })
     .from(courses)
-    .where(
-      userView ? inArray(courses.status, ["planned", "live"]) : undefined,
-    )
+    .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -208,14 +206,12 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
         .select({
           moduleId: courseMaterials.moduleId,
           materialsCount: sql<number>`count(*)`.mapWith(Number),
-          fileMaterialsCount:
-            sql<number>`
+          fileMaterialsCount: sql<number>`
               count(
                 case when ${courseMaterials.type} = 'file' then 1 else null end
               )
             `.mapWith(Number),
-          urlMaterialsCount:
-            sql<number>`
+          urlMaterialsCount: sql<number>`
               count(
                 case when ${courseMaterials.type} = 'url' then 1 else null end
               )
@@ -251,8 +247,9 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       db
         .select({
           moduleId: quizzes.moduleId,
-          quizzesCount:
-            sql<number>`count(distinct ${quizzes.uuid})`.mapWith(Number),
+          quizzesCount: sql<number>`count(distinct ${quizzes.uuid})`.mapWith(
+            Number,
+          ),
           quizAttempts: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
             Number,
           ),
@@ -268,8 +265,7 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
               )
             )
           `.mapWith(Number),
-          lowScoreQuizzes:
-            sql<number>`
+          lowScoreQuizzes: sql<number>`
               count(
                 distinct case
                   when ${quizSubmissions.maxScore} > 0
@@ -282,8 +278,7 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
                 end
               )
             `.mapWith(Number),
-          quizzesWithoutSubmits:
-            sql<number>`
+          quizzesWithoutSubmits: sql<number>`
               count(
                 distinct case
                   when ${quizSubmissions.uuid} is null
@@ -302,7 +297,9 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
     const materialStatsByModule = new Map(
       materialStats.map((row) => [row.moduleId, row]),
     );
-    const quizStatsByModule = new Map(quizStats.map((row) => [row.moduleId, row]));
+    const quizStatsByModule = new Map(
+      quizStats.map((row) => [row.moduleId, row]),
+    );
 
     const moduleAnalytics = courseModules.map((module) => {
       const material = materialStatsByModule.get(module.uuid);
@@ -350,11 +347,9 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
         acc.openCount += module.openCount;
         acc.modulesWithoutInteraction += module.interactions === 0 ? 1 : 0;
         acc.lowScoreQuizzes += module.lowScoreQuizzes;
-        if (
-          module.averageQuizPercentage != null &&
-          module.quizAttempts > 0
-        ) {
-          acc.quizWeightedSum += module.averageQuizPercentage * module.quizAttempts;
+        if (module.averageQuizPercentage != null && module.quizAttempts > 0) {
+          acc.quizWeightedSum +=
+            module.averageQuizPercentage * module.quizAttempts;
           acc.quizAttempts += module.quizAttempts;
         }
         return acc;
@@ -655,10 +650,9 @@ export async function updateCourse(req: Request, res: Response) {
               { status, timestamp: new Date().toISOString() },
             ]
           : existing[0].status_history,
-      scheduledFor:
-        shouldClearScheduleOnTransition
-          ? null
-          : nextStatus === "live"
+      scheduledFor: shouldClearScheduleOnTransition
+        ? null
+        : nextStatus === "live"
           ? null
           : nextStatus === "planned"
             ? nextScheduledForDate
@@ -761,13 +755,19 @@ export async function deleteCourse(req: Request, res: Response) {
     const [deletedCourse] = await db
       .delete(courses)
       .where(eq(courses.uuid, uuid))
-      .returning({ uuid: courses.uuid });
+      .returning({
+        uuid: courses.uuid,
+        name: courses.name,
+        status: courses.status,
+      });
 
     // If nothing was deleted, the course did not exist.
     if (!deletedCourse) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
     }
 
+    sseManager.broadcast("courses", "course_removed", deletedCourse);
+    sseManager.broadcast(deletedCourse.uuid, "course_removed", deletedCourse);
     return res.status(204).send();
   } catch (error) {
     // Explicit server error handling for DB/runtime failures.
@@ -784,4 +784,3 @@ export const streamCourses = (req: Request, res: Response) => {
 
   sseManager.addClient("courses", res);
 };
-

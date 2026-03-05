@@ -8,17 +8,18 @@ export const useCoursesSSE = () => {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
+    const isDev = import.meta.env.DEV
     const eventSource = new EventSource(`/api/courses/stream`)
 
     eventSource.onopen = () => {
-      console.log('✅ SSE kurzu připojeno')
+      if (isDev) console.log('Course SSE connected')
       setIsConnected(true)
     }
 
     eventSource.onerror = (err) => {
-      console.log(' SSE kurzu chyba')
-      console.error(' SSE kurzu onerror:', err)
-      console.error('EventSource readyState:', eventSource.readyState)
+      if (isDev) console.log(' Course SSE error')
+      if (isDev) console.error(' Course SSE onerror:', err)
+      if (isDev) console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
       eventSource.close()
     }
@@ -96,10 +97,14 @@ export const useCoursesSSE = () => {
     })
 
     return () => {
-      console.log('SSE kurzu zavirame')
+      if (isDev) console.log('Course SSE closing')
       eventSource.close()
       setIsConnected(false)
     }
   }, [queryClient])
   return { isConnected }
 }
+
+
+
+

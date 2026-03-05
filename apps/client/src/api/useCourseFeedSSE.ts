@@ -79,25 +79,27 @@ export const useCourseFeedSSE = ({
 
   useEffect(() => {
     if (!courseId) return
+    const isDev = import.meta.env.DEV
 
     const eventSource = new EventSource(`/api/courses/${courseId}/feed/stream`)
 
     eventSource.onopen = () => {
-      console.log('✅ SSE připojeno')
+      if (isDev) console.log('SSE connected')
       setIsConnected(true)
     }
 
     eventSource.onerror = (err) => {
-      console.log(' SSE chyba')
-      console.error(' SSE onerror:', err)
-      console.error('EventSource readyState:', eventSource.readyState)
+      if (isDev) console.log(' SSE error')
+      if (isDev) console.error(' SSE onerror:', err)
+      if (isDev)
+        console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
       eventSource.close()
     }
 
     eventSource.addEventListener('new_post', (event) => {
       const newPost = JSON.parse(event.data)
-      console.log(' Received new_post event:', newPost)
+      if (isDev) console.log('Received new_post event:', newPost)
 
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
@@ -131,7 +133,7 @@ export const useCourseFeedSSE = ({
 
     eventSource.addEventListener('post_updated', (event) => {
       const updatedPost = JSON.parse(event.data)
-      console.log('Post updated:', updatedPost)
+      if (isDev) console.log('Post updated:', updatedPost)
 
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
@@ -167,7 +169,7 @@ export const useCourseFeedSSE = ({
 
     eventSource.addEventListener('post_deleted', (event) => {
       const { uuid } = JSON.parse(event.data)
-      console.log(' Post deleted:', uuid)
+      if (isDev) console.log('Post deleted:', uuid)
 
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
@@ -200,7 +202,7 @@ export const useCourseFeedSSE = ({
     // --- Course Updates ---
     eventSource.addEventListener('course_updated', (event) => {
       const updatedCourse = JSON.parse(event.data)
-      console.log('Course updated:', updatedCourse)
+      if (isDev) console.log('Course updated:', updatedCourse)
 
       if (showSseToasts && updatedCourse.status === 'paused') {
         toast.info(`Kurz "${updatedCourse.name}" byl pozastaven lektorem`)
@@ -233,7 +235,7 @@ export const useCourseFeedSSE = ({
       if (!syncModuleActivation) return
 
       const activatedModule = JSON.parse(event.data)
-      console.log('module activated:', activatedModule)
+      if (isDev) console.log('Module activated:', activatedModule)
 
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
@@ -246,10 +248,11 @@ export const useCourseFeedSSE = ({
           const allowed = isLive && isStatusOnlyChange
 
           if (!allowed) {
-            console.warn(
-              'Module update not allowed for course status:',
-              oldData.status,
-            )
+            if (isDev)
+              console.warn(
+                'Module update not allowed for course status:',
+                oldData.status,
+              )
             return oldData
           }
 
@@ -454,7 +457,7 @@ export const useCourseFeedSSE = ({
     // })
 
     return () => {
-      console.log('SSE zavirame')
+      if (isDev) console.log('SSE closing')
       eventSource.close()
       setIsConnected(false)
     }
@@ -468,3 +471,7 @@ export const useCourseFeedSSE = ({
 
   return { isConnected }
 }
+
+
+
+

@@ -207,7 +207,7 @@ const DashboardDesign1 = () => {
   return (
     <>
       <div className='max-w-7xl mx-auto'>
-        <div className='space-y-4'>
+        <div className='space-y-4 md:space-y-5'>
           <div className='flex  items-center justify-center gap-2 md:gap-3'>
             <HintPageText
               text='Správa kurzů'

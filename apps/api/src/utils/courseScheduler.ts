@@ -2,6 +2,7 @@ import { and, eq, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import { courses } from "../db/schema";
 import { sseManager } from "./sseManager";
+import { logger } from "./logger";
 
 let intervalRef: NodeJS.Timeout | null = null;
 let isRunning = false;
@@ -47,7 +48,7 @@ const runCheck = async () => {
       }
     }
   } catch (error) {
-    console.error("[courseScheduler] runTick failed:", error);
+    logger.error({ err: error }, "[courseScheduler] Tick failed");
   } finally {
     isRunning = false;
   }

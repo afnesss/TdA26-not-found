@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { courses } from "../db/schema";
+import { logger } from "../utils/logger";
 
 type CourseStatus = typeof courses.$inferSelect.status;
 
@@ -53,7 +54,7 @@ const requireCourseStatus = ({
 
       return next();
     } catch (error) {
-      console.error(error);
+      logger.error({ err: error }, "Course status check failed");
       return res.status(500).json({ message: "Došlo k chybě serveru" });
     }
   };

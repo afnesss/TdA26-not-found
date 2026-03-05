@@ -3,6 +3,7 @@ import { courses, modules, courseMaterials, quizzes, feedItems } from "./schema"
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
+import { logger } from "../utils/logger";
 
 const sampleCourses = [
   {
@@ -150,7 +151,7 @@ const moduleBlueprints = [
 ];
 
 export async function seed() {
-  console.log("Seeding database...");
+  logger.info("Seeding database...");
 
   try {
     const seedAssetsDir = path.join(process.cwd(), "seed_assets");
@@ -161,20 +162,20 @@ export async function seed() {
     const files = await fs.readdir(seedAssetsDir);
     for (const file of files) {
       await fs.copyFile(path.join(seedAssetsDir, file), path.join(uploadsDir, file));
-      console.log(`Copied ${file} to uploads directory`);
+      logger.info(`Copied ${file} to uploads directory`);
     }
   } catch (error) {
-    console.warn("Failed to copy seed assets (ignoring if dev environment issue):", error);
+    logger.warn({ err: error }, "Failed to copy seed assets (ignoring if dev environment issue)");
   }
 
   const existingCourses = await db.select().from(courses);
   if (existingCourses.length > 0) {
-    console.log("Courses already exist, skipping seed");
+    logger.info("Courses already exist, skipping seed");
     return;
   }
 
   const createdCourses = await db.insert(courses).values(sampleCourses).returning();
-  console.log(`Created ${createdCourses.length} courses`);
+  logger.info(`Created ${createdCourses.length} courses`);
 
   for (const course of createdCourses) {
     const createdModules = await db
@@ -416,5 +417,6 @@ export async function seed() {
     await db.insert(feedItems).values(feed);
   }
 
-  console.log("Seeding complete with rich, production-ready data!");
+  logger.info("Seeding complete with production-ready data");
 }
+

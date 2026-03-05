@@ -131,7 +131,7 @@ const TermsOfUsePage = () => {
 
           <section className='pt-4 border-t border-gray-200'>
             <Label variant='descriptionSmall' size='sm' className='italic'>
-              Tyto podmínky jsou platné od 1. listopadu 2025.
+              Tyto podmínky jsou platné od 1. prosince 2025.
             </Label>
           </section>
         </div>

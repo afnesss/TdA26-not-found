@@ -14,7 +14,7 @@ const Footer = () => {
                sm:flex-nowrap sm:items-center sm:justify-between'
       >
         <div className='flex flex-wrap items-center gap-2 sm:gap-4'>
-          <span className='mr-2'>© 2025 Think Different Academy</span>
+          <span className='mr-2'>© 2026 Think Different Academy</span>
 
           <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
             <span

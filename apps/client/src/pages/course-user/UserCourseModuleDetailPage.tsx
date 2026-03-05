@@ -2,7 +2,7 @@ import MaterialCard from '@/components/shared/MaterialComponent'
 import QuizComponent from '@/components/shared/Quiz/QuizComponent'
 import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
-import CoursesPageSceleton from '@/components/shared/loadingskeleton/CoursesSceleton'
+import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { Label } from '@/components/ui/label'
 import type { Quiz } from '@/lib/schemas'
 import type { QuizStateById } from '@/lib/types'
@@ -72,7 +72,7 @@ const UserCourseModuleDetailPage = () => {
   }
 
   if (!selectedModule) {
-    return <CoursesPageSceleton />
+    return <CourseSkeleton containerClassName='mx-auto space-y-8' />
   }
 
   return (

@@ -2,10 +2,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { MaterialSkeleton } from './MaterialSkeleton'
 import { QuizSkeleton } from './QuizSkeleton'
 
-const CourseSkeleton = () => {
+type CourseSkeletonProps = {
+  containerClassName?: string
+}
+
+const CourseSkeleton = ({
+  containerClassName = 'max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8',
+}: CourseSkeletonProps) => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
-      <div className='max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8'>
+      <div className={containerClassName}>
         {/* summary */}
         <section>
           <div className='bg-background rounded-xl border border-gray-100 overflow-hidden'>

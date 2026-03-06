@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import {
   createModule,
   deleteModule,
@@ -8,7 +8,6 @@ import {
   updateModule,
 } from "../controllers/moduleController";
 import { authMiddleware } from "../middleware/auth";
-import { writeLimiter } from "../middleware/rateLimiter";
 import { validate } from "../middleware/validate";
 import {
   requireCourseDraft,
@@ -27,7 +26,6 @@ router.get("/:moduleId", getModuleByUuid);
 router.post(
   "/",
   authMiddleware,
-  writeLimiter,
   validate(ModuleCreateRequestSchema),
   requireCourseDraft(),
   createModule,
@@ -35,7 +33,6 @@ router.post(
 router.put(
   "/reorder",
   authMiddleware,
-  writeLimiter,
   validate(ModuleReorderRequestSchema),
   requireCourseDraft(),
   reorderModules,
@@ -43,7 +40,6 @@ router.put(
 router.put(
   "/:moduleId",
   authMiddleware,
-  writeLimiter,
   validate(ModuleUpdateRequestSchema),
   requireModuleUpdateAllowed(),
   updateModule,
@@ -51,9 +47,9 @@ router.put(
 router.delete(
   "/:moduleId",
   authMiddleware,
-  writeLimiter,
   requireCourseDraft(),
   deleteModule,
 );
 
 export default router;
+

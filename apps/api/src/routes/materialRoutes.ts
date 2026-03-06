@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import multer from "multer";
 import {
   createMaterial,
@@ -9,7 +9,6 @@ import {
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
-import { uploadLimiter, writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
 
@@ -84,7 +83,6 @@ router.post("/:materialId/interactions", trackMaterialInteraction);
 router.post(
   "/",
   authMiddleware,
-  uploadLimiter,
   requireCourseDraft(),
   uploadMiddleware,
   createMaterial,
@@ -92,7 +90,6 @@ router.post(
 router.put(
   "/:materialId",
   authMiddleware,
-  writeLimiter,
   requireCourseDraft(),
   uploadMiddleware,
   updateMaterial,
@@ -100,7 +97,6 @@ router.put(
 router.delete(
   "/:materialId",
   authMiddleware,
-  writeLimiter,
   requireCourseDraft(),
   deleteMaterial,
 );

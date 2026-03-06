@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import {
   getAllCourses,
   getCourseByUuid,
@@ -15,7 +15,6 @@ import {
   CourseCreateRequestSchema,
   CourseUpdateRequestSchema,
 } from "../schemas/course";
-import { writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
 import {
   requireCourseDraft,
@@ -32,19 +31,17 @@ router.get("/:uuid", getCourseByUuid);
 router.post(
   "/",
   authMiddleware,
-  writeLimiter,
   validate(CourseCreateRequestSchema),
   createCourse,
 );
-router.post("/:uuid/clone", authMiddleware, writeLimiter, cloneCourse);
+router.post("/:uuid/clone", authMiddleware, cloneCourse);
 router.put(
   "/:uuid",
   authMiddleware,
-  writeLimiter,
   validate(CourseUpdateRequestSchema),
   requireCourseUpdateAllowed("uuid"),
   updateCourse,
 );
-router.delete("/:uuid", authMiddleware, writeLimiter, deleteCourse);
+router.delete("/:uuid", authMiddleware, deleteCourse);
 
 export default router;

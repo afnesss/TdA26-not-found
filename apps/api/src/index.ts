@@ -1,4 +1,4 @@
-import cors from "cors";
+﻿import cors from "cors";
 import express from "express";
 // import session from "express-session";
 import authRoutes from "./routes/authRoutes";
@@ -9,7 +9,6 @@ import feedRoutes from "./routes/feedRoutes";
 import moduleRoutes from "./routes/moduleRoutes";
 import { seed } from "./db/seed";
 import path from "path";
-import { generalLimiter } from "./middleware/rateLimiter";
 import cookieParser from "cookie-parser";
 import {
   startIntervalScheduler,
@@ -33,7 +32,6 @@ app.use(
 
 app.use(cookieParser());
 app.set("trust proxy", 1);
-app.use(generalLimiter);
 
 app.use(httpLogger);
 
@@ -73,7 +71,7 @@ app.use(
   ) => {
     const requestId = (req as { id?: string }).id ?? "unknown";
     logger.error({ err, requestId }, "Unhandled error");
-    res.status(500).json({ message: "Došlo k chybě serveru" });
+    res.status(500).json({ message: "DoÅ¡lo k chybÄ› serveru" });
   },
 );
 
@@ -82,7 +80,7 @@ async function start() {
     await seed();
   } catch (error: any) {
     if (error?.code === "42P07" || error?.cause?.code === "42P07") {
-      logger.warn("Migration warning: table already exists � continuing startup.");
+      logger.warn("Migration warning: table already exists — continuing startup.");
     } else {
       logger.error({ err: error }, "Failed to start server");
       process.exit(1);
@@ -118,6 +116,7 @@ async function start() {
 }
 
 start();
+
 
 
 

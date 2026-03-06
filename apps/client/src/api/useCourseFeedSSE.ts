@@ -244,9 +244,7 @@ export const useCourseFeedSSE = ({
         | string
       const payloadData = typeof payload === 'string' ? undefined : payload
       const removedCourseId =
-        typeof payload === 'string'
-          ? payload
-          : payloadData?.uuid ?? courseId
+        typeof payload === 'string' ? payload : (payloadData?.uuid ?? courseId)
 
       const removedCourseName = payloadData?.name
       const removedCourseStatus = payloadData?.status
@@ -514,10 +512,8 @@ export const useCourseFeedSSE = ({
     showNewPostToast,
     showSseToasts,
     syncModuleActivation,
+    onCourseRemoved,
   ])
 
   return { isConnected }
 }
-
-
-

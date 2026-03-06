@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import {
   getFeed,
   createPost,
@@ -11,7 +11,6 @@ import {
   FeedCreateRequestSchema,
   FeedUpdateRequestSchema,
 } from "../schemas/feed";
-import { writeLimiter } from "../middleware/rateLimiter";
 import { authMiddleware } from "../middleware/auth";
 import { requireCourseLiveOrDraft } from "../middleware/courseStatus";
 
@@ -24,7 +23,6 @@ router.get("/", getFeed);
 router.post(
   "/",
   authMiddleware,
-  writeLimiter,
   validate(FeedCreateRequestSchema),
   requireCourseLiveOrDraft(),
   createPost,
@@ -32,7 +30,6 @@ router.post(
 router.put(
   "/:postId",
   authMiddleware,
-  writeLimiter,
   validate(FeedUpdateRequestSchema),
   requireCourseLiveOrDraft(),
   updatePost,
@@ -40,9 +37,9 @@ router.put(
 router.delete(
   "/:postId",
   authMiddleware,
-  writeLimiter,
   requireCourseLiveOrDraft(),
   deletePost,
 );
 
 export default router;
+

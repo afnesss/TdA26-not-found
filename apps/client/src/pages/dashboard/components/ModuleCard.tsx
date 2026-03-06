@@ -230,7 +230,7 @@ const ModuleCard = (props: ModuleCardProps) => {
   }).length
   const quizAttentionParts: string[] = []
   if (moduleQuizzesWithoutSubmits > 0) {
-    quizAttentionParts.push(`Kvízy bez submitu: ${moduleQuizzesWithoutSubmits}`)
+    quizAttentionParts.push(`Kvízy bez odeslání: ${moduleQuizzesWithoutSubmits}`)
   }
   if (moduleLowScoreQuizzes > 0) {
     quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)

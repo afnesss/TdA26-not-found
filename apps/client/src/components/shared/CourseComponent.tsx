@@ -117,7 +117,7 @@ const CourseComponent = (props: CourseCompProps) => {
     attentionParts.push(`Moduly bez interakcí: ${modulesWithoutInteraction}`)
   }
   if (modulesWithoutInteraction === 0 && quizzesWithoutSubmits > 0) {
-    attentionParts.push(`Kvízy bez submitu: ${quizzesWithoutSubmits}`)
+    attentionParts.push(`Kvízy bez odeslání: ${quizzesWithoutSubmits}`)
   }
   if (lowScoreQuizzes > 0) {
     attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)

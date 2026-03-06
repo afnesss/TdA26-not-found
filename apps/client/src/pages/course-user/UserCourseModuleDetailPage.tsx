@@ -6,8 +6,8 @@ import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkelet
 import { Label } from '@/components/ui/label'
 import type { Quiz } from '@/lib/schemas'
 import type { QuizStateById } from '@/lib/types'
-import { startTransition, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { startTransition, useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQuizSubmitMutation } from '../CoursePage/utils/quizSubmitMutation'
 import {
   handleSubmitQuiz,
@@ -29,6 +29,8 @@ const UserCourseModuleDetailPage = () => {
     courseId: string
     moduleId: string
   }>()
+  const navigate = useNavigate()
+  const redirectedRef = useRef(false)
   const { courseData, activeModules } = useUserCourseLayoutContext()
   const [quizState, setQuizState] = useState<QuizStateById>({})
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
@@ -67,6 +69,15 @@ const UserCourseModuleDetailPage = () => {
       })
     })
   }, [selectedModule?.quizzes])
+
+  useEffect(() => {
+    if (!courseId || !moduleId) return
+    if (redirectedRef.current) return
+    if (selectedModule) return
+
+    redirectedRef.current = true
+    navigate(`/courses/${courseId}`, { replace: true })
+  }, [courseId, moduleId, navigate, selectedModule])
 
   if (!courseId || !moduleId) {
     return <StateComp type='not-found' message='Modul nebyl nalezen' />

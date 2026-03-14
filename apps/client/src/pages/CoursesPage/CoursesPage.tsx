@@ -85,16 +85,17 @@ const CoursesPage = () => {
     <div className='h-full'>
       {/* Hero */}
       <div className='max-w-7xl mx-auto  '>
-        <div className='flex flex-row md:justify-center justify-between items-center mb-4 md:mb-5 w-full md:w-auto'>
-          <HintPageText
-            text='Dostupné kurzy'
-            icon={BookOpenText}
-            spanText={
-              (searchQuery && displayedCourses.length.toString()) ||
-              courses.length.toString()
-            }
-            className='hidden lg:inline-flex'
-          />
+        <div className='flex flex-row md:justify-center justify-between items-center gap-2 sm:gap-3 mb-4 md:mb-5 w-full md:w-auto'>
+          <div className='hidden lg:flex'>
+            <HintPageText
+              text='Dostupné kurzy'
+              icon={BookOpenText}
+              spanText={
+                (searchQuery && displayedCourses.length.toString()) ||
+                courses.length.toString()
+              }
+            />
+          </div>
 
           <FilterDropdown
             items={filterItems}

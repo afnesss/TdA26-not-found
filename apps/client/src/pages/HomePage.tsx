@@ -39,11 +39,11 @@ const HomePage = () => {
               navigate('/courses')
             }}
           >
-            Procházet Kurzy
+            Procházet kurzy
           </Button>
         </div>
 
-        <div className='grid grid-cols-3 max-w-lg gap-4 sm:gap-5'>
+        <div className='grid grid-cols-3 max-w-md gap-3 sm:gap-4'>
           <HomeBoxDetail
             bg='accent-teal-light'
             icon={ThinkIcon}

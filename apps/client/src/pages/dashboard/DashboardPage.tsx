@@ -208,16 +208,17 @@ const DashboardDesign1 = () => {
     <>
       <div className='max-w-7xl mx-auto'>
         <div className='space-y-4 md:space-y-5'>
-          <div className='flex  items-center justify-center gap-2 md:gap-3'>
-            <HintPageText
-              text='Správa kurzů'
-              icon={BookOpenText}
-              spanText={
-                (searchQuery && filteredCourses.length.toString()) ||
-                courses.length.toString()
-              }
-              className='hidden lg:inline-flex'
-            />
+          <div className='flex items-center justify-center gap-2 sm:gap-3'>
+            <div className='hidden lg:flex'>
+              <HintPageText
+                text='Správa kurzů'
+                icon={BookOpenText}
+                spanText={
+                  (searchQuery && filteredCourses.length.toString()) ||
+                  courses.length.toString()
+                }
+              />
+            </div>
             <DashboardModeTabs
               value={dashboardTabsValue}
               tabs={dashboardTabs}

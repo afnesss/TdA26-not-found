@@ -43,6 +43,13 @@ const isDirtyText = (className?: string) => {
   )
 }
 
+const formatQuestionsCount = (count: number) => {
+  const absCount = Math.abs(count)
+  if (absCount === 1) return `${count} otázka`
+  if (absCount >= 2 && absCount <= 4) return `${count} otázky`
+  return `${count} otázek`
+}
+
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
 type QuizComponentProps = {
@@ -132,7 +139,7 @@ const QuizComponentInner = ({
               setShowIncompleteError(false)
               onSubmit?.()
             }}
-            aria-label='Submit quiz answers'
+            aria-label='Odeslat odpovědi do kvízu'
           >
             <span className='sm:hidden'>Odeslat</span>
             <span className='hidden sm:inline'>Odeslat odpovědi</span>
@@ -147,8 +154,8 @@ const QuizComponentInner = ({
           onClick={onToggleShowCorrect}
           aria-label={
             userState?.showCorrect
-              ? 'Hide correct answers'
-              : 'Show correct answers'
+              ? 'Skrýt správné odpovědi'
+              : 'Zobrazit správné odpovědi'
           }
         >
           {userState?.showCorrect ? 'Skrýt odpovědi' : 'Zobrazit odpovědi'}
@@ -400,7 +407,7 @@ const QuizComponentInner = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
-                      aria-label='Cancel quiz draft'
+                      aria-label='Zrušit koncept kvízu'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -409,7 +416,7 @@ const QuizComponentInner = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
-                            aria-label={`Delete quiz ${quiz.title}`}
+                            aria-label={`Smazat kvíz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -428,7 +435,7 @@ const QuizComponentInner = ({
                         e.stopPropagation()
                         toggleExpand()
                       }}
-                      aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                      aria-label={isExpanded ? 'Sbalit kvíz' : 'Rozbalit kvíz'}
                       aria-expanded={isExpanded}
                     >
                       {isExpanded ? (
@@ -477,7 +484,7 @@ const QuizComponentInner = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
-                      aria-label='Cancel quiz draft'
+                      aria-label='Zrušit koncept kvízu'
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -486,7 +493,7 @@ const QuizComponentInner = ({
                           <EditBtn
                             type='delete'
                             onClick={(e) => e?.stopPropagation()}
-                            aria-label={`Delete quiz ${quiz.title}`}
+                            aria-label={`Smazat kvíz ${quiz.title}`}
                           />
                         }
                         itemName={quiz.title}
@@ -500,7 +507,7 @@ const QuizComponentInner = ({
 
                   <button
                     className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'
-                    aria-label={isExpanded ? 'Collapse quiz' : 'Expand quiz'}
+                    aria-label={isExpanded ? 'Sbalit kvíz' : 'Rozbalit kvíz'}
                     aria-expanded={isExpanded}
                   >
                     {isExpanded ? (
@@ -529,7 +536,9 @@ const QuizComponentInner = ({
 
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <HelpCircle size={14} className='text-secondary shrink-0' />
-                <span>{displayQuiz.questions?.length ?? 0} otázek</span>
+                <span>
+                  {formatQuestionsCount(displayQuiz.questions?.length ?? 0)}
+                </span>
               </span>
 
               {showAnalytics && (displayQuiz.attemptsCount ?? 0) > 0 && (
@@ -636,7 +645,7 @@ const QuizComponentInner = ({
                   !Array.isArray(errors.questions) &&
                   'border-destructive',
               )}
-              aria-label='Add new question'
+              aria-label='Přidat novou otázku'
             >
               <Plus size={20} />
               Přidat otázku
@@ -673,7 +682,7 @@ const QuizComponentInner = ({
                   variant='link'
                   className='rounded-lg shadow-none'
                   onClick={() => setShowCorrect((prev) => !prev)}
-                  aria-label='Show correct answers'
+                  aria-label='Zobrazit správné odpovědi'
                 >
                   {showCorrect ? 'Skrýt odpovědi' : 'Zobrazit správné odpovědi'}
                 </Button>

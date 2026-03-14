@@ -6,7 +6,7 @@ import type {
 } from '@/lib/schemas'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 type CourseModule = CourseDetail['modules'][number]
@@ -85,6 +85,11 @@ export const useCourseFeedSSE = ({
 }: UseCourseFeedSSEOptions) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
+  const onCourseRemovedRef = useRef(onCourseRemoved)
+
+  useEffect(() => {
+    onCourseRemovedRef.current = onCourseRemoved
+  }, [onCourseRemoved])
 
   useEffect(() => {
     if (!courseId) return
@@ -269,8 +274,8 @@ export const useCourseFeedSSE = ({
 
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
 
-      if (onCourseRemoved) {
-        onCourseRemoved(payload)
+      if (onCourseRemovedRef.current) {
+        onCourseRemovedRef.current(payload)
       }
     })
 
@@ -512,7 +517,6 @@ export const useCourseFeedSSE = ({
     showNewPostToast,
     showSseToasts,
     syncModuleActivation,
-    onCourseRemoved,
   ])
 
   return { isConnected }

@@ -1,14 +1,11 @@
-import HomeBoxDetail from '../components/shared/HomeBoxDetail'
-import { Zap, Trophy } from 'lucide-react'
-import ThinkIcon from '@/assets/t-think-blue.svg?react'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 import ActivitiesIcon from '@/assets/activities-blue.svg?react'
-import { Button } from '../components/ui/button'
+import LogoAnim from '@/components/shared/LogoAnim'
+import TitleText from '@/components/shared/TitleText'
+import { Label } from '@/components/ui/label'
 import { useNavigate } from 'react-router-dom'
 import HintPageText from '../components/shared/HintPageText'
-import LogoAnim from '@/components/shared/LogoAnim'
-import { Label } from '@/components/ui/label'
-import TitleText from '@/components/shared/TitleText'
-import { useCoursesSSE } from '@/api/useCourseSSE'
+import { Button } from '../components/ui/button'
 
 const HomePage = () => {
   const navigate = useNavigate()
@@ -17,7 +14,7 @@ const HomePage = () => {
   return (
     <div className='grid grid-cols-1 md:grid-cols-3 items-center justify-center max-w-7xl mx-auto md:px-6 lg:px-12'>
       <div className='flex flex-col max-sm:justify-center md:col-span-2 gap-7 md:gap-10 w-full'>
-        <HintPageText text='Učení může být zábava' icon={Trophy} />
+        <HintPageText text='Učení může být zábava' icon={ActivitiesIcon} />
 
         <TitleText
           addtext1='Rozvíjejte své '
@@ -41,25 +38,6 @@ const HomePage = () => {
           >
             Procházet kurzy
           </Button>
-        </div>
-
-        <div className='grid grid-cols-3 max-w-md gap-3 sm:gap-4'>
-          <HomeBoxDetail
-            bg='accent-teal-light'
-            icon={ThinkIcon}
-            text='Chytré řešení'
-          />
-          <HomeBoxDetail
-            bg='accent-teal'
-            icon={ActivitiesIcon}
-            text='Interaktivní přístup'
-          />
-          <HomeBoxDetail
-            bg='accent-teal-dark'
-            icon={Zap}
-            iconClassName='fill-current [stroke-width:1]'
-            text='Efektivně'
-          />
         </div>
       </div>
 

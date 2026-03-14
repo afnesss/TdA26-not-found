@@ -1,5 +1,13 @@
 import { db } from "./index";
-import { courses, modules, courseMaterials, quizzes, feedItems } from "./schema";
+import {
+  courses,
+  modules,
+  courseMaterials,
+  quizzes,
+  quizSubmissions,
+  feedItems,
+  courseStatusEnum,
+} from "./schema";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
@@ -133,6 +141,85 @@ const sampleCourses = [
   },
 ];
 
+const courseStatusByIndex = new Map<number, (typeof courseStatusEnum)[number]>([
+  [0, "draft"],
+  [1, "planned"],
+  [2, "live"],
+  [3, "paused"],
+  [4, "archived"],
+]);
+
+const now = new Date();
+const plannedFor = new Date(now);
+plannedFor.setDate(plannedFor.getDate() + 1);
+plannedFor.setHours(12, 0, 0, 0);
+
+const liveStartedAt = new Date(now);
+liveStartedAt.setDate(liveStartedAt.getDate() - 4);
+liveStartedAt.setHours(9, 0, 0, 0);
+
+const pausedAt = new Date(now);
+pausedAt.setDate(pausedAt.getDate() - 1);
+pausedAt.setHours(16, 0, 0, 0);
+
+const archivedStartedAt = new Date(now);
+archivedStartedAt.setDate(archivedStartedAt.getDate() - 14);
+archivedStartedAt.setHours(10, 0, 0, 0);
+
+const archivedAt = new Date(now);
+archivedAt.setDate(archivedAt.getDate() - 6);
+archivedAt.setHours(11, 0, 0, 0);
+
+const seedCourses = sampleCourses.map((course, index) => {
+  const status = courseStatusByIndex.get(index) ?? "draft";
+  const status_history =
+    status === "paused"
+      ? [
+          {
+            status: "live" as (typeof courseStatusEnum)[number],
+            timestamp: liveStartedAt.toISOString(),
+          },
+          {
+            status: "paused" as (typeof courseStatusEnum)[number],
+            timestamp: pausedAt.toISOString(),
+          },
+        ]
+      : status === "archived"
+        ? [
+            {
+              status: "live" as (typeof courseStatusEnum)[number],
+              timestamp: archivedStartedAt.toISOString(),
+            },
+            {
+              status: "archived" as (typeof courseStatusEnum)[number],
+              timestamp: archivedAt.toISOString(),
+            },
+          ]
+        : status === "live"
+          ? [
+              {
+                status: "live" as (typeof courseStatusEnum)[number],
+                timestamp: liveStartedAt.toISOString(),
+              },
+            ]
+          : [];
+
+  return {
+    ...course,
+    status,
+    scheduledFor: status === "planned" ? plannedFor : null,
+    startedAt:
+      status === "live"
+        ? liveStartedAt
+        : status === "paused"
+          ? liveStartedAt
+          : status === "archived"
+            ? archivedStartedAt
+            : null,
+    status_history,
+  };
+});
+
 const moduleBlueprints = [
   {
     position: 1,
@@ -161,11 +248,17 @@ export async function seed() {
 
     const files = await fs.readdir(seedAssetsDir);
     for (const file of files) {
-      await fs.copyFile(path.join(seedAssetsDir, file), path.join(uploadsDir, file));
+      await fs.copyFile(
+        path.join(seedAssetsDir, file),
+        path.join(uploadsDir, file),
+      );
       logger.info(`Copied ${file} to uploads directory`);
     }
   } catch (error) {
-    logger.warn({ err: error }, "Failed to copy seed assets (ignoring if dev environment issue)");
+    logger.warn(
+      { err: error },
+      "Failed to copy seed assets (ignoring if dev environment issue)",
+    );
   }
 
   const existingCourses = await db.select().from(courses);
@@ -174,10 +267,23 @@ export async function seed() {
     return;
   }
 
-  const createdCourses = await db.insert(courses).values(sampleCourses).returning();
+  const createdCourses = await db
+    .insert(courses)
+    .values(seedCourses)
+    .returning();
   logger.info(`Created ${createdCourses.length} courses`);
 
   for (const course of createdCourses) {
+    const analyticsScale =
+      course.status === "live"
+        ? 3
+        : course.status === "paused"
+          ? 2
+          : course.status === "archived"
+            ? 1
+            : 0;
+    const shouldSeedAnalytics = analyticsScale > 0;
+
     const createdModules = await db
       .insert(modules)
       .values(
@@ -194,7 +300,9 @@ export async function seed() {
         position: modules.position,
       });
 
-    const moduleByPosition = new Map(createdModules.map((m) => [m.position, m.uuid]));
+    const moduleByPosition = new Map(
+      createdModules.map((m) => [m.position, m.uuid]),
+    );
     const module1Id = moduleByPosition.get(1)!;
     const module2Id = moduleByPosition.get(2)!;
 
@@ -205,7 +313,11 @@ export async function seed() {
         name: "Oficiální sylabus kurzu",
         description: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
         url: "https://example.com/syllabus",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=example.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=example.com&sz=64",
+        ...(shouldSeedAnalytics
+          ? { openCount: 8 * analyticsScale, copyCount: 2 * analyticsScale }
+          : {}),
       },
       {
         moduleId: module1Id,
@@ -214,7 +326,8 @@ export async function seed() {
         description:
           "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
         url: "https://medium.com/tag/programming-basics",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
       },
       {
         moduleId: module1Id,
@@ -226,6 +339,7 @@ export async function seed() {
         mimeType: "text/plain",
         sizeBytes: 1024 * 700,
         originalFilename: "lecture-slides-week1.txt",
+        ...(shouldSeedAnalytics ? { downloadCount: 5 * analyticsScale } : {}),
       },
       {
         moduleId: module1Id,
@@ -234,7 +348,11 @@ export async function seed() {
         description:
           "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
         url: "https://replit.com/",
-        faviconUrl: "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
+        ...(shouldSeedAnalytics
+          ? { openCount: 6 * analyticsScale, copyCount: 1 * analyticsScale }
+          : {}),
       },
       {
         moduleId: module2Id,
@@ -250,9 +368,11 @@ export async function seed() {
         moduleId: module2Id,
         type: "url" as const,
         name: "Fórum pro pokročilá témata",
-        description: "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+        description:
+          "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
         url: `https://stackoverflow.com/tags/${course.name.split(" ")[0].toLowerCase()}`,
-        faviconUrl: "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
       },
       {
         moduleId: module2Id,
@@ -273,7 +393,8 @@ export async function seed() {
         url: `https://www.freecodecamp.org/news/tag/${course.name
           .split(" ")[0]
           .toLowerCase()}`,
-        faviconUrl: "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
+        faviconUrl:
+          "https://www.google.com/s2/favicons?domain=freecodecamp.org&sz=64",
       },
     ];
 
@@ -299,8 +420,14 @@ export async function seed() {
           {
             uuid: uuidv4(),
             type: "multipleChoice",
-            question: "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
-            options: ["Objektově orientované", "Funkcionální", "Procedurální", "Logické"],
+            question:
+              "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
+            options: [
+              "Objektově orientované",
+              "Funkcionální",
+              "Procedurální",
+              "Logické",
+            ],
             correctIndices: [0, 1, 2],
           },
           {
@@ -353,7 +480,52 @@ export async function seed() {
       },
     ];
 
-    await db.insert(quizzes).values(quizzesData);
+    const createdQuizzes = await db
+      .insert(quizzes)
+      .values(quizzesData)
+      .returning({ uuid: quizzes.uuid, moduleId: quizzes.moduleId });
+
+    if (shouldSeedAnalytics && createdQuizzes.length > 0) {
+      const quizAttempts =
+        course.status === "live" ? 3 : course.status === "paused" ? 2 : 1;
+      const quizSeed = quizzesData[0];
+      const questions = quizSeed?.questions ?? [];
+      const maxScore = questions.length || 1;
+
+      const buildAnswers = (variant: "correct" | "partial") =>
+        questions.map((question) =>
+          question.type === "singleChoice"
+            ? {
+                uuid: question.uuid,
+                selectedIndex:
+                  variant === "correct"
+                    ? typeof question.correctIndex === "number"
+                      ? question.correctIndex
+                      : 0
+                    : typeof question.correctIndex === "number"
+                      ? (question.correctIndex + 1) % question.options.length
+                      : 0,
+              }
+            : {
+                uuid: question.uuid,
+                selectedIndices:
+                  variant === "correct"
+                    ? (question.correctIndices ?? [])
+                    : Array.isArray(question.correctIndices)
+                      ? question.correctIndices.slice(0, 1)
+                      : [],
+              },
+        );
+
+      const submissions = Array.from({ length: quizAttempts }, (_, index) => ({
+        quizId: createdQuizzes[0].uuid,
+        score: index === 0 ? maxScore : Math.max(1, maxScore - (index + 1)),
+        maxScore,
+        answers: buildAnswers(index === 0 ? "correct" : "partial"),
+      }));
+
+      await db.insert(quizSubmissions).values(submissions);
+    }
 
     const feed = [
       {
@@ -402,7 +574,8 @@ export async function seed() {
       {
         courseId: course.uuid,
         type: "manual" as const,
-        message: "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
+        message:
+          "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
       },
       {
@@ -419,4 +592,3 @@ export async function seed() {
 
   logger.info("Seeding complete with production-ready data");
 }
-

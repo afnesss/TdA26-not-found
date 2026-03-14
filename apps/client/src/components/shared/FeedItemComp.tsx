@@ -113,11 +113,11 @@ const FeedItemComp = ({
                 <EditBtn
                   icon={Edit}
                   onClick={() => setEditName(true)}
-                  aria-label='Edit feed post'
+                  aria-label='Upravit příspěvek'
                 />
                 <DeleteConfirmDialog
                   trigger={
-                    <EditBtn type='delete' aria-label='Delete feed post' />
+                    <EditBtn type='delete' aria-label='Smazat příspěvek' />
                   }
                   itemType='příspěvek'
                   onConfirm={() => {

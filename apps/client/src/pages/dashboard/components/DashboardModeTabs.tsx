@@ -54,13 +54,13 @@ const ToggleSwitch = <T extends string>({
   return (
     <div className={cn('inline-flex flex-col items-center gap-1', className)}>
       <span className='text-[10px] md:text-xs font-semibold tracking-wide text-primary'>
-        Statistics
+        Statistiky
       </span>
       <button
         type='button'
         role='switch'
         aria-checked={isSecondaryActive}
-        aria-label='Toggle statistics mode'
+        aria-label='Přepnout režim statistik'
         className={cn(
           'relative inline-flex h-3 md:h-4 w-8 md:w-10 cursor-pointer items-center rounded-full border transition-all duration-200 mr-0.5',
           isSecondaryActive

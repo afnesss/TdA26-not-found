@@ -241,12 +241,12 @@ export const useDeleteMaterialMutation = (
         queryKey: materialsQueryKey,
       })
       invalidateQueries(courseId, moduleId, queryClient)
-      toast.success('Material smazán')
+      toast.success('Materiál smazán')
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při mazání materialu',
+        'Chyba při mazání materiálu',
         queryClient,
         materialsQueryKey,
         context?.previousMaterials,

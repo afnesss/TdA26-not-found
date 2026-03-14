@@ -80,7 +80,7 @@ export const useCoursesSSE = () => {
       const removedCourseStatus = payloadData?.status ?? existingCourse?.status
 
       if (removedCourseName && removedCourseStatus === 'paused') {
-        toast.info(`Kurz "${removedCourseName}" pozastaveno lektorem`)
+        toast.info(`Kurz "${removedCourseName}" pozastaven lektorem`)
       } else if (removedCourseName && removedCourseStatus === 'archived') {
         toast.info(`Kurz "${removedCourseName}" dokončeno lektorem`)
       } else {

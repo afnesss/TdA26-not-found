@@ -41,7 +41,7 @@ const FilterDropdown = <T extends string = string>({
   statusCheckboxes,
   align = 'center',
   width = 'w-28',
-  triggerClassName = 'bg-background  text-primary mr-2 sm:mr-3 ml-2 h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0',
+  triggerClassName = 'bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0',
   disabled = false,
 }: FilterDropdownProps<T>) => {
   return (
@@ -51,7 +51,7 @@ const FilterDropdown = <T extends string = string>({
           variant='filter'
           className={triggerClassName}
           disabled={disabled || items.length === 0}
-          aria-label='Filter courses'
+          aria-label='Filtrovat kurzy'
         >
           <Filter size={16} />
         </Button>

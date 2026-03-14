@@ -33,7 +33,11 @@ export async function getAllCourses(req: Request, res: Response) {
       status_history: courses.status_history,
     })
     .from(courses)
-    .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
+    .where(
+      userView
+        ? inArray(courses.status, ["planned", "live", "paused"])
+        : undefined,
+    )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);

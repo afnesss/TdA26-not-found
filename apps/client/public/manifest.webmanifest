@@ -1,0 +1,12 @@
+{
+  "name": "Think Different Academy",
+  "short_name": "TDA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0070BB",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/blue_logo.png", "sizes": "400x400", "type": "image/png" }
+  ]
+}

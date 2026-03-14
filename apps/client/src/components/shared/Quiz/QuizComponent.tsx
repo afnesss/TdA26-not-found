@@ -158,7 +158,19 @@ const QuizComponentInner = ({
               : 'Zobrazit správné odpovědi'
           }
         >
-          {userState?.showCorrect ? 'Skrýt odpovědi' : 'Zobrazit odpovědi'}
+          {userState?.showCorrect ? (
+            <>
+              <span className='sm:hidden'>Skrýt odpovědi</span>
+              <span className='hidden sm:inline'>Skrýt správné odpovědi</span>
+            </>
+          ) : (
+            <>
+              <span className='sm:hidden'>Zobrazit odpovědi</span>
+              <span className='hidden sm:inline'>
+                Zobrazit správné odpovědi
+              </span>
+            </>
+          )}
         </Button>
       )}
 
@@ -684,7 +696,21 @@ const QuizComponentInner = ({
                   onClick={() => setShowCorrect((prev) => !prev)}
                   aria-label='Zobrazit správné odpovědi'
                 >
-                  {showCorrect ? 'Skrýt odpovědi' : 'Zobrazit správné odpovědi'}
+                  {showCorrect ? (
+                    <>
+                      <span className='sm:hidden'>Skrýt odpovědi</span>
+                      <span className='hidden sm:inline'>
+                        Skrýt správné odpovědi
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className='sm:hidden'>Zobrazit odpovědi</span>
+                      <span className='hidden sm:inline'>
+                        Zobrazit správné odpovědi
+                      </span>
+                    </>
+                  )}
                 </Button>
               </div>
             ) : (

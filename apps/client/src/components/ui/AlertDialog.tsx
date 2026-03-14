@@ -37,7 +37,7 @@ const DeleteConfirmDialog = ({
   confirmText = 'Smazat',
   isLoading = false,
 }: DeleteConfirmDialogProps) => {
-  const defaultTitle = `Odstranit ${itemType}?`
+  const defaultTitle = `Smazat ${itemType}?`
   const defaultDescription = itemName
     ? `Opravdu chcete smazat ${itemType} "${itemName}"?`
     : `Opravdu chcete smazat tento ${itemType}?`

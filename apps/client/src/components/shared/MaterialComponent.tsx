@@ -201,12 +201,7 @@ const MaterialCard = (props: MaterialCardProps) => {
   })
   const displayType =
     'isDraft' in props && props.isDraft ? formValues.type : material.type
-  const showLecturerCounters =
-    isDashboardPage &&
-    !isEditing &&
-    (props.courseStatus === 'live' ||
-      props.courseStatus === 'paused' ||
-      props.courseStatus === 'archived')
+  const showLecturerCounters = isDashboardPage && !isEditing
   const downloadUrl =
     material.type === 'file' && courseId && moduleId
       ? isDashboardPage

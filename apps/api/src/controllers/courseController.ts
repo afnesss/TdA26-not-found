@@ -167,10 +167,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
     }
 
-    if (!["live", "paused", "archived"].includes(existingCourse.status)) {
-      return res.status(404).json({ message: "Statistiky nejsou dostupné" });
-    }
-
     const courseModules = await db
       .select({
         uuid: modules.uuid,

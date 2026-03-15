@@ -17,7 +17,7 @@ const statusConfig: Record<
 > = {
   draft: {
     label: 'Návrh',
-    className: 'bg-accent-teal-light/20 text-[#2D8B6B]/70',
+    className: 'bg-accent-teal-light/20 text-[#2D8B6B]',
   },
   planned: {
     label: 'Naplánováno',

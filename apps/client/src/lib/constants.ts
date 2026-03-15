@@ -11,13 +11,13 @@ export type ColorVariant = (typeof colors)[number]
 
 export const colorStyles = {
   bg: {
-    secondary: 'from-secondary/30 to-secondary/60',
-    primary: 'from-primary/20 to-primary/50',
+    secondary: 'from-secondary/40 to-secondary/66',
+    primary: 'from-primary/28 to-primary/50',
     gray: 'from-gray-200/70 to-gray-300/90',
     'accent-teal-light': 'from-accent-teal-light/20 to-accent-teal-light/60',
     'accent-teal-light-subtle':
-      'from-accent-teal-light/15 to-accent-teal-light/30',
-    'accent-teal': 'from-accent-teal/20 to-accent-teal/60',
+      'from-accent-teal-light/15 to-accent-teal-light/40',
+    'accent-teal': 'from-accent-teal/30 to-accent-teal/60',
     'accent-teal-dark': 'from-accent-teal-dark/20 to-accent-teal-dark/60',
   },
   text: {
@@ -38,12 +38,12 @@ export const colorStyles = {
     gray: 'from-gray-200 via-gray-300 to-gray-300',
   },
   line: {
-    secondary: 'bg-secondary/70',
-    primary: 'bg-primary/40',
+    secondary: 'bg-secondary/80',
+    primary: 'bg-primary/50',
     gray: 'bg-gray-300',
     'accent-teal-light': 'bg-accent-teal-light/50',
     'accent-teal-light-subtle': 'bg-accent-teal-light/30',
-    'accent-teal': 'bg-accent-teal/60',
+    'accent-teal': 'bg-accent-teal/70',
     'accent-teal-dark': 'bg-accent-teal-dark/45',
   },
 }

@@ -95,12 +95,8 @@ const CourseComponent = (props: CourseCompProps) => {
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
   const isCourseLive = course.status === 'live'
-  const canShowAnalytics =
-    course.status === 'live' ||
-    course.status === 'paused' ||
-    course.status === 'archived'
-  const isAnalyticsMode =
-    type === 'edit' && Boolean(props.statisticsMode) && canShowAnalytics
+
+  const isAnalyticsMode = type === 'edit' && Boolean(props.statisticsMode)
 
   const {
     data: overviewCourse,
@@ -109,11 +105,7 @@ const CourseComponent = (props: CourseCompProps) => {
   } = useQuery<CourseDashboardAnalytics>({
     queryKey: ['course-dashboard-analytics', course.uuid],
     queryFn: () => getCourseDashboardAnalytics(course.uuid),
-    enabled:
-      isEditableCourseCard &&
-      isAnalyticsMode &&
-      !state.isEditing &&
-      canShowAnalytics,
+    enabled: isEditableCourseCard && isAnalyticsMode && !state.isEditing,
     staleTime: 1000 * 20,
   })
 
@@ -219,7 +211,7 @@ const CourseComponent = (props: CourseCompProps) => {
           course.status === 'live') &&
           'cursor-pointer',
         (course.status === 'archived' || course.status === 'draft') &&
-          'opacity-85',
+          'opacity-80',
       )}
       onClick={handleCardClick}
     >

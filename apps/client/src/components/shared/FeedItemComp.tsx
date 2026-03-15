@@ -105,7 +105,7 @@ const FeedItemComp = ({
                   (editedFeed.message === feedItem.message ||
                     editedFeed.message.trim() === '')
                 }
-                saveAriaLabel='Save feed post'
+                saveAriaLabel='Uložit příspěvek'
                 className='flex gap-1'
               />
             ) : (

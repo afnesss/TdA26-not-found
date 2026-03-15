@@ -248,7 +248,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       className='flex items-center gap-1 shrink-0'
                       onSave={saveEdit}
                       onCancel={cancelEdit}
-                      saveAriaLabel='Save material'
+                      saveAriaLabel='Uložit materiál'
                       saveDisabled={
                         isSubmitting ||
                         !!errors.name ||
@@ -281,17 +281,17 @@ const MaterialCard = (props: MaterialCardProps) => {
                       <EditBtn
                         icon={Edit}
                         onClick={startEdit}
-                        aria-label={`Edit material ${material.name}`}
+                        aria-label={`Upravit materiál ${material.name}`}
                       />
                       <DeleteConfirmDialog
                         trigger={
                           <EditBtn
                             type='delete'
-                            aria-label={`Delete material ${material.name}`}
+                            aria-label={`Smazat materiál ${material.name}`}
                           />
                         }
                         itemName={material.name}
-                        itemType='material'
+                        itemType='materiál'
                         onConfirm={() => {
                           if (props.onDelete) {
                             props.onDelete()
@@ -307,12 +307,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                           download={material.originalFilename || material.name}
                           target='_blank'
                           rel='noopener noreferrer'
-                          aria-label={`Download ${material.name}`}
+                          aria-label={`Stáhnout ${material.name}`}
                           className='relative'
                         >
                           <EditBtn
                             icon={Download}
-                            aria-label={`Download ${material.name}`}
+                            aria-label={`Stáhnout ${material.name}`}
                           />
                           {showLecturerCounters &&
                             (material.downloadCount ?? 0) >= 0 && (
@@ -339,8 +339,8 @@ const MaterialCard = (props: MaterialCardProps) => {
                               onClick={() => handleCopyLink(material.url)}
                               aria-label={
                                 copied
-                                  ? 'Link copied'
-                                  : 'Copy link to clipboard'
+                                  ? 'Odkaz zkopírován'
+                                  : 'Kopírovat odkaz do schránky'
                               }
                             />
                             {showLecturerCounters &&
@@ -361,12 +361,12 @@ const MaterialCard = (props: MaterialCardProps) => {
                               href={material.url}
                               target='_blank'
                               rel='noopener noreferrer'
-                              aria-label={`Open ${material.name} in new tab`}
+                              aria-label={`Otevřít ${material.name} v nové kartě`}
                               onClick={() => void runInteraction('open')}
                             >
                               <EditBtn
                                 icon={ExternalLink}
-                                aria-label={`Open ${material.name} in new tab`}
+                                aria-label={`Otevřít ${material.name} v nové kartě`}
                               />
                             </a>
                             {showLecturerCounters &&

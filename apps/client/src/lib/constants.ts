@@ -65,7 +65,7 @@ export const filterItems: { label: string; value: FilterIds }[] = [
 
 export const statusFilterItems: { label: string; value: CourseStatus }[] = [
   { label: 'Návrhy', value: 'draft' },
-  { label: 'Naplánováné', value: 'planned' },
+  { label: 'Naplánované', value: 'planned' },
   { label: 'Aktivní', value: 'live' },
   { label: 'Pozastavené', value: 'paused' },
   { label: 'Archiv', value: 'archived' },

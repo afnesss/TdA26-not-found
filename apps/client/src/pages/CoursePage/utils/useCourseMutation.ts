@@ -90,7 +90,7 @@ export const useCloneCourseMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
-      toast.success('Kurz byl zkopirován')
+      toast.success('Kurz byl zkopírován')
     },
     onMutate: async ({ source }) => {
       await queryClient.cancelQueries({ queryKey: ['courses'] })
@@ -119,7 +119,7 @@ export const useCloneCourseMutation = () => {
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při kopirování kurzu',
+        'Chyba při kopírování kurzu',
         queryClient,
         ['courses'],
         context?.previousCourses,

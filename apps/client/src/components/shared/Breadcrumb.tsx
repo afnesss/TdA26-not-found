@@ -32,7 +32,7 @@ const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
                 !item.path && 'hover:no-underline pointer-events-none',
               )}
               onClick={() => (item.path ? navigate(item.path) : undefined)}
-              aria-label={item.path ? `Navigate to ${item.label}` : item.label}
+              aria-label={item.path ? `Přejít na ${item.label}` : item.label}
             >
               <span className='flex sm:hidden'>
                 {truncateDescription(item.label, 15)}

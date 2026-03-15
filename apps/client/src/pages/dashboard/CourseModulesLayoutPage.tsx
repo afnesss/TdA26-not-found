@@ -308,7 +308,7 @@ const CourseModulesLayoutPage = () => {
                       className='rounded-xl border border-border/60 bg-muted/20 p-3'
                     >
                       <p className='text-sm font-semibold text-neutral-black'>
-                        Stav kurzu změněn na {event.status}
+                        Stav kurzu byl změněn na {event.status}
                       </p>
                       {event.note && (
                         <p className='text-xs text-muted-foreground mt-1'>

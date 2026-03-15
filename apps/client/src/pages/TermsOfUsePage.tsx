@@ -108,7 +108,7 @@ const TermsOfUsePage = () => {
 
           <LegalSection title='6. Změny podmínek'>
             <LegalText>
-              Vyhrazujeme si právo tyto podmínky kdykoliv upravit. Doporučujeme
+              Vyhrazujeme si právo tyto podmínky kdykoli upravit. Doporučujeme
               pravidelně kontrolovat tyto podmínky. Pokračováním v používání
               platformy po zveřejnění změn vyjadřujete souhlas s aktualizovanými
               podmínkami.
@@ -125,7 +125,7 @@ const TermsOfUsePage = () => {
           <LegalSection title='8. Kontaktní informace'>
             <LegalText>
               V případě dotazů týkajících se těchto podmínek nás prosím
-              kontaktujte na emailu: info@thinkdifferent.academy
+              kontaktujte na e-mailu: info@thinkdifferent.academy
             </LegalText>
           </LegalSection>
 

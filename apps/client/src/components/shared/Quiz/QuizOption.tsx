@@ -75,7 +75,7 @@ const QuizOption = ({
               e?.stopPropagation()
               onOptionRemove?.()
             }}
-            aria-label={`Remove option ${optIndex + 1}`}
+            aria-label={`Odstranit možnost ${optIndex + 1}`}
           />
         )}
       </div>
@@ -114,7 +114,7 @@ const QuizOption = ({
           disabled={isSubmitted}
           onCheckedChange={onAnswerChange}
           answerState={getAnswerState()}
-          aria-label={`Option ${optIndex + 1}: ${option}`}
+          aria-label={`Možnost ${optIndex + 1}: ${option}`}
           className={cn(mode === 'lecturer-preview' && 'cursor-default')}
         />
         <span className='text-xs sm:text-sm font-medium text-foreground'>

@@ -21,7 +21,7 @@ const NotFoundPage = () => {
             Hmm... Tato stránka nebyla nalezena
           </h2>
           <p className='text-muted-foreground text-lg'>
-            Stránka, kterou hledáte, neexistuje nebo byla odstraněná.
+            Stránka, kterou hledáte, neexistuje nebo byla odstraněna.
           </p>
         </div>
 

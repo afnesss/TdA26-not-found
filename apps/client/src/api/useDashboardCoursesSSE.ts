@@ -45,7 +45,7 @@ export const useDashboardCoursesSSE = () => {
         )
       })
 
-      toast.info(`Kurz ${startedCourse.name} automatický spuštěn`)
+      toast.info(`Kurz ${startedCourse.name} byl automaticky spuštěn`)
     })
 
     eventSource.addEventListener('material_interaction_updated', (event) => {

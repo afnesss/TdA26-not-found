@@ -122,7 +122,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='md:hidden shrink-0'
-                      aria-label={`Remove question ${qIndex + 1}`}
+                      aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />
                   </div>
 
@@ -158,7 +158,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='hidden md:flex shrink-0'
-                      aria-label={`Remove question ${qIndex + 1}`}
+                      aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />
                   </div>
                 </div>
@@ -278,7 +278,7 @@ const QuizQuestion = ({
           })}
         </div>
         {mode === 'lecturer' && hasOptionErrors && !questionError?.question && (
-          <p className='error-text mt-2'>Všechny možnosti musí být vyplněné</p>
+          <p className='error-text mt-2'>Všechny možnosti musí být vyplněny</p>
         )}
         {mode === 'lecturer' &&
           questionError?.correctIndices &&
@@ -292,10 +292,10 @@ const QuizQuestion = ({
           <Button
             variant='outline'
             size='sm'
-            onClick={onAddOption}
-            className='w-full md:w-auto'
-            aria-label={`Add new option to question ${qIndex + 1}`}
-          >
+          onClick={onAddOption}
+          className='w-full md:w-auto'
+          aria-label={`Přidat novou možnost k otázce ${qIndex + 1}`}
+        >
             <Plus size={16} />
             Přidat možnost
           </Button>

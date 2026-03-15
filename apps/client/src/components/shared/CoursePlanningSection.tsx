@@ -50,7 +50,7 @@ const CoursePlanningSection = ({
             onCancel={() => planning.onCancel()}
             saveDisabled={planning.saving || !!planning.error}
             cancelDisabled={planning.saving}
-            saveAriaLabel='Save course'
+            saveAriaLabel='Uložit kurz'
           />
         ) : (
           rightActions

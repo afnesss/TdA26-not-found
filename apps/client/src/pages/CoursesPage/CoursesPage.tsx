@@ -77,7 +77,7 @@ const CoursesPage = () => {
     value: 'live' | 'planned' | 'paused'
   }[] = [
     { label: 'Aktivní', value: 'live' },
-    { label: 'Naplanováné', value: 'planned' },
+    { label: 'Naplánované', value: 'planned' },
     { label: 'Pozastavené', value: 'paused' },
   ]
 

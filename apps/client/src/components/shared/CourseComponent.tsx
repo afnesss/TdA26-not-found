@@ -228,7 +228,7 @@ const CourseComponent = (props: CourseCompProps) => {
                     e?.stopPropagation()
                     props.onEdit()
                   }}
-                  aria-label={`View course ${course.name}`}
+                  aria-label={`Zobrazit kurz ${course.name}`}
                 />
               ) : (
                 <>
@@ -239,7 +239,7 @@ const CourseComponent = (props: CourseCompProps) => {
                         e?.stopPropagation()
                         props.onEdit()
                       }}
-                      aria-label={`Edit course ${course.name}`}
+                      aria-label={`Upravit kurz ${course.name}`}
                     />
                   ) : (
                     <EditBtn
@@ -248,7 +248,7 @@ const CourseComponent = (props: CourseCompProps) => {
                         e?.stopPropagation()
                         props.onEdit()
                       }}
-                      aria-label={`View course ${course.name}`}
+                      aria-label={`Zobrazit kurz ${course.name}`}
                     />
                   )}
                   <DeleteConfirmDialog
@@ -256,7 +256,7 @@ const CourseComponent = (props: CourseCompProps) => {
                       <EditBtn
                         type='delete'
                         onClick={(e) => e?.stopPropagation()}
-                        aria-label={`Delete course ${course.name}`}
+                        aria-label={`Smazat kurz ${course.name}`}
                       />
                     }
                     itemName={course.name}
@@ -277,7 +277,7 @@ const CourseComponent = (props: CourseCompProps) => {
               onCancel={cancelEdit}
               saveDisabled={state.saving || !!state.nameError}
               cancelDisabled={state.saving}
-              saveAriaLabel='Save course'
+              saveAriaLabel='Uložit kurz'
             />
           ))}
       </div>

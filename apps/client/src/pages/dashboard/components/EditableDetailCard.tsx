@@ -2,7 +2,7 @@ import Breadcrumb from '@/components/shared/Breadcrumb'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { colorStyles } from '@/lib/constants'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Children, type ReactNode } from 'react'
 import thinkIconUrl from '@/assets/t-idea-blue.svg'
@@ -14,7 +14,7 @@ type BreadcrumbItem = {
 
 type EditableDetailCardProps = {
   breadcrumbItems: BreadcrumbItem[]
-  gradient: keyof typeof colorStyles.gradient
+  gradient: keyof typeof colorStyles.line
 
   onNameChange?: (value: string) => void
   onDescriptionChange?: (value: string) => void
@@ -72,7 +72,7 @@ const EditableDetailCard = ({
   return (
     <Card className='border border-border/60 shadow-md bg-background rounded-xl cursor-auto'>
       {/* Gradient bar */}
-      <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[gradient]}`} />
+      <div className={cn(headerLineHeight, colorStyles.line[gradient])} />
 
       <div className='p-4 lg:p-6 -mt-2'>
         {/* Header */}

@@ -4,11 +4,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { MaterialSkeleton } from './MaterialSkeleton'
 import { QuizSkeleton } from './QuizSkeleton'
 import { FeedSkeleton } from './FeedSkeleton'
+import { headerLineHeight } from '@/lib/constants'
 
 export const DetailsContentSkeleton = () => {
   return (
     <Card className='mx-auto max-w-7xl bg-background rounded-xl shadow-md overflow-hidden'>
-      <div className='h-2 bg-gray-200 rounded-none' />
+      <div className={`${headerLineHeight} bg-gray-200 rounded-none`} />
 
       <div className='p-4 lg:p-6 -mt-2'>
         {/* Breadcrumb */}

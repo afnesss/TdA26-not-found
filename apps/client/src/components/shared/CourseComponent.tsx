@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { colorStyles, colors } from '@/lib/constants'
+import { colorStyles, headerLineHeight, type ColorVariant } from '@/lib/constants'
 import type {
   CourseDashboardAnalytics,
   CourseStatus,
@@ -20,7 +20,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useMediaQuery } from 'usehooks-ts'
 import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
@@ -59,9 +58,23 @@ type CourseCompProps = CourseClassic | CourseEdit
 
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
-  const isLg = useMediaQuery('(min-width: 1024px)')
   const navigate = useNavigate()
-  const courseColor = colors[index % (isLg ? 3 : 2)]
+  const courseColor: keyof typeof colorStyles.bg =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : 'gray'
+  const lineColor: keyof typeof colorStyles.line =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : 'gray'
 
   const [state, setState] = useState({
     isEditing: type === 'edit' && 'isDraft' in props ? props.isDraft : false,
@@ -73,6 +86,7 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
+  const isCourseLive = course.status === 'live'
   const canShowAnalytics =
     course.status === 'live' ||
     course.status === 'paused' ||
@@ -196,19 +210,11 @@ const CourseComponent = (props: CourseCompProps) => {
         ((type === 'edit' && !props.planning?.isEditing) ||
           course.status === 'live') &&
           'cursor-pointer',
-        (course.status === 'draft' || course.status === 'archived') &&
-          'opacity-70',
+        course.status === 'archived' && 'opacity-70',
       )}
       onClick={handleCardClick}
     >
-      <div
-        className={cn(
-          'h-2 bg-linear-to-r',
-          colorStyles.gradient[courseColor],
-          course.status === 'live' && 'animate-pulse',
-        )}
-      />
-
+      <div className={cn(headerLineHeight, colorStyles.line[lineColor])} />
       <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
         <CourseStateBadge status={course.status} />
         {type === 'edit' &&
@@ -344,8 +350,9 @@ const CourseComponent = (props: CourseCompProps) => {
                   'bg-linear-to-br',
                   colorStyles.bg[courseColor],
                   colorStyles.text[courseColor],
+                  !isCourseLive && 'disabled:opacity-100',
                 )}
-                disabled={course.status !== 'live'}
+                disabled={!isCourseLive}
               >
                 <span className='font-semibold'>Zobrazit</span>
               </Button>
@@ -357,20 +364,20 @@ const CourseComponent = (props: CourseCompProps) => {
               {!('isDraft' in props && props.isDraft) &&
                 !state.isEditing &&
                 isAnalyticsMode && (
-                <AnalyticsSection
-                  score={averageQuizScore}
-                  completions={overviewCompletions}
-                  modules={overviewModulesCount}
-                  activeModules={overviewActiveModulesCount}
-                  materials={overviewMaterialsCount}
-                  quizzes={overviewQuizzesCount}
-                  materialDownloads={overviewDownloadCount}
-                  materialCopies={overviewCopyCount}
-                  materialOpens={overviewOpenCount}
-                  attention={attentionParts}
-                  isLoading={overviewLoading}
-                  isError={overviewError}
-                />
+                  <AnalyticsSection
+                    score={averageQuizScore}
+                    completions={overviewCompletions}
+                    modules={overviewModulesCount}
+                    activeModules={overviewActiveModulesCount}
+                    materials={overviewMaterialsCount}
+                    quizzes={overviewQuizzesCount}
+                    materialDownloads={overviewDownloadCount}
+                    materialCopies={overviewCopyCount}
+                    materialOpens={overviewOpenCount}
+                    attention={attentionParts}
+                    isLoading={overviewLoading}
+                    isError={overviewError}
+                  />
                 )}
               {!isAnalyticsMode && (
                 <CoursePlanningSection

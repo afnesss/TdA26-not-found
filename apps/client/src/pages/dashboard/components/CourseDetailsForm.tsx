@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { colorStyles } from '@/lib/constants'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import {
   CourseUpdateRequestSchema,
   type CourseSummary,
@@ -66,9 +66,7 @@ const CourseDetailsForm = ({
       key={selectedCourse.uuid}
       className='bg-background rounded-xl shadow-md hover:shadow-md hover:scale-100 hover:translate-0 overflow-hidden cursor-auto'
     >
-      <div
-        className={`h-2 bg-linear-to-r ${colorStyles.gradient['accent-teal']}`}
-      />
+      <div className={cn(headerLineHeight, colorStyles.line['accent-teal'])} />
       <div className='p-4 lg:p-6 -mt-2'>
         <div className='flex justify-between'>
           <div className='flex flex-col'>

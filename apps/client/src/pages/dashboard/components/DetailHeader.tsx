@@ -1,6 +1,6 @@
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { colorStyles } from '@/lib/constants'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { Plus, type LucideIcon } from 'lucide-react'
 import Breadcrumb from '@/components/shared/Breadcrumb'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,7 @@ type DetailHeaderProps = {
   buttonText: string
   buttonIcon?: LucideIcon
   onButtonClick: () => void
-  gradient?: 'accent-teal' | 'accent-teal-light' | 'accent-teal-dark'
+  gradient?: keyof typeof colorStyles.line
   icon?: string
 }
 
@@ -24,7 +24,7 @@ const DetailHeader = ({
 }: DetailHeaderProps) => {
   return (
     <div className='bg-background rounded-xl shadow-sm overflow-hidden'>
-      <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[gradient]}`} />
+      <div className={cn(headerLineHeight, colorStyles.line[gradient])} />
 
       <div className='flex flex-row justify-between items-center gap-3 p-3 sm:p-4 lg:p-5 -mt-1'>
         <div className='flex flex-col gap-1'>
@@ -46,7 +46,12 @@ const DetailHeader = ({
             )}
           </div>
         </div>
-        <Button variant='primary' size='grid' onClick={onButtonClick} aria-label={buttonText}>
+        <Button
+          variant='primary'
+          size='grid'
+          onClick={onButtonClick}
+          aria-label={buttonText}
+        >
           {Icon ? (
             <Icon className='w-5 h-5 block md:hidden' aria-hidden='true' />
           ) : (

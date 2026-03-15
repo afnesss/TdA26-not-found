@@ -2,6 +2,7 @@ import Breadcrumb from '@/components/shared/Breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import iconIdea from '@/assets/t-idea-blue.svg'
+import { headerLineHeight } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
@@ -78,7 +79,12 @@ const SummarySection = ({
           cardClassName,
         )}
       >
-        <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
+        <div
+          className={cn(
+            'bg-linear-to-r from-secondary to-accent-teal-light',
+            headerLineHeight,
+          )}
+        />
 
         <div className='p-4 lg:p-6 -mt-2 gap-1 sm:gap-2 flex flex-col'>
           <div className='flex gap-1 justify-between '>

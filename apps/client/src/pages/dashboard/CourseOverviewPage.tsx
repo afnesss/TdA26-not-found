@@ -249,13 +249,16 @@ const CourseModulesOverviewPage = () => {
         ? 'accent-teal'
         : course.status === 'planned'
           ? 'primary'
-          : 'gray'
+          : course.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
+  const statusActionColor = courseGradientColor
 
   const statusActions = (
     <StatusActionButtons
       currentStatus={course.status}
       onStatusChange={handleCourseStatusChange}
-      courseColor={courseGradientColor}
+      courseColor={statusActionColor}
       className='justify-end shrink-0'
       buttonClassName='md:h-9'
       labelClassName='text-xs md:text-sm'

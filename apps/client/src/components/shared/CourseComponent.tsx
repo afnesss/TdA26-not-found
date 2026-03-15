@@ -8,7 +8,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { colorStyles, headerLineHeight, type ColorVariant } from '@/lib/constants'
+import {
+  colorStyles,
+  headerLineHeight,
+  type ColorVariant,
+} from '@/lib/constants'
 import type {
   CourseDashboardAnalytics,
   CourseStatus,
@@ -66,7 +70,9 @@ const CourseComponent = (props: CourseCompProps) => {
         ? 'accent-teal'
         : course.status === 'planned'
           ? 'primary'
-          : 'gray'
+          : course.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
   const lineColor: keyof typeof colorStyles.line =
     course.status === 'live'
       ? 'secondary'
@@ -74,7 +80,9 @@ const CourseComponent = (props: CourseCompProps) => {
         ? 'accent-teal'
         : course.status === 'planned'
           ? 'primary'
-          : 'gray'
+          : course.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
 
   const [state, setState] = useState({
     isEditing: type === 'edit' && 'isDraft' in props ? props.isDraft : false,
@@ -210,7 +218,8 @@ const CourseComponent = (props: CourseCompProps) => {
         ((type === 'edit' && !props.planning?.isEditing) ||
           course.status === 'live') &&
           'cursor-pointer',
-        course.status === 'archived' && 'opacity-70',
+        (course.status === 'archived' || course.status === 'draft') &&
+          'opacity-85',
       )}
       onClick={handleCardClick}
     >

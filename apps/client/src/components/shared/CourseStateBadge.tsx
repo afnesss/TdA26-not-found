@@ -17,7 +17,7 @@ const statusConfig: Record<
 > = {
   draft: {
     label: 'Návrh',
-    className: 'bg-muted text-muted-foreground ',
+    className: 'bg-accent-teal-light/20 text-[#2D8B6B]/70',
   },
   planned: {
     label: 'Naplánováno',
@@ -49,4 +49,3 @@ export function CourseStateBadge({ status, className }: CourseStateBadgeProps) {
     </Badge>
   )
 }
-

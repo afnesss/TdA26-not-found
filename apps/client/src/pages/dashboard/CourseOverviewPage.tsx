@@ -33,6 +33,7 @@ import { Label } from '@/components/ui/label'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import DashboardModeTabs from './components/DashboardModeTabs'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { ModulesSectionActions } from './components/ModuleSectionActions'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -101,7 +102,7 @@ const CourseModulesOverviewPage = () => {
     if (!course) return
     const prevStatus = prevCourseStatusRef.current
     if (prevStatus && prevStatus === 'planned' && course.status === 'live') {
-      toast.info(`Kurz ${course.name} automatický spuštěn`)
+      toast.info(`Kurz ${course.name} byl automaticky spuštěn`)
     }
     prevCourseStatusRef.current = course.status
   }, [course])
@@ -223,21 +224,15 @@ const CourseModulesOverviewPage = () => {
   const showPlanningForHeader =
     course.status === 'planned' || planning.isEditing
   const showPlanningOnSeparateRow = !isSm && showPlanningForHeader
-  const analyticsAllowed =
-    course.status === 'live' ||
-    course.status === 'paused' ||
-    course.status === 'archived'
-  const showContentTab =
-    course.status !== 'draft' && course.status !== 'planned'
+
+  const disableDraftActionsInAnalytics =
+    course.status === 'draft' && viewMode === 'analytics'
+
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
     [
-      ...(showContentTab
-        ? [{ value: 'content' as const, label: 'Obsah' }]
-        : []),
-      ...(analyticsAllowed
-        ? [{ value: 'analytics' as const, label: 'Statistiky' }]
-        : []),
+      ...[{ value: 'content' as const, label: 'Obsah' }],
+      ...[{ value: 'analytics' as const, label: 'Statistiky' }],
     ]
   const showPlanningInHeader =
     !showPlanningOnSeparateRow && showPlanningForHeader
@@ -341,7 +336,7 @@ const CourseModulesOverviewPage = () => {
         }
       />
 
-      {viewMode === 'content' || !analyticsAllowed ? (
+      {viewMode === 'content' ? (
         <ModulesSection
           courseId={courseId}
           modules={modules ?? []}
@@ -350,6 +345,7 @@ const CourseModulesOverviewPage = () => {
           setDraftModule={setDraftModule}
           previewMode={previewMode}
           isReorderMode={isReorderMode}
+          disableActions={disableDraftActionsInAnalytics}
           onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
           onAddModule={handleAddModuleDraft}
           onOpenModule={handleOpenModule}
@@ -376,13 +372,25 @@ const CourseModulesOverviewPage = () => {
                 Moduly kurzu
               </UnderlinedText>
             </Label>
-            {overviewTabs.length > 1 && (
-              <DashboardModeTabs
-                value={viewMode}
-                tabs={overviewTabs}
-                onChange={setViewMode}
-              />
-            )}
+            <ModulesSectionActions
+              courseStatus={course.status}
+              previewMode={previewMode}
+              modulesLength={modules?.length ?? 0}
+              disableActions={disableDraftActionsInAnalytics}
+              isReorderMode={isReorderMode}
+              draftModule={draftModule}
+              onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
+              onAddModule={handleAddModuleDraft}
+              headerRightSlot={
+                overviewTabs.length > 1 ? (
+                  <DashboardModeTabs
+                    value={viewMode}
+                    tabs={overviewTabs}
+                    onChange={setViewMode}
+                  />
+                ) : undefined
+              }
+            />
           </div>
           {analyticsModules.length === 0 ? (
             <StateComp

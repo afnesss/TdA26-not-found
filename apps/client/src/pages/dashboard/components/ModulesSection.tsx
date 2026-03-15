@@ -11,6 +11,7 @@ import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
 import { useEffect, useRef, type ReactNode } from 'react'
+import { ModulesSectionActions } from './ModuleSectionActions'
 
 interface ModulesSectionProps {
   courseId: string
@@ -20,6 +21,7 @@ interface ModulesSectionProps {
   setDraftModule: React.Dispatch<React.SetStateAction<DraftModuleForm | null>>
   previewMode: boolean
   isReorderMode: boolean
+  disableActions?: boolean
   onToggleReorderMode: () => void
   onAddModule: () => void
   onOpenModule: (moduleId: string) => void
@@ -42,6 +44,7 @@ const ModulesSection = ({
   setDraftModule,
   previewMode,
   isReorderMode,
+  disableActions = false,
   onToggleReorderMode,
   onAddModule,
   onOpenModule,
@@ -96,38 +99,17 @@ const ModulesSection = ({
           </UnderlinedText>
         </Label>
 
-        <div className='flex items-center gap-2'>
-          {headerRightSlot}
-          {courseStatus === 'draft' && !previewMode && (
-            <Button
-              variant={'outline'}
-              size='sm'
-              disabled={modules.length === 0}
-              onClick={onToggleReorderMode}
-              className='rounded-full'
-            >
-              {isReorderMode ? (
-                <>
-                  <X className='w-4 h-4' />
-                  Zrušit
-                </>
-              ) : (
-                <>
-                  <Menu className='w-4 h-4' />
-                  Přeskládat
-                </>
-              )}
-            </Button>
-          )}
-          {!previewMode && (
-            <DashboardAddButton
-              label='Přidat modul'
-              className='rounded-full'
-              onClick={onAddModule}
-              disabled={Boolean(draftModule) || isReorderMode}
-            />
-          )}
-        </div>
+        <ModulesSectionActions
+          courseStatus={courseStatus}
+          previewMode={previewMode}
+          modulesLength={modules.length}
+          disableActions={disableActions}
+          isReorderMode={isReorderMode}
+          draftModule={draftModule}
+          onToggleReorderMode={onToggleReorderMode}
+          onAddModule={onAddModule}
+          headerRightSlot={headerRightSlot}
+        />
       </div>
 
       {isEmpty ? (

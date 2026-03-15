@@ -242,11 +242,20 @@ const CourseModulesOverviewPage = () => {
   const showPlanningInHeader =
     !showPlanningOnSeparateRow && showPlanningForHeader
   const showStatusActions = course.status !== 'archived'
+  const courseGradientColor =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : 'gray'
+
   const statusActions = (
     <StatusActionButtons
       currentStatus={course.status}
       onStatusChange={handleCourseStatusChange}
-      courseColor={'accent-teal-dark'}
+      courseColor={courseGradientColor}
       className='justify-end shrink-0'
       buttonClassName='md:h-9'
       labelClassName='text-xs md:text-sm'
@@ -259,7 +268,7 @@ const CourseModulesOverviewPage = () => {
   return (
     <>
       <EditableDetailCard
-        gradient={'accent-teal-dark'}
+        gradient={courseGradientColor}
         breadcrumbItems={[
           { label: 'Správa kurzů', path: '/dashboard' },
           { label: currentCourseName },

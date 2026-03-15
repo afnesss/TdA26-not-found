@@ -21,15 +21,15 @@ const statusConfig: Record<
   },
   planned: {
     label: 'Naplánováno',
-    className: 'bg-primary/20 text-primary ',
+    className: 'bg-primary/20 text-primary',
   },
   live: {
     label: 'Aktivní',
-    className: 'bg-secondary text-secondary-foreground ',
+    className: 'bg-secondary/40 text-[#2D8B6B]',
   },
   paused: {
     label: 'Pozastaveno',
-    className: 'bg-accent-teal/20 text-accent-teal',
+    className: 'bg-accent-teal/30 text-[#246969]',
   },
   archived: {
     label: 'Archivováno',
@@ -49,3 +49,4 @@ export function CourseStateBadge({ status, className }: CourseStateBadgeProps) {
     </Badge>
   )
 }
+

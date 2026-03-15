@@ -28,8 +28,8 @@ const ModuleVisibilityActionButton = ({
         !isActive &&
           cn(
             'bg-linear-to-br font-medium text-xs md:text-sm',
-            colorStyles.bg['accent-teal-light'],
-            colorStyles.text['accent-teal-light'],
+            colorStyles.bg.secondary,
+            colorStyles.text.secondary,
           ),
         className,
       )}

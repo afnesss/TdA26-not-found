@@ -4,9 +4,10 @@ import FeedItemComp from '@/components/shared/FeedItemComp'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import UnderlinedText from '@/components/shared/UnderlinedText'
 import { colorStyles } from '@/lib/constants'
 import type { CourseDetail, FeedItem, StatusHistoryEvent } from '@/lib/schemas'
-import { cn } from '@/lib/utils'
 import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
@@ -135,9 +136,14 @@ const CourseModulesLayoutPage = () => {
 
   const previewMode = course.status !== 'draft'
   const canManageFeed = course.status === 'draft' || course.status === 'live'
-  const courseIndexColor: keyof typeof colorStyles.gradient = isModuleDetailPage
-    ? 'accent-teal'
-    : 'accent-teal-dark'
+  const courseIndexColor: keyof typeof colorStyles.line =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : 'gray'
 
   const handleAddPost = () => {
     if (!canManageFeed || draftPost) return
@@ -171,49 +177,34 @@ const CourseModulesLayoutPage = () => {
           }}
         />
 
+        <div className='flex items-center justify-between gap-3'>
+          <Label className='font-bold text-lg md:text-xl text-neutral-black'>
+            <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
+              {sideTab === 'feed' ? 'Oznámení' : 'Historie'}
+            </UnderlinedText>
+          </Label>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              className='rounded-xl'
+              onClick={() => setSideTab(sideTab === 'feed' ? 'history' : 'feed')}
+            >
+              {sideTab === 'feed' ? 'Historie' : 'Oznámení'}
+            </Button>
+            {canManageFeed && sideTab === 'feed' && (
+              <DashboardAddButton
+                label='Přidat příspěvek'
+                className='h-fit'
+                onClick={handleAddPost}
+                disabled={Boolean(draftPost)}
+              />
+            )}
+          </div>
+        </div>
+
         <Card className='border border-border/60 shadow-md bg-background'>
-          <div
-            className={`h-2 bg-linear-to-r ${colorStyles.gradient[courseIndexColor]}`}
-          />
           <div className='p-3 md:p-5 space-y-4'>
-            <div className='flex justify-between gap-3'>
-              <div className='flex gap-2'>
-                <Button
-                  variant='filter'
-                  size='sm'
-                  className={cn(
-                    'whitespace-nowrap rounded-xl',
-                    sideTab === 'feed'
-                      ? 'bg-primary text-background shadow-md'
-                      : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
-                  )}
-                  onClick={() => setSideTab('feed')}
-                >
-                  Oznámení
-                </Button>
-                <Button
-                  variant='filter'
-                  size='sm'
-                  className={cn(
-                    'whitespace-nowrap rounded-xl',
-                    sideTab === 'history'
-                      ? 'bg-primary text-background shadow-md'
-                      : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
-                  )}
-                  onClick={() => setSideTab('history')}
-                >
-                  Historie
-                </Button>
-              </div>
-              {canManageFeed && sideTab === 'feed' && (
-                <DashboardAddButton
-                  label={'Přidat příspěvek'}
-                  className='h-fit'
-                  onClick={handleAddPost}
-                  disabled={Boolean(draftPost)}
-                />
-              )}
-            </div>
 
             {sideTab === 'feed' && !hasCourseError ? (
               <div className='space-y-3'>

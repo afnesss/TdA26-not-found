@@ -52,7 +52,7 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
     variant='secondary'
     className={cn(
       status === 'active'
-        ? 'bg-secondary/50 text-secondary-foreground'
+        ? 'bg-secondary/40 text-[#2D8B6B]'
         : 'bg-muted text-muted-foreground',
     )}
   >
@@ -352,6 +352,16 @@ const CourseModuleDetailPage = () => {
   }
 
   const canEditQuizzes = course && course.status === 'draft'
+  const moduleGradient =
+    selectedModule?.status === 'active'
+      ? course?.status === 'live'
+        ? 'secondary'
+        : course?.status === 'paused'
+          ? 'accent-teal'
+          : course?.status === 'planned'
+            ? 'primary'
+            : 'gray'
+      : 'gray'
 
   return (
     <div className='space-y-4'>
@@ -379,7 +389,7 @@ const CourseModuleDetailPage = () => {
         <DetailsContentSkeleton />
       ) : (
         <EditableDetailCard
-          gradient='accent-teal'
+          gradient={moduleGradient}
           breadcrumbItems={[
             { label: 'Správa kurzů', path: '/dashboard' },
             {

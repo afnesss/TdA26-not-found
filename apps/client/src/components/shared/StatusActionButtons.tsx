@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils'
 import { colorStyles } from '@/lib/constants'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { useMediaQuery } from 'usehooks-ts'
 
 interface StatusActionButtonProps {
   currentStatus: CourseStatus
@@ -35,12 +36,14 @@ export function StatusActionButtons({
   onCopyAsDraft,
   hideCopyAsDraft = false,
 }: StatusActionButtonProps) {
+  const isMd = useMediaQuery('(min-width: 768px)')
   const getActions = () => {
     switch (currentStatus) {
       case 'draft':
         return [
           {
             label: 'Naplánovat',
+            title: 'Naplánovat',
             icon: Calendar,
             status: 'planned' as CourseStatus,
             variant: 'outline' as const,
@@ -48,6 +51,7 @@ export function StatusActionButtons({
           },
           {
             label: 'Spustit',
+            title: 'Spustit',
             icon: Play,
             status: 'live' as CourseStatus,
             variant: 'grid' as const,
@@ -58,6 +62,7 @@ export function StatusActionButtons({
         return [
           {
             label: 'Do návrhu',
+            title: 'Do návrhu',
             icon: RotateCcw,
             status: 'draft' as CourseStatus,
             variant: 'outline' as const,
@@ -65,6 +70,7 @@ export function StatusActionButtons({
           },
           {
             label: 'Spustit',
+            title: 'Spustit',
             icon: Play,
             status: 'live' as CourseStatus,
             variant: 'grid' as const,
@@ -75,6 +81,7 @@ export function StatusActionButtons({
         return [
           {
             label: 'Archivovat',
+            title: 'Archivovat',
             icon: Archive,
             status: 'archived' as CourseStatus,
             variant: 'outline' as const,
@@ -82,6 +89,7 @@ export function StatusActionButtons({
           },
           {
             label: 'Pozastavit',
+            title: 'Pozastavit',
             icon: Pause,
             status: 'paused' as CourseStatus,
             variant: 'grid' as const,
@@ -91,7 +99,14 @@ export function StatusActionButtons({
       case 'paused':
         return [
           {
-            label: 'Archivovat',
+            title: 'Naplánovat',
+            icon: Calendar,
+            status: 'planned' as CourseStatus,
+            variant: 'outline' as const,
+            primary: false,
+          },
+          {
+            title: 'Archivovat',
             icon: Archive,
             status: 'archived' as CourseStatus,
             variant: 'outline' as const,
@@ -99,6 +114,7 @@ export function StatusActionButtons({
           },
           {
             label: 'Obnovit',
+            title: 'Obnovit',
             icon: Play,
             status: 'live' as CourseStatus,
             variant: 'grid' as const,
@@ -110,6 +126,7 @@ export function StatusActionButtons({
         return [
           {
             label: 'Kopírovat jako návrh',
+            title: 'Kopírovat jako návrh',
             mobileLabel: 'Kopírovat',
             icon: FilePlus,
             status: 'draft' as CourseStatus,
@@ -157,18 +174,26 @@ export function StatusActionButtons({
             className={cn(
               'h-8 px-3',
               gridColorClasses,
-              !action.primary && 'hover:bg-muted',
+              !action.primary && 'hover:bg-muted text-muted-foreground',
               buttonClassName,
+              !action.label && 'gap-0',
             )}
+            title={!action.label || !isMd ? action.title : ''}
           >
-            <Icon className={cn('w-3.5 h-3.5 md:mr-1', iconClassName)} />
+            <Icon
+              className={cn(
+                'w-3.5 h-3.5',
+                iconClassName,
+                action.label && 'md:mr-1',
+              )}
+            />
             <span
               className={cn(
                 'hidden md:inline text-xs font-medium',
                 labelClassName,
               )}
             >
-              {action.label}
+              {action.label ?? ''}
             </span>
           </Button>
         )

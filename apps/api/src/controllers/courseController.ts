@@ -731,7 +731,7 @@ const validateCourseUpdate = ({
     draft: ["planned", "live"],
     planned: ["draft", "live"],
     live: ["paused", "archived"],
-    paused: ["live", "archived"],
+    paused: ["planned", "live", "archived"],
     archived: [],
   };
 

@@ -1,6 +1,5 @@
 import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
 import StateComp from '@/components/shared/StateComp'
-import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { ModuleDetail } from '@/lib/schemas/module'
@@ -10,8 +9,7 @@ import DashboardAddButton from './DashboardAddButton'
 import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
-import { useEffect, useRef, type ReactNode } from 'react'
-import { ModulesSectionActions } from './ModuleSectionActions'
+import { useEffect, useRef } from 'react'
 
 interface ModulesSectionProps {
   courseId: string
@@ -33,7 +31,7 @@ interface ModulesSectionProps {
   ) => void
   isCreating: boolean
   isToggleVisibilityPending: boolean
-  headerRightSlot?: ReactNode
+  lastActiveModuleUuid?: string
 }
 
 const ModulesSection = ({
@@ -53,7 +51,7 @@ const ModulesSection = ({
   onToggleVisibility,
   isCreating,
   isToggleVisibilityPending,
-  headerRightSlot,
+  lastActiveModuleUuid,
 }: ModulesSectionProps) => {
   const modulesList = modules
   const canToggleModuleVisibility = courseStatus === 'live'
@@ -92,26 +90,6 @@ const ModulesSection = ({
 
   return (
     <section className='space-y-4'>
-      <div className='flex flex-wrap items-center justify-between gap-3'>
-        <Label className='font-bold text-lg md:text-xl text-neutral-black'>
-          <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-            Moduly kurzu
-          </UnderlinedText>
-        </Label>
-
-        <ModulesSectionActions
-          courseStatus={courseStatus}
-          previewMode={previewMode}
-          modulesLength={modules.length}
-          disableActions={disableActions}
-          isReorderMode={isReorderMode}
-          draftModule={draftModule}
-          onToggleReorderMode={onToggleReorderMode}
-          onAddModule={onAddModule}
-          headerRightSlot={headerRightSlot}
-        />
-      </div>
-
       {isEmpty ? (
         <StateComp
           type='no-content'
@@ -134,6 +112,7 @@ const ModulesSection = ({
                   isToggleVisibilityPending={isToggleVisibilityPending}
                   onDeleteModule={isReorderMode ? undefined : onDeleteModule}
                   onToggleModuleVisibility={onToggleVisibility}
+                  lastActiveModuleUuid={lastActiveModuleUuid}
                   canDragAndDrop={canDragAndDrop}
                   DraggableCardComponent={DraggableModuleCard}
                 />
@@ -153,6 +132,7 @@ const ModulesSection = ({
                 onOpenModule={onOpenModule}
                 onDeleteModule={isReorderMode ? undefined : onDeleteModule}
                 onToggleModuleVisibility={onToggleVisibility}
+                lastActiveModuleUuid={lastActiveModuleUuid}
               />
 
               <div ref={draftCardRef}>

@@ -1,4 +1,5 @@
 ﻿import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
@@ -69,6 +70,8 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   }
   alwaysShowActions?: boolean
   isDragging?: boolean
+  lastActiveModuleUuid?: string
+  userMode?: boolean
 }
 
 type DraftModuleCardProps = BaseModuleCardProps & {
@@ -170,6 +173,8 @@ const ModuleCard = (props: ModuleCardProps) => {
     gripHandleProps,
     alwaysShowActions,
     isDragging,
+    lastActiveModuleUuid,
+    userMode = false,
   } = props
 
   const isWholeCardDragEnabled = Boolean(gripHandleProps)
@@ -178,6 +183,9 @@ const ModuleCard = (props: ModuleCardProps) => {
       ? { ...gripHandleProps.attributes, ...gripHandleProps.listeners }
       : {}
   const isAnalyticsMode = Boolean(analyticsMode)
+
+  const isLastActiveModule =
+    module.status === 'active' && lastActiveModuleUuid === module.uuid
 
   const moduleQuizAttempts = module.quizzes.reduce(
     (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
@@ -276,11 +284,13 @@ const ModuleCard = (props: ModuleCardProps) => {
             <span
               className={cn(
                 'inline-flex items-center justify-center w-6 h-6 rounded-full text-foreground font-medium shrink-0',
-                courseStatus !== 'live'
+                userMode
                   ? 'bg-primary/30'
-                  : module.status === 'active'
-                    ? 'bg-secondary/60'
-                    : 'bg-muted-foreground/20',
+                  : courseStatus !== 'live'
+                    ? 'bg-primary/30'
+                    : module.status === 'active'
+                      ? 'bg-secondary/60'
+                      : 'bg-muted-foreground/20',
               )}
             >
               {moduleIndex}
@@ -539,7 +549,15 @@ const ModuleCard = (props: ModuleCardProps) => {
                         e.stopPropagation()
                         onToggleModuleVisibility(module.uuid, module.status)
                       }}
-                      disabled={Boolean(isToggleVisibilityPending)}
+                      disabled={
+                        Boolean(isToggleVisibilityPending) ||
+                        (module.status === 'active' && !isLastActiveModule)
+                      }
+                      title={
+                        module.status === 'active' && !isLastActiveModule
+                          ? 'Lze skrýt pouze poslední aktivní modul'
+                          : ''
+                      }
                     />
                   )}
                 </div>

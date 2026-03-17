@@ -194,6 +194,26 @@ export async function updateModule(req: Request, res: Response) {
       return res.status(400).json({ message: "Neplatný status modulu" });
     }
 
+    if (status === "passive" && existingModule.status === "active") {
+      const activeModules = await db
+        .select({ uuid: modules.uuid, position: modules.position })
+        .from(modules)
+        .where(
+          and(eq(modules.status, "active"), eq(modules.courseId, courseId)),
+        )
+        .orderBy(desc(modules.position));
+
+      const lastActiveModuleId = activeModules[0];
+
+      if (
+        !lastActiveModuleId ||
+        lastActiveModuleId.uuid !== existingModule.uuid
+      ) {
+        return res.status(400).json({
+          message: "Lze skrýt pouze poslední aktivní modul v kurzu",
+        });
+      }
+    }
     const [updatedModule] = await db
       .update(modules)
       .set({
@@ -330,4 +350,3 @@ export async function reorderModules(req: Request, res: Response) {
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
-

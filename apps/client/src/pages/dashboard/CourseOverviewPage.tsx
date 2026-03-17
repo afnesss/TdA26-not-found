@@ -228,6 +228,10 @@ const CourseModulesOverviewPage = () => {
   const disableDraftActionsInAnalytics =
     course.status === 'draft' && viewMode === 'analytics'
 
+  const lastActiveModuleUuid = modules
+    ?.filter((m) => m.status === 'active')
+    .at(-1)?.uuid
+
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
     [
@@ -336,6 +340,33 @@ const CourseModulesOverviewPage = () => {
         }
       />
 
+      <div className='flex flex-wrap items-center justify-between gap-3'>
+        <Label className='font-bold text-lg md:text-xl text-neutral-black'>
+          <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
+            Moduly kurzu
+          </UnderlinedText>
+        </Label>
+        <ModulesSectionActions
+          courseStatus={course.status}
+          previewMode={previewMode}
+          modulesLength={modules?.length ?? 0}
+          disableActions={disableDraftActionsInAnalytics}
+          isReorderMode={isReorderMode}
+          draftModule={draftModule}
+          onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
+          onAddModule={handleAddModuleDraft}
+          headerRightSlot={
+            overviewTabs.length > 1 ? (
+              <DashboardModeTabs
+                value={viewMode}
+                tabs={overviewTabs}
+                onChange={setViewMode}
+              />
+            ) : undefined
+          }
+        />
+      </div>
+
       {viewMode === 'content' ? (
         <ModulesSection
           courseId={courseId}
@@ -354,44 +385,10 @@ const CourseModulesOverviewPage = () => {
           onToggleVisibility={handleToggleModuleVisibility}
           isCreating={createModulePending}
           isToggleVisibilityPending={togglePending}
-          headerRightSlot={
-            overviewTabs.length > 1 ? (
-              <DashboardModeTabs
-                value={viewMode}
-                tabs={overviewTabs}
-                onChange={setViewMode}
-              />
-            ) : undefined
-          }
+          lastActiveModuleUuid={lastActiveModuleUuid}
         />
       ) : (
         <section className='space-y-4'>
-          <div className='flex flex-wrap items-center justify-between gap-3'>
-            <Label className='font-bold text-lg md:text-xl text-neutral-black'>
-              <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-                Moduly kurzu
-              </UnderlinedText>
-            </Label>
-            <ModulesSectionActions
-              courseStatus={course.status}
-              previewMode={previewMode}
-              modulesLength={modules?.length ?? 0}
-              disableActions={disableDraftActionsInAnalytics}
-              isReorderMode={isReorderMode}
-              draftModule={draftModule}
-              onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
-              onAddModule={handleAddModuleDraft}
-              headerRightSlot={
-                overviewTabs.length > 1 ? (
-                  <DashboardModeTabs
-                    value={viewMode}
-                    tabs={overviewTabs}
-                    onChange={setViewMode}
-                  />
-                ) : undefined
-              }
-            />
-          </div>
           {analyticsModules.length === 0 ? (
             <StateComp
               type='no-content'
@@ -409,6 +406,7 @@ const CourseModulesOverviewPage = () => {
                   courseStatus={course.status}
                   onOpenModule={handleOpenModule}
                   analyticsMode
+                  lastActiveModuleUuid={lastActiveModuleUuid}
                 />
               ))}
             </div>

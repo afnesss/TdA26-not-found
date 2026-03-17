@@ -197,6 +197,10 @@ const CourseModuleDetailPage = () => {
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const isModuleNotFound = moduleQueryError?.status === 404
 
+  const isLastActiveModule =
+    modules.filter((m) => m.status === 'active').at(-1)?.uuid ===
+    selectedModule?.uuid
+
   if (!courseId || !moduleId) {
     return (
       <StateComp
@@ -353,15 +357,17 @@ const CourseModuleDetailPage = () => {
 
   const canEditQuizzes = course && course.status === 'draft'
   const moduleGradient =
-    selectedModule?.status === 'active'
-      ? course?.status === 'live'
+    course?.status === 'live'
+      ? selectedModule?.status === 'active'
         ? 'secondary'
-        : course?.status === 'paused'
-          ? 'accent-teal'
-          : course?.status === 'planned'
-            ? 'primary'
+        : 'gray'
+      : course?.status === 'paused'
+        ? 'accent-teal'
+        : course?.status === 'planned'
+          ? 'primary'
+          : course?.status === 'draft'
+            ? 'accent-teal-light-subtle'
             : 'gray'
-      : 'gray'
 
   return (
     <div className='space-y-4'>
@@ -442,7 +448,15 @@ const CourseModuleDetailPage = () => {
                 <ModuleVisibilityActionButton
                   status={selectedModule.status}
                   onClick={() => toggleVisibilityMutation.mutate()}
-                  disabled={toggleVisibilityMutation.isPending}
+                  disabled={
+                    toggleVisibilityMutation.isPending ||
+                    (selectedModule.status === 'active' && !isLastActiveModule)
+                  }
+                  title={
+                    selectedModule.status === 'active' && !isLastActiveModule
+                      ? 'Lze skrýt pouze poslední aktivní modul'
+                      : ''
+                  }
                 />
               </div>
             ) : undefined

@@ -7,11 +7,13 @@ import {
   Calendar,
   RotateCcw,
   FilePlus,
+  type LucideProps,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { colorStyles } from '@/lib/constants'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { useMediaQuery } from 'usehooks-ts'
+import type { ForwardRefExoticComponent, RefAttributes } from 'react'
 
 interface StatusActionButtonProps {
   currentStatus: CourseStatus
@@ -23,6 +25,19 @@ interface StatusActionButtonProps {
   labelClassName?: string
   onCopyAsDraft?: () => void
   hideCopyAsDraft?: boolean
+}
+
+type ActionButton = {
+  label?: string
+  mobileLabel?: string
+  title: string
+  icon: ForwardRefExoticComponent<
+    Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
+  >
+  status: CourseStatus
+  variant: 'outline' | 'grid'
+  primary: boolean
+  action?: 'copy' | undefined
 }
 
 export function StatusActionButtons({
@@ -37,24 +52,32 @@ export function StatusActionButtons({
   hideCopyAsDraft = false,
 }: StatusActionButtonProps) {
   const isMd = useMediaQuery('(min-width: 768px)')
-  const getActions = () => {
+  const getActions = (): ActionButton[] => {
     switch (currentStatus) {
       case 'draft':
         return [
           {
-            label: 'Naplánovat',
             title: 'Naplánovat',
             icon: Calendar,
-            status: 'planned' as CourseStatus,
-            variant: 'outline' as const,
+            status: 'planned',
+            variant: 'outline',
             primary: false,
+          },
+          {
+            title: 'Kopírovat jako návrh',
+            mobileLabel: 'Kopírovat',
+            icon: FilePlus,
+            status: 'draft',
+            variant: 'outline',
+            primary: false,
+            action: 'copy',
           },
           {
             label: 'Spustit',
             title: 'Spustit',
             icon: Play,
-            status: 'live' as CourseStatus,
-            variant: 'grid' as const,
+            status: 'live',
+            variant: 'grid',
             primary: true,
           },
         ]
@@ -64,16 +87,16 @@ export function StatusActionButtons({
             label: 'Do návrhu',
             title: 'Do návrhu',
             icon: RotateCcw,
-            status: 'draft' as CourseStatus,
-            variant: 'outline' as const,
+            status: 'draft',
+            variant: 'outline',
             primary: false,
           },
           {
             label: 'Spustit',
             title: 'Spustit',
             icon: Play,
-            status: 'live' as CourseStatus,
-            variant: 'grid' as const,
+            status: 'live',
+            variant: 'grid',
             primary: true,
           },
         ]
@@ -83,16 +106,16 @@ export function StatusActionButtons({
             label: 'Archivovat',
             title: 'Archivovat',
             icon: Archive,
-            status: 'archived' as CourseStatus,
-            variant: 'outline' as const,
+            status: 'archived',
+            variant: 'outline',
             primary: false,
           },
           {
             label: 'Pozastavit',
             title: 'Pozastavit',
             icon: Pause,
-            status: 'paused' as CourseStatus,
-            variant: 'grid' as const,
+            status: 'paused',
+            variant: 'grid',
             primary: true,
           },
         ]
@@ -101,23 +124,23 @@ export function StatusActionButtons({
           {
             title: 'Naplánovat',
             icon: Calendar,
-            status: 'planned' as CourseStatus,
-            variant: 'outline' as const,
+            status: 'planned',
+            variant: 'outline',
             primary: false,
           },
           {
             title: 'Archivovat',
             icon: Archive,
-            status: 'archived' as CourseStatus,
-            variant: 'outline' as const,
+            status: 'archived',
+            variant: 'outline',
             primary: false,
           },
           {
             label: 'Obnovit',
             title: 'Obnovit',
             icon: Play,
-            status: 'live' as CourseStatus,
-            variant: 'grid' as const,
+            status: 'live',
+            variant: 'grid',
             primary: true,
           },
         ]
@@ -129,9 +152,10 @@ export function StatusActionButtons({
             title: 'Kopírovat jako návrh',
             mobileLabel: 'Kopírovat',
             icon: FilePlus,
-            status: 'draft' as CourseStatus,
-            variant: 'grid' as const,
+            status: 'draft',
+            variant: 'grid',
             primary: true,
+            action: 'copy',
           },
         ]
       default:
@@ -149,7 +173,7 @@ export function StatusActionButtons({
 
         const handleClick = (e?: React.MouseEvent) => {
           e?.stopPropagation()
-          if (currentStatus === 'archived' && onCopyAsDraft) {
+          if (action.action && action.action === 'copy' && onCopyAsDraft) {
             onCopyAsDraft()
             return
           }

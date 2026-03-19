@@ -25,7 +25,7 @@ const statusConfig: Record<
   },
   live: {
     label: 'Aktivní',
-    className: 'bg-secondary/40 text-[#2D8B6B]',
+    className: 'bg-secondary/50 text-[#2D8B6B]',
   },
   paused: {
     label: 'Pozastaveno',

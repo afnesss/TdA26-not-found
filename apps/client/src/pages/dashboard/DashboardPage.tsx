@@ -20,7 +20,7 @@ import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpenText, Plus } from 'lucide-react'
+import { BarChart3, BookOpenText, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
@@ -197,8 +197,12 @@ const DashboardDesign1 = () => {
           <div className='flex items-center justify-center gap-2 sm:gap-3'>
             <div className='hidden lg:flex'>
               <HintPageText
-                text='Správa kurzů'
-                icon={BookOpenText}
+                text={
+                  dashboardMode === 'analytics'
+                    ? 'Statistiky kurzů'
+                    : 'Správa kurzů'
+                }
+                icon={dashboardMode === 'analytics' ? BarChart3 : BookOpenText}
                 spanText={
                   (searchQuery && filteredCourses.length.toString()) ||
                   courses.length.toString()

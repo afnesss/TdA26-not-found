@@ -98,12 +98,21 @@ const QuizOption = ({
         isSelected && !showCorrect && !isSubmitted && 'bg-primary/10',
         isSelected && isSubmitted && !showCorrect && 'bg-gray-200',
         isSelected && isCorrect && showCorrect && 'bg-secondary/40',
+        mode === 'lecturer-preview' &&
+          showCorrect &&
+          isCorrect &&
+          !isSelected &&
+          'bg-secondary/40',
         isSelected &&
           !isCorrect &&
           isSubmitted &&
           showCorrect &&
           'bg-destructive/30',
-        !isSelected && isCorrect && showCorrect && 'border-secondary border-2',
+        !isSelected &&
+          isCorrect &&
+          showCorrect &&
+          mode !== 'lecturer-preview' &&
+          'border-secondary border-2',
         mode === 'lecturer-preview' && 'cursor-default',
       )}
     >

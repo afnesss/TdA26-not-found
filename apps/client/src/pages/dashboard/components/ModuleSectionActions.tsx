@@ -34,7 +34,7 @@ export const ModulesSectionActions = ({
       <Button
         variant={'outline'}
         size='sm'
-        disabled={modulesLength === 0 || disableActions}
+        disabled={modulesLength < 2 || disableActions}
         onClick={() => {
           if (!disableActions) onToggleReorderMode()
         }}

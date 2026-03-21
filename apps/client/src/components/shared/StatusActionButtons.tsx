@@ -208,16 +208,21 @@ export function StatusActionButtons({
               className={cn(
                 'w-3.5 h-3.5',
                 iconClassName,
-                action.label && 'md:mr-1',
+                ((isMd && action.label) ||
+                  (!isMd && action.primary && (action.mobileLabel || action.label))) &&
+                  'mr-1',
               )}
             />
             <span
               className={cn(
-                'hidden md:inline text-xs font-medium',
+                ' inline text-xs font-medium',
+                !isMd && !action.primary && 'hidden',
                 labelClassName,
               )}
             >
-              {action.label ?? ''}
+              {(!isMd && action.primary && action.mobileLabel) ||
+                action.label ||
+                ''}
             </span>
           </Button>
         )

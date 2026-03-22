@@ -12,6 +12,8 @@ type EditBtnProps = {
   iconClassName?: string
   disabled?: boolean
   size?: 'sm' | 'md' | 'lg'
+  label?: string
+  labelClassName?: string
 }
 
 const EditBtn: React.FC<EditBtnProps> = ({
@@ -23,6 +25,8 @@ const EditBtn: React.FC<EditBtnProps> = ({
   iconClassName,
   disabled,
   size = 'sm',
+  label,
+  labelClassName,
 }) => {
   let hoverStyle = `hover:bg-${bgColor}-100`
   let textStyle = `text-${bgColor}`
@@ -47,19 +51,35 @@ const EditBtn: React.FC<EditBtnProps> = ({
     lg: 'w-5 h-5 sm:w-6 h-6',
   }
 
+  const buttonSize = label ? 'sm' : 'icon-sm'
+
+  const sizeClassName = label ? '' : sizeClasses[size]
+
   return (
     <Button
       variant='ghost'
-      size='icon-sm'
+      size={buttonSize}
       disabled={disabled}
-      className={cn(hoverStyle, sizeClasses[size], classNameBtn)}
+      className={cn(hoverStyle, sizeClassName, classNameBtn)}
       onClick={onClick}
     >
-      {IconToRender && (
-        <IconToRender
-          className={cn(`${iconClasses[size]} ${textStyle}`, iconClassName)}
-        />
-      )}
+      <span className='inline-flex items-center gap-1'>
+        {IconToRender && (
+          <IconToRender
+            className={cn(`${iconClasses[size]} ${textStyle}`, iconClassName)}
+          />
+        )}
+        {label ? (
+          <span
+            className={cn(
+              'text-xs font-medium whitespace-nowrap text-current',
+              labelClassName,
+            )}
+          >
+            {label}
+          </span>
+        ) : null}
+      </span>
     </Button>
   )
 }

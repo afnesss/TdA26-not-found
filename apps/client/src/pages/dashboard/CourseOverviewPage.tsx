@@ -282,22 +282,22 @@ const CourseModulesOverviewPage = () => {
     ) : undefined
 
   const planningFooterMeta = showPlanningFooter ? (
-    <div className='flex items-center gap-2'>
-      <CardDate
-        course={course}
-        state={course.status}
-        planning={planning}
-      />
+    <div className='flex items-center gap-2 w-full justify-between sm:justify-start'>
+      <div className='flex-1'>
+        <CardDate course={course} state={course.status} planning={planning} />
+      </div>
       {planning.isEditing && (
-        <EditSaveCancelButtons
-          onSave={() => planning.onConfirm()}
-          onCancel={() => planning.onCancel()}
-          saveDisabled={planning.saving || !!planning.error}
-          cancelDisabled={planning.saving}
-          className='flex items-center gap-1'
-          saveAriaLabel='Uložit kurz'
-          cancelAriaLabel='Zrušit úpravy'
-        />
+        <div className='shrink-0'>
+          <EditSaveCancelButtons
+            onSave={() => planning.onConfirm()}
+            onCancel={() => planning.onCancel()}
+            saveDisabled={planning.saving || !!planning.error}
+            cancelDisabled={planning.saving}
+            className='flex items-center gap-1'
+            saveAriaLabel='Uložit kurz'
+            cancelAriaLabel='Zrušit úpravy'
+          />
+        </div>
       )}
     </div>
   ) : undefined
@@ -336,7 +336,14 @@ const CourseModulesOverviewPage = () => {
           ) : undefined
         }
         footerMeta={planningFooterMeta}
-        footerActions={statusActions}
+        hideDatesOnSmall={course.status === 'planned'}
+        footerActions={
+          planning.isEditing ? (
+            <div className='hidden sm:flex'>{statusActions}</div>
+          ) : (
+            statusActions
+          )
+        }
       />
 
       <div className='flex flex-wrap items-center justify-between gap-3'>

@@ -20,7 +20,10 @@ import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
 import type { CourseDetail } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
-import { truncateDescription } from '../../CoursePage/utils/helperFunctions'
+import {
+  handleSaveOnEnter,
+  truncateDescription,
+} from '../../CoursePage/utils/helperFunctions'
 import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
@@ -117,6 +120,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     : prev,
                 )
               }
+              onKeyDown={(e) => handleSaveOnEnter(e, onCreate)}
               placeholder='Zadejte název modulu'
               className='placeholder:font-semibold'
             />
@@ -150,6 +154,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                       : prev,
                   )
                 }
+                onKeyDown={(e) => handleSaveOnEnter(e, onCreate)}
                 placeholder='Popis modulu (volitelné)'
               />
             </div>

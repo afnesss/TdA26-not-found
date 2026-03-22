@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
+import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 
 const FeedItemComp = ({
   feedItem,
@@ -155,6 +156,7 @@ const FeedItemComp = ({
                 setMessageError(null)
               }
             }}
+            onKeyDown={(e) => handleSaveOnEnter(e, handleSave)}
             rows={3}
           />
           {messageError && <p className='error-text'>{messageError}</p>}

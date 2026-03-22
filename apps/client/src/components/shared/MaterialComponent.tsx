@@ -15,7 +15,6 @@ import {
 import { cn, formatFileSize } from '@/lib/utils'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { Check, Copy, Download, Edit, ExternalLink } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -26,6 +25,7 @@ import DeleteConfirmDialog from '../ui/AlertDialog'
 import { Textarea } from '../ui/textarea'
 import MaterialIcon from './MaterialIcon'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
+import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 
 const countStyle = (count: number): string => {
   return cn(
@@ -80,9 +80,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     control,
     formState: { errors, isSubmitting, isDirty },
     setValue,
-    register,
     reset,
-    watch,
   } = useForm<MaterialValidation>({
     resolver: zodResolver(MaterialValidationSchema),
     defaultValues: material,
@@ -151,6 +149,21 @@ const MaterialCard = (props: MaterialCardProps) => {
 
   const handleUrlChange = (url: string) => {
     setValue('url', url, { shouldValidate: true, shouldDirty: true })
+  }
+
+  const handleDownloadClick = () => {
+    if (!downloadUrl) return
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download =
+      material.type === 'file'
+        ? material.originalFilename || material.name
+        : material.name
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,6 +247,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onChange={(e) =>
                           handleFieldChange('name', e.target.value)
                         }
+                        onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
                         className={cn(
                           'w-full min-h-0 text-sm sm:text-base font-semibold block',
                           errors.name && 'border-destructive',
@@ -302,17 +316,14 @@ const MaterialCard = (props: MaterialCardProps) => {
                   ) : (
                     <div className='shrink-0 flex items-center gap-1'>
                       {material.type === 'file' ? (
-                        <a
-                          href={downloadUrl}
-                          download={material.originalFilename || material.name}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          aria-label={`Stáhnout ${material.name}`}
-                          className='relative'
-                        >
+                        <div className='relative'>
                           <EditBtn
                             icon={Download}
+                            onClick={handleDownloadClick}
                             aria-label={`Stáhnout ${material.name}`}
+                            label='Stáhnout'
+                            labelClassName='hidden sm:inline text-current whitespace-nowrap'
+                            classNameBtn='h-7 px-2'
                           />
                           {showLecturerCounters &&
                             (material.downloadCount ?? 0) >= 0 && (
@@ -326,7 +337,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                                   : material.downloadCount}
                               </span>
                             )}
-                        </a>
+                        </div>
                       ) : (
                         <>
                           <div className='relative'>
@@ -390,13 +401,13 @@ const MaterialCard = (props: MaterialCardProps) => {
               )}
             </div>
           </div>
-
           {/* Description */}
           {isEditing ? (
             <Textarea
               variant='ghost'
               value={formValues.description}
               onChange={(e) => handleFieldChange('description', e.target.value)}
+              onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
@@ -415,7 +426,7 @@ const MaterialCard = (props: MaterialCardProps) => {
             <div
               className={cn(
                 'flex flex-wrap',
-                displayType === 'file' ? 'sm:items-center' : 'sm:items-start',
+                displayType === 'file' ? 'items-center' : 'sm:items-start',
                 'isDraft' in props && props.isDraft
                   ? 'gap-1 flex-col sm:gap-0 sm:flex-row'
                   : 'flex-row',
@@ -517,6 +528,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     onChange={(e) => {
                       handleUrlChange(e.target.value)
                     }}
+                    onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
                     className={cn(
                       'block w-full text-xs sm:text-sm mb-0',
                       'url' in errors && !!errors.url && 'border-destructive',
@@ -532,19 +544,29 @@ const MaterialCard = (props: MaterialCardProps) => {
               )}
             </div>
           ) : (
-            <div className='flex items-center gap-4 text-xs sm:text-sm text-gray-500'>
+            <div className='flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500'>
               {material.type === 'file' && (
-                <span>{formatFileSize(material.sizeBytes)}</span>
+                <>
+                  <span className='font-medium text-gray-600 '>
+                    Soubor ke stažení:
+                  </span>
+                  <span className='text-accent-teal font-semibold'>
+                    {formatFileSize(material.sizeBytes)}
+                  </span>
+                </>
               )}
               {material.type === 'url' && (
-                <a
-                  href={material.url}
-                  className='text-primary hover:underline break-all'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {material.url}
-                </a>
+                <>
+                  <span className='font-medium text-gray-600'>Odkaz:</span>
+                  <a
+                    href={material.url}
+                    className='text-primary hover:underline break-all'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {material.url}
+                  </a>
+                </>
               )}
             </div>
           )}

@@ -12,6 +12,7 @@ import {
   type CourseUpdateRequest,
 } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
+import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
@@ -101,6 +102,7 @@ const CourseDetailsForm = ({
                     shouldValidate: true,
                   })
                 },
+                onKeyDown: (e) => handleSaveOnEnter(e, handleSave),
                 type: 'text',
                 placeholder: 'Název kurzu',
                 disabled: updateCoursePending || isSubmitting,
@@ -123,6 +125,7 @@ const CourseDetailsForm = ({
                     shouldDirty: true,
                   })
                 },
+                onKeyDown: handleSaveOnEnter,
                 placeholder: 'Zadejte popis kurzu',
                 disabled: updateCoursePending || isSubmitting,
               }}

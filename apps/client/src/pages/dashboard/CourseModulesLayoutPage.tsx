@@ -12,6 +12,7 @@ import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Outlet, useParams, useMatch } from 'react-router-dom'
+import feedImg from '@/assets/disconnect-blue.svg'
 import {
   useCreatePostMutation,
   useDeletePostMutation,
@@ -188,7 +189,9 @@ const CourseModulesLayoutPage = () => {
               variant='outline'
               size='sm'
               className='rounded-xl'
-              onClick={() => setSideTab(sideTab === 'feed' ? 'history' : 'feed')}
+              onClick={() =>
+                setSideTab(sideTab === 'feed' ? 'history' : 'feed')
+              }
             >
               {sideTab === 'feed' ? 'Historie' : 'Oznámení'}
             </Button>
@@ -205,7 +208,6 @@ const CourseModulesLayoutPage = () => {
 
         <Card className='border border-border/60 shadow-md bg-background'>
           <div className='p-3 md:p-5 space-y-4'>
-
             {sideTab === 'feed' && !hasCourseError ? (
               <div className='space-y-3'>
                 {feedLoading ? (
@@ -288,6 +290,8 @@ const CourseModulesLayoutPage = () => {
                 ) : (
                   <StateComp
                     type='no-content'
+                    img={feedImg}
+                    iconClassName='w-12 h-12 md:w-13 h-13'
                     message='Zatím žádné příspěvky'
                     className='pt-8 pb-0'
                   />

@@ -24,7 +24,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
+import {
+  handleSaveOnEnter,
+  truncateDescription,
+} from '../../pages/CoursePage/utils/helperFunctions'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import DeleteConfirmDialog from '../ui/AlertDialog'
@@ -290,6 +293,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 value={state.tempName}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => handleNameChange(e.target.value)}
+                onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
                 className={cn(
                   'font-semibold text-base sm:text-lg lg:text-xl overflow-hidden flex items-center sm:py-1.8 placeholder:pt-1',
                   state.nameError && 'border-destructive',
@@ -321,6 +325,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   tempDescription: capitalizedValue,
                 }))
               }}
+              onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
               className='mb-2 md:mb-3 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
               minRows={2}
               maxRows={4}

@@ -72,7 +72,11 @@ export const useDeleteCourseMutation = () => {
   })
 }
 
-export const useCloneCourseMutation = () => {
+export const useCloneCourseMutation = (options?: {
+  onSuccess?: (cloned: CourseSummary, source: CourseSummary) => void
+  toastMessage?: (source: CourseSummary) => string
+  skipToast?: boolean
+}) => {
   const queryClient = useQueryClient()
 
   return useMutation<
@@ -88,9 +92,15 @@ export const useCloneCourseMutation = () => {
       }
       return result
     },
-    onSuccess: () => {
+    onSuccess: (clonedCourse, variables) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
-      toast.success('Kurz byl zkopírován')
+      if (!options?.skipToast) {
+        const message =
+          options?.toastMessage?.(variables.source) ??
+          `Kurz "${variables.source.name}" byl zkopírován jako návrh`
+        toast.success(message)
+      }
+      options?.onSuccess?.(clonedCourse, variables.source)
     },
     onMutate: async ({ source }) => {
       await queryClient.cancelQueries({ queryKey: ['courses'] })

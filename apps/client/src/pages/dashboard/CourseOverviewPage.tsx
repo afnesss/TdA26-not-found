@@ -1,5 +1,4 @@
-﻿import CoursePlanningSection from '@/components/shared/CoursePlanningSection'
-import {
+﻿import {
   CourseStateBadge,
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
+  useCloneCourseMutation,
   useUpdateCourseMutation,
   useUpdateCourseStatusMutation,
 } from '@/pages/CoursePage/utils/useCourseMutation'
@@ -19,12 +19,11 @@ import {
   useDeleteModuleMutation,
   useToggleModuleMutation,
 } from '@/pages/CoursePage/utils/useModuleMutation'
-import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
+import CardDate, { type CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { useMediaQuery } from 'usehooks-ts'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
 import ModuleCard, { type DraftModuleForm } from './components/ModuleCard'
@@ -34,10 +33,10 @@ import UnderlinedText from '@/components/shared/UnderlinedText'
 import DashboardModeTabs from './components/DashboardModeTabs'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { ModulesSectionActions } from './components/ModuleSectionActions'
+import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
-  const isSm = useMediaQuery('(min-width: 640px)')
   const {
     courseId,
     course,
@@ -90,6 +89,12 @@ const CourseModulesOverviewPage = () => {
     useToggleModuleMutation(courseId)
   const { mutate: updateCourseStatusMutation } =
     useUpdateCourseStatusMutation(courseId)
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
+    onSuccess: (clonedCourse) => {
+      navigate(`/dashboard/${clonedCourse.uuid}`)
+    },
+    toastMessage: (source) => `Kurz "${source.name}" byl zkopírován jako návrh`,
+  })
   const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId)
   const { mutate: createModuleMutation, isPending: createModulePending } =
     useCreateModuleMutation(courseId, () => setDraftModule(null))
@@ -172,6 +177,11 @@ const CourseModulesOverviewPage = () => {
     })
   }
 
+  const handleCancelCourseDetails = () => {
+    setCourseName(null)
+    setCourseDescription(null)
+  }
+
   const handleOpenModule = (moduleId: string) => {
     if (!isReorderMode) navigate(`/dashboard/${courseId}/modules/${moduleId}`)
   }
@@ -221,9 +231,7 @@ const CourseModulesOverviewPage = () => {
     onCancel: planningHook.closePlanningEditor,
   }
 
-  const showPlanningForHeader =
-    course.status === 'planned' || planning.isEditing
-  const showPlanningOnSeparateRow = !isSm && showPlanningForHeader
+  const showPlanningFooter = course.status === 'planned' || planning.isEditing
 
   const disableDraftActionsInAnalytics =
     course.status === 'draft' && viewMode === 'analytics'
@@ -238,9 +246,6 @@ const CourseModulesOverviewPage = () => {
       ...[{ value: 'content' as const, label: 'Obsah' }],
       ...[{ value: 'analytics' as const, label: 'Statistiky' }],
     ]
-  const showPlanningInHeader =
-    !showPlanningOnSeparateRow && showPlanningForHeader
-  const showStatusActions = course.status !== 'archived'
   const courseGradientColor =
     course.status === 'live'
       ? 'secondary'
@@ -259,13 +264,43 @@ const CourseModulesOverviewPage = () => {
       onStatusChange={handleCourseStatusChange}
       courseColor={statusActionColor}
       className='justify-end shrink-0'
-      buttonClassName='md:h-9'
-      labelClassName='text-xs md:text-sm'
-      onCopyAsDraft={() => handleCourseStatusChange('draft')}
-      hideCopyAsDraft={course.status === 'archived'}
+      buttonClassName='lg:h-9'
+      labelClassName='text-xs lg:text-sm'
+      onCopyAsDraft={() => cloneCourseMutation({ source: course })}
     />
   )
-  const hasTopActions = showPlanningInHeader || showStatusActions
+
+  const saveCourseAction =
+    !previewMode && hasCourseDetailsChanges ? (
+      <EditSaveCancelButtons
+        onSave={handleSaveCourseDetails}
+        onCancel={handleCancelCourseDetails}
+        saveDisabled={updateCourseDetailsPending || !currentCourseName.trim()}
+        cancelDisabled={updateCourseDetailsPending}
+        className='flex items-center gap-1'
+      />
+    ) : undefined
+
+  const planningFooterMeta = showPlanningFooter ? (
+    <div className='flex items-center gap-2'>
+      <CardDate
+        course={course}
+        state={course.status}
+        planning={planning}
+      />
+      {planning.isEditing && (
+        <EditSaveCancelButtons
+          onSave={() => planning.onConfirm()}
+          onCancel={() => planning.onCancel()}
+          saveDisabled={planning.saving || !!planning.error}
+          cancelDisabled={planning.saving}
+          className='flex items-center gap-1'
+          saveAriaLabel='Uložit kurz'
+          cancelAriaLabel='Zrušit úpravy'
+        />
+      )}
+    </div>
+  ) : undefined
 
   return (
     <>
@@ -285,6 +320,7 @@ const CourseModulesOverviewPage = () => {
             handleCapitalizedInput(value, currentCourseDescription),
           )
         }}
+        onEnterSave={handleSaveCourseDetails}
         disabled={previewMode}
         createdAt={course.createdAt}
         updatedAt={course.updatedAt}
@@ -293,51 +329,13 @@ const CourseModulesOverviewPage = () => {
             <CourseStateBadge status={course.status} />
           </div>
         }
-        headerBottom={
-          showPlanningOnSeparateRow ? (
-            <CoursePlanningSection
-              course={course}
-              state={course.status}
-              planning={planning}
-              hideStatusLabel
-              className='w-fit'
-            />
-          ) : undefined
-        }
         topActions={
-          hasTopActions ? (
-            <div className='flex items-center gap-2'>
-              {showPlanningInHeader && (
-                <CoursePlanningSection
-                  course={course}
-                  state={course.status}
-                  planning={planning}
-                  hideStatusLabel
-                  className='w-fit min-w-[18rem] shrink-0'
-                  rowClassName='justify-end'
-                />
-              )}
-              {showStatusActions && statusActions}
-            </div>
+          saveCourseAction ? (
+            <div className='flex items-center gap-2'>{saveCourseAction}</div>
           ) : undefined
         }
-        footerActions={
-          !previewMode ? (
-            <Button
-              variant='primary'
-              size='grid'
-              className='w-fit'
-              onClick={handleSaveCourseDetails}
-              disabled={
-                !hasCourseDetailsChanges ||
-                updateCourseDetailsPending ||
-                !currentCourseName.trim()
-              }
-            >
-              Uložit změny
-            </Button>
-          ) : undefined
-        }
+        footerMeta={planningFooterMeta}
+        footerActions={statusActions}
       />
 
       <div className='flex flex-wrap items-center justify-between gap-3'>
@@ -418,3 +416,4 @@ const CourseModulesOverviewPage = () => {
 }
 
 export default CourseModulesOverviewPage
+

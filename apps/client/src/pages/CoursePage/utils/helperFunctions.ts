@@ -231,3 +231,24 @@ export const fmt = (d: string) =>
     dateStyle: 'medium',
     timeStyle: 'short',
   })
+
+export const handleSaveOnEnter = (
+  e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  saveEdit?: () => void | Promise<void>,
+) => {
+  if (
+    e.key !== 'Enter' ||
+    e.shiftKey ||
+    e.altKey ||
+    e.ctrlKey ||
+    e.metaKey ||
+    e.nativeEvent.isComposing
+  ) {
+    return
+  }
+  e.preventDefault()
+  e.currentTarget.blur()
+  if (saveEdit) {
+    void saveEdit()
+  }
+}

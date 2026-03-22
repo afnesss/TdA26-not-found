@@ -156,7 +156,7 @@ const FeedItemComp = ({
                 setMessageError(null)
               }
             }}
-            onKeyDown={(e) => handleSaveOnEnter(e, handleSave)}
+            onKeyDown={(e) => handleSaveOnEnter(e, handleSave, cancelEdit)}
             rows={3}
           />
           {messageError && <p className='error-text'>{messageError}</p>}

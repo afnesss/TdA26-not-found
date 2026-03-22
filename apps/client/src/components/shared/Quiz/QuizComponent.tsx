@@ -12,6 +12,7 @@ import {
 import type { QuizState } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -370,6 +371,21 @@ const QuizComponentInner = ({
     }
   })
 
+  const handleCancelEdit = () => {
+    if (isDraft) {
+      onCancelDraft?.()
+      return
+    }
+    reset(quiz)
+    setShowIncompleteError(false)
+  }
+
+  const handleEditKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    handleSaveOnEnter(e, handleSave, handleCancelEdit)
+  }
+
   return (
     <div className='bg-background group rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100'>
       {/* Header */}
@@ -395,6 +411,7 @@ const QuizComponentInner = ({
                     value={displayQuiz.title}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => updateTitle(e.target.value)}
+                    onKeyDown={handleEditKeyDown}
                     placeholder='Zadejte název kvízu'
                   />
                   {errors.title?.message && (
@@ -617,6 +634,7 @@ const QuizComponentInner = ({
                       toggleCorrectAnswer(qIndex, optIndex)
                     }
                     onAddOption={() => addOption(qIndex)}
+                    onEditKeyDown={handleEditKeyDown}
                     // user props
                     userState={userState}
                     onAnswerChange={(questionId, answer) => {

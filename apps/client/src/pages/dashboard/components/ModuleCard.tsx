@@ -120,7 +120,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     : prev,
                 )
               }
-              onKeyDown={(e) => handleSaveOnEnter(e, onCreate)}
+              onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
               placeholder='Zadejte název modulu'
               className='placeholder:font-semibold'
             />
@@ -154,7 +154,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                       : prev,
                   )
                 }
-                onKeyDown={(e) => handleSaveOnEnter(e, onCreate)}
+                onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
                 placeholder='Popis modulu (volitelné)'
               />
             </div>

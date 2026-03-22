@@ -321,6 +321,7 @@ const CourseModulesOverviewPage = () => {
           )
         }}
         onEnterSave={handleSaveCourseDetails}
+        onCancelEdit={handleCancelCourseDetails}
         disabled={previewMode}
         createdAt={course.createdAt}
         updatedAt={course.updatedAt}

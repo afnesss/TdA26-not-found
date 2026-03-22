@@ -247,7 +247,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onChange={(e) =>
                           handleFieldChange('name', e.target.value)
                         }
-                        onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
+                        onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
                         className={cn(
                           'w-full min-h-0 text-sm sm:text-base font-semibold block',
                           errors.name && 'border-destructive',
@@ -407,7 +407,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               variant='ghost'
               value={formValues.description}
               onChange={(e) => handleFieldChange('description', e.target.value)}
-              onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
+              onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
@@ -528,7 +528,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     onChange={(e) => {
                       handleUrlChange(e.target.value)
                     }}
-                    onKeyDown={(e) => handleSaveOnEnter(e, saveEdit)}
+                    onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
                     className={cn(
                       'block w-full text-xs sm:text-sm mb-0',
                       'url' in errors && !!errors.url && 'border-destructive',

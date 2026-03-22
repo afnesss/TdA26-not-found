@@ -235,20 +235,25 @@ export const fmt = (d: string) =>
 export const handleSaveOnEnter = (
   e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   saveEdit?: () => void | Promise<void>,
+  cancelEdit?: () => void | Promise<void>,
 ) => {
-  if (
-    e.key !== 'Enter' ||
-    e.shiftKey ||
-    e.altKey ||
-    e.ctrlKey ||
-    e.metaKey ||
-    e.nativeEvent.isComposing
-  ) {
-    return
+  if (e.nativeEvent.isComposing) return
+  const hasModifier =
+    e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
+
+  if (e.key === 'Enter' && !hasModifier) {
+    e.preventDefault()
+    e.currentTarget.blur()
+    if (saveEdit) {
+      void saveEdit()
+    }
   }
-  e.preventDefault()
-  e.currentTarget.blur()
-  if (saveEdit) {
-    void saveEdit()
+
+  if (e.key === 'Escape' && !hasModifier) {
+    e.preventDefault()
+    e.currentTarget.blur()
+    if (cancelEdit) {
+      void cancelEdit()
+    }
   }
 }

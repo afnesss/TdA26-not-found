@@ -20,6 +20,9 @@ type QuizOptionProps = {
   onOptionUpdate?: (value: string) => void
   onOptionRemove?: () => void
   canRemove?: boolean
+  onEditKeyDown?: (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
   // User mode
   isSelected?: boolean
   isSubmitted?: boolean
@@ -38,6 +41,7 @@ const QuizOption = ({
   onOptionUpdate,
   onOptionRemove,
   canRemove = true,
+  onEditKeyDown,
   isSelected = false,
   isSubmitted = false,
   showCorrect = false,
@@ -63,6 +67,7 @@ const QuizOption = ({
           variant='ghost'
           value={option}
           onChange={(e) => onOptionUpdate?.(e.target.value)}
+          onKeyDown={onEditKeyDown}
           placeholder='Zadejte možnost'
           className='text-xs md:text-sm flex-1'
         />

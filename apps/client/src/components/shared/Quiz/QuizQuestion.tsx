@@ -32,6 +32,9 @@ type QuizQuestionProps = {
   onOptionRemove?: (optIndex: number) => void
   onCorrectToggle?: (optIndex: number) => void
   onAddOption?: () => void
+  onEditKeyDown?: (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
   questionError?: {
     question?: FieldError
     options?: FieldError[]
@@ -60,6 +63,7 @@ const QuizQuestion = ({
   onOptionRemove,
   onCorrectToggle,
   onAddOption,
+  onEditKeyDown,
   userState,
   onAnswerChange,
   questionError,
@@ -112,6 +116,7 @@ const QuizQuestion = ({
                         e.preventDefault()
                         onQuestionTextUpdate?.(e.target.value)
                       }}
+                      onKeyDown={onEditKeyDown}
                       className={cn(
                         'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
                         questionError?.question && 'border-destructive',
@@ -237,23 +242,24 @@ const QuizQuestion = ({
             )
 
             return (
-              <QuizOption
-                key={optIndex}
-                option={option}
-                optIndex={optIndex}
-                question={question}
-                mode={mode}
-                selectedCount={
-                  questionAnalytics ? optionStats?.selectedCount : undefined
-                }
-                // Lecturer props
-                isCorrect={isCorrect}
-                onCorrectToggle={() => onCorrectToggle?.(optIndex)}
-                onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
-                onOptionRemove={() => onOptionRemove?.(optIndex)}
-                canRemove={question.options.length > 2}
-                // User props
-                isSelected={isSelected}
+                <QuizOption
+                  key={optIndex}
+                  option={option}
+                  optIndex={optIndex}
+                  question={question}
+                  mode={mode}
+                  selectedCount={
+                    questionAnalytics ? optionStats?.selectedCount : undefined
+                  }
+                  // Lecturer props
+                  isCorrect={isCorrect}
+                  onCorrectToggle={() => onCorrectToggle?.(optIndex)}
+                  onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
+                  onOptionRemove={() => onOptionRemove?.(optIndex)}
+                  canRemove={question.options.length > 2}
+                  onEditKeyDown={onEditKeyDown}
+                  // User props
+                  isSelected={isSelected}
                 isSubmitted={isSubmitted}
                 showCorrect={showCorrect}
                 onAnswerChange={() => {

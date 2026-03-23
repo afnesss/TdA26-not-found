@@ -97,7 +97,9 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
-  const isCourseLive = course.status === 'live'
+  const canOpenCourse =
+    course.status === 'live' &&
+    (!course.startedAt || new Date(course.startedAt) <= new Date())
 
   const isAnalyticsMode = type === 'edit' && Boolean(props.statisticsMode)
 
@@ -200,7 +202,7 @@ const CourseComponent = (props: CourseCompProps) => {
       return
 
     if (type === 'classic') {
-      if (course.status !== 'live') return
+      if (!canOpenCourse) return
       navigate(`/courses/${course.uuid}`)
     } else if (type === 'edit') {
       props.onEdit()
@@ -212,8 +214,7 @@ const CourseComponent = (props: CourseCompProps) => {
       key={course.uuid}
       className={cn(
         'relative transition-colors',
-        ((type === 'edit' && !props.planning?.isEditing) ||
-          course.status === 'live') &&
+        ((type === 'edit' && !props.planning?.isEditing) || canOpenCourse) &&
           'cursor-pointer',
         (course.status === 'archived' || course.status === 'draft') &&
           'opacity-80',
@@ -358,9 +359,8 @@ const CourseComponent = (props: CourseCompProps) => {
                   'bg-linear-to-br',
                   colorStyles.bg[courseColor],
                   colorStyles.text[courseColor],
-                  !isCourseLive && 'disabled:opacity-100',
                 )}
-                disabled={!isCourseLive}
+                disabled={!canOpenCourse}
               >
                 <span className='font-semibold'>Zobrazit</span>
               </Button>

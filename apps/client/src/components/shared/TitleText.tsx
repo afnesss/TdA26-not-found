@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+﻿import { cn } from '@/lib/utils'
 import UnderlinedText from './UnderlinedText'
 
 type TitlePageProps = {
@@ -6,6 +6,10 @@ type TitlePageProps = {
   addtext2?: string
   underlinedText?: string
   highlightedText?: string
+  underlineHeight?: string
+  underlineStrokeWidth?: string
+  underlineOffset?: string
+  className?: string
 }
 
 const TitleText = ({
@@ -13,12 +17,28 @@ const TitleText = ({
   addtext2,
   underlinedText,
   highlightedText,
+  underlineHeight,
+  underlineStrokeWidth,
+  underlineOffset,
+  className,
 }: TitlePageProps) => {
   return (
     <>
-      <h1 className=' max-sm:text-2xl text-3xl lg:text-4xl text-foreground font-bold text-left'>
+      <h1
+        className={cn(
+          'max-sm:text-2xl text-3xl lg:text-4xl text-foreground font-bold text-left',
+          className,
+        )}
+      >
         {addtext1}
-        <UnderlinedText className='mb-2'>{underlinedText}</UnderlinedText>
+        <UnderlinedText
+          className='mb-2'
+          height={underlineHeight}
+          strokeWidth={underlineStrokeWidth}
+          offset={underlineOffset}
+        >
+          {underlinedText}
+        </UnderlinedText>
         {addtext2}
         <br />
         {highlightedText && (

@@ -12,7 +12,7 @@ export type ColorVariant = (typeof colors)[number]
 export const colorStyles = {
   bg: {
     secondary: 'from-secondary/40 to-secondary/66',
-    primary: 'from-primary/28 to-primary/50',
+    primary: 'from-primary/25 to-primary/45',
     gray: 'from-gray-200/70 to-gray-300/90',
     'accent-teal-light': 'from-accent-teal-light/20 to-accent-teal-light/60',
     'accent-teal-light-subtle':

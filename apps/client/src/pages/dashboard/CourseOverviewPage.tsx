@@ -19,7 +19,9 @@ import {
   useDeleteModuleMutation,
   useToggleModuleMutation,
 } from '@/pages/CoursePage/utils/useModuleMutation'
-import CardDate, { type CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
+import CardDate, {
+  type CoursePlanningState,
+} from '@/pages/CoursesPage/components/CardDate'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -323,6 +325,8 @@ const CourseModulesOverviewPage = () => {
         onEnterSave={handleSaveCourseDetails}
         onCancelEdit={handleCancelCourseDetails}
         disabled={previewMode}
+        isDirty={!previewMode && hasCourseDetailsChanges}
+        saveDisabled={updateCourseDetailsPending || !currentCourseName.trim()}
         createdAt={course.createdAt}
         updatedAt={course.updatedAt}
         topBadges={
@@ -336,7 +340,7 @@ const CourseModulesOverviewPage = () => {
           ) : undefined
         }
         footerMeta={planningFooterMeta}
-        hideDatesOnSmall={course.status === 'planned'}
+        hideDatesOnSmall={planning.isEditing}
         footerActions={
           planning.isEditing ? (
             <div className='hidden sm:flex'>{statusActions}</div>
@@ -349,7 +353,7 @@ const CourseModulesOverviewPage = () => {
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <Label className='font-bold text-lg md:text-xl text-neutral-black'>
           <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-            Moduly kurzu
+            {viewMode === 'analytics' ? 'Statistiky modulů' : 'Moduly kurzu'}
           </UnderlinedText>
         </Label>
         <ModulesSectionActions
@@ -424,4 +428,3 @@ const CourseModulesOverviewPage = () => {
 }
 
 export default CourseModulesOverviewPage
-

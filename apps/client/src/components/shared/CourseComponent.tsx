@@ -124,19 +124,21 @@ const CourseComponent = (props: CourseCompProps) => {
   const overviewOpenCount = overviewCourse?.openCount ?? 0
   const overviewCompletions =
     overviewCourse?.modules.reduce((sum, m) => sum + m.quizAttempts, 0) ?? 0
-  const modulesWithoutInteraction =
-    overviewCourse?.modulesWithoutInteraction ?? 0
+  const activeModulesWithoutInteraction =
+    overviewCourse?.modules.filter(
+      (module) => module.status === 'active' && module.interactions === 0,
+    ).length ?? 0
   const quizzesWithoutSubmits = overviewCourse?.quizzesWithoutSubmits ?? 0
   const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
 
   const attentionParts: string[] = []
-  if (modulesWithoutInteraction > 0) {
-    attentionParts.push(`Moduly bez interakcí: ${modulesWithoutInteraction}`)
-  }
-  if (modulesWithoutInteraction === 0 && quizzesWithoutSubmits > 0) {
-    attentionParts.push(`Kvízy bez odeslání: ${quizzesWithoutSubmits}`)
-  }
-  if (lowScoreQuizzes > 0) {
+  if (activeModulesWithoutInteraction > 0) {
+    attentionParts.push(
+      `Aktivní moduly bez interakcí: ${activeModulesWithoutInteraction}`,
+    )
+  } else if (overviewActiveModulesCount === 0) {
+    attentionParts.push(`Žádné aktivní moduly`)
+  } else if (lowScoreQuizzes > 0) {
     attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)
   }
 

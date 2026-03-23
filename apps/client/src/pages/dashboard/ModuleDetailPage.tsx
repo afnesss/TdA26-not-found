@@ -10,7 +10,6 @@ import {
   QuizzesContentSkeleton,
 } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useTitle } from '@/lib/dynamicTitleHook'
@@ -254,6 +253,11 @@ const CourseModuleDetailPage = () => {
     })
   }
 
+  const handleCancelModuleDetails = () => {
+    setModuleName(null)
+    setModuleDescription(null)
+  }
+
   const handleUpdateMaterial = async (
     materialId: string,
     data: MaterialDraft,
@@ -422,7 +426,13 @@ const CourseModuleDetailPage = () => {
               handleCapitalizedInput(value, currentModuleDescription),
             )
           }}
+          onEnterSave={handleSaveModuleDetails}
+          onCancelEdit={handleCancelModuleDetails}
           disabled={!canEditModuleInfo}
+          isDirty={canEditModuleInfo && hasModuleDetailsChanges}
+          saveDisabled={
+            saveModuleDetailsMutation.isPending || !currentModuleName.trim()
+          }
           createdAt={
             typeof selectedModule.createdAt === 'string'
               ? selectedModule.createdAt
@@ -442,7 +452,7 @@ const CourseModuleDetailPage = () => {
               )}
             </>
           }
-          topActions={
+          footerActions={
             canToggleModuleVisibility ? (
               <div className='flex flex-wrap items-center gap-2 justify-end'>
                 <ModuleVisibilityActionButton
@@ -459,23 +469,6 @@ const CourseModuleDetailPage = () => {
                   }
                 />
               </div>
-            ) : undefined
-          }
-          footerActions={
-            canEditModuleInfo ? (
-              <Button
-                variant='primary'
-                size='grid'
-                className='w-fit'
-                onClick={handleSaveModuleDetails}
-                disabled={
-                  !hasModuleDetailsChanges ||
-                  saveModuleDetailsMutation.isPending ||
-                  !currentModuleName.trim()
-                }
-              >
-                Uložit změny
-              </Button>
             ) : undefined
           }
         />

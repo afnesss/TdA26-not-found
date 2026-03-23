@@ -39,23 +39,24 @@ export const ModulesSectionActions = ({
           if (!disableActions) onToggleReorderMode()
         }}
         className='rounded-full'
+        aria-label={isReorderMode ? 'Zrušit preskládání' : 'Přeskládat'}
       >
         {isReorderMode ? (
           <>
             <X className='w-4 h-4' />
-            Zrušit
+            <span className='hidden sm:inline'>Zrušit</span>
           </>
         ) : (
           <>
             <Menu className='w-4 h-4' />
-            Přeskládat
+            <span className='hidden sm:inline'>Přeskládat</span>
           </>
         )}
       </Button>
     )}
     {!previewMode && (
       <DashboardAddButton
-        label='Přidat modul'
+        label='Pridat modul'
         className='rounded-full'
         onClick={() => {
           if (!disableActions) onAddModule()

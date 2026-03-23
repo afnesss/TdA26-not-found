@@ -32,6 +32,7 @@ interface ModulesSectionProps {
   isCreating: boolean
   isToggleVisibilityPending: boolean
   lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
 }
 
 const ModulesSection = ({
@@ -52,6 +53,7 @@ const ModulesSection = ({
   isCreating,
   isToggleVisibilityPending,
   lastActiveModuleUuid,
+  firstPassiveModuleUuid,
 }: ModulesSectionProps) => {
   const modulesList = modules
   const canToggleModuleVisibility = courseStatus === 'live'
@@ -113,6 +115,7 @@ const ModulesSection = ({
                   onDeleteModule={isReorderMode ? undefined : onDeleteModule}
                   onToggleModuleVisibility={onToggleVisibility}
                   lastActiveModuleUuid={lastActiveModuleUuid}
+                  firstPassiveModuleUuid={firstPassiveModuleUuid}
                   canDragAndDrop={canDragAndDrop}
                   DraggableCardComponent={DraggableModuleCard}
                 />
@@ -133,6 +136,7 @@ const ModulesSection = ({
                 onDeleteModule={isReorderMode ? undefined : onDeleteModule}
                 onToggleModuleVisibility={onToggleVisibility}
                 lastActiveModuleUuid={lastActiveModuleUuid}
+                firstPassiveModuleUuid={firstPassiveModuleUuid}
               />
 
               <div ref={draftCardRef}>

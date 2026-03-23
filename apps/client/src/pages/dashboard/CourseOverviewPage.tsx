@@ -241,6 +241,9 @@ const CourseModulesOverviewPage = () => {
   const lastActiveModuleUuid = modules
     ?.filter((m) => m.status === 'active')
     .at(-1)?.uuid
+  const firstPassiveModuleUuid = modules?.find(
+    (module) => module.status === 'passive',
+  )?.uuid
 
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
@@ -396,6 +399,7 @@ const CourseModulesOverviewPage = () => {
           isCreating={createModulePending}
           isToggleVisibilityPending={togglePending}
           lastActiveModuleUuid={lastActiveModuleUuid}
+          firstPassiveModuleUuid={firstPassiveModuleUuid}
         />
       ) : (
         <section className='space-y-4'>

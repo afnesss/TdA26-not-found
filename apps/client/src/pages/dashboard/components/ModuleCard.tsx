@@ -74,6 +74,7 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   alwaysShowActions?: boolean
   isDragging?: boolean
   lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
   userMode?: boolean
 }
 
@@ -176,11 +177,12 @@ const ModuleCard = (props: ModuleCardProps) => {
     onToggleModuleVisibility,
     showGripHandle,
     gripHandleProps,
-    alwaysShowActions,
-    isDragging,
-    lastActiveModuleUuid,
-    userMode = false,
-  } = props
+  alwaysShowActions,
+  isDragging,
+  lastActiveModuleUuid,
+  firstPassiveModuleUuid,
+  userMode = false,
+} = props
 
   const isWholeCardDragEnabled = Boolean(gripHandleProps)
   const cardDragProps =
@@ -191,6 +193,8 @@ const ModuleCard = (props: ModuleCardProps) => {
 
   const isLastActiveModule =
     module.status === 'active' && lastActiveModuleUuid === module.uuid
+  const isFirstPassiveModule =
+    module.status === 'passive' && firstPassiveModuleUuid === module.uuid
 
   const moduleQuizAttempts = module.quizzes.reduce(
     (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
@@ -556,11 +560,14 @@ const ModuleCard = (props: ModuleCardProps) => {
                       }}
                       disabled={
                         Boolean(isToggleVisibilityPending) ||
-                        (module.status === 'active' && !isLastActiveModule)
+                        (module.status === 'active' && !isLastActiveModule) ||
+                        (module.status === 'passive' && !isFirstPassiveModule)
                       }
                       title={
                         module.status === 'active' && !isLastActiveModule
                           ? 'Lze skrýt pouze poslední aktivní modul'
+                          : module.status === 'passive' && !isFirstPassiveModule
+                            ? 'Lze aktivovat pouze první skrytý modul'
                           : ''
                       }
                     />

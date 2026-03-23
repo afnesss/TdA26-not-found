@@ -19,6 +19,7 @@ interface DraggableModuleCardProps {
     currentStatus: 'active' | 'passive',
   ) => void
   lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
 }
 
 export function DraggableModuleCard({

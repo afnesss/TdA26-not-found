@@ -17,6 +17,7 @@ type CourseModulesGridProps = {
   canDragAndDrop?: boolean
   DraggableCardComponent?: typeof DraggableModuleCard
   lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
   userMode?: boolean
 }
 
@@ -31,6 +32,7 @@ const CourseModulesGrid = ({
   canDragAndDrop,
   DraggableCardComponent,
   lastActiveModuleUuid,
+  firstPassiveModuleUuid,
   userMode,
 }: CourseModulesGridProps) => {
   return (
@@ -46,6 +48,7 @@ const CourseModulesGrid = ({
           onDeleteModule,
           onToggleModuleVisibility,
           lastActiveModuleUuid,
+          firstPassiveModuleUuid,
           userMode,
         }
 

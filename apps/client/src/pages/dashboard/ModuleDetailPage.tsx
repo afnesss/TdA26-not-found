@@ -199,6 +199,8 @@ const CourseModuleDetailPage = () => {
   const isLastActiveModule =
     modules.filter((m) => m.status === 'active').at(-1)?.uuid ===
     selectedModule?.uuid
+  const isFirstPassiveModule =
+    modules.find((m) => m.status === 'passive')?.uuid === selectedModule?.uuid
 
   if (!courseId || !moduleId) {
     return (
@@ -460,11 +462,15 @@ const CourseModuleDetailPage = () => {
                   onClick={() => toggleVisibilityMutation.mutate()}
                   disabled={
                     toggleVisibilityMutation.isPending ||
-                    (selectedModule.status === 'active' && !isLastActiveModule)
+                    (selectedModule.status === 'active' && !isLastActiveModule) ||
+                    (selectedModule.status === 'passive' && !isFirstPassiveModule)
                   }
                   title={
                     selectedModule.status === 'active' && !isLastActiveModule
                       ? 'Lze skrýt pouze poslední aktivní modul'
+                      : selectedModule.status === 'passive' &&
+                          !isFirstPassiveModule
+                        ? 'Lze aktivovat pouze první skrytý modul'
                       : ''
                   }
                 />

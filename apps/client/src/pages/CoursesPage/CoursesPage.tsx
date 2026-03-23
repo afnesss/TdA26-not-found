@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/button'
 import {
   filterCourses,
   sortCoursesByFilter,
+  useAutoTopScroll,
 } from '../CoursePage/utils/helperFunctions'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useCoursesSSE } from '@/api/useCourseSSE'
@@ -24,6 +25,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 const COURSES_PAGE_FILTERS_KEY = 'courses-page-filters'
 
 const CoursesPage = () => {
+  useAutoTopScroll()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
     `${COURSES_PAGE_FILTERS_KEY}-sort`,

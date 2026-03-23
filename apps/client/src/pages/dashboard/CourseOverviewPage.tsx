@@ -36,6 +36,7 @@ import DashboardModeTabs from './components/DashboardModeTabs'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { ModulesSectionActions } from './components/ModuleSectionActions'
 import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
+import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -52,6 +53,7 @@ const CourseModulesOverviewPage = () => {
   useTitle(
     course?.name ? `Správa kurzů - ${course.name}` : 'Správa kurzů - kurz',
   )
+  useAutoTopScroll()
 
   const [courseName, setCourseName] = useState<string | null>(null)
   const [courseDescription, setCourseDescription] = useState<string | null>(

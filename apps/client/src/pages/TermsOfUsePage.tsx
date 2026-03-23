@@ -4,11 +4,13 @@ import { FileText } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText'
 import LegalSection, { LegalText } from '@/components/shared/LegalSection'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useAutoTopScroll } from './CoursePage/utils/helperFunctions'
 
 const TermsOfUsePage = () => {
   useTitle('Podmínky použití platformy')
+  useAutoTopScroll()
   return (
-    <div className='max-w-6xl mx-auto lg:px-5 py-5'>
+    <div className='max-w-6xl mx-auto lg:px-5 pb-5'>
       <div className='flex flex-col gap-6'>
         <HintPageText text='Právní informace' icon={FileText} />
 

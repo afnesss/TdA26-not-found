@@ -43,6 +43,7 @@ import ModuleVisibilityActionButton from './components/ModuleVisibilityActionBut
 import QuizzesSection from './components/QuizzesSection'
 import UserModuleTab from './components/ModuleTab'
 import { toast } from 'sonner'
+import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 type QueryError = Error & { status?: number }
 
@@ -74,6 +75,7 @@ const CourseModuleDetailPage = () => {
   )
   const [moduleUpdatedAt, setModuleUpdatedAt] = useState<string | Date>()
   const { course, previewMode } = useCourseModulesLayoutContext()
+  useAutoTopScroll()
 
   const {
     data: modules = [],
@@ -462,8 +464,10 @@ const CourseModuleDetailPage = () => {
                   onClick={() => toggleVisibilityMutation.mutate()}
                   disabled={
                     toggleVisibilityMutation.isPending ||
-                    (selectedModule.status === 'active' && !isLastActiveModule) ||
-                    (selectedModule.status === 'passive' && !isFirstPassiveModule)
+                    (selectedModule.status === 'active' &&
+                      !isLastActiveModule) ||
+                    (selectedModule.status === 'passive' &&
+                      !isFirstPassiveModule)
                   }
                   title={
                     selectedModule.status === 'active' && !isLastActiveModule
@@ -471,7 +475,7 @@ const CourseModuleDetailPage = () => {
                       : selectedModule.status === 'passive' &&
                           !isFirstPassiveModule
                         ? 'Lze aktivovat pouze první skrytý modul'
-                      : ''
+                        : ''
                   }
                 />
               </div>

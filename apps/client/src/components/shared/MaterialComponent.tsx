@@ -247,7 +247,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                         onChange={(e) =>
                           handleFieldChange('name', e.target.value)
                         }
-                        onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
+                        onKeyDown={(e) =>
+                          handleSaveOnEnter(e, saveEdit, cancelEdit)
+                        }
                         className={cn(
                           'w-full min-h-0 text-sm sm:text-base font-semibold block',
                           errors.name && 'border-destructive',
@@ -322,7 +324,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                             onClick={handleDownloadClick}
                             aria-label={`Stáhnout ${material.name}`}
                             label='Stáhnout'
-                            labelClassName='hidden sm:inline text-current whitespace-nowrap'
+                            labelClassName='max-sm:hidden inline text-current whitespace-nowrap'
                             classNameBtn='h-7 px-2'
                           />
                           {showLecturerCounters &&
@@ -528,7 +530,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                     onChange={(e) => {
                       handleUrlChange(e.target.value)
                     }}
-                    onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
+                    onKeyDown={(e) =>
+                      handleSaveOnEnter(e, saveEdit, cancelEdit)
+                    }
                     className={cn(
                       'block w-full text-xs sm:text-sm mb-0',
                       'url' in errors && !!errors.url && 'border-destructive',

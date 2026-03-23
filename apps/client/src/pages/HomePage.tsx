@@ -12,8 +12,8 @@ const HomePage = () => {
   const { isConnected } = useCoursesSSE()
 
   return (
-    <div className='grid grid-cols-1 md:grid-cols-3 items-center justify-center max-w-7xl mx-auto md:px-6 lg:px-12'>
-      <div className='flex flex-col max-sm:justify-center md:col-span-2 gap-7 md:gap-10 w-full'>
+    <div className='grid grid-cols-1 md:grid-cols-[70%_30%] items-center justify-center max-w-7xl mx-auto md:px-6 lg:px-12'>
+      <div className='flex flex-col max-sm:justify-center gap-7 md:gap-10 w-full'>
         <HintPageText text='Učení může být zábava' icon={ActivitiesIcon} />
 
         <TitleText
@@ -47,7 +47,7 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className='col-span-1 relative items-center justify-center h-full hidden md:flex'>
+      <div className='relative items-center justify-center h-full hidden md:flex'>
         <LogoAnim className='h-50 w-50 lg:h-64 lg:w-64' />
       </div>
     </div>

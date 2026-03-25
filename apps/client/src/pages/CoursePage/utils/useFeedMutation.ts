@@ -170,7 +170,7 @@ export const useDeletePostMutation = (courseId: string) => {
     },
     onSuccess: () => {
       invalidateQueries(queryClient, courseId)
-      toast.success('Přispěvek smazán')
+      toast.success('Příspěvek smazán')
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(

@@ -119,7 +119,7 @@ const UserCourseModuleDetailPage = () => {
 
         <section>
           <Label className='font-bold mb-3'>
-            <UnderlinedText strokeWidth='4'>Studijní Materiály</UnderlinedText>
+            <UnderlinedText strokeWidth='4'>Studijní materiály</UnderlinedText>
           </Label>
           <div className='space-y-3'>
             {selectedModule.materials.length ? (

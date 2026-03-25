@@ -33,7 +33,11 @@ export async function getAllCourses(req: Request, res: Response) {
       status_history: courses.status_history,
     })
     .from(courses)
-    .where(userView ? inArray(courses.status, ["planned", "live"]) : undefined)
+    .where(
+      userView
+        ? inArray(courses.status, ["planned", "live", "paused"])
+        : undefined,
+    )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
   res.json(allCourses);
@@ -161,10 +165,6 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
 
     if (!existingCourse) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
-    }
-
-    if (!["live", "paused", "archived"].includes(existingCourse.status)) {
-      return res.status(404).json({ message: "Statistiky nejsou dostupné" });
     }
 
     const courseModules = await db
@@ -731,7 +731,7 @@ const validateCourseUpdate = ({
     draft: ["planned", "live"],
     planned: ["draft", "live"],
     live: ["paused", "archived"],
-    paused: ["live", "archived"],
+    paused: ["planned", "live", "archived"],
     archived: [],
   };
 

@@ -10,7 +10,6 @@ import {
   QuizzesContentSkeleton,
 } from '@/components/shared/loadingskeleton/DetailsSkeleton'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useTitle } from '@/lib/dynamicTitleHook'
@@ -44,6 +43,7 @@ import ModuleVisibilityActionButton from './components/ModuleVisibilityActionBut
 import QuizzesSection from './components/QuizzesSection'
 import UserModuleTab from './components/ModuleTab'
 import { toast } from 'sonner'
+import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 type QueryError = Error & { status?: number }
 
@@ -52,7 +52,7 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
     variant='secondary'
     className={cn(
       status === 'active'
-        ? 'bg-secondary/50 text-secondary-foreground'
+        ? 'bg-secondary/40 text-[#2D8B6B]'
         : 'bg-muted text-muted-foreground',
     )}
   >
@@ -75,6 +75,7 @@ const CourseModuleDetailPage = () => {
   )
   const [moduleUpdatedAt, setModuleUpdatedAt] = useState<string | Date>()
   const { course, previewMode } = useCourseModulesLayoutContext()
+  useAutoTopScroll()
 
   const {
     data: modules = [],
@@ -197,6 +198,12 @@ const CourseModuleDetailPage = () => {
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const isModuleNotFound = moduleQueryError?.status === 404
 
+  const isLastActiveModule =
+    modules.filter((m) => m.status === 'active').at(-1)?.uuid ===
+    selectedModule?.uuid
+  const isFirstPassiveModule =
+    modules.find((m) => m.status === 'passive')?.uuid === selectedModule?.uuid
+
   if (!courseId || !moduleId) {
     return (
       <StateComp
@@ -248,6 +255,11 @@ const CourseModuleDetailPage = () => {
       name: currentModuleName,
       description: currentModuleDescription,
     })
+  }
+
+  const handleCancelModuleDetails = () => {
+    setModuleName(null)
+    setModuleDescription(null)
   }
 
   const handleUpdateMaterial = async (
@@ -352,6 +364,18 @@ const CourseModuleDetailPage = () => {
   }
 
   const canEditQuizzes = course && course.status === 'draft'
+  const moduleGradient =
+    course?.status === 'live'
+      ? selectedModule?.status === 'active'
+        ? 'secondary'
+        : 'gray'
+      : course?.status === 'paused'
+        ? 'accent-teal'
+        : course?.status === 'planned'
+          ? 'primary'
+          : course?.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
 
   return (
     <div className='space-y-4'>
@@ -379,7 +403,7 @@ const CourseModuleDetailPage = () => {
         <DetailsContentSkeleton />
       ) : (
         <EditableDetailCard
-          gradient='accent-teal'
+          gradient={moduleGradient}
           breadcrumbItems={[
             { label: 'Správa kurzů', path: '/dashboard' },
             {
@@ -406,7 +430,13 @@ const CourseModuleDetailPage = () => {
               handleCapitalizedInput(value, currentModuleDescription),
             )
           }}
+          onEnterSave={handleSaveModuleDetails}
+          onCancelEdit={handleCancelModuleDetails}
           disabled={!canEditModuleInfo}
+          isDirty={canEditModuleInfo && hasModuleDetailsChanges}
+          saveDisabled={
+            saveModuleDetailsMutation.isPending || !currentModuleName.trim()
+          }
           createdAt={
             typeof selectedModule.createdAt === 'string'
               ? selectedModule.createdAt
@@ -426,32 +456,29 @@ const CourseModuleDetailPage = () => {
               )}
             </>
           }
-          topActions={
+          footerActions={
             canToggleModuleVisibility ? (
               <div className='flex flex-wrap items-center gap-2 justify-end'>
                 <ModuleVisibilityActionButton
                   status={selectedModule.status}
                   onClick={() => toggleVisibilityMutation.mutate()}
-                  disabled={toggleVisibilityMutation.isPending}
+                  disabled={
+                    toggleVisibilityMutation.isPending ||
+                    (selectedModule.status === 'active' &&
+                      !isLastActiveModule) ||
+                    (selectedModule.status === 'passive' &&
+                      !isFirstPassiveModule)
+                  }
+                  title={
+                    selectedModule.status === 'active' && !isLastActiveModule
+                      ? 'Lze skrýt pouze poslední aktivní modul'
+                      : selectedModule.status === 'passive' &&
+                          !isFirstPassiveModule
+                        ? 'Lze aktivovat pouze první skrytý modul'
+                        : ''
+                  }
                 />
               </div>
-            ) : undefined
-          }
-          footerActions={
-            canEditModuleInfo ? (
-              <Button
-                variant='primary'
-                size='grid'
-                className='w-fit'
-                onClick={handleSaveModuleDetails}
-                disabled={
-                  !hasModuleDetailsChanges ||
-                  saveModuleDetailsMutation.isPending ||
-                  !currentModuleName.trim()
-                }
-              >
-                Uložit změny
-              </Button>
             ) : undefined
           }
         />

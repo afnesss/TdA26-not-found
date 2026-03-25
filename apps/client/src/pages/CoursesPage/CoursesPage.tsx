@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/button'
 import {
   filterCourses,
   sortCoursesByFilter,
+  useAutoTopScroll,
 } from '../CoursePage/utils/helperFunctions'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useCoursesSSE } from '@/api/useCourseSSE'
@@ -24,16 +25,18 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 const COURSES_PAGE_FILTERS_KEY = 'courses-page-filters'
 
 const CoursesPage = () => {
+  useAutoTopScroll()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
     `${COURSES_PAGE_FILTERS_KEY}-sort`,
     'newest',
   )
   const [statusFilters, setStatusFilters] = useLocalStorage<
-    Record<'live' | 'planned', boolean>
+    Record<'live' | 'planned' | 'paused', boolean>
   >(`${COURSES_PAGE_FILTERS_KEY}-status`, {
     live: true,
     planned: true,
+    paused: true,
   })
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
@@ -51,7 +54,9 @@ const CoursesPage = () => {
 
   const filteredCourses = filterCourses(courses, searchQuery).filter(
     (course) =>
-      course.status === 'live' || course.status === 'planned'
+      course.status === 'live' ||
+      course.status === 'planned' ||
+      course.status === 'paused'
         ? statusFilters[course.status]
         : true,
   )
@@ -66,19 +71,26 @@ const CoursesPage = () => {
   }
 
   const resetStatusFilters = () => {
-    setStatusFilters({ live: true, planned: true })
+    setStatusFilters({ live: true, planned: true, paused: true })
   }
 
-  const statusFilterItems: { label: string; value: 'live' | 'planned' }[] = [
+  const statusFilterItems: {
+    label: string
+    value: 'live' | 'planned' | 'paused'
+  }[] = [
     { label: 'Aktivní', value: 'live' },
-    { label: 'Naplanováné', value: 'planned' },
+    { label: 'Naplánované', value: 'planned' },
+    { label: 'Pozastavené', value: 'paused' },
   ]
 
   useTitle('Kurzy')
 
   const isSearchEmpty = searchQuery.trim() === ''
   const isDefaultFilters =
-    selectedFilter === 'newest' && statusFilters.live && statusFilters.planned
+    selectedFilter === 'newest' &&
+    statusFilters.live &&
+    statusFilters.planned &&
+    statusFilters.paused
   const useResetStatusAction = isSearchEmpty && !isDefaultFilters
 
   return (

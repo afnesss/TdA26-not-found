@@ -20,6 +20,9 @@ type QuizOptionProps = {
   onOptionUpdate?: (value: string) => void
   onOptionRemove?: () => void
   canRemove?: boolean
+  onEditKeyDown?: (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
   // User mode
   isSelected?: boolean
   isSubmitted?: boolean
@@ -38,6 +41,7 @@ const QuizOption = ({
   onOptionUpdate,
   onOptionRemove,
   canRemove = true,
+  onEditKeyDown,
   isSelected = false,
   isSubmitted = false,
   showCorrect = false,
@@ -63,6 +67,7 @@ const QuizOption = ({
           variant='ghost'
           value={option}
           onChange={(e) => onOptionUpdate?.(e.target.value)}
+          onKeyDown={onEditKeyDown}
           placeholder='Zadejte možnost'
           className='text-xs md:text-sm flex-1'
         />
@@ -75,7 +80,7 @@ const QuizOption = ({
               e?.stopPropagation()
               onOptionRemove?.()
             }}
-            aria-label={`Remove option ${optIndex + 1}`}
+            aria-label={`Odstranit možnost ${optIndex + 1}`}
           />
         )}
       </div>
@@ -98,12 +103,21 @@ const QuizOption = ({
         isSelected && !showCorrect && !isSubmitted && 'bg-primary/10',
         isSelected && isSubmitted && !showCorrect && 'bg-gray-200',
         isSelected && isCorrect && showCorrect && 'bg-secondary/40',
+        mode === 'lecturer-preview' &&
+          showCorrect &&
+          isCorrect &&
+          !isSelected &&
+          'bg-secondary/40',
         isSelected &&
           !isCorrect &&
           isSubmitted &&
           showCorrect &&
           'bg-destructive/30',
-        !isSelected && isCorrect && showCorrect && 'border-secondary border-2',
+        !isSelected &&
+          isCorrect &&
+          showCorrect &&
+          mode !== 'lecturer-preview' &&
+          'border-secondary border-2',
         mode === 'lecturer-preview' && 'cursor-default',
       )}
     >
@@ -114,7 +128,7 @@ const QuizOption = ({
           disabled={isSubmitted}
           onCheckedChange={onAnswerChange}
           answerState={getAnswerState()}
-          aria-label={`Option ${optIndex + 1}: ${option}`}
+          aria-label={`Možnost ${optIndex + 1}: ${option}`}
           className={cn(mode === 'lecturer-preview' && 'cursor-default')}
         />
         <span className='text-xs sm:text-sm font-medium text-foreground'>

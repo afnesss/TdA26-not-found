@@ -8,6 +8,7 @@ let intervalRef: NodeJS.Timeout | null = null;
 let isRunning = false;
 export const startIntervalScheduler = () => {
   if (intervalRef) return;
+  void runCheck();
   intervalRef = setInterval(async () => {
     await runCheck();
   }, 10000);

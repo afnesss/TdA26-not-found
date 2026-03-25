@@ -11,7 +11,7 @@ export type CourseModulesLayoutContext = {
   isError: boolean
   refetchCourse: () => void
   previewMode: boolean
-  courseIndexColor: keyof typeof colorStyles.gradient
+  courseIndexColor: keyof typeof colorStyles.line
 }
 
 export const useCourseModulesLayoutContext = () =>

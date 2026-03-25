@@ -16,6 +16,9 @@ type CourseModulesGridProps = {
   ) => void
   canDragAndDrop?: boolean
   DraggableCardComponent?: typeof DraggableModuleCard
+  lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
+  userMode?: boolean
 }
 
 const CourseModulesGrid = ({
@@ -28,6 +31,9 @@ const CourseModulesGrid = ({
   onToggleModuleVisibility,
   canDragAndDrop,
   DraggableCardComponent,
+  lastActiveModuleUuid,
+  firstPassiveModuleUuid,
+  userMode,
 }: CourseModulesGridProps) => {
   return (
     <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
@@ -41,6 +47,9 @@ const CourseModulesGrid = ({
           isToggleVisibilityPending,
           onDeleteModule,
           onToggleModuleVisibility,
+          lastActiveModuleUuid,
+          firstPassiveModuleUuid,
+          userMode,
         }
 
         if (canDragAndDrop && DraggableCardComponent) {

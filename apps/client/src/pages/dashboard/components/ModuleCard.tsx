@@ -1,4 +1,5 @@
 ﻿import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
@@ -19,7 +20,10 @@ import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import type { CourseModule, CourseModulesStatus } from '@/lib/schemas/module'
 import type { CourseDetail } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
-import { truncateDescription } from '../../CoursePage/utils/helperFunctions'
+import {
+  handleSaveOnEnter,
+  truncateDescription,
+} from '../../CoursePage/utils/helperFunctions'
 import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
@@ -69,6 +73,9 @@ type ExistingModuleCardProps = BaseModuleCardProps & {
   }
   alwaysShowActions?: boolean
   isDragging?: boolean
+  lastActiveModuleUuid?: string
+  firstPassiveModuleUuid?: string
+  userMode?: boolean
 }
 
 type DraftModuleCardProps = BaseModuleCardProps & {
@@ -114,6 +121,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     : prev,
                 )
               }
+              onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
               placeholder='Zadejte název modulu'
               className='placeholder:font-semibold'
             />
@@ -122,8 +130,8 @@ const ModuleCard = (props: ModuleCardProps) => {
               onCancel={() => onCancel()}
               saveDisabled={isCreating || !draftModule.name.trim()}
               cancelDisabled={isCreating}
-              saveAriaLabel='Create module'
-              cancelAriaLabel='Cancel module draft'
+              saveAriaLabel='Vytvořit modul'
+              cancelAriaLabel='Zrušit koncept modulu'
               className='flex items-center gap-1'
             />
           </div>
@@ -147,6 +155,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                       : prev,
                   )
                 }
+                onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
                 placeholder='Popis modulu (volitelné)'
               />
             </div>
@@ -168,9 +177,12 @@ const ModuleCard = (props: ModuleCardProps) => {
     onToggleModuleVisibility,
     showGripHandle,
     gripHandleProps,
-    alwaysShowActions,
-    isDragging,
-  } = props
+  alwaysShowActions,
+  isDragging,
+  lastActiveModuleUuid,
+  firstPassiveModuleUuid,
+  userMode = false,
+} = props
 
   const isWholeCardDragEnabled = Boolean(gripHandleProps)
   const cardDragProps =
@@ -178,6 +190,11 @@ const ModuleCard = (props: ModuleCardProps) => {
       ? { ...gripHandleProps.attributes, ...gripHandleProps.listeners }
       : {}
   const isAnalyticsMode = Boolean(analyticsMode)
+
+  const isLastActiveModule =
+    module.status === 'active' && lastActiveModuleUuid === module.uuid
+  const isFirstPassiveModule =
+    module.status === 'passive' && firstPassiveModuleUuid === module.uuid
 
   const moduleQuizAttempts = module.quizzes.reduce(
     (sum, quiz) => sum + (quiz.attemptsCount ?? 0),
@@ -230,7 +247,9 @@ const ModuleCard = (props: ModuleCardProps) => {
   }).length
   const quizAttentionParts: string[] = []
   if (moduleQuizzesWithoutSubmits > 0) {
-    quizAttentionParts.push(`Kvízy bez odeslání: ${moduleQuizzesWithoutSubmits}`)
+    quizAttentionParts.push(
+      `Kvízy bez odeslání: ${moduleQuizzesWithoutSubmits}`,
+    )
   }
   if (moduleLowScoreQuizzes > 0) {
     quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)
@@ -274,11 +293,13 @@ const ModuleCard = (props: ModuleCardProps) => {
             <span
               className={cn(
                 'inline-flex items-center justify-center w-6 h-6 rounded-full text-foreground font-medium shrink-0',
-                courseStatus !== 'live'
+                userMode
                   ? 'bg-primary/30'
-                  : module.status === 'active'
-                    ? 'bg-secondary/60'
-                    : 'bg-muted-foreground/20',
+                  : courseStatus !== 'live'
+                    ? 'bg-primary/30'
+                    : module.status === 'active'
+                      ? 'bg-secondary/60'
+                      : 'bg-muted-foreground/20',
               )}
             >
               {moduleIndex}
@@ -311,11 +332,11 @@ const ModuleCard = (props: ModuleCardProps) => {
                 onClick={(e) => {
                   e?.stopPropagation()
                 }}
-                aria-label={`Edit module ${module.name}`}
+                aria-label={`Upravit modul ${module.name}`}
               />
               <EditBtn
                 type='delete'
-                aria-label={`Delete module ${module.name}`}
+                aria-label={`Smazat modul ${module.name}`}
               />
             </div>
           ) : courseStatus === 'draft' && onDeleteModule ? (
@@ -326,7 +347,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                   e?.stopPropagation()
                   onOpenModule?.(module.uuid)
                 }}
-                aria-label={`Edit module ${module.name}`}
+                aria-label={`Upravit modul ${module.name}`}
               />
               <div onClick={(e) => e.stopPropagation()}>
                 <DeleteConfirmDialog
@@ -335,7 +356,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                   trigger={
                     <EditBtn
                       type='delete'
-                      aria-label={`Delete module ${module.name}`}
+                      aria-label={`Smazat modul ${module.name}`}
                     />
                   }
                   onConfirm={() => {
@@ -356,7 +377,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     <span className='text-xs font-semibold text-muted-foreground'>
                       Materiály
                     </span>
-                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-xs font-semibold text-accent-teal-dark'>
                       Celkem {module.materials.length}
                     </span>
                   </div>
@@ -419,7 +440,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                     <span className='text-xs font-semibold text-muted-foreground'>
                       Kvízy
                     </span>
-                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent-teal-dark'>
+                    <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-xs font-semibold text-accent-teal-dark'>
                       Celkem {module.quizzes.length}
                     </span>
                   </div>
@@ -483,7 +504,7 @@ const ModuleCard = (props: ModuleCardProps) => {
           <>
             <div className='flex items-center gap-2 mt-1 mb-2 md:mb-3'>
               <CardDescription className='flex-1 min-w-0'>
-                {truncateDescription(module.description ?? '', 70)}
+                {truncateDescription(module.description ?? '', 90)}
               </CardDescription>
               {showGripHandle && (
                 <Button
@@ -537,7 +558,18 @@ const ModuleCard = (props: ModuleCardProps) => {
                         e.stopPropagation()
                         onToggleModuleVisibility(module.uuid, module.status)
                       }}
-                      disabled={Boolean(isToggleVisibilityPending)}
+                      disabled={
+                        Boolean(isToggleVisibilityPending) ||
+                        (module.status === 'active' && !isLastActiveModule) ||
+                        (module.status === 'passive' && !isFirstPassiveModule)
+                      }
+                      title={
+                        module.status === 'active' && !isLastActiveModule
+                          ? 'Lze skrýt pouze poslední aktivní modul'
+                          : module.status === 'passive' && !isFirstPassiveModule
+                            ? 'Lze aktivovat pouze první skrytý modul'
+                          : ''
+                      }
                     />
                   )}
                 </div>

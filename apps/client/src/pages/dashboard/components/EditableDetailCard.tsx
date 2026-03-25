@@ -1,11 +1,14 @@
 import Breadcrumb from '@/components/shared/Breadcrumb'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { colorStyles } from '@/lib/constants'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Children, type ReactNode } from 'react'
 import thinkIconUrl from '@/assets/t-idea-blue.svg'
+import { Calendar } from 'lucide-react'
+import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 
 type BreadcrumbItem = {
   label: string
@@ -14,15 +17,21 @@ type BreadcrumbItem = {
 
 type EditableDetailCardProps = {
   breadcrumbItems: BreadcrumbItem[]
-  gradient: keyof typeof colorStyles.gradient
+  gradient: keyof typeof colorStyles.line
 
   onNameChange?: (value: string) => void
   onDescriptionChange?: (value: string) => void
+  onEnterSave?: () => void
+  onCancelEdit?: () => void
   disabled?: boolean
+  isDirty?: boolean
+  saveDisabled?: boolean
   topBadges?: ReactNode
   topActions?: ReactNode
   headerBottom?: ReactNode
   footerActions?: ReactNode
+  footerMeta?: ReactNode
+  hideDatesOnSmall?: boolean
   noActionsSlot?: ReactNode
   nameValue: string
   descriptionValue?: string
@@ -51,11 +60,17 @@ const EditableDetailCard = ({
   gradient,
   onNameChange,
   onDescriptionChange,
+  onEnterSave,
+  onCancelEdit,
   disabled = false,
+  isDirty = false,
+  saveDisabled = false,
   topBadges,
   topActions,
   headerBottom,
   footerActions,
+  footerMeta,
+  hideDatesOnSmall = false,
   noActionsSlot,
   nameValue,
   descriptionValue,
@@ -68,15 +83,35 @@ const EditableDetailCard = ({
     createdAt &&
     new Date(createdAt).getTime() !== new Date(updatedAt).getTime()
   const hasTopActions = Boolean(topActions && Children.count(topActions) > 0)
+  const isNameEmpty = !disabled && !nameValue.trim()
+  const showInlineSave = !disabled && isDirty
+  const resolvedFooterActions = showInlineSave ? (
+    <Button
+      variant='primary'
+      size='sm'
+      onClick={() => onEnterSave?.()}
+      disabled={saveDisabled || isNameEmpty}
+    >
+      <span className='sm:hidden'>Uložit</span>
+      <span className='hidden sm:inline'>Uložit změny</span>
+    </Button>
+  ) : (
+    footerActions
+  )
 
   return (
     <Card className='border border-border/60 shadow-md bg-background rounded-xl cursor-auto'>
       {/* Gradient bar */}
-      <div className={`h-2 bg-linear-to-r ${colorStyles.gradient[gradient]}`} />
+      <div className={cn(headerLineHeight, colorStyles.line[gradient])} />
 
-      <div className='p-4 lg:p-6 -mt-2'>
+      <div
+        className={cn(
+          'p-4 lg:p-6 -mt-2',
+          disabled && 'gap-1 sm:gap-2 flex flex-col',
+        )}
+      >
         {/* Header */}
-        <div className='mb-4 space-y-3'>
+        <div className={cn(disabled ? '' : 'mb-4 space-y-3')}>
           <div className='flex items-start justify-between gap-3'>
             <div className='flex flex-wrap items-center gap-3 min-w-0'>
               <Breadcrumb items={breadcrumbItems} />
@@ -87,9 +122,12 @@ const EditableDetailCard = ({
               )}
             </div>
 
-            {hasTopActions ? (
-              <div className='flex flex-wrap items-end gap-2'>{topActions}</div>
-            ) : (
+            <div className='flex flex-wrap items-center gap-2 shrink-0'>
+              {hasTopActions && !showInlineSave && (
+                <div className='flex flex-wrap items-center gap-2'>
+                  {topActions}
+                </div>
+              )}
               <div className='shrink-0'>
                 {noActionsSlot ?? (
                   <img
@@ -100,87 +138,112 @@ const EditableDetailCard = ({
                   />
                 )}
               </div>
-            )}
+            </div>
           </div>
+
+          {disabled ? (
+            <div className='flex flex-col gap-1 sm:gap-2'>
+              <Label className='mb-0 font-bold' size='lg'>
+                {nameValue}
+              </Label>
+              {descriptionValue ? (
+                <p className='text-gray-600 text-sm md:text-base leading-relaxed whitespace-pre-wrap'>
+                  {descriptionValue}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           {headerBottom && <div>{headerBottom}</div>}
         </div>
 
         {/* Form fields */}
         <CardContent className='space-y-4 p-0'>
-          <div className='space-y-4'>
-            <div>
-              <Label size='sm' className='mb-1 block'>
-                Název
-              </Label>
-              <Textarea
-                value={nameValue}
-                onChange={(e) => onNameChange?.(e.target.value)}
-                // disabled={disabled}
-                minRows={1}
-                maxRows={2}
-                className={cn(
-                  'font-semibold text-base md:text-lg',
-                  disabled && 'bg-muted/20 opacity-80',
-                )}
-                readOnly={disabled}
-              />
-            </div>
-
-            <div>
-              <Label size='sm' className='mb-1 block'>
-                Popis
-              </Label>
-              <Textarea
-                value={descriptionValue ?? ''}
-                onChange={(e) => onDescriptionChange?.(e.target.value)}
-                // disabled={disabled}
-                minRows={1}
-                maxRows={4}
-                className={cn(disabled && 'bg-muted/20 opacity-80')}
-                readOnly={disabled}
-              />
-            </div>
-          </div>
-
-          {/* Footer with dates and actions */}
-          <CardFooter className='flex flex-wrap justify-between gap-4 p-0 pt-4'>
-            <div className='flex flex-wrap gap-6 md:gap-10'>
+          {disabled ? null : (
+            <div className='space-y-3'>
               <div>
                 <Label size='sm' className='mb-1 block'>
-                  Vytvořeno
+                  Název
                 </Label>
-                <p className='text-gray-900 font-medium'>
-                  {fmtDate(createdAt)}
-                </p>
+                <Textarea
+                  value={nameValue}
+                  onChange={(e) => onNameChange?.(e.target.value)}
+                  onKeyDown={(e) =>
+                    handleSaveOnEnter(e, onEnterSave, onCancelEdit)
+                  }
+                  minRows={1}
+                  maxRows={2}
+                  placeholder='Zadejte název'
+                  className={cn(
+                    'font-semibold text-base md:text-lg',
+                    isNameEmpty && 'border-destructive',
+                  )}
+                />
+                {isNameEmpty && <p className='error-text'>Název je povinný</p>}
               </div>
 
-              {showUpdatedAt && (
-                <div>
-                  <Label size='sm' className='mb-1 block'>
-                    Upraveno
-                  </Label>
-                  <p className='text-gray-900 font-medium'>
-                    {fmtDate(updatedAt)}
-                  </p>
-                </div>
-              )}
+              <div>
+                <Label size='sm' className='mb-1 block'>
+                  Popis
+                </Label>
+                <Textarea
+                  value={descriptionValue ?? ''}
+                  onChange={(e) => onDescriptionChange?.(e.target.value)}
+                  onKeyDown={(e) =>
+                    handleSaveOnEnter(e, onEnterSave, onCancelEdit)
+                  }
+                  minRows={1}
+                  maxRows={4}
+                  placeholder='Zadejte popis (volitelné)'
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer with dates and actions */}
+          <CardFooter className='flex justify-between gap-4 p-0 pt-3'>
+            <div className='flex flex-wrap items-center gap-5'>
+              <div
+                className={cn(
+                  'flex gap-3',
+                  hideDatesOnSmall && 'hidden sm:flex',
+                )}
+              >
+                <span className='flex flex-col items-center gap-1'>
+                  <span className='text-xs text-gray-500'>Vytvořeno</span>
+                  <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
+                    {fmtDate(createdAt)}
+                  </span>
+                </span>
+                {showUpdatedAt && (
+                  <span className='flex flex-col items-center gap-1'>
+                    <span className='text-xs text-gray-500'>Upraveno</span>
+                    <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
+                      {fmtDate(updatedAt)}
+                    </span>
+                  </span>
+                )}
+              </div>
 
               {extraDateMeta && (
-                <div>
-                  <Label size='sm' className='mb-1 block'>
+                <div className='flex flex-col gap-1'>
+                  <span className='text-xs text-muted-foreground/70'>
                     {extraDateMeta.label}
-                  </Label>
-                  <p className='text-gray-900 font-medium'>
-                    {extraDateMeta.withTime
-                      ? fmtDateTime(extraDateMeta.value ?? undefined)
-                      : fmtDate(extraDateMeta.value ?? undefined)}
-                  </p>
+                  </span>
+                  <span className='flex flex-col items-center gap-1.5'>
+                    <Calendar size={14} className='text-primary' />
+                    <span className='text-xs md:text-sm font-medium'>
+                      {extraDateMeta.withTime
+                        ? fmtDateTime(extraDateMeta.value ?? undefined)
+                        : fmtDate(extraDateMeta.value ?? undefined)}
+                    </span>
+                  </span>
                 </div>
               )}
+              {footerMeta && <div>{footerMeta}</div>}
             </div>
 
-            {footerActions && <div>{footerActions}</div>}
+            {resolvedFooterActions && <div>{resolvedFooterActions}</div>}
           </CardFooter>
         </CardContent>
       </div>

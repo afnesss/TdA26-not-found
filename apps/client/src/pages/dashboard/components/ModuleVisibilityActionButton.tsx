@@ -9,6 +9,7 @@ type ModuleVisibilityActionButtonProps = {
   onClick: MouseEventHandler<HTMLButtonElement>
   disabled?: boolean
   className?: string
+  title?: string
 }
 
 const ModuleVisibilityActionButton = ({
@@ -16,6 +17,7 @@ const ModuleVisibilityActionButton = ({
   onClick,
   disabled,
   className,
+  title,
 }: ModuleVisibilityActionButtonProps) => {
   const isActive = status === 'active'
 
@@ -28,11 +30,13 @@ const ModuleVisibilityActionButton = ({
         !isActive &&
           cn(
             'bg-linear-to-br font-medium text-xs md:text-sm',
-            colorStyles.bg['accent-teal-light'],
-            colorStyles.text['accent-teal-light'],
+            colorStyles.bg.secondary,
+            colorStyles.text.secondary,
           ),
         className,
+        isActive && 'text-muted-foreground',
       )}
+      title={title}
       onClick={onClick}
       disabled={disabled}
     >

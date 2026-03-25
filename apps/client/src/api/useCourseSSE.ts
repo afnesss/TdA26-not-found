@@ -50,7 +50,7 @@ export const useCoursesSSE = () => {
           toastMessage = `Termín kurzu "${newCourse.name}" byl změněn`
         }
 
-        if (newCourse.status !== 'planned' && newCourse.status !== 'live')
+        if (newCourse.status === 'draft' || newCourse.status === 'archived')
           return oldData
 
         return exists
@@ -78,17 +78,24 @@ export const useCoursesSSE = () => {
 
       const removedCourseName = payloadData?.name ?? existingCourse?.name
       const removedCourseStatus = payloadData?.status ?? existingCourse?.status
+      const isVisibleStatus =
+        removedCourseStatus === 'live' ||
+        removedCourseStatus === 'planned' ||
+        removedCourseStatus === 'paused'
+      const shouldNotify = Boolean(existingCourse) || isVisibleStatus
 
-      if (removedCourseName && removedCourseStatus === 'paused') {
-        toast.info(`Kurz "${removedCourseName}" pozastaven lektorem`)
-      } else if (removedCourseName && removedCourseStatus === 'archived') {
-        toast.info(`Kurz "${removedCourseName}" dokončeno lektorem`)
-      } else {
-        toast.info(
-          removedCourseName
-            ? `Kurz "${removedCourseName}" byl odstraněn lektorem`
-            : 'Kurz byl odstraněn lektorem',
-        )
+      if (shouldNotify) {
+        if (removedCourseName && removedCourseStatus === 'paused') {
+          toast.info(`Kurz "${removedCourseName}" byl pozastaven lektorem`)
+        } else if (removedCourseName && removedCourseStatus === 'archived') {
+          toast.info(`Kurz "${removedCourseName}" byl dokončen lektorem`)
+        } else {
+          toast.info(
+            removedCourseName
+              ? `Kurz "${removedCourseName}" byl smazán lektorem`
+              : 'Kurz byl smazán lektorem',
+          )
+        }
       }
 
       queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {

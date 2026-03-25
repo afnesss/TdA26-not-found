@@ -23,6 +23,23 @@ const moduleSummarySelect = {
   updatedAt: modules.updatedAt,
 };
 
+async function getBoundaryModuleUuid(
+  courseId: string,
+  status: "active" | "passive",
+  direction: "first" | "last",
+) {
+  const orderBy =
+    direction === "first" ? asc(modules.position) : desc(modules.position);
+
+  const [row] = await db
+    .select({ uuid: modules.uuid })
+    .from(modules)
+    .where(and(eq(modules.status, status), eq(modules.courseId, courseId)))
+    .orderBy(orderBy);
+
+  return row?.uuid ?? null;
+}
+
 async function buildModuleDetail(moduleUuid: string) {
   const [fetchedModule] = await db
     .select({
@@ -194,6 +211,35 @@ export async function updateModule(req: Request, res: Response) {
       return res.status(400).json({ message: "Neplatný status modulu" });
     }
 
+    if (status === "passive" && existingModule.status === "active") {
+      const lastActiveModuleUuid = await getBoundaryModuleUuid(
+        courseId,
+        "active",
+        "last",
+      );
+
+      if (!lastActiveModuleUuid || lastActiveModuleUuid !== existingModule.uuid) {
+        return res.status(400).json({
+          message: "Lze skrýt pouze poslední aktivní modul v kurzu",
+        });
+      }
+    }
+    if (status === "active" && existingModule.status === "passive") {
+      const firstPassiveModuleUuid = await getBoundaryModuleUuid(
+        courseId,
+        "passive",
+        "first",
+      );
+
+      if (
+        !firstPassiveModuleUuid ||
+        firstPassiveModuleUuid !== existingModule.uuid
+      ) {
+        return res.status(400).json({
+          message: "Lze aktivovat pouze první skrytý modul v kurzu",
+        });
+      }
+    }
     const [updatedModule] = await db
       .update(modules)
       .set({
@@ -330,4 +376,3 @@ export async function reorderModules(req: Request, res: Response) {
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
-

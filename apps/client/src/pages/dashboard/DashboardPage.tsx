@@ -20,7 +20,7 @@ import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookOpenText, Plus } from 'lucide-react'
+import { BarChart3, BookOpenText, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
@@ -40,13 +40,6 @@ import DashboardModeTabs from './components/DashboardModeTabs'
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
-  const statisticsAllowedStatuses: CourseStatus[] = [
-    'live',
-    'paused',
-    'archived',
-  ]
-  const isStatisticsAllowedStatus = (status: CourseStatus) =>
-    statisticsAllowedStatuses.includes(status)
   const [searchQuery, setSearchQuery] = useState('')
 
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
@@ -100,21 +93,14 @@ const DashboardDesign1 = () => {
     (course) => statusFilters[course.status],
   )
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
-  const statisticsCourses = sortedCourses.filter((course) =>
-    isStatisticsAllowedStatus(course.status),
-  )
-  const coursesForCurrentMode =
-    dashboardMode === 'analytics' ? statisticsCourses : sortedCourses
 
-  const hasMoreCourses = coursesForCurrentMode.length > displayCount
-  const displayedCourses = coursesForCurrentMode.slice(0, displayCount)
+  const hasMoreCourses = sortedCourses.length > displayCount
+  const displayedCourses = sortedCourses.slice(0, displayCount)
   const displayedStatisticsQueries = useQueries({
     queries: displayedCourses.map((course) => ({
       queryKey: ['course-dashboard-analytics', course.uuid],
       queryFn: () => getCourseDashboardAnalytics(course.uuid),
-      enabled:
-        dashboardMode === 'analytics' &&
-        isStatisticsAllowedStatus(course.status),
+      enabled: dashboardMode === 'analytics',
       staleTime: 1000 * 20,
     })),
   })
@@ -137,7 +123,7 @@ const DashboardDesign1 = () => {
     {
       value: 'statistics',
       label: 'Statistiky',
-      disabled: statisticsCourses.length === 0,
+      disabled: sortedCourses.length === 0,
     },
   ]
   const dashboardTabsValue =
@@ -211,8 +197,12 @@ const DashboardDesign1 = () => {
           <div className='flex items-center justify-center gap-2 sm:gap-3'>
             <div className='hidden lg:flex'>
               <HintPageText
-                text='Správa kurzů'
-                icon={BookOpenText}
+                text={
+                  dashboardMode === 'analytics'
+                    ? 'Statistiky kurzů'
+                    : 'Správa kurzů'
+                }
+                icon={dashboardMode === 'analytics' ? BarChart3 : BookOpenText}
                 spanText={
                   (searchQuery && filteredCourses.length.toString()) ||
                   courses.length.toString()
@@ -274,7 +264,7 @@ const DashboardDesign1 = () => {
               displayedCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
-                  message='Žádné kurzy s dostupnou statistikou'
+                  message='Začněte vytvořením svého prvního kurzu'
                 />
               ) : (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>
@@ -305,10 +295,7 @@ const DashboardDesign1 = () => {
                         course={course}
                         index={courseDraft ? index + 1 : index}
                         type='edit'
-                        statisticsMode={
-                          dashboardMode === 'analytics' &&
-                          isStatisticsAllowedStatus(course.status)
-                        }
+                        statisticsMode={dashboardMode === 'analytics'}
                         onEdit={() => {
                           handleEditCourse(course)
                         }}

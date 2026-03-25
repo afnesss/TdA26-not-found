@@ -32,6 +32,9 @@ type QuizQuestionProps = {
   onOptionRemove?: (optIndex: number) => void
   onCorrectToggle?: (optIndex: number) => void
   onAddOption?: () => void
+  onEditKeyDown?: (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void
   questionError?: {
     question?: FieldError
     options?: FieldError[]
@@ -60,6 +63,7 @@ const QuizQuestion = ({
   onOptionRemove,
   onCorrectToggle,
   onAddOption,
+  onEditKeyDown,
   userState,
   onAnswerChange,
   questionError,
@@ -112,6 +116,7 @@ const QuizQuestion = ({
                         e.preventDefault()
                         onQuestionTextUpdate?.(e.target.value)
                       }}
+                      onKeyDown={onEditKeyDown}
                       className={cn(
                         'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
                         questionError?.question && 'border-destructive',
@@ -122,7 +127,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='md:hidden shrink-0'
-                      aria-label={`Remove question ${qIndex + 1}`}
+                      aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />
                   </div>
 
@@ -158,7 +163,7 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       type='delete'
                       classNameBtn='hidden md:flex shrink-0'
-                      aria-label={`Remove question ${qIndex + 1}`}
+                      aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />
                   </div>
                 </div>
@@ -237,23 +242,24 @@ const QuizQuestion = ({
             )
 
             return (
-              <QuizOption
-                key={optIndex}
-                option={option}
-                optIndex={optIndex}
-                question={question}
-                mode={mode}
-                selectedCount={
-                  questionAnalytics ? optionStats?.selectedCount : undefined
-                }
-                // Lecturer props
-                isCorrect={isCorrect}
-                onCorrectToggle={() => onCorrectToggle?.(optIndex)}
-                onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
-                onOptionRemove={() => onOptionRemove?.(optIndex)}
-                canRemove={question.options.length > 2}
-                // User props
-                isSelected={isSelected}
+                <QuizOption
+                  key={optIndex}
+                  option={option}
+                  optIndex={optIndex}
+                  question={question}
+                  mode={mode}
+                  selectedCount={
+                    questionAnalytics ? optionStats?.selectedCount : undefined
+                  }
+                  // Lecturer props
+                  isCorrect={isCorrect}
+                  onCorrectToggle={() => onCorrectToggle?.(optIndex)}
+                  onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
+                  onOptionRemove={() => onOptionRemove?.(optIndex)}
+                  canRemove={question.options.length > 2}
+                  onEditKeyDown={onEditKeyDown}
+                  // User props
+                  isSelected={isSelected}
                 isSubmitted={isSubmitted}
                 showCorrect={showCorrect}
                 onAnswerChange={() => {
@@ -278,7 +284,7 @@ const QuizQuestion = ({
           })}
         </div>
         {mode === 'lecturer' && hasOptionErrors && !questionError?.question && (
-          <p className='error-text mt-2'>Všechny možnosti musí být vyplněné</p>
+          <p className='error-text mt-2'>Všechny možnosti musí být vyplněny</p>
         )}
         {mode === 'lecturer' &&
           questionError?.correctIndices &&
@@ -292,10 +298,10 @@ const QuizQuestion = ({
           <Button
             variant='outline'
             size='sm'
-            onClick={onAddOption}
-            className='w-full md:w-auto'
-            aria-label={`Add new option to question ${qIndex + 1}`}
-          >
+          onClick={onAddOption}
+          className='w-full md:w-auto'
+          aria-label={`Přidat novou možnost k otázce ${qIndex + 1}`}
+        >
             <Plus size={16} />
             Přidat možnost
           </Button>

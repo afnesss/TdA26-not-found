@@ -15,6 +15,7 @@ export default function Header() {
   const queryClient = useQueryClient()
   const isMd = useMediaQuery('(min-width: 768px)')
   const isDashboard = location.pathname.includes('/dashboard')
+  const isCourses = location.pathname.includes('/courses')
   const { isAuth } = useAuth()
 
   return (
@@ -41,16 +42,20 @@ export default function Header() {
             >
               <Button
                 variant={'tab'}
+                className={cn(isCourses && 'text-secondary ...')}
                 onClick={() => navigate('/courses')}
                 aria-label='Přejít na kurzy'
+                aria-current={isCourses ? 'page' : undefined}
               >
                 Kurzy
               </Button>
               {isAuth && (
                 <Button
                   variant='tab'
+                  className={cn(isDashboard && 'text-secondary ...')}
                   onClick={() => navigate('/dashboard')}
                   aria-label='Přejít na Dashboard'
+                  aria-current={isDashboard ? 'page' : undefined}
                 >
                   Dashboard
                 </Button>

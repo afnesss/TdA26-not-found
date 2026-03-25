@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
 import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
 import UserCourseFeedSection from './components/UserCourseFeedSection'
+import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 const UserCourseLayoutPage = () => {
   const { courseId, moduleId } = useParams<{
@@ -31,6 +32,8 @@ const UserCourseLayoutPage = () => {
       navigate('/courses', { replace: true })
     },
   })
+
+  useAutoTopScroll()
 
   const {
     coursesUser,

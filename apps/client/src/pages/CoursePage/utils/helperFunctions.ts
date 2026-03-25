@@ -1,14 +1,19 @@
-import type { ApiError, QuizStateById } from '../../../lib/types'
-import {
-  QuizSubmitResponseSchema,
-  type CourseSummary,
-  type QuizAnswer,
-} from '@/lib/schemas'
 import type { FilterIds } from '@/lib/constants'
-import { submitQuiz } from '@/api/queries/quizQueries'
-import type { UseMutationResult, QueryClient } from '@tanstack/react-query'
-import { useQuizSubmitMutation } from './quizSubmitMutation'
+import { type CourseSummary } from '@/lib/schemas'
+import type { QueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router'
 import { toast } from 'sonner'
+import type { ApiError, QuizStateById } from '../../../lib/types'
+import { useQuizSubmitMutation } from './quizSubmitMutation'
+
+export const useAutoTopScroll = () => {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [pathname])
+}
 
 export const handleSingleChoice = (
   quizId: string,
@@ -231,3 +236,28 @@ export const fmt = (d: string) =>
     dateStyle: 'medium',
     timeStyle: 'short',
   })
+
+export const handleSaveOnEnter = (
+  e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  saveEdit?: () => void | Promise<void>,
+  cancelEdit?: () => void | Promise<void>,
+) => {
+  if (e.nativeEvent.isComposing) return
+  const hasModifier = e.shiftKey || e.altKey || e.ctrlKey || e.metaKey
+
+  if (e.key === 'Enter' && !hasModifier) {
+    e.preventDefault()
+    e.currentTarget.blur()
+    if (saveEdit) {
+      void saveEdit()
+    }
+  }
+
+  if (e.key === 'Escape' && !hasModifier) {
+    e.preventDefault()
+    e.currentTarget.blur()
+    if (cancelEdit) {
+      void cancelEdit()
+    }
+  }
+}

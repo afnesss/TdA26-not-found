@@ -19,8 +19,8 @@ const EditSaveCancelButtons = ({
   onCancel,
   saveDisabled,
   cancelDisabled,
-  saveAriaLabel = 'Save changes',
-  cancelAriaLabel = 'Cancel editing',
+  saveAriaLabel = 'Uložit změny',
+  cancelAriaLabel = 'Zrušit úpravy',
   stopPropagation = true,
   className,
 }: EditSaveCancelButtonsProps) => {

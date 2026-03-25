@@ -4,11 +4,13 @@ import { Shield } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText'
 import LegalSection, { LegalText } from '@/components/shared/LegalSection'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useAutoTopScroll } from './CoursePage/utils/helperFunctions'
 
 const PrivacyPolicyPage = () => {
   useTitle('Ochrana osobních údajů')
+  useAutoTopScroll()
   return (
-    <div className='max-w-6xl mx-auto lg:px-5 py-5'>
+    <div className='max-w-6xl mx-auto lg:px-5 pb-5'>
       <div className='flex flex-col gap-6'>
         <HintPageText text='Ochrana soukromí' icon={Shield} />
 
@@ -33,7 +35,7 @@ const PrivacyPolicyPage = () => {
             <LegalText>
               Správcem vašich osobních údajů je Think Different Academy,
               nezisková organizace. V případě dotazů nás prosím kontaktujte na
-              emailu: info@thinkdifferent.academy
+              e-mailu: info@thinkdifferent.academy
             </LegalText>
           </LegalSection>
 
@@ -232,7 +234,7 @@ const PrivacyPolicyPage = () => {
           <LegalSection title='12. Kontakt a podání stížnosti'>
             <LegalText>
               Máte-li jakékoli dotazy ohledně zpracování vašich osobních údajů
-              nebo chcete uplatnit svá práva, kontaktujte nás na emailu:
+              nebo chcete uplatnit svá práva, kontaktujte nás na e-mailu:
               info@thinkdifferent.academy
             </LegalText>
             <LegalText className='mt-3'>

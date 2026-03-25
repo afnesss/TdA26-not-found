@@ -43,6 +43,7 @@ const UserCourseOverviewPage = () => {
             onOpenModule={(moduleId) =>
               navigate(`/courses/${courseId}/modules/${moduleId}`)
             }
+            userMode
           />
         )}
       </section>

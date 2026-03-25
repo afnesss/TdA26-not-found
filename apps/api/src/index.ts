@@ -71,7 +71,7 @@ app.use(
   ) => {
     const requestId = (req as { id?: string }).id ?? "unknown";
     logger.error({ err, requestId }, "Unhandled error");
-    res.status(500).json({ message: "DoÅ¡lo k chybÄ› serveru" });
+    res.status(500).json({ message: "Došlo k chybě serveru" });
   },
 );
 
@@ -80,7 +80,9 @@ async function start() {
     await seed();
   } catch (error: any) {
     if (error?.code === "42P07" || error?.cause?.code === "42P07") {
-      logger.warn("Migration warning: table already exists — continuing startup.");
+      logger.warn(
+        "Migration warning: table already exists — continuing startup.",
+      );
     } else {
       logger.error({ err: error }, "Failed to start server");
       process.exit(1);
@@ -116,9 +118,3 @@ async function start() {
 }
 
 start();
-
-
-
-
-
-

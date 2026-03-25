@@ -8,7 +8,11 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import { colorStyles, colors } from '@/lib/constants'
+import {
+  colorStyles,
+  headerLineHeight,
+  type ColorVariant,
+} from '@/lib/constants'
 import type {
   CourseDashboardAnalytics,
   CourseStatus,
@@ -20,8 +24,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { useMediaQuery } from 'usehooks-ts'
-import { truncateDescription } from '../../pages/CoursePage/utils/helperFunctions'
+import {
+  handleSaveOnEnter,
+  truncateDescription,
+} from '../../pages/CoursePage/utils/helperFunctions'
 import CardDate from '../../pages/CoursesPage/components/CardDate'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import DeleteConfirmDialog from '../ui/AlertDialog'
@@ -59,9 +65,27 @@ type CourseCompProps = CourseClassic | CourseEdit
 
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
-  const isLg = useMediaQuery('(min-width: 1024px)')
   const navigate = useNavigate()
-  const courseColor = colors[index % (isLg ? 3 : 2)]
+  const courseColor: keyof typeof colorStyles.bg =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : course.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
+  const lineColor: keyof typeof colorStyles.line =
+    course.status === 'live'
+      ? 'secondary'
+      : course.status === 'paused'
+        ? 'accent-teal'
+        : course.status === 'planned'
+          ? 'primary'
+          : course.status === 'draft'
+            ? 'accent-teal-light-subtle'
+            : 'gray'
 
   const [state, setState] = useState({
     isEditing: type === 'edit' && 'isDraft' in props ? props.isDraft : false,
@@ -73,12 +97,11 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const isEditableCourseCard =
     type === 'edit' && !('isDraft' in props && props.isDraft)
-  const canShowAnalytics =
-    course.status === 'live' ||
-    course.status === 'paused' ||
-    course.status === 'archived'
-  const isAnalyticsMode =
-    type === 'edit' && Boolean(props.statisticsMode) && canShowAnalytics
+  const canOpenCourse =
+    course.status === 'live' &&
+    (!course.startedAt || new Date(course.startedAt) <= new Date())
+
+  const isAnalyticsMode = type === 'edit' && Boolean(props.statisticsMode)
 
   const {
     data: overviewCourse,
@@ -87,11 +110,7 @@ const CourseComponent = (props: CourseCompProps) => {
   } = useQuery<CourseDashboardAnalytics>({
     queryKey: ['course-dashboard-analytics', course.uuid],
     queryFn: () => getCourseDashboardAnalytics(course.uuid),
-    enabled:
-      isEditableCourseCard &&
-      isAnalyticsMode &&
-      !state.isEditing &&
-      canShowAnalytics,
+    enabled: isEditableCourseCard && isAnalyticsMode && !state.isEditing,
     staleTime: 1000 * 20,
   })
 
@@ -107,19 +126,21 @@ const CourseComponent = (props: CourseCompProps) => {
   const overviewOpenCount = overviewCourse?.openCount ?? 0
   const overviewCompletions =
     overviewCourse?.modules.reduce((sum, m) => sum + m.quizAttempts, 0) ?? 0
-  const modulesWithoutInteraction =
-    overviewCourse?.modulesWithoutInteraction ?? 0
+  const activeModulesWithoutInteraction =
+    overviewCourse?.modules.filter(
+      (module) => module.status === 'active' && module.interactions === 0,
+    ).length ?? 0
   const quizzesWithoutSubmits = overviewCourse?.quizzesWithoutSubmits ?? 0
   const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
 
   const attentionParts: string[] = []
-  if (modulesWithoutInteraction > 0) {
-    attentionParts.push(`Moduly bez interakcí: ${modulesWithoutInteraction}`)
-  }
-  if (modulesWithoutInteraction === 0 && quizzesWithoutSubmits > 0) {
-    attentionParts.push(`Kvízy bez odeslání: ${quizzesWithoutSubmits}`)
-  }
-  if (lowScoreQuizzes > 0) {
+  if (activeModulesWithoutInteraction > 0) {
+    attentionParts.push(
+      `Aktivní moduly bez interakcí: ${activeModulesWithoutInteraction}`,
+    )
+  } else if (overviewActiveModulesCount === 0) {
+    attentionParts.push(`Žádné aktivní moduly`)
+  } else if (lowScoreQuizzes > 0) {
     attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)
   }
 
@@ -181,7 +202,7 @@ const CourseComponent = (props: CourseCompProps) => {
       return
 
     if (type === 'classic') {
-      if (course.status !== 'live') return
+      if (!canOpenCourse) return
       navigate(`/courses/${course.uuid}`)
     } else if (type === 'edit') {
       props.onEdit()
@@ -193,22 +214,14 @@ const CourseComponent = (props: CourseCompProps) => {
       key={course.uuid}
       className={cn(
         'relative transition-colors',
-        ((type === 'edit' && !props.planning?.isEditing) ||
-          course.status === 'live') &&
+        ((type === 'edit' && !props.planning?.isEditing) || canOpenCourse) &&
           'cursor-pointer',
-        (course.status === 'draft' || course.status === 'archived') &&
-          'opacity-70',
+        (course.status === 'archived' || course.status === 'draft') &&
+          'opacity-80',
       )}
       onClick={handleCardClick}
     >
-      <div
-        className={cn(
-          'h-2 bg-linear-to-r',
-          colorStyles.gradient[courseColor],
-          course.status === 'live' && 'animate-pulse',
-        )}
-      />
-
+      <div className={cn(headerLineHeight, colorStyles.line[lineColor])} />
       <div className='flex justify-between gap-2 mx-4 md:mx-5 mt-3'>
         <CourseStateBadge status={course.status} />
         {type === 'edit' &&
@@ -221,7 +234,7 @@ const CourseComponent = (props: CourseCompProps) => {
                     e?.stopPropagation()
                     props.onEdit()
                   }}
-                  aria-label={`View course ${course.name}`}
+                  aria-label={`Zobrazit kurz ${course.name}`}
                 />
               ) : (
                 <>
@@ -232,7 +245,7 @@ const CourseComponent = (props: CourseCompProps) => {
                         e?.stopPropagation()
                         props.onEdit()
                       }}
-                      aria-label={`Edit course ${course.name}`}
+                      aria-label={`Upravit kurz ${course.name}`}
                     />
                   ) : (
                     <EditBtn
@@ -241,7 +254,7 @@ const CourseComponent = (props: CourseCompProps) => {
                         e?.stopPropagation()
                         props.onEdit()
                       }}
-                      aria-label={`View course ${course.name}`}
+                      aria-label={`Zobrazit kurz ${course.name}`}
                     />
                   )}
                   <DeleteConfirmDialog
@@ -249,7 +262,7 @@ const CourseComponent = (props: CourseCompProps) => {
                       <EditBtn
                         type='delete'
                         onClick={(e) => e?.stopPropagation()}
-                        aria-label={`Delete course ${course.name}`}
+                        aria-label={`Smazat kurz ${course.name}`}
                       />
                     }
                     itemName={course.name}
@@ -270,7 +283,7 @@ const CourseComponent = (props: CourseCompProps) => {
               onCancel={cancelEdit}
               saveDisabled={state.saving || !!state.nameError}
               cancelDisabled={state.saving}
-              saveAriaLabel='Save course'
+              saveAriaLabel='Uložit kurz'
             />
           ))}
       </div>
@@ -283,6 +296,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 value={state.tempName}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(e) => handleNameChange(e.target.value)}
+                onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
                 className={cn(
                   'font-semibold text-base sm:text-lg lg:text-xl overflow-hidden flex items-center sm:py-1.8 placeholder:pt-1',
                   state.nameError && 'border-destructive',
@@ -314,6 +328,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   tempDescription: capitalizedValue,
                 }))
               }}
+              onKeyDown={(e) => handleSaveOnEnter(e, saveEdit, cancelEdit)}
               className='mb-2 md:mb-3 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
               minRows={2}
               maxRows={4}
@@ -345,7 +360,7 @@ const CourseComponent = (props: CourseCompProps) => {
                   colorStyles.bg[courseColor],
                   colorStyles.text[courseColor],
                 )}
-                disabled={course.status !== 'live'}
+                disabled={!canOpenCourse}
               >
                 <span className='font-semibold'>Zobrazit</span>
               </Button>
@@ -357,20 +372,20 @@ const CourseComponent = (props: CourseCompProps) => {
               {!('isDraft' in props && props.isDraft) &&
                 !state.isEditing &&
                 isAnalyticsMode && (
-                <AnalyticsSection
-                  score={averageQuizScore}
-                  completions={overviewCompletions}
-                  modules={overviewModulesCount}
-                  activeModules={overviewActiveModulesCount}
-                  materials={overviewMaterialsCount}
-                  quizzes={overviewQuizzesCount}
-                  materialDownloads={overviewDownloadCount}
-                  materialCopies={overviewCopyCount}
-                  materialOpens={overviewOpenCount}
-                  attention={attentionParts}
-                  isLoading={overviewLoading}
-                  isError={overviewError}
-                />
+                  <AnalyticsSection
+                    score={averageQuizScore}
+                    completions={overviewCompletions}
+                    modules={overviewModulesCount}
+                    activeModules={overviewActiveModulesCount}
+                    materials={overviewMaterialsCount}
+                    quizzes={overviewQuizzesCount}
+                    materialDownloads={overviewDownloadCount}
+                    materialCopies={overviewCopyCount}
+                    materialOpens={overviewOpenCount}
+                    attention={attentionParts}
+                    isLoading={overviewLoading}
+                    isError={overviewError}
+                  />
                 )}
               {!isAnalyticsMode && (
                 <CoursePlanningSection

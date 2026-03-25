@@ -17,19 +17,19 @@ const statusConfig: Record<
 > = {
   draft: {
     label: 'Návrh',
-    className: 'bg-muted text-muted-foreground ',
+    className: 'bg-accent-teal-light/20 text-[#2D8B6B]',
   },
   planned: {
     label: 'Naplánováno',
-    className: 'bg-primary/20 text-primary ',
+    className: 'bg-primary/20 text-primary',
   },
   live: {
     label: 'Aktivní',
-    className: 'bg-secondary text-secondary-foreground ',
+    className: 'bg-secondary/50 text-[#2D8B6B]',
   },
   paused: {
     label: 'Pozastaveno',
-    className: 'bg-accent-teal/20 text-accent-teal',
+    className: 'bg-accent-teal/30 text-[#246969]',
   },
   archived: {
     label: 'Archivováno',

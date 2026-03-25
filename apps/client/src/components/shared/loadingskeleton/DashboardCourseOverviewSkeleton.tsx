@@ -5,7 +5,7 @@ const DashboardCourseOverviewSkeleton = () => {
     <div className='max-w-7xl mx-auto  py-6 space-y-5'>
       {/* EditableDetailCard */}
       <div className='bg-background rounded-xl border border-gray-100 overflow-hidden'>
-        <div className='bg-linear-to-r from-accent-teal to-accent-teal-dark h-2' />
+        <div className='bg-muted/40 h-1.5' />
         <div className='p-5 md:p-6 space-y-5'>
           {/* Header: Badge + Actions */}
           <div className='flex items-center justify-between gap-4'>

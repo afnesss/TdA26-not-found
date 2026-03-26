@@ -6,6 +6,7 @@ import {
   deleteCourse,
   updateCourse,
 } from '@/api/queries/courseQueries'
+import { pendingCloneIds } from '@/api/pendingCloneIds'
 import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { CourseDetail, CourseStatus, CourseSummary } from '@/lib/schemas'
@@ -75,7 +76,12 @@ export const useDeleteCourseMutation = () => {
 export const useCloneCourseMutation = (options?: {
   onSuccess?: (cloned: CourseSummary, source: CourseSummary) => void
   toastMessage?: (source: CourseSummary) => string
-  skipToast?: boolean
+  skipInvalidateCourses?: boolean
+  skipOptimisticInsert?: boolean
+  optimisticInsert?: (
+    previous: CourseSummary[] | undefined,
+    optimistic: CourseSummary,
+  ) => CourseSummary[]
 }) => {
   const queryClient = useQueryClient()
 
@@ -92,14 +98,39 @@ export const useCloneCourseMutation = (options?: {
       }
       return result
     },
-    onSuccess: (clonedCourse, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['courses'] })
-      if (!options?.skipToast) {
-        const message =
-          options?.toastMessage?.(variables.source) ??
-          `Kurz "${variables.source.name}" byl zkopírován jako návrh`
-        toast.success(message)
+    onSuccess: (clonedCourse, variables, context) => {
+      pendingCloneIds.delete(context?.tempId ?? '')
+
+      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
+        if (!old) return old
+
+        const realExists = old.some((c) => c.uuid === clonedCourse.uuid)
+        if (realExists) {
+          return old.map((c) =>
+            c.uuid === clonedCourse.uuid ? clonedCourse : c,
+          )
+        }
+
+        if (context?.tempId) {
+          const tempExists = old.some((c) => c.uuid === context.tempId)
+          if (tempExists) {
+            return old.map((c) =>
+              c.uuid === context.tempId ? clonedCourse : c,
+            )
+          }
+        }
+
+        if (options?.optimisticInsert) {
+          return options.optimisticInsert(old, clonedCourse)
+        }
+
+        return [clonedCourse, ...old]
+      })
+
+      if (!options?.skipInvalidateCourses) {
+        queryClient.invalidateQueries({ queryKey: ['courses'] })
       }
+
       options?.onSuccess?.(clonedCourse, variables.source)
     },
     onMutate: async ({ source }) => {
@@ -119,14 +150,18 @@ export const useCloneCourseMutation = (options?: {
         updatedAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => [
-        optimistic,
-        ...old,
-      ])
+      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
+        if (options?.optimisticInsert) {
+          return options.optimisticInsert(old, optimistic)
+        }
+        return [optimistic, ...old]
+      })
+      pendingCloneIds.add(tempId)
 
       return { previousCourses, tempId }
     },
     onError: (error: ApiError, _variables, context) => {
+      if (context?.tempId) pendingCloneIds.delete(context.tempId)
       onErrorWithRollback(
         error,
         'Chyba při kopírování kurzu',

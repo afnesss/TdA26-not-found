@@ -1,3 +1,4 @@
+import { pendingCloneIds } from '@/api/pendingCloneIds'
 import type { CourseDetail, CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
@@ -27,6 +28,16 @@ export const useDashboardCoursesSSE = () => {
       const updatedCourse = JSON.parse(event.data) as CourseSummary
 
       queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
+        for (const tempId of pendingCloneIds) {
+          const tempIndex = old.findIndex((c) => c.uuid === tempId)
+          if (tempIndex !== -1) {
+            pendingCloneIds.delete(tempId)
+            const next = [...old]
+            next[tempIndex] = updatedCourse
+            return next
+          }
+        }
+
         const exists = old.some((c) => c.uuid === updatedCourse.uuid)
         return exists
           ? old.map((c) => (c.uuid === updatedCourse.uuid ? updatedCourse : c))

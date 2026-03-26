@@ -77,7 +77,11 @@ const DashboardDesign1 = () => {
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
   const { mutateAsync: createCourseMutation } =
     useCreateCourseMutation(setCourseDraft)
-  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation()
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
+    skipInvalidateCourses: true,
+    optimisticInsert: (previous, optimistic) =>
+      sortCoursesByFilter([optimistic, ...(previous ?? [])], selectedFilter),
+  })
 
   const { isConnected } = useDashboardCoursesSSE()
 
@@ -151,6 +155,10 @@ const DashboardDesign1 = () => {
       updatedAt: new Date().toISOString(),
     }
     setCourseDraft(newDraft)
+  }
+
+  const handleCopyAsDraft = (source: CourseSummary) => {
+    void cloneCourseMutation({ source })
   }
 
   const createButton = (mobile?: boolean) => (
@@ -303,7 +311,7 @@ const DashboardDesign1 = () => {
                         onStatusChange={handleStatusChange}
                         planning={planningState}
                         onCopyAsDraft={async (source: CourseSummary) => {
-                          cloneCourseMutation({ source })
+                          handleCopyAsDraft(source)
                         }}
                       />
                     )

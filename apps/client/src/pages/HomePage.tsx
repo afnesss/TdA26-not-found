@@ -1,43 +1,42 @@
-﻿import { useCoursesSSE } from '@/api/useCourseSSE'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 import ActivitiesIcon from '@/assets/activities-blue.svg?react'
 import LogoAnim from '@/components/shared/LogoAnim'
 import TitleText from '@/components/shared/TitleText'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HintPageText from '../components/shared/HintPageText'
+import { useMediaQuery } from 'usehooks-ts'
 
 const HomePage = () => {
   const navigate = useNavigate()
   const { isConnected } = useCoursesSSE()
-
+  const isMd = useMediaQuery('(min-width: 768px)')
   return (
-    <div className='grid grid-cols-1 md:grid-cols-[70%_30%] items-center justify-center max-w-7xl mx-auto md:px-6 lg:px-12'>
-      <div className='flex flex-col max-sm:justify-center gap-7 md:gap-10 w-full'>
+    <div className='grid grid-cols-1 md:grid-cols-[68%_32%] items-center justify-center max-w-9xl mx-auto md:px-10 lg:px-16 gap-x-10 lg:gap-x-16'>
+      <div className='flex flex-col max-sm:justify-center gap-7 sm:gap-10 md:gap-10 w-full md:px-7 '>
         <HintPageText text='Učení může být zábava' icon={ActivitiesIcon} />
 
         <TitleText
-          className='max-sm:text-2xl text-4xl lg:text-5xl'
-          addtext1='Rozvíjejte své '
-          underlinedText='kritické a kreativní'
+          className='max-sm:text-4xl text-5xl sm:text-5xl md:text-5xl lg:text-6xl'
+          underlinedText='Kreativní'
           addtext2=' myšlení s'
           highlightedText='Think Different Academy'
-          underlineHeight='18'
+          underlineHeight={isMd ? '19' : '16'}
           underlineStrokeWidth='4'
-          underlineOffset='-bottom-2.5'
+          underlineOffset={isMd ? '-bottom-2.5' : '-bottom-1.5'}
         />
 
-        <Label variant={'description'}>
-          Think Different Academy je nezisková organizace zaměřená na rozvoj
-          kritického a kreativního myšlení studentů i široké veřejnosti. Naše
-          platforma propojuje kurzy a moderní, interaktivní učení pro studenty i
-          lektory — bez úmorného pročítání textů a s důrazem na praxi a dopad.
-        </Label>
+        <ul className='list-disc pl-5 text-muted-foreground text-left max-w-full text-xl sm:text-xl md:text-xl marker:text-secondary marker:text-xl'>
+          <li>Nezisková organizace pro vzdělávání</li>
+          <li>Moderní a interaktivní výuka</li>
+          <li>Bez úmorného pročítání textů</li>
+        </ul>
 
         <div className='flex flex-row gap-5'>
           <Button
             variant='primary'
             size='primary'
+            className='group text-xl sm:text-xl md:text-xl'
             onClick={() => {
               navigate('/courses')
             }}
@@ -48,7 +47,7 @@ const HomePage = () => {
       </div>
 
       <div className='relative items-center justify-center h-full hidden md:flex'>
-        <LogoAnim className='h-50 w-50 lg:h-64 lg:w-64' />
+        <LogoAnim className='h-56 w-56 lg:h-72 lg:w-72' />
       </div>
     </div>
   )

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import HintPageText from '../components/shared/HintPageText'
 import { useMediaQuery } from 'usehooks-ts'
+import { Label } from '@/components/ui/label'
+import UnderlinedText from '@/components/shared/UnderlinedText'
 
 const HomePage = () => {
   const navigate = useNavigate()
@@ -26,11 +28,31 @@ const HomePage = () => {
           underlineOffset={isMd ? '-bottom-2.5' : '-bottom-1.5'}
         />
 
-        <ul className='list-disc pl-5 text-muted-foreground text-left max-w-full text-xl sm:text-xl md:text-xl marker:text-secondary marker:text-xl'>
-          <li>Nezisková organizace pro vzdělávání</li>
-          <li>Moderní a interaktivní výuka</li>
-          <li>Bez úmorného pročítání textů</li>
-        </ul>
+        <Label variant={'description'}>
+          Nezisková organizace pro vzdělávání studentů i veřejnosti. Přinášíme{' '}
+          {
+            <UnderlinedText
+              strokeWidth={isMd ? undefined : '4'}
+              height={isMd ? undefined : '9'}
+              offset={isMd ? undefined : '-bottom-0.5'}
+              className='font-bold'
+            >
+              moderní
+            </UnderlinedText>
+          }{' '}
+          a{' '}
+          {
+            <UnderlinedText
+              strokeWidth={isMd ? undefined : '4'}
+              height={isMd ? undefined : '9'}
+              offset={isMd ? undefined : '-bottom-0.5'}
+              className='font-bold'
+            >
+              interaktivní
+            </UnderlinedText>
+          }{' '}
+          výuku - bez úmorného pročítání textů.
+        </Label>
 
         <div className='flex flex-row gap-5'>
           <Button

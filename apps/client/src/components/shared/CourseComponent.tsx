@@ -214,8 +214,9 @@ const CourseComponent = (props: CourseCompProps) => {
       key={course.uuid}
       className={cn(
         'relative transition-colors',
-        ((type === 'edit' && !props.planning?.isEditing) || canOpenCourse) &&
-          'cursor-pointer',
+        (type === 'edit' && !props.planning?.isEditing) || canOpenCourse
+          ? 'cursor-pointer'
+          : 'cursor-not-allowed',
         (course.status === 'archived' || course.status === 'draft') &&
           'opacity-80',
       )}

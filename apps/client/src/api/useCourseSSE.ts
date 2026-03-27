@@ -35,7 +35,12 @@ export const useCoursesSSE = () => {
         const existingCourse = oldData.find((c) => c.uuid === newCourse.uuid)
         const exists = Boolean(existingCourse)
 
-        if (newCourse.status === 'live' && existingCourse?.status !== 'live') {
+        if (newCourse.status === 'paused' && existingCourse?.status === 'live') {
+          toastMessage = `Kurz "${newCourse.name}" byl pozastaven lektorem`
+        } else if (
+          newCourse.status === 'live' &&
+          existingCourse?.status !== 'live'
+        ) {
           toastMessage = `Kurz "${newCourse.name}" byl spuštěn`
         } else if (
           newCourse.status === 'planned' &&
@@ -85,9 +90,7 @@ export const useCoursesSSE = () => {
       const shouldNotify = Boolean(existingCourse) || isVisibleStatus
 
       if (shouldNotify) {
-        if (removedCourseName && removedCourseStatus === 'paused') {
-          toast.info(`Kurz "${removedCourseName}" byl pozastaven lektorem`)
-        } else if (removedCourseName && removedCourseStatus === 'archived') {
+        if (removedCourseName && removedCourseStatus === 'archived') {
           toast.info(`Kurz "${removedCourseName}" byl dokončen lektorem`)
         } else {
           toast.info(

@@ -677,8 +677,10 @@ export async function updateCourse(req: Request, res: Response) {
   const isOnlyStatusChange =
     status !== undefined && name === undefined && description === undefined;
 
-  const wasUserVisible = ["planned", "live"].includes(existing[0].status);
-  const isUserVisible = ["planned", "live"].includes(nextStatus);
+  const wasUserVisible = ["paused", "planned", "live"].includes(
+    existing[0].status,
+  );
+  const isUserVisible = ["paused", "planned", "live"].includes(nextStatus);
   if ((!wasUserVisible && isUserVisible) || (wasUserVisible && isUserVisible)) {
     sseManager.broadcast("courses", "course_upserted", updated[0]);
   } else if (wasUserVisible && !isUserVisible) {

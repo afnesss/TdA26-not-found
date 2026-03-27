@@ -16,6 +16,7 @@ export default function Header() {
   const isMd = useMediaQuery('(min-width: 768px)')
   const isDashboard = location.pathname.includes('/dashboard')
   const isCourses = location.pathname.includes('/courses')
+  const isLogin = location.pathname.includes('/login')
   const { isAuth } = useAuth()
 
   return (
@@ -99,8 +100,10 @@ export default function Header() {
           )}
           <Button
             variant={'secondary'}
+            aria-current={isLogin ? 'page' : undefined}
             className={cn(
               `text-sm md:text-base px-2 py-2 md:px-4 ${isAuth ? 'text-destructive' : 'text-primary'}`,
+              isLogin && !isAuth && 'bg-secondary text-primary',
             )}
             onClick={async () => {
               if (isAuth) {

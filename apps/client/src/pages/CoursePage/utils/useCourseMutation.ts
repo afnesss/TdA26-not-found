@@ -131,6 +131,10 @@ export const useCloneCourseMutation = (options?: {
         queryClient.invalidateQueries({ queryKey: ['courses'] })
       }
 
+      if (options?.toastMessage) {
+        toast.success(options.toastMessage(variables.source))
+      }
+
       options?.onSuccess?.(clonedCourse, variables.source)
     },
     onMutate: async ({ source }) => {

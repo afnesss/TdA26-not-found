@@ -39,11 +39,11 @@ export const colorStyles = {
   },
   line: {
     secondary: 'bg-secondary/80',
-    primary: 'bg-primary/50',
+    primary: 'bg-primary/45',
     gray: 'bg-gray-300',
     'accent-teal-light': 'bg-accent-teal-light/50',
-    'accent-teal-light-subtle': 'bg-accent-teal-light/30',
-    'accent-teal': 'bg-accent-teal/70',
+    'accent-teal-light-subtle': 'bg-accent-teal-light/40',
+    'accent-teal': 'bg-accent-teal/60',
     'accent-teal-dark': 'bg-accent-teal-dark/45',
   },
 }

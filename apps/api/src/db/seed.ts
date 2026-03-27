@@ -142,11 +142,12 @@ const sampleCourses = [
 ];
 
 const courseStatusByIndex = new Map<number, (typeof courseStatusEnum)[number]>([
-  [0, "draft"],
-  [1, "planned"],
+  [0, "live"],
+  [1, "live"],
   [2, "live"],
-  [3, "paused"],
-  [4, "archived"],
+  [3, "planned"],
+  [4, "planned"],
+  [5, "paused"],
 ]);
 
 const now = new Date();
@@ -170,8 +171,29 @@ const archivedAt = new Date(now);
 archivedAt.setDate(archivedAt.getDate() - 6);
 archivedAt.setHours(11, 0, 0, 0);
 
+const getCreatedAt = (
+  status: (typeof courseStatusEnum)[number],
+  index: number,
+) => {
+  const createdAt = new Date(now);
+
+  if (status === "live") {
+    createdAt.setDate(createdAt.getDate() - (10 + index));
+  } else if (status === "planned") {
+    createdAt.setDate(createdAt.getDate() - (5 + index));
+  } else if (status === "paused") {
+    createdAt.setDate(createdAt.getDate() - (8 + index));
+  } else if (status === "archived") {
+    createdAt.setDate(createdAt.getDate() - (20 + index));
+  }
+
+  createdAt.setHours(9, 0, 0, 0);
+  return createdAt;
+};
+
 const seedCourses = sampleCourses.map((course, index) => {
   const status = courseStatusByIndex.get(index) ?? "draft";
+  const createdAt = getCreatedAt(status, index);
   const status_history =
     status === "paused"
       ? [
@@ -208,6 +230,8 @@ const seedCourses = sampleCourses.map((course, index) => {
     ...course,
     status,
     scheduledFor: status === "planned" ? plannedFor : null,
+    createdAt,
+    updatedAt: createdAt,
     startedAt:
       status === "live"
         ? liveStartedAt

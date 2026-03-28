@@ -89,6 +89,7 @@ const QrImage = ({ value, size, className }: QrImageProps) => {
 type CourseShareTriggerProps = {
   courseId: string
   courseName: string
+  orgSlug?: string
   className?: string
   size?: 'sm' | 'md' | 'lg'
 }
@@ -96,6 +97,7 @@ type CourseShareTriggerProps = {
 const CourseShareTrigger = ({
   courseId,
   courseName,
+  orgSlug,
   className,
   size = 'sm',
 }: CourseShareTriggerProps) => {
@@ -105,13 +107,13 @@ const CourseShareTrigger = ({
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey,
-    queryFn: () => getCourseShareLink(courseId),
+    queryFn: () => getCourseShareLink(courseId, orgSlug),
     enabled: open,
     staleTime: 1000 * 60 * 5,
   })
 
   const shareMutation = useMutation({
-    mutationFn: () => regenerateCourseShareLink(courseId),
+    mutationFn: () => regenerateCourseShareLink(courseId, orgSlug),
     onSuccess: (nextData) => {
       queryClient.setQueryData(queryKey, nextData)
       toast.success('QR kód byl obnoven')

@@ -26,9 +26,10 @@ import DashboardAddButton from './components/DashboardAddButton'
 type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
-  const { courseId } = useParams<{ courseId: string }>()
-  const { isConnected } = useCourseFeedSSE({
+  const { orgSlug, courseId } = useParams<{ orgSlug?: string; courseId: string }>()
+  useCourseFeedSSE({
     courseId: courseId!,
+    orgSlug,
     syncModuleActivation: false,
     showNewPostToast: false,
     showSseToasts: false,
@@ -36,7 +37,7 @@ const CourseModulesLayoutPage = () => {
   const [sideTab, setSideTab] = useState<'feed' | 'history'>('feed')
   const [draftPost, setDraftPost] = useState<FeedItem | null>(null)
 
-  const isModuleDetailPage = useMatch('/dashboard/:courseId/modules/:moduleId')
+  const isModuleDetailPage = useMatch('/:orgSlug/dashboard/:courseId/modules/:moduleId')
 
   const {
     data: course,
@@ -46,7 +47,7 @@ const CourseModulesLayoutPage = () => {
     refetch: refetchCourse,
   } = useQuery<CourseDetail, QueryError>({
     queryKey: ['course', courseId],
-    queryFn: () => getCourseById(courseId!),
+    queryFn: () => getCourseById(courseId!, orgSlug),
     enabled: Boolean(courseId),
     networkMode: 'always',
   })
@@ -63,7 +64,7 @@ const CourseModulesLayoutPage = () => {
     isError: feedError,
     error: feedErrorObj,
     refetch: refetchFeed,
-  } = useFeedPagination(courseId ?? '', undefined, Boolean(courseId))
+  } = useFeedPagination(courseId ?? '', undefined, orgSlug, Boolean(courseId))
 
   const isNetworkError = (feedErrorObj as ApiError)?.isNetworkError ?? false
   const isFeedOfflineError = isNetworkError || isOffline
@@ -73,12 +74,15 @@ const CourseModulesLayoutPage = () => {
 
   const { mutateAsync: createPostMutation } = useCreatePostMutation(
     courseId ?? '',
+    orgSlug,
   )
   const { mutateAsync: updatePostMutation } = useUpdatePostMutation(
     courseId ?? '',
+    orgSlug,
   )
   const { mutateAsync: deletePostMutation } = useDeletePostMutation(
     courseId ?? '',
+    orgSlug,
   )
 
   const historyItems = useMemo(() => {
@@ -116,7 +120,7 @@ const CourseModulesLayoutPage = () => {
                 courseId,
                 course: null,
                 modules: undefined,
-                isConnected,
+                isConnected: true,
                 isLoading: true,
                 isError: false,
                 refetchCourse,
@@ -171,7 +175,7 @@ const CourseModulesLayoutPage = () => {
             courseId,
             course,
             modules: course?.modules,
-            isConnected,
+            isConnected: true,
             isLoading: courseLoading,
             isError: courseError,
             refetchCourse,

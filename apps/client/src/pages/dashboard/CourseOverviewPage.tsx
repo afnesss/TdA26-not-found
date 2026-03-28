@@ -25,7 +25,7 @@ import CardDate, {
 } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
 import EditableDetailCard from './components/EditableDetailCard'
@@ -39,9 +39,15 @@ import { ModulesSectionActions } from './components/ModuleSectionActions'
 import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 import CourseShareTrigger from '@/components/shared/CourseShareTrigger'
+import {
+  buildOrgDashboardCoursePath,
+  buildOrgDashboardModulePath,
+  buildOrgDashboardPath,
+} from '@/lib/routes'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
   const {
     courseId,
     course,
@@ -89,25 +95,26 @@ const CourseModulesOverviewPage = () => {
   } = useUpdateCourseMutation(courseId, (updatedCourse) => {
     setCourseName(updatedCourse.name)
     setCourseDescription(updatedCourse.description ?? '')
-  })
+  }, orgSlug)
 
   const { mutate: toggleModuleVisibilityMutation, isPending: togglePending } =
-    useToggleModuleMutation(courseId)
+    useToggleModuleMutation(courseId, orgSlug)
   const { mutate: updateCourseStatusMutation } =
-    useUpdateCourseStatusMutation(courseId)
+    useUpdateCourseStatusMutation(courseId, orgSlug)
   const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
     onSuccess: (clonedCourse) => {
-      navigate(`/dashboard/${clonedCourse.uuid}`)
+      navigate(buildOrgDashboardCoursePath(orgSlug, clonedCourse.uuid))
     },
     toastMessage: (source) => `Kurz "${source.name}" byl zkopírován jako návrh`,
-  })
-  const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId)
+  }, orgSlug)
+  const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId, orgSlug)
   const { mutate: createModuleMutation, isPending: createModulePending } =
-    useCreateModuleMutation(courseId, () => setDraftModule(null))
+    useCreateModuleMutation(courseId, () => setDraftModule(null), orgSlug)
 
   const planningHook = useCoursePlanning({
     courseId,
     queryClient,
+    orgSlug,
   })
   useEffect(() => {
     if (!course) return
@@ -207,7 +214,9 @@ const CourseModulesOverviewPage = () => {
   }
 
   const handleOpenModule = (moduleId: string) => {
-    if (!isReorderMode) navigate(`/dashboard/${courseId}/modules/${moduleId}`)
+    if (!isReorderMode) {
+      navigate(buildOrgDashboardModulePath(orgSlug, courseId, moduleId))
+    }
   }
 
   const handleToggleModuleVisibility = (
@@ -334,7 +343,7 @@ const CourseModulesOverviewPage = () => {
       <EditableDetailCard
         gradient={courseGradientColor}
         breadcrumbItems={[
-          { label: 'Správa kurzů', path: '/dashboard' },
+          { label: 'Správa kurzů', path: buildOrgDashboardPath(orgSlug) },
           { label: currentCourseName },
         ]}
         nameValue={currentCourseName}

@@ -8,9 +8,12 @@ import { useQuery } from '@tanstack/react-query'
 
 type CourseQueryError = Error & { status?: number }
 
-const fetchCourse = async (id: string): Promise<CourseDetail> => {
+const fetchCourse = async (
+  id: string,
+  orgSlug?: string,
+): Promise<CourseDetail> => {
   try {
-    const raw = await getCourseById(id)
+    const raw = await getCourseById(id, orgSlug)
     if (!raw) {
       throw Object.assign(new Error('Course not found'), { status: 404 })
     }
@@ -36,14 +39,14 @@ const fetchCourse = async (id: string): Promise<CourseDetail> => {
   }
 }
 
-export const useCoursePageQueries = (id?: string) => {
+export const useCoursePageQueries = (id?: string, orgSlug?: string) => {
   const {
     data: coursesUser = [],
     isLoading: isCoursesUserLoading,
     isFetching: isCoursesUserFetching,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses-user'],
-    queryFn: () => getCourses(true),
+    queryFn: () => getCourses(true, orgSlug),
     enabled: Boolean(id),
     networkMode: 'always',
   })
@@ -56,7 +59,7 @@ export const useCoursePageQueries = (id?: string) => {
     refetch,
   } = useQuery<CourseDetail, CourseQueryError>({
     queryKey: ['course', id],
-    queryFn: () => fetchCourse(id!),
+    queryFn: () => fetchCourse(id!, orgSlug),
     enabled: Boolean(id),
     networkMode: 'always',
   })

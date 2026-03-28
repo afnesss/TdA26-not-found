@@ -177,9 +177,9 @@ const ShopCatalogPage = () => {
                 </div>
                 {item.purchaseMode === 'xp' &&
                   user?.role === 'student' &&
-                  (item.xpCost ?? 0) > user.xp && (
+                  (item.xpCost ?? 0) > (user.xp ?? 0) && (
                     <p className='text-xs text-destructive'>
-                      Nemáte dostatek XP ({user.xp} / {item.xpCost ?? 0} XP).
+                      Nemáte dostatek XP ({user.xp ?? 0} / {item.xpCost ?? 0} XP).
                     </p>
                   )}
               </div>

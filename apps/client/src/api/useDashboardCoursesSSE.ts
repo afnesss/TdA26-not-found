@@ -1,16 +1,19 @@
 import { pendingCloneIds } from '@/api/pendingCloneIds'
+import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseDetail, CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export const useDashboardCoursesSSE = () => {
+export const useDashboardCoursesSSE = (orgSlug?: string) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
     const isDev = import.meta.env.DEV
-    const eventSource = new EventSource(`/api/courses/stream`)
+    const eventSource = new EventSource(
+      `/api${buildOrgApiPrefix(orgSlug)}/courses/stream`,
+    )
 
     eventSource.onopen = () => {
       if (isDev) console.log('SSE connected')
@@ -136,6 +139,5 @@ export const useDashboardCoursesSSE = () => {
 
   return { isConnected }
 }
-
 
 

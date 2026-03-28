@@ -1,8 +1,12 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { buildOrgCoursesPath, buildOrgInfoPath } from '@/lib/routes'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 const Footer = () => {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const isOrganizationArea = Boolean(orgSlug) && !pathname.startsWith('/admin')
 
   return (
     <footer className='w-full bg-foreground/90'>
@@ -19,10 +23,18 @@ const Footer = () => {
           <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
             <span
               className='cursor-pointer hover:text-secondary'
-              onClick={() => navigate('/courses')}
+              onClick={() => navigate(isOrganizationArea && orgSlug ? buildOrgCoursesPath(orgSlug) : '/')}
             >
               Kurzy
             </span>
+            {isOrganizationArea && orgSlug && (
+              <span
+                className='cursor-pointer hover:text-secondary'
+                onClick={() => navigate(buildOrgInfoPath(orgSlug))}
+              >
+                Info
+              </span>
+            )}
             <span
               className='cursor-pointer hover:text-secondary'
               onClick={() => navigate('/shop')}

@@ -39,7 +39,7 @@ export const QuestionSchema = z.discriminatedUnion('type', [
 export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
-  difficulty: QuizDifficultySchema,
+  difficulty: QuizDifficultySchema.default('beginner'),
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z.array(QuestionSchema),
@@ -62,6 +62,8 @@ export const QuizSubmitResponseSchema = z.object({
   maxScore: z.number(),
   correctPerQuestion: z.array(z.boolean()),
   submittedAt: z.string().datetime(),
+  participantXp: z.number().int().nullable().optional(),
+  participantLevel: z.number().int().nullable().optional(),
 })
 
 export const QuizResultsSchema = z.record(
@@ -136,7 +138,7 @@ export const QuizValidationSchema = z.object({
     .refine((val) => val.trim().length > 0, {
       message: 'Název kvízu nesmí být prázdný',
     }),
-  difficulty: QuizDifficultyValidationSchema,
+  difficulty: QuizDifficultyValidationSchema.default('beginner'),
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z

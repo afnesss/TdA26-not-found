@@ -25,11 +25,14 @@ export function useQuizSubmitMutation(
       moduleId: string
       quizId: string
       answers: QuizAnswer[]
+      accountScope?: string
     },
     { previousData?: CourseDetail | undefined }
   >({
-    mutationFn: async ({ courseId, moduleId, quizId, answers }) => {
-      const raw = await submitQuiz(courseId, moduleId, quizId, { answers })
+    mutationFn: async ({ courseId, moduleId, quizId, answers, accountScope }) => {
+      const raw = await submitQuiz(courseId, moduleId, quizId, {
+        answers,
+      })
 
       const parsed = QuizSubmitResponseSchema.safeParse(raw)
 
@@ -50,7 +53,8 @@ export function useQuizSubmitMutation(
           showCorrect: false,
         },
       }))
-      setQuizSubmission(quizId, parsed.data, answers)
+      setQuizSubmission(quizId, parsed.data, answers, accountScope)
+
       return parsed.data
     },
     networkMode: 'always',
@@ -93,9 +97,18 @@ export function useQuizSubmitMutation(
         context?.previousData,
       )
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['course', variables.courseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-leaderboard', variables.courseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-overview', variables.courseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['auth', 'me'],
       })
       toast.success('Kvíz byl odeslán')
     },

@@ -27,7 +27,7 @@ type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
   const { courseId } = useParams<{ courseId: string }>()
-  useCourseFeedSSE({
+  const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
     syncModuleActivation: false,
     showNewPostToast: false,
@@ -116,6 +116,7 @@ const CourseModulesLayoutPage = () => {
                 courseId,
                 course: null,
                 modules: undefined,
+                isConnected,
                 isLoading: true,
                 isError: false,
                 refetchCourse,
@@ -170,6 +171,7 @@ const CourseModulesLayoutPage = () => {
             courseId,
             course,
             modules: course?.modules,
+            isConnected,
             isLoading: courseLoading,
             isError: courseError,
             refetchCourse,

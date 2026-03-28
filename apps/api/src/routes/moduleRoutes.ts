@@ -7,7 +7,7 @@ import {
   reorderModules,
   updateModule,
 } from "../controllers/moduleController";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import { validate } from "../middleware/validate";
 import {
   requireCourseDraft,
@@ -26,6 +26,7 @@ router.get("/:moduleId", getModuleByUuid);
 router.post(
   "/",
   authMiddleware,
+  requireRole("lecturer"),
   validate(ModuleCreateRequestSchema),
   requireCourseDraft(),
   createModule,
@@ -33,6 +34,7 @@ router.post(
 router.put(
   "/reorder",
   authMiddleware,
+  requireRole("lecturer"),
   validate(ModuleReorderRequestSchema),
   requireCourseDraft(),
   reorderModules,
@@ -40,6 +42,7 @@ router.put(
 router.put(
   "/:moduleId",
   authMiddleware,
+  requireRole("lecturer"),
   validate(ModuleUpdateRequestSchema),
   requireModuleUpdateAllowed(),
   updateModule,
@@ -47,9 +50,9 @@ router.put(
 router.delete(
   "/:moduleId",
   authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   deleteModule,
 );
 
 export default router;
-

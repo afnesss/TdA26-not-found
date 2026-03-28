@@ -1,0 +1,1 @@
+ALTER TABLE "quizzes" ADD COLUMN "difficulty" varchar(20) DEFAULT 'beginner' NOT NULL;

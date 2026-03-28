@@ -571,7 +571,6 @@ export async function cloneCourse(req: Request, res: Response) {
         await tx.insert(quizzes).values({
           moduleId: mappedModuleId,
           title: quiz.title,
-          difficulty: quiz.difficulty ?? "easy",
           questions: quiz.questions,
         });
       }

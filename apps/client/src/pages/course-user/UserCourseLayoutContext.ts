@@ -10,4 +10,3 @@ export type UserCourseLayoutContext = {
 
 export const useUserCourseLayoutContext = () =>
   useOutletContext<UserCourseLayoutContext>()
-

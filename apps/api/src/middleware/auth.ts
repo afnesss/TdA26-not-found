@@ -1,6 +1,6 @@
-﻿import { Request, Response, NextFunction } from "express";
+﻿import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import { AuthRequest } from "../types/auth";
+import { AuthRequest, AuthRole } from "../types/auth";
 
 const clearAuthCookieAndRespond = (
   res: Response,
@@ -44,17 +44,42 @@ export function authMiddleware(
       return;
     }
 
-    if (
-      typeof payload !== "object" ||
-      payload === null ||
-      !("username" in payload)
-    ) {
+    const username =
+      typeof payload?.username === "string" ? payload.username : null;
+    const role = typeof payload?.role === "string" ? payload.role : null;
+    const sub = typeof payload?.sub === "string" ? payload.sub : null;
+
+    if (!username || (role !== "lecturer" && role !== "student")) {
       clearAuthCookieAndRespond(res, cookieOptions);
       return;
     }
-    req.user = { username: String((payload as jwt.JwtPayload).username) };
+
+    if (role === "student" && !sub) {
+      clearAuthCookieAndRespond(res, cookieOptions);
+      return;
+    }
+
+    req.user = {
+      id: role === "student" ? sub : null,
+      username,
+      role,
+    };
     next();
   } catch (error) {
     clearAuthCookieAndRespond(res, cookieOptions);
   }
 }
+
+export const requireRole =
+  (requiredRole: AuthRole): RequestHandler =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Nejste oprávnění" });
+    }
+
+    if (req.user.role !== requiredRole) {
+      return res.status(403).json({ message: "Nemáte dostatečná oprávnění" });
+    }
+
+    return next();
+  };

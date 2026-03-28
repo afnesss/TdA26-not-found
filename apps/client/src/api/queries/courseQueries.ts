@@ -9,6 +9,26 @@ import type {
 } from '@/lib/schemas'
 import apiFetch from '../client'
 
+export type CourseLeaderboardEntry = {
+  rank: number
+  userId: string
+  username: string
+  xp: number
+  level: number
+  successRate: number | null
+  submissionsCount: number
+  completedQuizzes: number
+  totalQuizzes: number
+  progressPercent: number
+  status: 'completed' | 'in_progress'
+}
+
+export type CourseSessionLeaderboardResponse = {
+  courseId: string
+  totalQuizzes: number
+  leaderboard: CourseLeaderboardEntry[]
+}
+
 export const getCourses = async (userView: boolean = false) => {
   const params = userView ? '?userView=true' : ''
   return await apiFetch<CourseSummary[]>(`/courses${params}`)
@@ -78,4 +98,20 @@ export const resolveCourseShareToken = async (
   token: string,
 ): Promise<CourseShareResolve> => {
   return await apiFetch<CourseShareResolve>(`/course-share/${token}`)
+}
+
+export const getCourseSessionOverview = async (
+  courseId: string,
+): Promise<CourseSessionLeaderboardResponse> => {
+  return await apiFetch<CourseSessionLeaderboardResponse>(
+    `/courses/${courseId}/session/overview`,
+  )
+}
+
+export const getCourseSessionLeaderboard = async (
+  courseId: string,
+): Promise<CourseSessionLeaderboardResponse> => {
+  return await apiFetch<CourseSessionLeaderboardResponse>(
+    `/courses/${courseId}/session/leaderboard`,
+  )
 }

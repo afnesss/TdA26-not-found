@@ -7,6 +7,7 @@ export type CourseModulesLayoutContext = {
   courseId: string
   course: CourseDetail | null
   modules?: ModuleDetail[]
+  isConnected: boolean
   isLoading: boolean
   isError: boolean
   refetchCourse: () => void

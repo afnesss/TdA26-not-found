@@ -91,6 +91,7 @@ export const handleSubmitQuiz = async (
   quizId: string,
   quizState: QuizStateById,
   mutation: SubmitQuizMutation,
+  accountScope?: string,
 ) => {
   const answers = Object.values(quizState[quizId].answers)
 
@@ -99,6 +100,7 @@ export const handleSubmitQuiz = async (
     moduleId,
     quizId,
     answers,
+    accountScope,
   })
 }
 

@@ -1,24 +1,41 @@
-﻿import { useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Eye, EyeOff, Lock, User, Sparkles } from 'lucide-react'
 import HintPageText from '@/components/shared/HintPageText'
-import { Input } from '@/components/ui/input'
 import LogoAnim from '@/components/shared/LogoAnim'
-import { useForm, type FieldValues } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import TitleText from '@/components/shared/TitleText'
 import FormField from '@/components/shared/FormField'
 import { Label } from '@/components/ui/label'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { toast } from 'sonner'
-import { userLogin } from '@/api/queries/authQueries'
+import { studentUpsertLogin, userLogin } from '@/api/queries/authQueries'
 import { useQueryClient } from '@tanstack/react-query'
 
+type LoginFormValues = {
+  name: string
+  password: string
+}
+
+type LoginMode = 'lecturer' | 'student'
+
 const LoginPage = () => {
-  const [isLogin, setIsLogin] = useState(true)
+  const location = useLocation()
   const [show, setShow] = useState(false)
+  const [mode, setMode] = useState<LoginMode>('lecturer')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const searchParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  )
+  const redirectTarget = useMemo(() => {
+    const redirectParam = searchParams.get('redirect')
+    if (!redirectParam?.startsWith('/')) return ''
+    return redirectParam
+  }, [searchParams])
+  const requestedMode = searchParams.get('mode') === 'student' ? 'student' : 'lecturer'
 
   const {
     register,
@@ -26,18 +43,65 @@ const LoginPage = () => {
     formState: { errors, isSubmitting },
     reset,
     setError,
-  } = useForm()
+    clearErrors,
+  } = useForm<LoginFormValues>()
 
-  const onSubmit = async (data: FieldValues) => {
-    const result = await userLogin({
-      username: data.name,
-      password: data.password,
-    })
-    if (result) {
-      queryClient.setQueryData(['auth', 'me'], { username: data.name })
-      toast.success('Přihlášení úspěšné')
-      navigate('/dashboard')
-      reset()
+  useEffect(() => {
+    setMode(requestedMode)
+    clearErrors()
+  }, [clearErrors, requestedMode])
+
+  const onSubmit = async (data: LoginFormValues) => {
+    clearErrors('root')
+    const username = data.name.trim()
+
+    try {
+      if (mode === 'lecturer') {
+        const result = await userLogin({
+          username,
+          password: data.password,
+        })
+        queryClient.setQueryData(['auth', 'me'], result.user)
+        toast.success('Přihlášení lektora úspěšné')
+        navigate('/dashboard', { replace: true })
+      } else {
+        const result = await studentUpsertLogin({
+          username,
+          password: data.password,
+        })
+        queryClient.setQueryData(['auth', 'me'], result.user)
+        toast.success('Přihlášení studenta úspěšné')
+        navigate(redirectTarget || '/courses', { replace: true })
+      }
+
+      reset({ name: '', password: '' })
+    } catch (error: unknown) {
+      const apiError = error as
+        | {
+            status?: number
+            body?: { message?: string; error?: string }
+          }
+        | undefined
+
+      const fallbackMessage =
+        mode === 'lecturer'
+          ? 'Nepodařilo se přihlásit jako lektor'
+          : 'Nepodařilo se přihlásit do kurzu'
+
+      let message =
+        apiError?.body?.message || apiError?.body?.error || fallbackMessage
+
+      if (mode === 'lecturer' && apiError?.status === 401) {
+        message = 'Nesprávné přihlašovací údaje'
+      }
+      if (mode === 'student' && apiError?.status === 401) {
+        message = 'Nesprávné heslo'
+      }
+      if (mode === 'student' && apiError?.status === 409) {
+        message = 'Uživatelské jméno je již obsazené'
+      }
+
+      setError('root', { type: 'server', message })
     }
   }
 
@@ -63,16 +127,39 @@ const LoginPage = () => {
         <div className='w-full max-w-md'>
           <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
             <Label variant={'formTitle'}>
-              {/* <span className="relative z-10">{!isLogin ? "Vytvořit účet" : "Přihlášení"}</span> */}
               Přihlášení
             </Label>
 
-            {/* Form content */}
             <div className='px-5 sm:px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className='flex flex-col gap-3'
               >
+                <div className='grid grid-cols-2 gap-2'>
+                  <Button
+                    type='button'
+                    variant={mode === 'lecturer' ? 'primary' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      setMode('lecturer')
+                      clearErrors()
+                    }}
+                  >
+                    Lektor
+                  </Button>
+                  <Button
+                    type='button'
+                    variant={mode === 'student' ? 'primary' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      setMode('student')
+                      clearErrors()
+                    }}
+                  >
+                    Student
+                  </Button>
+                </div>
+
                 <FormField
                   label='Jméno'
                   icon={User}
@@ -117,20 +204,11 @@ const LoginPage = () => {
                   </p>
                 )}
 
-                {/* {isLogin && (
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center text-foreground/70 cursor-pointer hover:text-foreground transition-colors">
-                      <input 
-                        type="checkbox" 
-                        className="mr-2 rounded accent-primary cursor-pointer"
-                      />
-                      Zapamatovat
-                    </label>
-                    <button className="text-primary hover:text-accent-blue font-semibold transition-colors">
-                      Zapomenuté heslo?
-                    </button>
-                  </div>
-                )} */}
+                {errors.root && (
+                  <p className='text-sm text-destructive'>
+                    {errors.root.message as string}
+                  </p>
+                )}
 
                 <Button
                   disabled={isSubmitting}
@@ -139,20 +217,10 @@ const LoginPage = () => {
                   size='primary'
                   className='mt-3'
                 >
-                  {isLogin ? 'Přihlásit se' : 'Zaregistrovat se'}
+                  {mode === 'lecturer'
+                    ? 'Přihlásit se jako lektor'
+                    : 'Přihlásit se do kurzu'}
                 </Button>
-
-                {/* For future registration */}
-                {/* <p className="text-sm text-gray-600 text-center mt-2">
-                  {isLogin ? "Nemáte účet? " : "Již máte účet? "}
-                  <button
-                    type="button"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-accent-teal-light hover:text-accent-teal font-semibold transition-colors duration-200 underline-offset-2 hover:underline"
-                  >
-                    {isLogin ? "Zaregistrujte se" : "Přihlaste se"}
-                  </button>
-                </p> */}
               </form>
             </div>
           </div>

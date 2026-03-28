@@ -1,4 +1,3 @@
-import { time } from "console";
 import {
   pgTable,
   text,
@@ -14,12 +13,16 @@ import {
 import { StatusHistoryEvent } from "../schemas";
 import { sql } from "drizzle-orm";
 
-// export const users = pgTable("users", {
-//   uuid: uuid("uuid").defaultRandom().primaryKey(),
-//   username: varchar("username", { length: 256 }).notNull().unique(),
-//   passwordHash: varchar("password_hash", { length: 256 }).notNull(),
-//   createdAt: timestamp("created_at").defaultNow().notNull(),
-// });
+export const users = pgTable("users", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  username: varchar("username", { length: 64 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 256 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("student"),
+  xp: integer("xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
 export const courseStatusEnum = [
   "draft",
@@ -99,17 +102,66 @@ export const quizzes = pgTable("quizzes", {
     .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
   title: varchar("title", { length: 256 }).notNull(),
-  difficulty: varchar("difficulty", { length: 20 }).notNull().default("easy"),
+  difficulty: varchar("difficulty", { length: 20 }).notNull().default("beginner"),
   questions: jsonb("questions").notNull(), // Stores Question[]
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const courseSessions = pgTable("course_sessions", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  courseId: uuid("course_id")
+    .references(() => courses.uuid, { onDelete: "cascade" })
+    .notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // 'active' | 'closed'
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  endedAt: timestamp("ended_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const courseSessionParticipants = pgTable(
+  "course_session_participants",
+  {
+    uuid: uuid("uuid").defaultRandom().primaryKey(),
+    courseId: uuid("course_id")
+      .references(() => courses.uuid, { onDelete: "cascade" })
+      .notNull(),
+    sessionId: uuid("session_id")
+      .references(() => courseSessions.uuid, { onDelete: "cascade" })
+      .notNull(),
+    participantToken: uuid("participant_token").defaultRandom().notNull(),
+    nickname: varchar("nickname", { length: 64 }).notNull(),
+    xp: integer("xp").notNull().default(0),
+    level: integer("level").notNull().default(1),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("course_session_participants_session_nickname_unique").on(
+      t.sessionId,
+      t.nickname,
+    ),
+    uniqueIndex("course_session_participants_participant_token_unique").on(
+      t.participantToken,
+    ),
+  ],
+);
 
 export const quizSubmissions = pgTable("quiz_submissions", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
   quizId: uuid("quiz_id")
     .references(() => quizzes.uuid, { onDelete: "cascade" })
     .notNull(),
+  userId: uuid("user_id").references(() => users.uuid, {
+    onDelete: "set null",
+  }),
+  participantId: uuid("participant_id").references(
+    () => courseSessionParticipants.uuid,
+    {
+      onDelete: "set null",
+    },
+  ),
   score: integer("score").notNull(),
   maxScore: integer("max_score").notNull(),
   answers: jsonb("answers").notNull(), // Stores QuizAnswer[]

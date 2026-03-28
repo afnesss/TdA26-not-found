@@ -19,6 +19,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
 import UserModuleTab from '../dashboard/components/ModuleTab'
 import SummarySection from '../CoursePage/components/SummarySection'
+import { useAuth } from '@/auth/useAuth'
 import {
   clearQuizSubmission,
   getQuizSubmission,
@@ -31,6 +32,7 @@ const UserCourseModuleDetailPage = () => {
   }>()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
+  const { user } = useAuth()
   const { courseData, activeModules } = useUserCourseLayoutContext()
   const [quizState, setQuizState] = useState<QuizStateById>({})
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
@@ -45,10 +47,11 @@ const UserCourseModuleDetailPage = () => {
     if (!selectedModule?.quizzes?.length) return
 
     const initialResults: QuizStateById = {}
+    const accountScope = user?.role === 'student' ? user.id : undefined
     selectedModule.quizzes.forEach((quiz) => {
       if (!quiz.uuid) return
 
-      const stored = getQuizSubmission(quiz.uuid)
+      const stored = getQuizSubmission(quiz.uuid, accountScope)
 
       initialResults[quiz.uuid] = {
         status: stored ? 'submitted' : 'idle',
@@ -68,7 +71,7 @@ const UserCourseModuleDetailPage = () => {
         return initialResults
       })
     })
-  }, [selectedModule?.quizzes])
+  }, [selectedModule?.quizzes, user?.id, user?.role])
 
   useEffect(() => {
     if (!courseId || !moduleId) return
@@ -182,10 +185,11 @@ const UserCourseModuleDetailPage = () => {
                       quiz.uuid!,
                       quizState,
                       quizMutation,
+                      user?.role === 'student' ? user.id : undefined,
                     )
                   }
                   onReset={() => {
-                    clearQuizSubmission(quiz.uuid!)
+                    clearQuizSubmission(quiz.uuid!, user?.id)
                     setQuizState((prev) => ({
                       ...prev,
                       [quiz.uuid!]: {

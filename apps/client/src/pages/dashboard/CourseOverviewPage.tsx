@@ -6,6 +6,7 @@ import DashboardCourseOverviewSkeleton from '@/components/shared/loadingskeleton
 import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
 import { Button } from '@/components/ui/button'
+import { getCourseSessionOverview } from '@/api/queries/courseQueries'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
@@ -22,7 +23,7 @@ import {
 import CardDate, {
   type CoursePlanningState,
 } from '@/pages/CoursesPage/components/CardDate'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -118,6 +119,24 @@ const CourseModulesOverviewPage = () => {
   }, [course])
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const hasNetworkError = isError || !course
+  const showLeaderboard =
+    course?.status === 'live' ||
+    course?.status === 'paused' ||
+    course?.status === 'archived'
+
+  const { data: courseSessionOverview } = useQuery({
+    queryKey: ['course-session-overview', courseId],
+    queryFn: () => getCourseSessionOverview(courseId),
+    enabled: Boolean(course) && showLeaderboard,
+    refetchOnReconnect: true,
+  })
+  const leaderboard = courseSessionOverview?.leaderboard ?? []
+  const leaderboardTopThree = leaderboard.slice(0, 3)
+  const leaderboardRest = leaderboard.slice(3)
+  const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false)
+  const visibleLeaderboard = isLeaderboardExpanded
+    ? leaderboard
+    : leaderboardTopThree
 
   if (isLoading && !course) {
     return <DashboardCourseOverviewSkeleton />
@@ -364,6 +383,68 @@ const CourseModulesOverviewPage = () => {
           ) : undefined
         }
       />
+
+      {showLeaderboard && (
+        <section className='rounded-xl border border-border bg-background p-4 shadow-sm space-y-3'>
+          <div className='flex items-center justify-between gap-2'>
+            <h3 className='text-base font-semibold'>Leaderboard účtů</h3>
+            <p className='text-xs text-muted-foreground'>
+              Kvízy v kurzu: {courseSessionOverview?.totalQuizzes ?? 0}
+            </p>
+          </div>
+
+          {leaderboard.length === 0 ? (
+            <p className='text-sm text-muted-foreground'>
+              Zatím žádná studentská odevzdání.
+            </p>
+          ) : (
+            <div className='overflow-hidden rounded-lg border border-border/70 bg-muted/10'>
+              <div className='divide-y divide-border/60'>
+                {visibleLeaderboard.map((entry) => (
+                  <div
+                    key={entry.userId}
+                    className='flex flex-wrap items-center justify-between gap-2 bg-muted/20 px-3 py-2'
+                  >
+                    <div className='min-w-0'>
+                      <p className='text-sm font-medium truncate'>
+                        #{entry.rank} {entry.username}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        Úspěšnost:{' '}
+                        {entry.successRate == null ? '—' : `${entry.successRate}%`}{' '}
+                        | Progress: {entry.completedQuizzes}/{entry.totalQuizzes}{' '}
+                        | Pokusy: {entry.submissionsCount}
+                      </p>
+                    </div>
+                    <div className='text-right'>
+                      <p className='text-sm font-semibold'>
+                        {entry.status === 'completed'
+                          ? 'Dokončil kurz'
+                          : 'Vyplňuje kurz'}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {entry.progressPercent}%
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {leaderboardRest.length > 0 && (
+                <button
+                  type='button'
+                  className='w-full border-t border-border/60 px-3 py-2 text-sm font-medium text-left hover:bg-background/70 transition-colors'
+                  onClick={() => setIsLeaderboardExpanded((prev) => !prev)}
+                >
+                  {isLeaderboardExpanded
+                    ? 'Zobrazit méně'
+                    : `Zobrazit další (${leaderboardRest.length})`}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <Label className='font-bold text-lg md:text-xl text-neutral-black'>

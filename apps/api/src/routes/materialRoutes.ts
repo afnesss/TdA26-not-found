@@ -9,7 +9,7 @@ import {
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
 
 const router = Router({ mergeParams: true });
@@ -83,6 +83,7 @@ router.post("/:materialId/interactions", trackMaterialInteraction);
 router.post(
   "/",
   authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   uploadMiddleware,
   createMaterial,
@@ -90,6 +91,7 @@ router.post(
 router.put(
   "/:materialId",
   authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   uploadMiddleware,
   updateMaterial,
@@ -97,6 +99,7 @@ router.put(
 router.delete(
   "/:materialId",
   authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   deleteMaterial,
 );

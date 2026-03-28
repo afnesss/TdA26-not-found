@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { cn } from '@/lib/utils'
 import { ChevronDown, LogIn, LogOut } from 'lucide-react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import logo from '../../assets/white_logo.svg'
@@ -12,12 +12,16 @@ import { Button } from '../ui/button'
 
 export default function Header() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const queryClient = useQueryClient()
   const isMd = useMediaQuery('(min-width: 768px)')
-  const isDashboard = location.pathname.includes('/dashboard')
-  const isCourses = location.pathname.includes('/courses')
-  const isLogin = location.pathname.includes('/login')
-  const { isAuth } = useAuth()
+  const isDashboard = pathname.includes('/dashboard')
+  const isCourses = pathname.includes('/courses')
+  const isLogin = pathname.includes('/login')
+  const { isAuth, user } = useAuth()
+
+  const isLecturer = user?.role === 'lecturer'
+  const isStudent = user?.role === 'student'
 
   return (
     <>
@@ -50,7 +54,7 @@ export default function Header() {
               >
                 Kurzy
               </Button>
-              {isAuth && (
+              {isLecturer && (
                 <Button
                   variant='tab'
                   className={cn(isDashboard && 'text-secondary ...')}
@@ -62,7 +66,7 @@ export default function Header() {
                 </Button>
               )}
             </nav>
-          ) : isAuth ? (
+          ) : isLecturer ? (
             <DropdownMenuComponent
               trigger={
                 <Button
@@ -98,6 +102,15 @@ export default function Header() {
               Kurzy
             </Button>
           )}
+
+          {isStudent && (
+            <div className='flex items-center gap-1 rounded-md border border-white/35 bg-white/12 px-2 py-1 text-white/95'>
+              <span className='text-xs font-medium'>Lvl {user.level}</span>
+              <span className='text-[10px] opacity-75'>|</span>
+              <span className='text-xs font-medium'>XP {user.xp}</span>
+            </div>
+          )}
+
           <Button
             variant={'secondary'}
             aria-current={isLogin ? 'page' : undefined}
@@ -111,9 +124,14 @@ export default function Header() {
                   await userLogout()
                   queryClient.setQueryData(['auth', 'me'], null)
                   toast.success('Odhlášení úspěšné')
-                } catch (error) {
+                } catch (_error) {
                   toast.error('Chyba při odhlašování')
+                  return
                 }
+                if (isDashboard) {
+                  navigate('/login')
+                }
+                return
               }
               navigate('/login')
             }}

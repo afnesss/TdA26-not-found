@@ -2,8 +2,14 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../db";
-import { modules, quizSubmissions, quizzes } from "../db/schema";
 import {
+  modules,
+  quizSubmissions,
+  quizzes,
+  users,
+} from "../db/schema";
+import {
+  QuizDifficulty,
   Question,
   Quiz,
   QuizAnswer,
@@ -12,6 +18,29 @@ import {
 } from "../schemas/quiz";
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
+import { AuthRequest } from "../types/auth";
+
+const XP_PER_LEVEL = 100;
+const XP_BY_DIFFICULTY: Record<QuizDifficulty, number> = {
+  beginner: 10,
+  easy: 25,
+  medium: 50,
+  hard: 100,
+  extreme: 150,
+};
+
+const resolveQuizDifficulty = (value: unknown): QuizDifficulty => {
+  if (
+    value === "beginner" ||
+    value === "easy" ||
+    value === "medium" ||
+    value === "hard" ||
+    value === "extreme"
+  ) {
+    return value;
+  }
+  return "beginner";
+};
 
 const getCourseIdByModuleId = async (moduleId: string) => {
   const [module] = await db
@@ -79,7 +108,7 @@ export const createQuiz = async (req: Request, res: Response) => {
       .values({
         moduleId,
         title: quizData.title,
-        difficulty: quizData.difficulty ?? "easy",
+        difficulty: quizData.difficulty ?? "beginner",
         questions: questionsWithIds,
       })
       .returning();
@@ -152,7 +181,6 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .update(quizzes)
       .set({
         title: quizData.title,
-        difficulty: quizData.difficulty ?? "easy",
         questions: questionsWithIds,
         updatedAt: new Date(),
       })
@@ -234,10 +262,28 @@ export const deleteQuiz = async (req: Request, res: Response) => {
   }
 };
 
-export const submitQuiz = async (req: Request, res: Response) => {
+export const submitQuiz = async (req: AuthRequest, res: Response) => {
   try {
     const { moduleId, quizId } = req.params;
     const { answers } = req.body as QuizSubmitRequest;
+
+    if (!req.user || req.user.role !== "student" || !req.user.id) {
+      return res.status(401).json({ message: "Nejste oprávnění" });
+    }
+
+    const [currentUser] = await db
+      .select({
+        id: users.uuid,
+        xp: users.xp,
+        level: users.level,
+      })
+      .from(users)
+      .where(eq(users.uuid, req.user.id))
+      .limit(1);
+
+    if (!currentUser) {
+      return res.status(401).json({ message: "Relace vypršela" });
+    }
 
     const [quiz] = await db
       .select()
@@ -248,12 +294,16 @@ export const submitQuiz = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
+    const courseId = await getCourseIdByModuleId(moduleId);
+    if (!courseId) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
     const questions = quiz.questions as any[];
     let score = 0;
-    const maxScore = questions.length; // Assuming 1 point per question
+    const maxScore = questions.length;
     const correctPerQuestion: boolean[] = [];
 
-    // Map answers for easy lookup
     const answerMap = new Map<string, QuizAnswer>();
     answers.forEach((a) => answerMap.set(a.uuid, a));
 
@@ -288,16 +338,63 @@ export const submitQuiz = async (req: Request, res: Response) => {
       correctPerQuestion.push(isCorrect);
     });
 
-    // Save submission
+    let hadPreviousSubmission = false;
+    const [existingSubmission] = await db
+      .select({
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(quizSubmissions)
+      .where(
+        and(
+          eq(quizSubmissions.quizId, quizId),
+          eq(quizSubmissions.userId, currentUser.id),
+        ),
+      );
+    hadPreviousSubmission = (existingSubmission?.count ?? 0) > 0;
+
     const [submission] = await db
       .insert(quizSubmissions)
       .values({
         quizId,
+        userId: currentUser.id,
         score,
         maxScore,
         answers: answers,
       })
       .returning();
+
+    const difficulty = resolveQuizDifficulty((quiz as { difficulty?: unknown }).difficulty);
+    const gainedXp =
+      !hadPreviousSubmission ? XP_BY_DIFFICULTY[difficulty] : 0;
+
+    let accountProgress: { xp: number; level: number } | null = null;
+    if (gainedXp > 0) {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          xp: sql`${users.xp} + ${gainedXp}`,
+          level: sql`floor((${users.xp} + ${gainedXp}) / ${XP_PER_LEVEL}) + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.uuid, currentUser.id))
+        .returning({
+          xp: users.xp,
+          level: users.level,
+        });
+
+      accountProgress = updatedUser ?? null;
+    } else {
+      const [currentAccount] = await db
+        .select({
+          xp: users.xp,
+          level: users.level,
+        })
+        .from(users)
+        .where(eq(users.uuid, currentUser.id))
+        .limit(1);
+
+      accountProgress = currentAccount ?? null;
+    }
 
     // Get fresh attempts count and average
     const [stats] = await db
@@ -315,7 +412,17 @@ export const submitQuiz = async (req: Request, res: Response) => {
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
     };
-    const courseId = await getCourseIdByModuleId(moduleId);
+
+    if (courseId && accountProgress) {
+      sseManager.broadcast(courseId, "user_progress_updated", {
+        courseId,
+        userId: currentUser.id,
+        xp: accountProgress.xp,
+        level: accountProgress.level,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
     if (courseId) {
       const payload = {
         courseId,
@@ -334,6 +441,8 @@ export const submitQuiz = async (req: Request, res: Response) => {
       maxScore,
       correctPerQuestion,
       submittedAt: submission.createdAt.toISOString(),
+      participantXp: accountProgress?.xp ?? null,
+      participantLevel: accountProgress?.level ?? null,
     };
 
     res.json(response);
@@ -441,4 +550,3 @@ export const getQuizAnalytics = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 };
-

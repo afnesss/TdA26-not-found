@@ -19,10 +19,6 @@ import type {
   ModuleDetail,
   ModuleSummary,
 } from '@/lib/schemas/module'
-import {
-  buildOrgDashboardCoursePath,
-  buildOrgDashboardPath,
-} from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -65,8 +61,7 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
 )
 
 const CourseModuleDetailPage = () => {
-  const { orgSlug, courseId, moduleId } = useParams<{
-    orgSlug?: string
+  const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId: string
   }>()
@@ -90,7 +85,7 @@ const CourseModuleDetailPage = () => {
     refetch: refetchModules,
   } = useQuery<ModuleSummary[], QueryError>({
     queryKey: ['course-modules', courseId],
-    queryFn: () => getCourseModules(courseId!, orgSlug),
+    queryFn: () => getCourseModules(courseId!),
     enabled: Boolean(courseId),
     networkMode: 'always',
   })
@@ -103,7 +98,7 @@ const CourseModuleDetailPage = () => {
     refetch: refetchModule,
   } = useQuery<ModuleDetail, QueryError>({
     queryKey: ['course-module', courseId, moduleId],
-    queryFn: () => getModuleByUuid(courseId!, moduleId!, orgSlug),
+    queryFn: () => getModuleByUuid(courseId!, moduleId!),
     enabled: Boolean(courseId && moduleId),
     networkMode: 'always',
   })
@@ -116,7 +111,7 @@ const CourseModuleDetailPage = () => {
 
       return updateModule(courseId, selectedModule.uuid, {
         status: selectedModule.status === 'active' ? 'passive' : 'active',
-      }, orgSlug)
+      })
     },
     onSuccess: async (updatedModule) => {
       await Promise.all([
@@ -154,7 +149,7 @@ const CourseModuleDetailPage = () => {
       return updateModule(courseId, moduleId, {
         name,
         description: description || undefined,
-      }, orgSlug)
+      })
     },
     onSuccess: async (updatedModule) => {
       setModuleName(null)
@@ -411,10 +406,10 @@ const CourseModuleDetailPage = () => {
         <EditableDetailCard
           gradient={moduleGradient}
           breadcrumbItems={[
-            { label: 'Správa kurzů', path: buildOrgDashboardPath(orgSlug) },
+            { label: 'Správa kurzů', path: '/dashboard' },
             {
               label: course?.name ?? 'Kurz',
-              path: buildOrgDashboardCoursePath(orgSlug, courseId),
+              path: `/dashboard/${courseId}`,
             },
             { label: currentModuleName },
           ]}

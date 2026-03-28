@@ -1,18 +1,15 @@
-import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-export const useCoursesSSE = (orgSlug?: string) => {
+export const useCoursesSSE = () => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
     const isDev = import.meta.env.DEV
-    const eventSource = new EventSource(
-      `/api${buildOrgApiPrefix(orgSlug)}/courses/stream`,
-    )
+    const eventSource = new EventSource(`/api/courses/stream`)
 
     eventSource.onopen = () => {
       if (isDev) console.log('Course SSE connected')

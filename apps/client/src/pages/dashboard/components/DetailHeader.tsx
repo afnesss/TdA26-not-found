@@ -3,9 +3,7 @@ import { Button } from '@/components/ui/button'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { Plus, type LucideIcon } from 'lucide-react'
 import Breadcrumb from '@/components/shared/Breadcrumb'
-import { buildOrgDashboardPath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
-import { useParams } from 'react-router-dom'
 
 type DetailHeaderProps = {
   title: string
@@ -24,8 +22,6 @@ const DetailHeader = ({
   onButtonClick,
   gradient = 'accent-teal',
 }: DetailHeaderProps) => {
-  const { orgSlug } = useParams<{ orgSlug?: string }>()
-
   return (
     <div className='bg-background rounded-xl shadow-sm overflow-hidden'>
       <div className={cn(headerLineHeight, colorStyles.line[gradient])} />
@@ -34,7 +30,7 @@ const DetailHeader = ({
         <div className='flex flex-col gap-1'>
           <Breadcrumb
             items={[
-              { label: 'Sprava kurzů', path: buildOrgDashboardPath(orgSlug) },
+              { label: 'Sprava kurzů', path: '/dashboard' },
               { label: 'Detaily kurzu' },
             ]}
           />

@@ -65,7 +65,7 @@ const MaterialCard = (props: MaterialCardProps) => {
     moduleId: string
   }>()
   const { pathname } = useLocation()
-  const isDashboardPage = pathname.includes('/dashboard')
+  const isDashboardPage = pathname.startsWith('/dashboard')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isEditing, setEditing] = useState(
     'isDraft' in props ? props.isDraft : false,

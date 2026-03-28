@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { BookOpenText } from 'lucide-react'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
 import HintPageText from '../../components/shared/HintPageText'
@@ -41,8 +40,7 @@ const CoursesPage = () => {
   })
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
-  const { orgSlug } = useParams<{ orgSlug?: string }>()
-  const { isConnected } = useCoursesSSE(orgSlug)
+  const { isConnected } = useCoursesSSE()
 
   const {
     data: courses = [],
@@ -51,7 +49,7 @@ const CoursesPage = () => {
     refetch,
   } = useQuery<CourseSummary[]>({
     queryKey: ['courses-user'],
-    queryFn: () => getCourses(true, orgSlug),
+    queryFn: () => getCourses(true),
   })
 
   const filteredCourses = filterCourses(courses, searchQuery).filter(
@@ -85,7 +83,7 @@ const CoursesPage = () => {
     { label: 'Pozastavené', value: 'paused' },
   ]
 
-  useTitle(orgSlug ? 'Kurzy organizace' : 'Kurzy')
+  useTitle('Kurzy')
 
   const isSearchEmpty = searchQuery.trim() === ''
   const isDefaultFilters =

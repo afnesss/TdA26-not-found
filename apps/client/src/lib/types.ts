@@ -16,8 +16,6 @@ export type ApiError = Error & {
     message?: string
     error?: string
     details?: string
-    code?: string
-    organizationStatus?: string
   }
   isNetworkError?: boolean
 }

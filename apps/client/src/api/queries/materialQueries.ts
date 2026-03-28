@@ -6,25 +6,17 @@ import type {
   UrlMaterialCreateRequest,
   UrlMaterialUpdateRequest,
 } from '@/lib/schemas'
-import { buildOrgApiPrefix } from '@/lib/routes'
 import apiFetch from '../client'
 
 type MaterialBody = FileMaterialUpdateRequest | UrlMaterialUpdateRequest
 
-const buildMaterialApiPath = (
-  courseId: string,
-  moduleId: string,
-  orgSlug?: string,
-  suffix: string = '',
-) =>
-  `${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/modules/${moduleId}/materials${suffix}`
-
 export const getMaterials = async (
   courseId: string,
   moduleId: string,
-  orgSlug?: string,
 ): Promise<Material[]> => {
-  return await apiFetch<Material[]>(buildMaterialApiPath(courseId, moduleId, orgSlug))
+  return await apiFetch<Material[]>(
+    `/courses/${courseId}/modules/${moduleId}/materials`,
+  )
 }
 
 export const updateMaterial = async (
@@ -32,7 +24,6 @@ export const updateMaterial = async (
   moduleId: string,
   materialId: string,
   body: MaterialBody,
-  orgSlug?: string,
 ): Promise<Material> => {
   if ('file' in body && body.file) {
     const formData = new FormData()
@@ -41,7 +32,7 @@ export const updateMaterial = async (
     formData.append('file', body.file)
 
     return await apiFetch<Material>(
-      buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}`),
+      `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
       {
         method: 'PUT',
         body: formData,
@@ -50,7 +41,7 @@ export const updateMaterial = async (
   }
 
   return await apiFetch<Material>(
-    buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}`),
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
     {
       method: 'PUT',
       body: JSON.stringify(body),
@@ -62,10 +53,9 @@ export const deleteMaterial = async (
   courseId: string,
   moduleId: string,
   materialId: string,
-  orgSlug?: string,
 ): Promise<void> => {
   return await apiFetch<void>(
-    buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}`),
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}`,
     {
       method: 'DELETE',
     },
@@ -76,7 +66,6 @@ export const createMaterial = async (
   courseId: string,
   moduleId: string,
   body: FileMaterialCreateRequest | UrlMaterialCreateRequest,
-  orgSlug?: string,
 ): Promise<Material> => {
   if (body.type === 'file') {
     const formData = new FormData()
@@ -90,7 +79,7 @@ export const createMaterial = async (
     formData.append('file', body.file)
 
     return await apiFetch<Material>(
-      buildMaterialApiPath(courseId, moduleId, orgSlug),
+      `/courses/${courseId}/modules/${moduleId}/materials`,
       {
         method: 'POST',
         body: formData,
@@ -99,7 +88,7 @@ export const createMaterial = async (
   }
 
   return await apiFetch<Material>(
-    buildMaterialApiPath(courseId, moduleId, orgSlug),
+    `/courses/${courseId}/modules/${moduleId}/materials`,
     {
       method: 'POST',
       body: JSON.stringify(body),
@@ -112,10 +101,9 @@ export const trackMaterialInteraction = async (
   moduleId: string,
   materialId: string,
   action: MaterialInteractionAction,
-  orgSlug?: string,
 ): Promise<Material> => {
   return await apiFetch<Material>(
-    buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}/interactions`),
+    `/courses/${courseId}/modules/${moduleId}/materials/${materialId}/interactions`,
     {
       method: 'POST',
       body: JSON.stringify({ action }),
@@ -127,7 +115,6 @@ export const getMaterialDownloadUrl = (
   courseId: string,
   moduleId: string,
   materialId: string,
-  orgSlug?: string,
 ): string => {
-  return `/api${buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}/download`)}`
+  return `/api/courses/${courseId}/modules/${moduleId}/materials/${materialId}/download`
 }

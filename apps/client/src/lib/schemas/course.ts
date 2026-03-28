@@ -71,7 +71,6 @@ export const CourseShareLinkSchema = z.object({
 
 export const CourseShareResolveSchema = z.object({
   courseId: z.string().uuid(),
-  orgSlug: z.string(),
 })
 
 export const DashboardModuleAnalyticsSchema = z.object({

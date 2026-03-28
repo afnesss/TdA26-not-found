@@ -273,15 +273,9 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
     const { moduleId, quizId } = req.params;
     const { answers } = req.body as QuizSubmitRequest;
 
-    if (
-      !req.user ||
-      req.user.actorType !== "legacy_user" ||
-      req.user.role !== "student"
-    ) {
+    if (!req.user || req.user.role !== "student" || !req.user.id) {
       return res.status(401).json({ message: "Nejste oprávnění" });
     }
-
-    const studentId = req.user.id;
 
     const [currentUser] = await db
       .select({
@@ -290,7 +284,7 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
         level: users.level,
       })
       .from(users)
-      .where(eq(users.uuid, studentId))
+      .where(eq(users.uuid, req.user.id))
       .limit(1);
 
     if (!currentUser) {

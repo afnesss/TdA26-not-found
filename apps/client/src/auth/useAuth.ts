@@ -1,20 +1,11 @@
-import { useCallback } from 'react'
+﻿import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { userCheck } from '@/api/queries/authQueries'
-
-type AuthMeResponse = {
-  actorType: 'platform_admin'
-  username: string
-  id?: string
-  role?: string
-  xp?: number
-  level?: number
-} | null
+import { userCheck, type AuthUser } from '@/api/queries/authQueries'
 
 export const useAuth = () => {
-  const { data, isPending, refetch } = useQuery<AuthMeResponse>({
+  const { data, isPending, refetch } = useQuery<AuthUser | null>({
     queryKey: ['auth', 'me'],
-    queryFn: async () => userCheck() as Promise<AuthMeResponse>,
+    queryFn: async () => userCheck(),
     retry: false,
     staleTime: Infinity,
     gcTime: Infinity,
@@ -28,9 +19,9 @@ export const useAuth = () => {
   }, [refetch])
 
   return {
-    user: data,
     isAuth: Boolean(data?.username),
     isLoading: isPending,
+    user: data ?? null,
     revalidateAuth,
   }
 }

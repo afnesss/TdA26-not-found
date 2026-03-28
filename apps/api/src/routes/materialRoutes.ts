@@ -9,12 +9,8 @@ import {
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
-import {
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
-} from "../middleware/organization";
 
 const router = Router({ mergeParams: true });
 
@@ -86,27 +82,24 @@ router.get("/:materialId/download", downloadMaterial);
 router.post("/:materialId/interactions", trackMaterialInteraction);
 router.post(
   "/",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   uploadMiddleware,
   createMaterial,
 );
 router.put(
   "/:materialId",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   uploadMiddleware,
   updateMaterial,
 );
 router.delete(
   "/:materialId",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   requireCourseDraft(),
   deleteMaterial,
 );

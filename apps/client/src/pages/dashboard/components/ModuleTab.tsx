@@ -1,8 +1,4 @@
 import { Button } from '@/components/ui/button'
-import {
-  buildOrgDashboardModulePath,
-  buildOrgModulePath,
-} from '@/lib/routes'
 import type { ModuleSummary } from '@/lib/schemas/module'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -15,8 +11,7 @@ type ModuleTabProps = {
 
 const UserModuleTab = ({ module, index, path = 'courses' }: ModuleTabProps) => {
   const navigate = useNavigate()
-  const { orgSlug, courseId, moduleId } = useParams<{
-    orgSlug?: string
+  const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId?: string
   }>()
@@ -32,15 +27,7 @@ const UserModuleTab = ({ module, index, path = 'courses' }: ModuleTabProps) => {
           : 'bg-background text-primary hover:bg-gray-50 border border-gray-200',
         'max-sm:w-8 ',
       )}
-      onClick={() => {
-        if (!courseId) return
-
-        navigate(
-          path === 'dashboard'
-            ? buildOrgDashboardModulePath(orgSlug, courseId, module.uuid)
-            : buildOrgModulePath(orgSlug, courseId, module.uuid),
-        )
-      }}
+      onClick={() => navigate(`/${path}/${courseId}/modules/${module.uuid}`)}
     >
       <span className='inline-flex items-center gap-2'>
         <span

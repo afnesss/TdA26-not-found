@@ -1,9 +1,3 @@
-import {
-  emitOrganizationInactiveEvent,
-  getOrgSlugFromApiInput,
-  isOrganizationInactiveError,
-} from '@/lib/organizationAccess'
-
 type ApiClientOptions = {
   headers?: HeadersInit
   token?: string
@@ -54,17 +48,11 @@ export default async function apiFetch<T>(
       throw new Error(`API ${response.status}: ${response.statusText}`)
     }
 
-    const apiError = {
+    throw {
       status: response.status,
       statusText: response.statusText,
       body: errorBody,
     }
-
-    if (isOrganizationInactiveError(apiError)) {
-      emitOrganizationInactiveEvent(getOrgSlugFromApiInput(input))
-    }
-
-    throw apiError
   }
 
   if (response.status === 204) {

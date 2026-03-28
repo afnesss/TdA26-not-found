@@ -18,16 +18,12 @@ import type {
   CourseStatus,
   CourseSummary,
 } from '@/lib/schemas'
-import {
-  buildOrgCoursePath,
-  buildOrgDashboardCoursePath,
-} from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery } from '@tanstack/react-query'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate } from 'react-router'
 import {
   handleSaveOnEnter,
   truncateDescription,
@@ -71,7 +67,6 @@ type CourseCompProps = CourseClassic | CourseEdit
 const CourseComponent = (props: CourseCompProps) => {
   const { course, index, type } = props
   const navigate = useNavigate()
-  const { orgSlug } = useParams<{ orgSlug?: string }>()
   const courseColor: keyof typeof colorStyles.bg =
     course.status === 'live'
       ? 'secondary'
@@ -115,7 +110,7 @@ const CourseComponent = (props: CourseCompProps) => {
     isError: overviewError,
   } = useQuery<CourseDashboardAnalytics>({
     queryKey: ['course-dashboard-analytics', course.uuid],
-    queryFn: () => getCourseDashboardAnalytics(course.uuid, orgSlug),
+    queryFn: () => getCourseDashboardAnalytics(course.uuid),
     enabled: isEditableCourseCard && isAnalyticsMode && !state.isEditing,
     staleTime: 1000 * 20,
   })
@@ -209,7 +204,7 @@ const CourseComponent = (props: CourseCompProps) => {
 
     if (type === 'classic') {
       if (!canOpenCourse) return
-      navigate(buildOrgCoursePath(orgSlug, course.uuid))
+      navigate(`/courses/${course.uuid}`)
     } else if (type === 'edit') {
       props.onEdit()
     }
@@ -238,7 +233,6 @@ const CourseComponent = (props: CourseCompProps) => {
                 <CourseShareTrigger
                   courseId={course.uuid}
                   courseName={course.name}
-                  orgSlug={orgSlug}
                   size='sm'
                 />
               )}
@@ -368,7 +362,7 @@ const CourseComponent = (props: CourseCompProps) => {
                 size={'grid'}
                 onClick={(e) => {
                   e.stopPropagation()
-                  navigate(buildOrgCoursePath(orgSlug, course.uuid))
+                  navigate(`/courses/${course.uuid}`)
                 }}
                 className={cn(
                   'bg-linear-to-br',

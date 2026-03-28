@@ -3,23 +3,15 @@ import type {
   FeedItem,
   FeedUpdateRequest,
 } from '@/lib/schemas'
-import { buildOrgApiPrefix } from '@/lib/routes'
 import apiFetch from '../client'
-
-const buildFeedApiPath = (
-  courseId: string,
-  orgSlug?: string,
-  suffix: string = '',
-) => `${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed${suffix}`
 
 export const getFeed = async (
   courseId: string,
   cursor?: string,
-  orgSlug?: string,
 ): Promise<FeedItem[] | null> => {
   const url = cursor
-    ? buildFeedApiPath(courseId, orgSlug, `/${cursor}`)
-    : buildFeedApiPath(courseId, orgSlug)
+    ? `/courses/${courseId}/feed/${cursor}`
+    : `/courses/${courseId}/feed`
 
   return await apiFetch<FeedItem[]>(url)
 }
@@ -27,9 +19,8 @@ export const getFeed = async (
 export const createPost = async (
   courseId: string,
   body: FeedCreateRequest,
-  orgSlug?: string,
 ): Promise<FeedItem> => {
-  return await apiFetch<FeedItem>(buildFeedApiPath(courseId, orgSlug), {
+  return await apiFetch<FeedItem>(`/courses/${courseId}/feed`, {
     method: 'POST',
     body: JSON.stringify(body),
   })
@@ -39,9 +30,8 @@ export const updatePost = async (
   courseId: string,
   postId: string,
   body: FeedUpdateRequest,
-  orgSlug?: string,
 ): Promise<FeedItem> => {
-  return await apiFetch<FeedItem>(buildFeedApiPath(courseId, orgSlug, `/${postId}`), {
+  return await apiFetch<FeedItem>(`/courses/${courseId}/feed/${postId}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   })
@@ -50,9 +40,8 @@ export const updatePost = async (
 export const deletePost = async (
   courseId: string,
   postId: string,
-  orgSlug?: string,
 ): Promise<void> => {
-  return await apiFetch<void>(buildFeedApiPath(courseId, orgSlug, `/${postId}`), {
+  return await apiFetch<void>(`/courses/${courseId}/feed/${postId}`, {
     method: 'DELETE',
   })
 }

@@ -6,7 +6,6 @@ import { useState } from 'react'
 export const useFeedPagination = (
   courseId: string,
   initialData?: FeedItem[],
-  orgSlug?: string,
   enabled: boolean = true,
 ) => {
   const {
@@ -19,8 +18,8 @@ export const useFeedPagination = (
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['feed-paginated', orgSlug, courseId],
-    queryFn: ({ pageParam }) => getFeed(courseId, pageParam, orgSlug),
+    queryKey: ['feed-paginated', courseId],
+    queryFn: ({ pageParam }) => getFeed(courseId, pageParam),
     getNextPageParam: (lastPage) => {
       if (!lastPage || lastPage.length < 15) return undefined
 

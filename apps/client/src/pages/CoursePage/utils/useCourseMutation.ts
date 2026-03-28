@@ -20,7 +20,7 @@ export const invalidateCourseQueries = async (
   await queryClient.invalidateQueries({ queryKey: ['courses'] })
 }
 
-export const useDeleteCourseMutation = (orgSlug?: string) => {
+export const useDeleteCourseMutation = () => {
   const queryClient = useQueryClient()
   return useMutation<
     void,
@@ -28,7 +28,7 @@ export const useDeleteCourseMutation = (orgSlug?: string) => {
     string,
     { previousCourses?: CourseSummary[]; previousCoursesUser?: CourseSummary[] }
   >({
-    mutationFn: async (courseId: string) => await deleteCourse(courseId, orgSlug),
+    mutationFn: async (courseId: string) => await deleteCourse(courseId),
     networkMode: 'always',
     onMutate: async (courseId) => {
       await queryClient.cancelQueries({ queryKey: ['courses'] })
@@ -82,7 +82,7 @@ export const useCloneCourseMutation = (options?: {
     previous: CourseSummary[] | undefined,
     optimistic: CourseSummary,
   ) => CourseSummary[]
-}, orgSlug?: string) => {
+}) => {
   const queryClient = useQueryClient()
 
   return useMutation<
@@ -92,7 +92,7 @@ export const useCloneCourseMutation = (options?: {
     { previousCourses?: CourseSummary[]; tempId: string }
   >({
     mutationFn: async ({ source }) => {
-      const result = await cloneCourse(source.uuid, orgSlug)
+      const result = await cloneCourse(source.uuid)
       if (!result) {
         throw new Error('Clone course returned null')
       }
@@ -179,7 +179,6 @@ export const useCloneCourseMutation = (options?: {
 export const useUpdateCourseMutation = (
   courseId: string,
   onSuccessCallback?: (updatedCourse: CourseSummary) => void,
-  orgSlug?: string,
 ) => {
   const queryClient = useQueryClient()
   return useMutation<
@@ -189,7 +188,7 @@ export const useUpdateCourseMutation = (
     { previousCourses?: CourseSummary[]; previousCourse?: CourseDetail }
   >({
     mutationFn: async (data: { name: string; description?: string }) => {
-      const result = await updateCourse(courseId, data, orgSlug)
+      const result = await updateCourse(courseId, data)
       if (!result) {
         throw new Error('Update course returned null')
       }
@@ -259,7 +258,6 @@ export const useUpdateCourseMutation = (
 
 export const useCreateCourseMutation = (
   setDraftCourse: (a: CourseSummary | null) => void,
-  orgSlug?: string,
 ) => {
   const queryClient = useQueryClient()
   return useMutation<
@@ -269,7 +267,7 @@ export const useCreateCourseMutation = (
     { previousCourses?: CourseSummary[] }
   >({
     mutationFn: async (data: { name: string; description?: string }) => {
-      const result = await createCourse(data, orgSlug)
+      const result = await createCourse(data)
       if (!result) {
         throw new Error('Create course returned null')
       }
@@ -321,13 +319,10 @@ export const useCreateCourseMutation = (
   })
 }
 
-export const useUpdateCourseStatusMutation = (
-  courseId: string,
-  orgSlug?: string,
-) => {
+export const useUpdateCourseStatusMutation = (courseId: string) => {
   const queryClient = useQueryClient()
   return useMutation<CourseSummary, ApiError, { status: CourseStatus }>({
-    mutationFn: ({ status }) => updateCourse(courseId, { status }, orgSlug),
+    mutationFn: ({ status }) => updateCourse(courseId, { status }),
     onSuccess: async () => {
       await invalidateCourseQueries(queryClient, courseId)
     },

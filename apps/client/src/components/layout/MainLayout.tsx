@@ -2,16 +2,10 @@ import React from 'react'
 import Header from './Header'
 import { Outlet, useLocation } from 'react-router'
 import Footer from './Footer'
-import { isOrgLoginPath, isOrgPasswordPath, isOrgRootPath } from '@/lib/routes'
 
 const MainLayout = () => {
   const { pathname } = useLocation()
-  const isHScreen =
-    pathname === '/' ||
-    pathname === '/admin/login' ||
-    isOrgRootPath(pathname) ||
-    isOrgLoginPath(pathname) ||
-    isOrgPasswordPath(pathname)
+  const isHScreen = pathname === '/' || pathname === '/login'
   return (
     <div className='flex flex-col min-h-dvh'>
       <Header />

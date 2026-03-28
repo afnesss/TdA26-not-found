@@ -208,15 +208,9 @@ export async function purchaseShopVoucherWithXp(
   req: AuthRequest,
   res: Response,
 ) {
-  if (
-    !req.user ||
-    req.user.actorType !== "legacy_user" ||
-    req.user.role !== "student"
-  ) {
+  if (!req.user || req.user.role !== "student" || !req.user.id) {
     return res.status(401).json({ message: "Nejste oprávnění" });
   }
-
-  const studentId = req.user.id;
 
   try {
     const { merchItemId } = req.body as { merchItemId: string };
@@ -230,7 +224,7 @@ export async function purchaseShopVoucherWithXp(
           xp: users.xp,
         })
         .from(users)
-        .where(eq(users.uuid, studentId))
+        .where(eq(users.uuid, req.user!.id as string))
         .limit(1);
 
       if (!currentUser) {

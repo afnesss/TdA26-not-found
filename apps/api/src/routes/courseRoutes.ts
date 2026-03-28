@@ -12,8 +12,8 @@ import {
   streamCourses,
 } from "../controllers/courseController";
 import {
-  getCourseSessionOverview,
   getCourseSessionLeaderboard,
+  getCourseSessionOverview,
 } from "../controllers/sessionController";
 // import { authMiddleware } from "../middleware/auth";
 import { validate } from "../middleware/validate";
@@ -21,81 +21,58 @@ import {
   CourseCreateRequestSchema,
   CourseUpdateRequestSchema,
 } from "../schemas/course";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { authMiddleware, requireRole } from "../middleware/auth";
 import {
-  requireCourseDraft,
   requireCourseUpdateAllowed,
 } from "../middleware/courseStatus";
-import {
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
-} from "../middleware/organization";
 
 const router = Router();
 
 router.get("/stream", streamCourses);
 router.get("/", getAllCourses);
-router.get("/:uuid/dashboard-analytics", getCourseDashboardAnalytics);
+router.get(
+  "/:uuid/dashboard-analytics",
+  authMiddleware,
+  requireRole("lecturer"),
+  getCourseDashboardAnalytics,
+);
+router.get("/:uuid/session/leaderboard", getCourseSessionLeaderboard);
 router.get(
   "/:uuid/session/overview",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   getCourseSessionOverview,
-);
-router.get(
-  "/:uuid/session/leaderboard",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
-  getCourseSessionLeaderboard,
 );
 router.get("/:uuid", getCourseByUuid);
 
 router.post(
   "/",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   validate(CourseCreateRequestSchema),
   createCourse,
 );
-router.post(
-  "/:uuid/clone",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
-  cloneCourse,
-);
+router.post("/:uuid/clone", authMiddleware, requireRole("lecturer"), cloneCourse);
 router.get(
   "/:uuid/share-link",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   getCourseShareLink,
 );
 router.post(
   "/:uuid/share-link/regenerate",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   regenerateCourseShareLink,
 );
 router.put(
   "/:uuid",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
+  authMiddleware,
+  requireRole("lecturer"),
   validate(CourseUpdateRequestSchema),
   requireCourseUpdateAllowed("uuid"),
   updateCourse,
 );
-router.delete(
-  "/:uuid",
-  scopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
-  requireScopedOrganizationPasswordChanged,
-  deleteCourse,
-);
+router.delete("/:uuid", authMiddleware, requireRole("lecturer"), deleteCourse);
 
 export default router;

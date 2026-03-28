@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md font-medium transition-all gap-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.95]',
+  'inline-flex items-center justify-center rounded-md font-medium transition-all gap-2 disabled:pointer-events-none disabled:opacity-60 [&_svg]:pointer-events-none  shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive active:scale-[0.95]',
   {
     variants: {
       variant: {
@@ -10,19 +10,17 @@ const buttonVariants = cva(
           'rounded-xl cursor-pointer bg-linear-to-r from-accent-teal to-primary text-background\
           font-bold hover:from-accent-teal-dark hover:to-accent-blue transition-all duration-300 \
           shadow-lg hover:shadow-xl hover:scale-102 text-base max-sm:text-md sm:text-md \
-          disabled:hover:from-accent-teal disabled:hover:to-primary disabled:hover:shadow-lg disabled:hover:scale-100',
+          disabled:pointer-events-none disabled:opacity-60',
         outline:
           'text-xs sm:text-sm border bg-background rounded-xl shadow-xs hover:bg-accent hover:text-accent-foreground \
-          dark:bg-input/30 dark:border-input dark:hover:bg-input/50 cursor-pointer \
-          disabled:hover:bg-background disabled:hover:text-foreground',
+          dark:bg-input/30 dark:border-input dark:hover:bg-input/50 cursor-pointer',
         secondary:
           'bg-background cursor-pointer shadow-md text-accent-blue transition-colors \
           duration-200 rounded-xl px-4 py-2 hover:bg-secondary active:bg-secondary \
-        font-semibold disabled:hover:bg-background',
+        font-semibold',
         filter:
           'px-2 md:px-4 py-1 sm:py-1.5 h-8 rounded-xl max-sm:text-xs text-sm font-medium \
-        transition-all duration-300 flex items-center gap-2 cursor-pointer \
-        disabled:hover:bg-inherit disabled:hover:text-inherit disabled:hover:shadow-none disabled:hover:scale-100',
+        transition-all duration-300 flex items-center gap-2 cursor-pointer',
         grid: 'flex items-center rounded-xl font-bold text-sm hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer',
         ghost:
           'hover:text-primary active-text-primary cursor-pointer text-gray-400 transition-colors',

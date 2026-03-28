@@ -2,11 +2,12 @@
 import express from "express";
 // import session from "express-session";
 import authRoutes from "./routes/authRoutes";
-import adminAuthRoutes from "./routes/adminAuthRoutes";
-import adminOrganizationRoutes from "./routes/adminOrganizationRoutes";
+import courseRoutes from "./routes/courseRoutes";
 import courseShareRoutes from "./routes/courseShareRoutes";
-import organizationRequestRoutes from "./routes/organizationRequestRoutes";
-import orgRoutes from "./routes/orgRoutes";
+import materialRoutes from "./routes/materialRoutes";
+import quizRoutes from "./routes/quizRoutes";
+import feedRoutes from "./routes/feedRoutes";
+import moduleRoutes from "./routes/moduleRoutes";
 import shopRoutes from "./routes/shopRoutes";
 import { seed } from "./db/seed";
 import path from "path";
@@ -56,11 +57,12 @@ app.get("/health", (req, res) => {
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/auth", authRoutes);
-app.use("/admin/auth", adminAuthRoutes);
-app.use("/admin", adminOrganizationRoutes);
-app.use("/organization-requests", organizationRequestRoutes);
-app.use("/orgs", orgRoutes);
 app.use("/course-share", courseShareRoutes);
+app.use("/courses/:courseId/modules", moduleRoutes);
+app.use("/courses/:courseId/modules/:moduleId/materials", materialRoutes);
+app.use("/courses/:courseId/modules/:moduleId/quizzes", quizRoutes);
+app.use("/courses/:courseId/feed", feedRoutes);
+app.use("/courses", courseRoutes);
 app.use("/shop", shopRoutes);
 
 // Error handling middleware

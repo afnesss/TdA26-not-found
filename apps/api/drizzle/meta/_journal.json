@@ -120,6 +120,20 @@
       "when": 1774711900000,
       "tag": "0016_course_share_token_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1774712600000,
+      "tag": "0017_platform_shop",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774714200000,
+      "tag": "0018_shop_xp_vouchers",
+      "breakpoints": true
     }
   ]
 }

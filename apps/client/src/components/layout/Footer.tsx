@@ -25,6 +25,12 @@ const Footer = () => {
             </span>
             <span
               className='cursor-pointer hover:text-secondary'
+              onClick={() => navigate('/shop')}
+            >
+              Shop (platforma)
+            </span>
+            <span
+              className='cursor-pointer hover:text-secondary'
               onClick={() => navigate('/terms-of-use')}
             >
               Podmínky použití

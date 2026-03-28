@@ -8,6 +8,7 @@ import materialRoutes from "./routes/materialRoutes";
 import quizRoutes from "./routes/quizRoutes";
 import feedRoutes from "./routes/feedRoutes";
 import moduleRoutes from "./routes/moduleRoutes";
+import shopRoutes from "./routes/shopRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import cookieParser from "cookie-parser";
@@ -62,6 +63,7 @@ app.use("/courses/:courseId/modules/:moduleId/materials", materialRoutes);
 app.use("/courses/:courseId/modules/:moduleId/quizzes", quizRoutes);
 app.use("/courses/:courseId/feed", feedRoutes);
 app.use("/courses", courseRoutes);
+app.use("/shop", shopRoutes);
 
 // Error handling middleware
 app.use(

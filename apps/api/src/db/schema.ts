@@ -179,3 +179,93 @@ export const feedItems = pgTable("feed_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export type ShopOrderItemSnapshot = {
+  merchItemId: string;
+  name: string;
+  quantity: number;
+  unitPriceCents: number;
+  lineTotalCents: number;
+};
+
+export const merchItems = pgTable(
+  "merch_items",
+  {
+    uuid: uuid("uuid").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 128 }).notNull(),
+    name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
+    imageUrl: text("image_url"),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    purchaseMode: varchar("purchase_mode", { length: 16 })
+      .notNull()
+      .default("money"),
+    xpCost: integer("xp_cost"),
+    voucherDiscountPercent: integer("voucher_discount_percent"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("merch_items_slug_unique").on(t.slug),
+    check("merch_items_unit_price_non_negative", sql`${t.unitPriceCents} >= 0`),
+    check(
+      "merch_items_purchase_mode_allowed",
+      sql`${t.purchaseMode} in ('money', 'xp')`,
+    ),
+    check("merch_items_xp_cost_positive", sql`${t.xpCost} is null or ${t.xpCost} > 0`),
+    check(
+      "merch_items_voucher_discount_percent_range",
+      sql`${t.voucherDiscountPercent} is null or (${t.voucherDiscountPercent} > 0 and ${t.voucherDiscountPercent} <= 100)`,
+    ),
+  ],
+);
+
+export const shopOrders = pgTable(
+  "shop_orders",
+  {
+    uuid: uuid("uuid").defaultRandom().primaryKey(),
+    contactEmail: varchar("contact_email", { length: 320 }).notNull(),
+    items: jsonb("items").$type<ShopOrderItemSnapshot[]>().notNull(),
+    promoCode: varchar("promo_code", { length: 64 }),
+    subtotalCents: integer("subtotal_cents").notNull(),
+    discountCents: integer("discount_cents").notNull().default(0),
+    totalCents: integer("total_cents").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    check("shop_orders_subtotal_non_negative", sql`${t.subtotalCents} >= 0`),
+    check("shop_orders_discount_non_negative", sql`${t.discountCents} >= 0`),
+    check("shop_orders_total_non_negative", sql`${t.totalCents} >= 0`),
+  ],
+);
+
+export const promoCodes = pgTable(
+  "promo_codes",
+  {
+    uuid: uuid("uuid").defaultRandom().primaryKey(),
+    code: varchar("code", { length: 64 }).notNull(),
+    discountType: varchar("discount_type", { length: 16 }).notNull(),
+    discountValue: integer("discount_value").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    isUsed: boolean("is_used").notNull().default(false),
+    xpRedemptionRef: varchar("xp_redemption_ref", { length: 128 }),
+    usedInOrderId: uuid("used_in_order_id").references(() => shopOrders.uuid, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    usedAt: timestamp("used_at"),
+  },
+  (t) => [
+    uniqueIndex("promo_codes_code_unique").on(t.code),
+    check("promo_codes_discount_value_positive", sql`${t.discountValue} > 0`),
+    check(
+      "promo_codes_discount_type_allowed",
+      sql`${t.discountType} in ('fixed', 'percent')`,
+    ),
+    check(
+      "promo_codes_percent_limit",
+      sql`(${t.discountType} <> 'percent') OR (${t.discountValue} <= 100)`,
+    ),
+  ],
+);

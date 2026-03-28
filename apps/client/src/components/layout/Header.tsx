@@ -17,11 +17,44 @@ export default function Header() {
   const isMd = useMediaQuery('(min-width: 768px)')
   const isDashboard = pathname.includes('/dashboard')
   const isCourses = pathname.includes('/courses')
+  const isShop = pathname.startsWith('/shop')
   const isLogin = pathname.includes('/login')
   const { isAuth, user } = useAuth()
 
   const isLecturer = user?.role === 'lecturer'
   const isStudent = user?.role === 'student'
+  const mobileNavItems = [
+    {
+      label: 'Kurzy',
+      value: 'courses',
+      onClick: () => navigate('/courses'),
+    },
+    {
+      label: 'Shop',
+      value: 'shop',
+      onClick: () => navigate('/shop'),
+    },
+    ...(isLecturer
+      ? [
+          {
+            label: 'Dashboard',
+            value: 'dashboard',
+            onClick: () => navigate('/dashboard'),
+          },
+        ]
+      : []),
+  ]
+  const selectedMobileValue = isDashboard
+    ? 'dashboard'
+    : isShop
+      ? 'shop'
+      : 'courses'
+  const selectedMobileLabel =
+    selectedMobileValue === 'dashboard'
+      ? 'Dashboard'
+      : selectedMobileValue === 'shop'
+        ? 'Shop'
+        : 'Kurzy'
 
   return (
     <>
@@ -54,17 +87,26 @@ export default function Header() {
             >
               <Button
                 variant={'tab'}
-                className={cn(isCourses && 'text-secondary ...')}
+                className={cn(isCourses && 'text-secondary')}
                 onClick={() => navigate('/courses')}
                 aria-label='Přejít na kurzy'
                 aria-current={isCourses ? 'page' : undefined}
               >
                 Kurzy
               </Button>
+              <Button
+                variant='tab'
+                className={cn(isShop && 'text-secondary')}
+                onClick={() => navigate('/shop')}
+                aria-label='Přejít na platform shop'
+                aria-current={isShop ? 'page' : undefined}
+              >
+                Shop
+              </Button>
               {isLecturer && (
                 <Button
                   variant='tab'
-                  className={cn(isDashboard && 'text-secondary ...')}
+                  className={cn(isDashboard && 'text-secondary')}
                   onClick={() => navigate('/dashboard')}
                   aria-label='Přejít na Dashboard'
                   aria-current={isDashboard ? 'page' : undefined}
@@ -73,41 +115,22 @@ export default function Header() {
                 </Button>
               )}
             </nav>
-          ) : isLecturer ? (
+          ) : (
             <DropdownMenuComponent
               trigger={
                 <Button
                   variant='tab'
                   className='gap-1 text-xs hover:bg-primary/10 transition-colors'
                 >
-                  {isDashboard ? <span>Dashboard</span> : <span>Kurzy</span>}
+                  <span>{selectedMobileLabel}</span>
                   <ChevronDown size={16} className='opacity-60' />
                 </Button>
               }
-              items={[
-                {
-                  label: 'Kurzy',
-                  value: 'courses',
-                  onClick: () => navigate('/courses'),
-                },
-                {
-                  label: 'Dashboard',
-                  value: 'dashboard',
-                  onClick: () => navigate('/dashboard'),
-                },
-              ]}
-              selectedValue={isDashboard ? 'dashboard' : 'courses'}
+              items={mobileNavItems}
+              selectedValue={selectedMobileValue}
               align='end'
-              width='w-25'
+              width='w-40'
             />
-          ) : (
-            <Button
-              variant={'tab'}
-              onClick={() => navigate('/courses')}
-              aria-label='Přejít na kurzy'
-            >
-              Kurzy
-            </Button>
           )}
 
           <Button

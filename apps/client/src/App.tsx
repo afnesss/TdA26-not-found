@@ -19,6 +19,10 @@ import UserCourseModuleDetailPage from './pages/course-user/UserCourseModuleDeta
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
+import ShopCatalogPage from './pages/shop/ShopCatalogPage'
+import ShopCartPage from './pages/shop/ShopCartPage'
+import ShopCheckoutPage from './pages/shop/ShopCheckoutPage'
+import ShopSuccessPage from './pages/shop/ShopSuccessPage'
 
 function App() {
   const router = createBrowserRouter(
@@ -26,6 +30,10 @@ function App() {
       <Route path='/' element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path='/courses' element={<CoursesPage />}></Route>
+        <Route path='/shop' element={<ShopCatalogPage />}></Route>
+        <Route path='/shop/cart' element={<ShopCartPage />}></Route>
+        <Route path='/shop/checkout' element={<ShopCheckoutPage />}></Route>
+        <Route path='/shop/success/:orderId' element={<ShopSuccessPage />}></Route>
         <Route path='/login' element={<LoginPage />}></Route>
         <Route path='/courses/:courseId/' element={<UserCourseLayoutPage />}>
           <Route index element={<UserCourseOverviewPage />} />

@@ -345,6 +345,7 @@ const CourseModuleDetailPage = () => {
     const newDraft: Quiz = {
       uuid: `temp-${Date.now()}`,
       title: '',
+      difficulty: 'easy',
       attemptsCount: 0,
       questions: [
         {

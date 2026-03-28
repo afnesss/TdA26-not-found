@@ -57,14 +57,9 @@ const formatQuestionsCount = (count: number) => {
 }
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
-type QuizFormValues = Omit<Quiz, 'difficulty'> & {
-  difficulty?: QuizDifficulty
-}
+type QuizFormValues = Quiz
 
-const toQuizFormValues = (quiz: Quiz): QuizFormValues => ({
-  ...quiz,
-  difficulty: quiz.difficulty ?? undefined,
-})
+const toQuizFormValues = (quiz: Quiz): QuizFormValues => quiz
 
 type QuizComponentProps = {
   quiz: Quiz
@@ -393,7 +388,7 @@ const QuizComponentInner = ({
     const formData = data as QuizFormValues
     await onSave?.({
       ...formData,
-      difficulty: formData.difficulty!,
+      difficulty: formData.difficulty,
     })
     // Clear dirty state after successful save
     reset(formData)

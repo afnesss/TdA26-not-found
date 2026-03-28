@@ -79,7 +79,7 @@ export const createQuiz = async (req: Request, res: Response) => {
       .values({
         moduleId,
         title: quizData.title,
-        difficulty: quizData.difficulty ?? null,
+        difficulty: quizData.difficulty ?? "easy",
         questions: questionsWithIds,
       })
       .returning();
@@ -152,7 +152,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .update(quizzes)
       .set({
         title: quizData.title,
-        difficulty: quizData.difficulty ?? null,
+        difficulty: quizData.difficulty ?? "easy",
         questions: questionsWithIds,
         updatedAt: new Date(),
       })

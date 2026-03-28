@@ -92,6 +92,13 @@
       "when": 1774700000000,
       "tag": "0012_quiz_difficulty",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1774700100000,
+      "tag": "0013_quiz_difficulty_not_null",
+      "breakpoints": true
     }
   ]
 }

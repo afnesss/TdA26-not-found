@@ -40,6 +40,13 @@ export default function Header() {
           />
         </div>
         <div className='w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center gap-4 md:gap-10 justify-end-safe '>
+          {isStudent && (
+            <div className='hidden md:flex items-center gap-1 rounded-xl border border-white/35 bg-white/12 px-2.5 py-1.5 text-white/95 shadow-sm'>
+              <span className='text-xs font-medium'>Lvl {user.level}</span>
+              <span className='text-[10px] opacity-75'>|</span>
+              <span className='text-xs font-medium'>XP {user.xp}</span>
+            </div>
+          )}
           {isMd ? (
             <nav
               className='flex flex-col sm:flex-row flex-wrap items-center gap-2 md:gap-10'
@@ -101,14 +108,6 @@ export default function Header() {
             >
               Kurzy
             </Button>
-          )}
-
-          {isStudent && (
-            <div className='flex items-center gap-1 rounded-md border border-white/35 bg-white/12 px-2 py-1 text-white/95'>
-              <span className='text-xs font-medium'>Lvl {user.level}</span>
-              <span className='text-[10px] opacity-75'>|</span>
-              <span className='text-xs font-medium'>XP {user.xp}</span>
-            </div>
           )}
 
           <Button

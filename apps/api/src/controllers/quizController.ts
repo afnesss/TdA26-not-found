@@ -177,10 +177,16 @@ export const updateQuiz = async (req: Request, res: Response) => {
       uuid: q.uuid || uuidv4(),
     }));
 
+    const nextDifficulty =
+      quizData.difficulty !== undefined
+        ? resolveQuizDifficulty(quizData.difficulty)
+        : undefined;
+
     const [updatedQuiz] = await db
       .update(quizzes)
       .set({
         title: quizData.title,
+        ...(nextDifficulty ? { difficulty: nextDifficulty } : {}),
         questions: questionsWithIds,
         updatedAt: new Date(),
       })

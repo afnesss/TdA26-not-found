@@ -571,6 +571,19 @@ export async function cloneCourse(req: Request, res: Response) {
         await tx.insert(quizzes).values({
           moduleId: mappedModuleId,
           title: quiz.title,
+          difficulty:
+            (quiz as { difficulty?: unknown }).difficulty === "beginner" ||
+            (quiz as { difficulty?: unknown }).difficulty === "easy" ||
+            (quiz as { difficulty?: unknown }).difficulty === "medium" ||
+            (quiz as { difficulty?: unknown }).difficulty === "hard" ||
+            (quiz as { difficulty?: unknown }).difficulty === "extreme"
+              ? ((quiz as { difficulty: string }).difficulty as
+                  | "beginner"
+                  | "easy"
+                  | "medium"
+                  | "hard"
+                  | "extreme")
+              : "beginner",
           questions: quiz.questions,
         });
       }

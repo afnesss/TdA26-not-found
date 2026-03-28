@@ -50,7 +50,7 @@ const UserCourseLayoutPage = () => {
   } = useCoursePageQueries(courseId)
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
-  const isStudentUser = user?.role === 'student'
+  const isAuthenticatedUser = Boolean(user)
   const redirectTarget = `${location.pathname}${location.search}${location.hash}`
 
   useTitle(courseData?.name || 'Kurz')
@@ -64,7 +64,7 @@ const UserCourseLayoutPage = () => {
   useEffect(() => {
     if (!courseId || isAuthLoading) return
 
-    if (isStudentUser) {
+    if (isAuthenticatedUser) {
       authRedirectedRef.current = false
       return
     }
@@ -76,7 +76,7 @@ const UserCourseLayoutPage = () => {
       `/login?mode=student&redirect=${encodeURIComponent(redirectTarget)}`,
       { replace: true },
     )
-  }, [courseId, isAuthLoading, isStudentUser, navigate, redirectTarget])
+  }, [courseId, isAuthLoading, isAuthenticatedUser, navigate, redirectTarget])
 
   useEffect(() => {
     if (!courseData || redirectedRef.current) return
@@ -149,7 +149,7 @@ const UserCourseLayoutPage = () => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
       <div className='max-w-6xl mx-auto space-y-5'>
-        {!isStudentUser ? (
+        {!isAuthenticatedUser ? (
           <CourseSkeleton />
         ) : (
           <>

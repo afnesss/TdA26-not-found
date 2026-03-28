@@ -34,6 +34,8 @@ export const courses = pgTable("courses", {
   name: varchar("name", { length: 256 }).notNull(),
   description: text("description"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
+  shareToken: varchar("share_token", { length: 128 }),
+  shareTokenUpdatedAt: timestamp("share_token_updated_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 

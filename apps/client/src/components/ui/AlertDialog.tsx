@@ -59,7 +59,8 @@ const DeleteConfirmDialog = ({
             disabled={isLoading}
             onClick={(e) => e?.stopPropagation()}
             className={cn(
-              'w-15 h-7 md:w-18 md:h-8 font-semibold border hover:bg-gray-200 border-gray-300 shadow-sm',
+              buttonVariants({ variant: 'outline' }),
+              'w-15 h-7 md:w-18 md:h-8 font-semibold shadow-sm',
             )}
           >
             {cancelText}

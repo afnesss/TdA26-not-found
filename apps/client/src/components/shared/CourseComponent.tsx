@@ -37,6 +37,7 @@ import { CourseStateBadge } from './CourseStateBadge'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
 import AnalyticsSection from './Statistics/StatisticsCourseSesction'
 import { StatusActionButtons } from './StatusActionButtons'
+import CourseShareTrigger from './CourseShareTrigger'
 
 interface CourseClassic {
   type: 'classic'
@@ -228,6 +229,13 @@ const CourseComponent = (props: CourseCompProps) => {
         {type === 'edit' &&
           (!props.isDraft ? (
             <div className='flex gap-2 md:gap-1.5 items-center'>
+              {course.status === 'live' && (
+                <CourseShareTrigger
+                  courseId={course.uuid}
+                  courseName={course.name}
+                  size='sm'
+                />
+              )}
               {isAnalyticsMode ? (
                 <EditBtn
                   type='view'

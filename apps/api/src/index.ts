@@ -3,6 +3,7 @@ import express from "express";
 // import session from "express-session";
 import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
+import courseShareRoutes from "./routes/courseShareRoutes";
 import materialRoutes from "./routes/materialRoutes";
 import quizRoutes from "./routes/quizRoutes";
 import feedRoutes from "./routes/feedRoutes";
@@ -55,6 +56,7 @@ app.get("/health", (req, res) => {
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/auth", authRoutes);
+app.use("/course-share", courseShareRoutes);
 app.use("/courses/:courseId/modules", moduleRoutes);
 app.use("/courses/:courseId/modules/:moduleId/materials", materialRoutes);
 app.use("/courses/:courseId/modules/:moduleId/quizzes", quizRoutes);

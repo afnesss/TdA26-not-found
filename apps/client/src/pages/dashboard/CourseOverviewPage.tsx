@@ -37,6 +37,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { ModulesSectionActions } from './components/ModuleSectionActions'
 import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
+import CourseShareTrigger from '@/components/shared/CourseShareTrigger'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -352,6 +353,15 @@ const CourseModulesOverviewPage = () => {
           ) : (
             statusActions
           )
+        }
+        noActionsSlot={
+          course.status === 'live' ? (
+            <CourseShareTrigger
+              courseId={courseId}
+              courseName={currentCourseName}
+              size='md'
+            />
+          ) : undefined
         }
       />
 

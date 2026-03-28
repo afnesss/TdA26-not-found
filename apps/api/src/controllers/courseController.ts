@@ -16,26 +16,49 @@ import { mapMaterial } from "./materialController";
 
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
+import { buildCourseShareUrl, generateCourseShareToken } from "../utils/courseShare";
+
+const USER_VISIBLE_COURSE_STATUSES = ["paused", "planned", "live"];
+
+const toCourseSummary = {
+  uuid: courses.uuid,
+  name: courses.name,
+  description: courses.description,
+  status: courses.status,
+  createdAt: courses.createdAt,
+  updatedAt: courses.updatedAt,
+  startedAt: courses.startedAt,
+  scheduledFor: courses.scheduledFor,
+  status_history: courses.status_history,
+};
+
+const createCourseShareToken = async (courseId: string) => {
+  const token = generateCourseShareToken();
+  const [updatedCourse] = await db
+    .update(courses)
+    .set({
+      shareToken: token,
+      shareTokenUpdatedAt: new Date(),
+    })
+    .where(eq(courses.uuid, courseId))
+    .returning({
+      uuid: courses.uuid,
+      shareToken: courses.shareToken,
+      status: courses.status,
+    });
+
+  return { token, course: updatedCourse };
+};
 
 export async function getAllCourses(req: Request, res: Response) {
   const userView = String(req.query.userView ?? "").toLowerCase() === "true";
 
   const allCourses = await db
-    .select({
-      uuid: courses.uuid,
-      name: courses.name,
-      description: courses.description,
-      status: courses.status,
-      createdAt: courses.createdAt,
-      updatedAt: courses.updatedAt,
-      startedAt: courses.startedAt,
-      scheduledFor: courses.scheduledFor,
-      status_history: courses.status_history,
-    })
+    .select(toCourseSummary)
     .from(courses)
     .where(
       userView
-        ? inArray(courses.status, ["planned", "live", "paused"])
+        ? inArray(courses.status, USER_VISIBLE_COURSE_STATUSES)
         : undefined,
     )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
@@ -48,17 +71,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
     const { uuid } = req.params;
 
     const course = await db
-      .select({
-        uuid: courses.uuid,
-        name: courses.name,
-        description: courses.description,
-        status: courses.status,
-        createdAt: courses.createdAt,
-        updatedAt: courses.updatedAt,
-        startedAt: courses.startedAt,
-        scheduledFor: courses.scheduledFor,
-        status_history: courses.status_history,
-      })
+      .select(toCourseSummary)
       .from(courses)
       .where(eq(courses.uuid, uuid));
 
@@ -403,21 +416,11 @@ export async function createCourse(req: Request, res: Response) {
 
   const newCourse = await db
     .insert(courses)
-    .values({
-      name,
-      description: description || null,
-    })
-    .returning({
-      uuid: courses.uuid,
-      name: courses.name,
-      description: courses.description,
-      status: courses.status,
-      createdAt: courses.createdAt,
-      updatedAt: courses.updatedAt,
-      startedAt: courses.startedAt,
-      scheduledFor: courses.scheduledFor,
-      status_history: courses.status_history,
-    });
+      .values({
+        name,
+        description: description || null,
+      })
+    .returning(toCourseSummary);
 
   res.status(201).json(newCourse[0]);
 }
@@ -492,21 +495,13 @@ export async function cloneCourse(req: Request, res: Response) {
           name: sourceCourse.name,
           description: sourceCourse.description ?? null,
           status: "draft",
+          shareToken: null,
+          shareTokenUpdatedAt: null,
           startedAt: null,
           scheduledFor: null,
           status_history: [],
         })
-        .returning({
-          uuid: courses.uuid,
-          name: courses.name,
-          description: courses.description,
-          status: courses.status,
-          createdAt: courses.createdAt,
-          updatedAt: courses.updatedAt,
-          startedAt: courses.startedAt,
-          status_history: courses.status_history,
-          scheduledFor: courses.scheduledFor,
-        });
+        .returning(toCourseSummary);
 
       const moduleIdMap = new Map<string, string>();
 
@@ -637,6 +632,14 @@ export async function updateCourse(req: Request, res: Response) {
       description:
         description !== undefined ? description : existing[0].description,
       status: status ?? existing[0].status,
+      shareToken:
+        status === "live" && isStatusChanged && !existing[0].shareToken
+          ? generateCourseShareToken()
+          : existing[0].shareToken,
+      shareTokenUpdatedAt:
+        status === "live" && isStatusChanged && !existing[0].shareToken
+          ? new Date()
+          : existing[0].shareTokenUpdatedAt,
       updatedAt: new Date(),
       startedAt:
         status === "live" && isStatusChanged
@@ -661,26 +664,14 @@ export async function updateCourse(req: Request, res: Response) {
               : existing[0].scheduledFor,
     })
     .where(eq(courses.uuid, uuid))
-    .returning({
-      uuid: courses.uuid,
-      name: courses.name,
-      description: courses.description,
-      status: courses.status,
-      createdAt: courses.createdAt,
-      updatedAt: courses.updatedAt,
-      startedAt: courses.startedAt,
-      status_history: courses.status_history,
-      scheduledFor: courses.scheduledFor,
-    });
+    .returning(toCourseSummary);
 
   // Only create feed event if something other than status was changed
   const isOnlyStatusChange =
     status !== undefined && name === undefined && description === undefined;
 
-  const wasUserVisible = ["paused", "planned", "live"].includes(
-    existing[0].status,
-  );
-  const isUserVisible = ["paused", "planned", "live"].includes(nextStatus);
+  const wasUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(existing[0].status);
+  const isUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(nextStatus);
   if ((!wasUserVisible && isUserVisible) || (wasUserVisible && isUserVisible)) {
     sseManager.broadcast("courses", "course_upserted", updated[0]);
   } else if (wasUserVisible && !isUserVisible) {
@@ -774,6 +765,97 @@ export async function deleteCourse(req: Request, res: Response) {
   } catch (error) {
     // Explicit server error handling for DB/runtime failures.
     logger.error({ err: error }, "Failed to delete course");
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
+export async function getCourseShareLink(req: Request, res: Response) {
+  try {
+    const { uuid } = req.params;
+    const [course] = await db
+      .select({
+        uuid: courses.uuid,
+        status: courses.status,
+        shareToken: courses.shareToken,
+      })
+      .from(courses)
+      .where(eq(courses.uuid, uuid));
+
+    if (!course) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    if (course.status !== "live") {
+      return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
+    }
+
+    let token = course.shareToken;
+    if (!token) {
+      const created = await createCourseShareToken(uuid);
+      token = created.token;
+    }
+
+    return res.json({
+      shareUrl: buildCourseShareUrl(req, token),
+    });
+  } catch (error) {
+    logger.error({ err: error }, "Failed to fetch course share link");
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
+export async function regenerateCourseShareLink(req: Request, res: Response) {
+  try {
+    const { uuid } = req.params;
+    const [course] = await db
+      .select({
+        uuid: courses.uuid,
+        status: courses.status,
+      })
+      .from(courses)
+      .where(eq(courses.uuid, uuid));
+
+    if (!course) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    if (course.status !== "live") {
+      return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
+    }
+
+    const { token } = await createCourseShareToken(uuid);
+
+    return res.json({
+      shareUrl: buildCourseShareUrl(req, token),
+    });
+  } catch (error) {
+    logger.error({ err: error }, "Failed to regenerate course share link");
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
+export async function resolveCourseShareLink(req: Request, res: Response) {
+  try {
+    const token = String(req.params.token ?? "").trim();
+    if (!token) {
+      return res.status(400).json({ message: "Chybí token sdílení" });
+    }
+
+    const [course] = await db
+      .select({
+        uuid: courses.uuid,
+        status: courses.status,
+      })
+      .from(courses)
+      .where(eq(courses.shareToken, token));
+
+    if (!course || course.status !== "live") {
+      return res.status(410).json({ message: "Tento QR kód už není platný" });
+    }
+
+    return res.json({ courseId: course.uuid });
+  } catch (error) {
+    logger.error({ err: error }, "Failed to resolve course share link");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }

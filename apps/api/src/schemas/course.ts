@@ -55,8 +55,18 @@ export const CourseDetailSchema = z.object({
   updatedAt: z.date().or(z.string().datetime()).optional(),
 });
 
+export const CourseShareLinkSchema = z.object({
+  shareUrl: z.string().url(),
+});
+
+export const CourseShareResolveSchema = z.object({
+  courseId: z.string().uuid(),
+});
+
 export type CourseSummary = z.infer<typeof CourseSummarySchema>;
 export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>;
 export type CourseUpdateRequest = z.infer<typeof CourseUpdateRequestSchema>;
 export type CourseDetail = z.infer<typeof CourseDetailSchema>;
+export type CourseShareLink = z.infer<typeof CourseShareLinkSchema>;
+export type CourseShareResolve = z.infer<typeof CourseShareResolveSchema>;
 export type StatusHistoryEvent = z.infer<typeof StatusHistoryEventSchema>;

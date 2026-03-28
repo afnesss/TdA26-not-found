@@ -31,6 +31,10 @@ import OrganizationInfoPage from './pages/OrganizationInfoPage'
 import OrganizationLoginPage from './pages/OrganizationLoginPage'
 import OrganizationPasswordPage from './pages/OrganizationPasswordPage'
 import CourseShareRedirectPage from './pages/course-share/CourseShareRedirectPage'
+import ShopCatalogPage from './pages/shop/ShopCatalogPage'
+import ShopCartPage from './pages/shop/ShopCartPage'
+import ShopCheckoutPage from './pages/shop/ShopCheckoutPage'
+import ShopSuccessPage from './pages/shop/ShopSuccessPage'
 
 function App() {
   const router = createBrowserRouter(
@@ -48,6 +52,7 @@ function App() {
         <Route path='/dashboard/*' element={<NotFoundPage />} />
         <Route path='/terms-of-use' element={<TermsOfUsePage />} />
         <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
+        <Route path='/admin' element={<Navigate to='/admin/login' replace />} />
         <Route path='/admin/login' element={<LoginPage />} />
         <Route
           path='/admin/requests'
@@ -73,6 +78,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path='/shop' element={<ShopCatalogPage />} />
+        <Route path='/shop/cart' element={<ShopCartPage />} />
+        <Route path='/shop/checkout' element={<ShopCheckoutPage />} />
+        <Route path='/shop/success/:orderId' element={<ShopSuccessPage />} />
         <Route path='/:orgSlug' element={<OrganizationStatusWatcher />}>
           <Route index element={<OrganizationHomePage />} />
           <Route path='info' element={<OrganizationInfoPage />} />

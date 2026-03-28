@@ -1,1 +1,0 @@
-ALTER TABLE "courses" ALTER COLUMN "status_history" SET DEFAULT '[]'::jsonb;

@@ -1,2 +1,0 @@
-ALTER TABLE "course_session_participants" ADD COLUMN "participant_token" uuid DEFAULT gen_random_uuid() NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX "course_session_participants_participant_token_unique" ON "course_session_participants" USING btree ("participant_token");

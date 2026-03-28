@@ -21,13 +21,14 @@ import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { toast } from 'sonner'
 
+const QR_RENDER_SIZE = 400
+
 type QrImageProps = {
   value?: string
-  size: number
   className?: string
 }
 
-const QrImage = ({ value, size, className }: QrImageProps) => {
+const QrImage = ({ value, className }: QrImageProps) => {
   const [qrState, setQrState] = useState<{ value?: string; src: string }>({
     value: undefined,
     src: '',
@@ -42,7 +43,7 @@ const QrImage = ({ value, size, className }: QrImageProps) => {
 
     void QRCode.toDataURL(value, {
       margin: 1,
-      width: size,
+      width: QR_RENDER_SIZE,
       color: {
         dark: '#0f2f46',
         light: '#ffffff',
@@ -59,18 +60,17 @@ const QrImage = ({ value, size, className }: QrImageProps) => {
     return () => {
       ignore = true
     }
-  }, [size, value])
+  }, [value])
 
   if (!value || qrState.value !== value || !qrState.src) {
     return (
       <div
         className={cn(
-          'flex items-center justify-center rounded-md bg-muted text-primary',
+          'flex aspect-square w-full items-center justify-center rounded-md bg-muted text-primary',
           className,
         )}
-        style={{ width: size, height: size }}
       >
-        <QrCode className='size-5' />
+        <QrCode className='size-8' />
       </div>
     )
   }
@@ -79,9 +79,7 @@ const QrImage = ({ value, size, className }: QrImageProps) => {
     <img
       src={qrState.src}
       alt='QR kód pro sdílení kurzu'
-      width={size}
-      height={size}
-      className={cn('rounded-md border border-border/60 bg-white', className)}
+      className={cn('w-full rounded-md border border-border/60 bg-white', className)}
     />
   )
 }
@@ -168,7 +166,7 @@ const CourseShareTrigger = ({
         iconClassName='text-primary'
       />
 
-      <AlertDialogContent className='max-w-md rounded-2xl'>
+      <AlertDialogContent className='w-[calc(100vw-2rem)] max-w-sm rounded-2xl sm:max-w-md'>
         <div className='absolute right-4 top-4 z-10'>
           <AlertDialogCancel asChild>
             <span>
@@ -193,8 +191,8 @@ const CourseShareTrigger = ({
         </AlertDialogHeader>
 
         <div className='flex flex-col items-center gap-4'>
-          <div className='rounded-2xl border border-border/60 bg-white p-3 shadow-sm'>
-            <QrImage value={shareUrl} size={248} className='rounded-xl' />
+          <div className='w-full rounded-2xl border border-border/60 bg-white p-3 shadow-sm'>
+            <QrImage value={shareUrl} className='rounded-xl' />
           </div>
           <p
             className={cn(

@@ -302,7 +302,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       <DeleteConfirmDialog
                         trigger={
                           <EditBtn
-                            type='delete'
+                            actionType='delete'
                             aria-label={`Smazat materiál ${material.name}`}
                           />
                         }

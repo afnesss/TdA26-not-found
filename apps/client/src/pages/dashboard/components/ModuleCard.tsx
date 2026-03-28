@@ -335,7 +335,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                 aria-label={`Upravit modul ${module.name}`}
               />
               <EditBtn
-                type='delete'
+                actionType='delete'
                 aria-label={`Smazat modul ${module.name}`}
               />
             </div>
@@ -355,7 +355,7 @@ const ModuleCard = (props: ModuleCardProps) => {
                   itemName={module.name}
                   trigger={
                     <EditBtn
-                      type='delete'
+                      actionType='delete'
                       aria-label={`Smazat modul ${module.name}`}
                     />
                   }

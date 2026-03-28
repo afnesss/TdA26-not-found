@@ -11,7 +11,6 @@ import { handleCapitalizedInput } from '@/lib/capitalize'
 import {
   colorStyles,
   headerLineHeight,
-  type ColorVariant,
 } from '@/lib/constants'
 import type {
   CourseDashboardAnalytics,
@@ -37,6 +36,7 @@ import EditBtn from '../../pages/dashboard/components/EditBtn'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { Textarea } from '../ui/textarea'
 import CoursePlanningSection from './CoursePlanningSection'
+import CourseExportTrigger from './CourseExportTrigger'
 import { CourseStateBadge } from './CourseStateBadge'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
 import AnalyticsSection from './Statistics/StatisticsCourseSesction'
@@ -69,7 +69,7 @@ type CourseCompProps = CourseClassic | CourseEdit
 // ─── Course component ─────────────────────────────────────────────────────────
 
 const CourseComponent = (props: CourseCompProps) => {
-  const { course, index, type } = props
+  const { course, type } = props
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const courseColor: keyof typeof colorStyles.bg =
@@ -243,17 +243,14 @@ const CourseComponent = (props: CourseCompProps) => {
                 />
               )}
               {isAnalyticsMode ? (
-                <EditBtn
-                  type='view'
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    props.onEdit()
-                  }}
-                  aria-label={`Zobrazit kurz ${course.name}`}
+                <CourseExportTrigger
+                  courseId={course.uuid}
+                  courseName={course.name}
+                  variant='card'
                 />
               ) : (
                 <>
-                  {course.status === 'draft' ? (
+                  {course.status === 'draft' && (
                     <EditBtn
                       icon={Edit}
                       onClick={(e) => {
@@ -262,20 +259,16 @@ const CourseComponent = (props: CourseCompProps) => {
                       }}
                       aria-label={`Upravit kurz ${course.name}`}
                     />
-                  ) : (
-                    <EditBtn
-                      type='view'
-                      onClick={(e) => {
-                        e?.stopPropagation()
-                        props.onEdit()
-                      }}
-                      aria-label={`Zobrazit kurz ${course.name}`}
-                    />
                   )}
+                  <CourseExportTrigger
+                    courseId={course.uuid}
+                    courseName={course.name}
+                    variant='card'
+                  />
                   <DeleteConfirmDialog
                     trigger={
                       <EditBtn
-                        type='delete'
+                        actionType='delete'
                         onClick={(e) => e?.stopPropagation()}
                         aria-label={`Smazat kurz ${course.name}`}
                       />

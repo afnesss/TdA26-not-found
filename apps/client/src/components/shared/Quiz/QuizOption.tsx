@@ -74,7 +74,7 @@ const QuizOption = ({
 
         {canRemove && (
           <EditBtn
-            type='delete'
+            actionType='delete'
             icon={X}
             onClick={(e) => {
               e?.stopPropagation()

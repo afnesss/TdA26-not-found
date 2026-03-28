@@ -34,7 +34,7 @@ export const QuizSchema = z.object({
   title: z.string(),
   difficulty: QuizDifficultySchema.default("beginner"),
   attemptsCount: z.number().int().optional(),
-  averagePercentage: z.number().min(0).optional(),
+  averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z.array(QuestionSchema),
 });
 

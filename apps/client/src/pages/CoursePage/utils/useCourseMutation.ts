@@ -4,6 +4,8 @@ import {
   cloneCourse,
   createCourse,
   deleteCourse,
+  importAllCoursesBackup,
+  importCourseBackup,
   updateCourse,
 } from '@/api/queries/courseQueries'
 import { pendingCloneIds } from '@/api/pendingCloneIds'
@@ -333,6 +335,54 @@ export const useUpdateCourseStatusMutation = (
     },
     onError: () => {
       toast.error('Chyba při změně stavu')
+    },
+  })
+}
+
+export const useImportCourseMutation = (options?: {
+  onSuccess?: (courses: CourseSummary[]) => void
+}) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<
+    CourseSummary[],
+    ApiError,
+    { file: File }
+  >({
+    mutationFn: (input) => importCourseBackup(input),
+    networkMode: 'always',
+    onSuccess: async (courses) => {
+      await queryClient.invalidateQueries({ queryKey: ['courses'] })
+      await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      toast.success('Kurz importován')
+      options?.onSuccess?.(courses)
+    },
+    onError: (error) => {
+      onError(error, 'Chyba při importu kurzu')
+    },
+  })
+}
+
+export const useImportAllCoursesMutation = (options?: {
+  onSuccess?: (courses: CourseSummary[]) => void
+}) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<CourseSummary[], ApiError, { file: File }>({
+    mutationFn: (input) => importAllCoursesBackup(input),
+    networkMode: 'always',
+    onSuccess: async (courses) => {
+      await queryClient.invalidateQueries({ queryKey: ['courses'] })
+      await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      toast.success(
+        courses.length === 1
+          ? '1 kurz importován'
+          : `${courses.length} kurzů importováno`,
+      )
+      options?.onSuccess?.(courses)
+    },
+    onError: (error) => {
+      onError(error, 'Chyba při importu kurzů')
     },
   })
 }

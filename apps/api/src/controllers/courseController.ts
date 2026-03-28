@@ -16,9 +16,20 @@ import {
 import { mapMaterial } from "./materialController";
 import { AuthRequest } from "../types/auth";
 
+import {
+  buildAllCoursesBackup,
+  buildCourseBackup,
+  buildCourseExportCsv,
+  importCourseBackup,
+  importAllCoursesBackup,
+} from "../utils/courseBackup";
+import { CoursesBackupCollectionSchema } from "../schemas/course";
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
-import { buildCourseShareUrl, generateCourseShareToken } from "../utils/courseShare";
+import {
+  buildCourseShareUrl,
+  generateCourseShareToken,
+} from "../utils/courseShare";
 
 const USER_VISIBLE_COURSE_STATUSES = ["paused", "planned", "live"];
 
@@ -102,7 +113,10 @@ export async function getCourseByUuid(req: Request, res: Response) {
       .from(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       );
 
@@ -209,7 +223,10 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
       .from(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       );
 
@@ -451,15 +468,17 @@ export async function createCourse(req: Request, res: Response) {
     return;
   }
 
-  const organizationId = getScopedOrganizationId(req) ?? (await getDefaultOrganizationId());
+  const organizationId =
+    getScopedOrganizationId(req) ?? (await getDefaultOrganizationId());
 
   const newCourse = await db
     .insert(courses)
-      .values({
-        organizationId,
-        name,
-        description: description || null,
-      })
+    .values({
+      organizationId,
+      name,
+      description: description || null,
+    })
+
     .returning(toCourseSummary);
 
   res.status(201).json(newCourse[0]);
@@ -492,7 +511,10 @@ export async function cloneCourse(req: Request, res: Response) {
       .from(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       );
 
@@ -647,6 +669,119 @@ export async function cloneCourse(req: Request, res: Response) {
   }
 }
 
+export async function exportCourse(req: Request, res: Response) {
+  try {
+    const { uuid } = req.params;
+    const format = String(req.query.format ?? "json").toLowerCase();
+    const organizationId = getScopedOrganizationId(req);
+    const backup = await buildCourseBackup(uuid, organizationId);
+
+    if (!backup) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
+
+    const fileBase =
+      backup.course.name
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase() || "course";
+
+    if (format === "csv") {
+      const csv = buildCourseExportCsv(backup);
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileBase}-report.csv"`,
+      );
+      return res.send(csv);
+    }
+
+    if (format !== "json") {
+      return res.status(400).json({ message: "Nepodporovany format exportu" });
+    }
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileBase}-backup.json"`,
+    );
+    return res.send(JSON.stringify(backup, null, 2));
+  } catch (error) {
+    logger.error({ err: error }, "Failed to export course");
+    return res.status(500).json({ message: "Nepodarilo se exportovat kurz" });
+  }
+}
+
+export async function exportAllCourses(req: Request, res: Response) {
+  try {
+    const organizationId = getScopedOrganizationId(req);
+    const backupCollection = await buildAllCoursesBackup(organizationId);
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="all-courses-backup.json"',
+    );
+    return res.send(JSON.stringify(backupCollection, null, 2));
+  } catch (error) {
+    logger.error({ err: error }, "Failed to export all courses");
+    return res
+      .status(500)
+      .json({ message: "Nepodarilo se exportovat vsechny kurzy" });
+  }
+}
+
+export async function importCourse(req: Request, res: Response) {
+  try {
+    const organizationId = getScopedOrganizationId(req);
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Soubor zalohy je povinny" });
+    }
+
+    const parsed = JSON.parse(req.file.buffer.toString("utf-8"));
+    const parsedCollection = CoursesBackupCollectionSchema.safeParse(parsed);
+
+    if (parsedCollection.success) {
+      const importedCourses = await importAllCoursesBackup(
+        parsedCollection.data,
+        {
+          organizationId,
+        },
+      );
+      importedCourses.forEach((course) => {
+        sseManager.broadcast("courses", "course_upserted", course);
+      });
+      return res.status(201).json(importedCourses);
+    }
+
+    const importedCourse = await importCourseBackup(parsed, {
+      includeStatistics: false,
+      organizationId,
+    });
+
+    sseManager.broadcast("courses", "course_upserted", importedCourse);
+    return res.status(201).json([importedCourse]);
+  } catch (error) {
+    logger.error({ err: error }, "Failed to import course");
+    const status =
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      typeof error.status === "number"
+        ? error.status
+        : 400;
+
+    return res.status(status).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Nepodarilo se importovat kurz",
+    });
+  }
+}
+
 export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
   const { name, description, status, scheduledFor } = req.body;
@@ -657,7 +792,10 @@ export async function updateCourse(req: Request, res: Response) {
     .from(courses)
     .where(
       organizationId
-        ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+        ? and(
+            eq(courses.uuid, uuid),
+            eq(courses.organizationId, organizationId),
+          )
         : eq(courses.uuid, uuid),
     );
 
@@ -734,7 +872,9 @@ export async function updateCourse(req: Request, res: Response) {
   const isOnlyStatusChange =
     status !== undefined && name === undefined && description === undefined;
 
-  const wasUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(existing[0].status);
+  const wasUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(
+    existing[0].status,
+  );
   const isUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(nextStatus);
   if ((!wasUserVisible && isUserVisible) || (wasUserVisible && isUserVisible)) {
     sseManager.broadcast("courses", "course_upserted", updated[0]);
@@ -814,7 +954,10 @@ export async function deleteCourse(req: Request, res: Response) {
       .delete(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       )
       .returning({
@@ -851,7 +994,10 @@ export async function getCourseShareLink(req: Request, res: Response) {
       .from(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       );
 
@@ -860,7 +1006,9 @@ export async function getCourseShareLink(req: Request, res: Response) {
     }
 
     if (course.status !== "live") {
-      return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
+      return res
+        .status(400)
+        .json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
     const shareToken =
@@ -887,7 +1035,10 @@ export async function regenerateCourseShareLink(req: Request, res: Response) {
       .from(courses)
       .where(
         organizationId
-          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          ? and(
+              eq(courses.uuid, uuid),
+              eq(courses.organizationId, organizationId),
+            )
           : eq(courses.uuid, uuid),
       );
 
@@ -896,7 +1047,9 @@ export async function regenerateCourseShareLink(req: Request, res: Response) {
     }
 
     if (course.status !== "live") {
-      return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
+      return res
+        .status(400)
+        .json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
     const shareTokenData = await createCourseShareToken(course.uuid);

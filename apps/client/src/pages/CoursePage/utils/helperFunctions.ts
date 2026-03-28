@@ -155,7 +155,7 @@ export const onError = (error: ApiError, message: string) => {
   if (error?.isNetworkError) {
     toast.error(error.body?.message || 'Chyba připojení')
   } else {
-    toast.error(message)
+    toast.error(error.body?.message || message)
   }
 }
 

@@ -109,6 +109,74 @@ export const cloneCourse = async (
   })
 }
 
+export const exportCourse = async (
+  courseId: string,
+  format: 'json' | 'csv',
+): Promise<Blob> => {
+  const response = await fetch(
+    `/api/courses/${courseId}/export?format=${format}`,
+    {
+      credentials: 'include',
+    },
+  )
+
+  if (!response.ok) {
+    const errorBody = await response
+      .json()
+      .catch(() => ({ message: 'Export selhal' }))
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody,
+    }
+  }
+
+  return response.blob()
+}
+
+export const exportAllCourses = async (): Promise<Blob> => {
+  const response = await fetch('/api/courses/export-all', {
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const errorBody = await response
+      .json()
+      .catch(() => ({ message: 'Export selhal' }))
+    throw {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody,
+    }
+  }
+
+  return response.blob()
+}
+
+export const importCourseBackup = async (input: {
+  file: File
+}): Promise<CourseSummary[]> => {
+  const formData = new FormData()
+  formData.append('file', input.file)
+
+  return await apiFetch<CourseSummary[]>('/courses/import', {
+    method: 'POST',
+    body: formData,
+  })
+}
+
+export const importAllCoursesBackup = async (input: {
+  file: File
+}): Promise<CourseSummary[]> => {
+  const formData = new FormData()
+  formData.append('file', input.file)
+
+  return await apiFetch<CourseSummary[]>('/courses/import', {
+    method: 'POST',
+    body: formData,
+  })
+}
+
 export const getCourseShareLink = async (
   courseId: string,
   orgSlug?: string,

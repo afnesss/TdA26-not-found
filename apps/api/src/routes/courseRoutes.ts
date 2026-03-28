@@ -1,31 +1,32 @@
-﻿import { Router } from "express";
+import { Router } from "express";
+import multer from "multer";
 import {
+  cloneCourse,
+  createCourse,
+  deleteCourse,
+  exportCourse,
+  exportAllCourses,
   getAllCourses,
   getCourseByUuid,
   getCourseDashboardAnalytics,
-  createCourse,
-  cloneCourse,
-  updateCourse,
-  deleteCourse,
   getCourseShareLink,
+  importCourse,
   regenerateCourseShareLink,
   streamCourses,
+  updateCourse,
 } from "../controllers/courseController";
 import {
   getCourseSessionOverview,
   getCourseSessionLeaderboard,
 } from "../controllers/sessionController";
-// import { authMiddleware } from "../middleware/auth";
+import { organizationScopedAuthMiddleware } from "../middleware/auth";
+import { requireCourseUpdateAllowed } from "../middleware/courseStatus";
 import { validate } from "../middleware/validate";
 import {
   CourseCreateRequestSchema,
   CourseUpdateRequestSchema,
 } from "../schemas/course";
-import { organizationScopedAuthMiddleware } from "../middleware/auth";
-import {
-  requireCourseDraft,
-  requireCourseUpdateAllowed,
-} from "../middleware/courseStatus";
+import { requireCourseDraft } from "../middleware/courseStatus";
 import {
   requireScopedOrganizationAdmin,
   requireScopedOrganizationMember,
@@ -34,8 +35,43 @@ import {
 
 const router = Router();
 
+const importUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 150 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    const hasJsonExtension = file.originalname.toLowerCase().endsWith(".json");
+    const isJsonMime =
+      file.mimetype === "application/json" ||
+      file.mimetype === "text/json" ||
+      file.mimetype === "application/octet-stream";
+
+    if (hasJsonExtension || isJsonMime) {
+      cb(null, true);
+      return;
+    }
+
+    cb(new Error("Nepodporovaný formát zálohy"));
+  },
+});
+
 router.get("/stream", streamCourses);
 router.get("/", getAllCourses);
+router.get(
+  "/export-all",
+  organizationScopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  exportAllCourses,
+);
+router.get(
+  "/:uuid/export",
+  organizationScopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  exportCourse,
+);
 router.get("/:uuid/dashboard-analytics", getCourseDashboardAnalytics);
 router.get(
   "/:uuid/session/overview",
@@ -74,6 +110,14 @@ router.get(
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   getCourseShareLink,
+);
+router.post(
+  "/import",
+  organizationScopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  importUpload.single("file"),
+  importCourse,
 );
 router.post(
   "/:uuid/share-link/regenerate",

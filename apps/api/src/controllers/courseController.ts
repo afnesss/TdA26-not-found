@@ -1011,11 +1011,11 @@ export async function getCourseShareLink(req: Request, res: Response) {
         .json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
-    const shareToken =
+    const token =
       course.shareToken ?? (await createCourseShareToken(course.uuid)).token;
 
     return res.json({
-      shareUrl: buildCourseShareUrl(req, shareToken),
+      shareUrl: buildCourseShareUrl(req, token),
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch course share link");
@@ -1052,10 +1052,10 @@ export async function regenerateCourseShareLink(req: Request, res: Response) {
         .json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
-    const shareTokenData = await createCourseShareToken(course.uuid);
+    const { token } = await createCourseShareToken(course.uuid);
 
     return res.json({
-      shareUrl: buildCourseShareUrl(req, shareTokenData.token),
+      shareUrl: buildCourseShareUrl(req, token),
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to regenerate course share link");

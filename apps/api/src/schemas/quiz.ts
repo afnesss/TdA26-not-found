@@ -32,7 +32,7 @@ export const QuestionSchema = z.discriminatedUnion("type", [
 export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
-  difficulty: QuizDifficultySchema.nullable().optional(),
+  difficulty: QuizDifficultySchema,
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).optional(),
   questions: z.array(QuestionSchema),

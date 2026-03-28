@@ -17,11 +17,15 @@ import {
   CourseCreateRequestSchema,
   CourseUpdateRequestSchema,
 } from "../schemas/course";
-import { authMiddleware } from "../middleware/auth";
+import { scopedAuthMiddleware } from "../middleware/auth";
 import {
   requireCourseDraft,
   requireCourseUpdateAllowed,
 } from "../middleware/courseStatus";
+import {
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+} from "../middleware/organization";
 
 const router = Router();
 
@@ -32,24 +36,48 @@ router.get("/:uuid", getCourseByUuid);
 
 router.post(
   "/",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(CourseCreateRequestSchema),
   createCourse,
 );
-router.post("/:uuid/clone", authMiddleware, cloneCourse);
-router.get("/:uuid/share-link", authMiddleware, getCourseShareLink);
+router.post(
+  "/:uuid/clone",
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  cloneCourse,
+);
+router.get(
+  "/:uuid/share-link",
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  getCourseShareLink,
+);
 router.post(
   "/:uuid/share-link/regenerate",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   regenerateCourseShareLink,
 );
 router.put(
   "/:uuid",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(CourseUpdateRequestSchema),
   requireCourseUpdateAllowed("uuid"),
   updateCourse,
 );
-router.delete("/:uuid", authMiddleware, deleteCourse);
+router.delete(
+  "/:uuid",
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+  deleteCourse,
+);
 
 export default router;

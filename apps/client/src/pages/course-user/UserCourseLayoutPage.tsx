@@ -2,6 +2,7 @@ import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
 import StateComp from '@/components/shared/StateComp'
 import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgCoursePath, buildOrgCoursesPath } from '@/lib/routes'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
@@ -12,7 +13,8 @@ import UserCourseFeedSection from './components/UserCourseFeedSection'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 const UserCourseLayoutPage = () => {
-  const { courseId, moduleId } = useParams<{
+  const { orgSlug, courseId, moduleId } = useParams<{
+    orgSlug?: string
     courseId: string
     moduleId?: string
   }>()
@@ -22,6 +24,7 @@ const UserCourseLayoutPage = () => {
   const queryClient = useQueryClient()
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
+    orgSlug,
     syncModuleActivation: true,
     onCourseRemoved: () => {
       if (redirectedRef.current) return
@@ -29,7 +32,7 @@ const UserCourseLayoutPage = () => {
       if (courseId) {
         queryClient.removeQueries({ queryKey: ['course', courseId] })
       }
-      navigate('/courses', { replace: true })
+      navigate(buildOrgCoursesPath(orgSlug), { replace: true })
     },
   })
 
@@ -44,7 +47,7 @@ const UserCourseLayoutPage = () => {
     isError,
     error,
     refetch,
-  } = useCoursePageQueries(courseId)
+  } = useCoursePageQueries(courseId, orgSlug)
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
 
@@ -67,7 +70,7 @@ const UserCourseLayoutPage = () => {
     if (courseId) {
       queryClient.removeQueries({ queryKey: ['course', courseId] })
     }
-    navigate('/courses', { replace: true })
+    navigate(buildOrgCoursesPath(orgSlug), { replace: true })
   }, [courseData, courseId, navigate, queryClient])
 
   useEffect(() => {
@@ -83,7 +86,7 @@ const UserCourseLayoutPage = () => {
 
     moduleRedirectRef.current = moduleId
     // toast.info('Modul byl skryt lektorem')
-    navigate(`/courses/${courseId}`, { replace: true })
+    navigate(buildOrgCoursePath(orgSlug, courseId), { replace: true })
   }, [courseData, courseId, moduleId, navigate])
 
   if (!courseId) {
@@ -113,7 +116,7 @@ const UserCourseLayoutPage = () => {
           }
           onAction={() => {
             if (isNotFound) {
-              navigate('/courses', { replace: true })
+              navigate(buildOrgCoursesPath(orgSlug), { replace: true })
               return
             }
             void refetch()

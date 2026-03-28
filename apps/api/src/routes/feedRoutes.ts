@@ -11,8 +11,12 @@ import {
   FeedCreateRequestSchema,
   FeedUpdateRequestSchema,
 } from "../schemas/feed";
-import { authMiddleware } from "../middleware/auth";
+import { scopedAuthMiddleware } from "../middleware/auth";
 import { requireCourseLiveOrDraft } from "../middleware/courseStatus";
+import {
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+} from "../middleware/organization";
 
 const router = Router({ mergeParams: true });
 
@@ -22,24 +26,29 @@ router.get("/", getFeed);
 
 router.post(
   "/",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(FeedCreateRequestSchema),
   requireCourseLiveOrDraft(),
   createPost,
 );
 router.put(
   "/:postId",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(FeedUpdateRequestSchema),
   requireCourseLiveOrDraft(),
   updatePost,
 );
 router.delete(
   "/:postId",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   requireCourseLiveOrDraft(),
   deletePost,
 );
 
 export default router;
-

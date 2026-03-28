@@ -7,10 +7,13 @@ import {
   quizSubmissions,
   feedItems,
   courseStatusEnum,
+  organizations,
 } from "./schema";
+import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
+import { eq } from "drizzle-orm";
 import { logger } from "../utils/logger";
 
 const sampleCourses = [
@@ -285,6 +288,42 @@ export async function seed() {
     );
   }
 
+  const defaultPassword = process.env.ORG_DEFAULT_PASSWORD || "TdA26!";
+
+  let [tdaOrganization] = await db
+    .select({
+      uuid: organizations.uuid,
+      slug: organizations.slug,
+    })
+    .from(organizations)
+    .where(eq(organizations.slug, "tda"));
+
+  if (!tdaOrganization) {
+    const passwordHash = await bcrypt.hash(defaultPassword, 10);
+    [tdaOrganization] = await db
+      .insert(organizations)
+      .values({
+        name: "TdA",
+        slug: "tda",
+        country: "Czech Republic",
+        city: "Brno",
+        address: "Veveří 95",
+        postalCode: "602 00",
+        region: "Central Europe",
+        type: "HO",
+        ownerName: "TdA Platform",
+        contactEmail: "admin@tda-app.com",
+        status: "active",
+        passwordHash,
+        mustChangePassword: false,
+      })
+      .returning({
+        uuid: organizations.uuid,
+        slug: organizations.slug,
+      });
+    logger.info("Created default TdA organization");
+  }
+
   const existingCourses = await db.select().from(courses);
   if (existingCourses.length > 0) {
     logger.info("Courses already exist, skipping seed");
@@ -293,7 +332,12 @@ export async function seed() {
 
   const createdCourses = await db
     .insert(courses)
-    .values(seedCourses)
+    .values(
+      seedCourses.map((course) => ({
+        ...course,
+        organizationId: tdaOrganization.uuid,
+      })),
+    )
     .returning();
   logger.info(`Created ${createdCourses.length} courses`);
 

@@ -2,12 +2,15 @@ import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
 import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Label } from '@/components/ui/label'
+import { buildOrgCoursePath, buildOrgCoursesPath, buildOrgModulePath } from '@/lib/routes'
 import SummarySection from '../CoursePage/components/SummarySection'
 import { useNavigate } from 'react-router-dom'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
+import { useParams } from 'react-router-dom'
 
 const UserCourseOverviewPage = () => {
   const navigate = useNavigate()
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
   const { courseId, courseData, activeModules } = useUserCourseLayoutContext()
 
   return (
@@ -16,7 +19,7 @@ const UserCourseOverviewPage = () => {
         name={courseData.name}
         description={courseData.description ?? undefined}
         breadcrumbs={[
-          { label: 'Kurzy', path: '/courses' },
+          { label: 'Kurzy', path: buildOrgCoursesPath(orgSlug) },
           { label: courseData.name },
         ]}
       />
@@ -41,7 +44,7 @@ const UserCourseOverviewPage = () => {
             modules={activeModules}
             courseStatus={courseData.status}
             onOpenModule={(moduleId) =>
-              navigate(`/courses/${courseId}/modules/${moduleId}`)
+              navigate(buildOrgModulePath(orgSlug, courseId, moduleId))
             }
             userMode
           />
@@ -52,4 +55,3 @@ const UserCourseOverviewPage = () => {
 }
 
 export default UserCourseOverviewPage
-

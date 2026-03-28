@@ -4,6 +4,7 @@ import type {
   CourseSummary,
   FeedItem,
 } from '@/lib/schemas'
+import { buildOrgApiPrefix } from '@/lib/routes'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -68,6 +69,7 @@ const parseQuizPayload = (
 
 type UseCourseFeedSSEOptions = {
   courseId: string
+  orgSlug?: string
   syncModuleActivation?: boolean
   showNewPostToast?: boolean
   showSseToasts?: boolean
@@ -78,6 +80,7 @@ type UseCourseFeedSSEOptions = {
 
 export const useCourseFeedSSE = ({
   courseId,
+  orgSlug,
   syncModuleActivation = true,
   showNewPostToast = true,
   showSseToasts = true,
@@ -95,7 +98,9 @@ export const useCourseFeedSSE = ({
     if (!courseId) return
     const isDev = import.meta.env.DEV
 
-    const eventSource = new EventSource(`/api/courses/${courseId}/feed/stream`)
+    const eventSource = new EventSource(
+      `/api${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`,
+    )
 
     eventSource.onopen = () => {
       if (isDev) console.log('SSE connected')

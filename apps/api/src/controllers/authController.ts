@@ -1,6 +1,12 @@
 ﻿import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth";
+import {
+  ADMIN_AUTH_COOKIE,
+  ORG_AUTH_COOKIE,
+  getAdminCookieOptions,
+  getOrgCookieOptions,
+} from "../middleware/auth";
 
 export async function login(req: Request, res: Response) {
   const { username, password } = req.body;
@@ -23,28 +29,30 @@ export async function login(req: Request, res: Response) {
     res.status(500).json({ error: "Server misconfiguration" });
     return;
   }
-  const token = jwt.sign({ username }, jwtSecret);
+  const token = jwt.sign({ actorType: "platform_admin", username }, jwtSecret);
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  res.cookie(ADMIN_AUTH_COOKIE, token, getAdminCookieOptions());
 
   res.json({ message: "OK" });
 }
 
-export async function logout(req: Request, res: Response) {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
-  };
-  res.clearCookie("token", cookieOptions);
+export async function logoutAdmin(_req: Request, res: Response) {
+  res.clearCookie(ADMIN_AUTH_COOKIE, getAdminCookieOptions());
+  res.json({ message: "Odhlášení proběhlo úspěšně" });
+}
+
+export async function logoutOrganization(_req: Request, res: Response) {
+  res.clearCookie(ORG_AUTH_COOKIE, getOrgCookieOptions());
   res.json({ message: "Odhlášení proběhlo úspěšně" });
 }
 
 export async function me(req: AuthRequest, res: Response) {
-  if (!req.user) return res.status(401).json({ error: "Nejste oprávněni" });
-  res.json({ username: req.user.username });
+  if (!req.user || req.user.actorType !== "platform_admin") {
+    return res.status(401).json({ error: "Nejste oprávněni" });
+  }
+
+  res.json({
+    actorType: "platform_admin",
+    username: req.user.username,
+  });
 }

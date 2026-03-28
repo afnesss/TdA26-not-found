@@ -1,60 +1,123 @@
-﻿import { Request, Response, NextFunction } from "express";
+import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import { AuthRequest } from "../types/auth";
+import { AuthActorType, AuthRequest, AuthUser } from "../types/auth";
+
+export const ADMIN_AUTH_COOKIE = "admin_token";
+export const ORG_AUTH_COOKIE = "org_token";
+
+const getBaseCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+});
+
+export const getAdminCookieOptions = () => ({
+  ...getBaseCookieOptions(),
+  path: "/api",
+});
+
+export const getOrgCookieOptions = () => ({
+  ...getBaseCookieOptions(),
+  path: "/api/orgs",
+});
 
 const clearAuthCookieAndRespond = (
   res: Response,
-  cookieOptions: {
-    httpOnly: boolean;
-    secure: boolean;
-    sameSite: "strict";
-  },
+  cookieName: string,
+  cookieOptions: ReturnType<typeof getAdminCookieOptions>,
 ) => {
-  res.clearCookie("token", cookieOptions);
+  res.clearCookie(cookieName, cookieOptions);
   res.status(401).json({ message: "Relace vypršela" });
 };
 
-export function authMiddleware(
+const getJwtSecret = () => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
+  return jwtSecret;
+};
+
+const mapPayloadToUser = (payload: jwt.JwtPayload): AuthUser | null => {
+  const actorType = String(payload.actorType ?? "");
+
+  if (actorType === "platform_admin" && typeof payload.username === "string") {
+    return {
+      actorType: "platform_admin",
+      username: String(payload.username),
+    };
+  }
+
+  if (
+    actorType === "organization_admin" &&
+    typeof payload.organizationId === "string" &&
+    typeof payload.orgSlug === "string"
+  ) {
+    return {
+      actorType: "organization_admin",
+      organizationId: String(payload.organizationId),
+      orgSlug: String(payload.orgSlug),
+    };
+  }
+
+  return null;
+};
+
+const createAuthMiddleware =
+  (
+    cookieName: string,
+    cookieOptions: ReturnType<typeof getAdminCookieOptions>,
+    expectedActorType: AuthActorType,
+  ) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    const token = req.cookies?.[cookieName];
+    if (!token) {
+      res.status(401).json({ message: "Nejste oprávnění" });
+      return;
+    }
+
+    try {
+      const payload = jwt.verify(token, getJwtSecret());
+
+      if (typeof payload === "string" || typeof payload !== "object" || payload === null) {
+        clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+        return;
+      }
+
+      const user = mapPayloadToUser(payload as jwt.JwtPayload);
+      if (!user || user.actorType !== expectedActorType) {
+        clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+        return;
+      }
+
+      req.user = user;
+      next();
+    } catch {
+      clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+    }
+  };
+
+export const adminAuthMiddleware = createAuthMiddleware(
+  ADMIN_AUTH_COOKIE,
+  getAdminCookieOptions(),
+  "platform_admin",
+);
+
+export const organizationAuthMiddleware = createAuthMiddleware(
+  ORG_AUTH_COOKIE,
+  getOrgCookieOptions(),
+  "organization_admin",
+);
+
+export const scopedAuthMiddleware = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-) {
-  const token = req.cookies?.token;
-  if (!token) {
-    res.status(401).json({ message: "Nejste oprávnění­" });
-    return;
+) => {
+  if (req.organization || req.params.orgSlug) {
+    return organizationAuthMiddleware(req, res, next);
   }
 
-  const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict" as const,
-  };
-
-  try {
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      res.status(500).json({ error: "Server misconfiguration" });
-      return;
-    }
-
-    const payload = jwt.verify(token, jwtSecret);
-    if (typeof payload === "string") {
-      clearAuthCookieAndRespond(res, cookieOptions);
-      return;
-    }
-
-    if (
-      typeof payload !== "object" ||
-      payload === null ||
-      !("username" in payload)
-    ) {
-      clearAuthCookieAndRespond(res, cookieOptions);
-      return;
-    }
-    req.user = { username: String((payload as jwt.JwtPayload).username) };
-    next();
-  } catch (error) {
-    clearAuthCookieAndRespond(res, cookieOptions);
-  }
-}
+  return adminAuthMiddleware(req, res, next);
+};

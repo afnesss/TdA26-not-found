@@ -7,7 +7,11 @@ import {
   reorderModules,
   updateModule,
 } from "../controllers/moduleController";
-import { authMiddleware } from "../middleware/auth";
+import { scopedAuthMiddleware } from "../middleware/auth";
+import {
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+} from "../middleware/organization";
 import { validate } from "../middleware/validate";
 import {
   requireCourseDraft,
@@ -25,31 +29,38 @@ router.get("/", getModules);
 router.get("/:moduleId", getModuleByUuid);
 router.post(
   "/",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleCreateRequestSchema),
   requireCourseDraft(),
   createModule,
 );
 router.put(
   "/reorder",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleReorderRequestSchema),
   requireCourseDraft(),
   reorderModules,
 );
 router.put(
   "/:moduleId",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleUpdateRequestSchema),
   requireModuleUpdateAllowed(),
   updateModule,
 );
 router.delete(
   "/:moduleId",
-  authMiddleware,
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),
   deleteModule,
 );
 
 export default router;
-

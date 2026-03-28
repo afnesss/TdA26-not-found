@@ -95,6 +95,7 @@ const reorderByIds = <T extends { uuid: string }>(
 export const useCreateModuleMutation = (
   courseId: string,
   setDraftModule?: (a: ModuleSummary | null) => void,
+  orgSlug?: string,
 ) => {
   const queryClient = useQueryClient()
   const modulesQueryKey = getCourseModulesQueryKey(courseId)
@@ -106,7 +107,7 @@ export const useCreateModuleMutation = (
     ModuleCreateRequest,
     { previousModules?: ModuleSummary[]; previousCourse?: CourseDetail }
   >({
-    mutationFn: (data) => createModule(courseId, data),
+    mutationFn: (data) => createModule(courseId, data, orgSlug),
     networkMode: 'always',
     onMutate: async (data) => {
       await queryClient.cancelQueries({ queryKey: modulesQueryKey })
@@ -157,7 +158,7 @@ export const useCreateModuleMutation = (
   })
 }
 
-export const useUpdateModuleMutation = (courseId: string) => {
+export const useUpdateModuleMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   const modulesQueryKey = getCourseModulesQueryKey(courseId)
   const courseQueryKey = getCourseQueryKey(courseId)
@@ -172,7 +173,8 @@ export const useUpdateModuleMutation = (courseId: string) => {
       previousModule?: ModuleDetail
     }
   >({
-    mutationFn: ({ moduleId, data }) => updateModule(courseId, moduleId, data),
+    mutationFn: ({ moduleId, data }) =>
+      updateModule(courseId, moduleId, data, orgSlug),
     networkMode: 'always',
     onMutate: async ({ moduleId, data }) => {
       const moduleQueryKey = getCourseModuleQueryKey(courseId, moduleId)
@@ -251,7 +253,7 @@ export const useUpdateModuleMutation = (courseId: string) => {
   })
 }
 
-export const useDeleteModuleMutation = (courseId: string) => {
+export const useDeleteModuleMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   const modulesQueryKey = getCourseModulesQueryKey(courseId)
   const courseQueryKey = getCourseQueryKey(courseId)
@@ -262,7 +264,7 @@ export const useDeleteModuleMutation = (courseId: string) => {
     string,
     { previousModules?: ModuleSummary[]; previousCourse?: CourseDetail }
   >({
-    mutationFn: (moduleId) => deleteModule(courseId, moduleId),
+    mutationFn: (moduleId) => deleteModule(courseId, moduleId, orgSlug),
     networkMode: 'always',
     onMutate: async (moduleId) => {
       await queryClient.cancelQueries({ queryKey: modulesQueryKey })
@@ -314,7 +316,7 @@ export const useDeleteModuleMutation = (courseId: string) => {
   })
 }
 
-export const useReorderModulesMutation = (courseId: string) => {
+export const useReorderModulesMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   const modulesQueryKey = getCourseModulesQueryKey(courseId)
   const courseQueryKey = getCourseQueryKey(courseId)
@@ -325,7 +327,7 @@ export const useReorderModulesMutation = (courseId: string) => {
     ModuleReorderRequest,
     { previousModules?: ModuleSummary[]; previousCourse?: CourseDetail }
   >({
-    mutationFn: (data) => reorderModules(courseId, data),
+    mutationFn: (data) => reorderModules(courseId, data, orgSlug),
     networkMode: 'always',
     onMutate: async ({ moduleIds }) => {
       await queryClient.cancelQueries({ queryKey: modulesQueryKey })
@@ -372,7 +374,7 @@ export const useReorderModulesMutation = (courseId: string) => {
   })
 }
 
-export const useToggleModuleMutation = (courseId: string) => {
+export const useToggleModuleMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
@@ -381,7 +383,7 @@ export const useToggleModuleMutation = (courseId: string) => {
     }: {
       moduleId: string
       nextStatus: 'active' | 'passive'
-    }) => updateModule(courseId, moduleId, { status: nextStatus }),
+    }) => updateModule(courseId, moduleId, { status: nextStatus }, orgSlug),
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['course', courseId] })
       await queryClient.invalidateQueries({

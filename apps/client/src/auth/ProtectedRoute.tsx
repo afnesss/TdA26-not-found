@@ -1,6 +1,5 @@
 import React from 'react'
 import { Navigate } from 'react-router'
-import { ClipLoader } from 'react-spinners'
 import { useAuth } from './useAuth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -8,7 +7,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (isLoading) return <></>
   if (!isAuth) {
-    return <Navigate to={'/login'} replace />
+    return <Navigate to={'/admin/login'} replace />
   }
 
   return <>{children}</>

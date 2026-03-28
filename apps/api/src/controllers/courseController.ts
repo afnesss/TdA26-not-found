@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { Request, Response } from "express";
 import fs from "fs/promises";
 import path from "path";
@@ -9,10 +9,12 @@ import {
   courses,
   feedItems,
   modules,
+  organizations,
   quizSubmissions,
   quizzes,
 } from "../db/schema";
 import { mapMaterial } from "./materialController";
+import { AuthRequest } from "../types/auth";
 
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
@@ -50,16 +52,40 @@ const createCourseShareToken = async (courseId: string) => {
   return { token, course: updatedCourse };
 };
 
+const getDefaultOrganizationId = async () => {
+  const [organization] = await db
+    .select({ uuid: organizations.uuid })
+    .from(organizations)
+    .where(eq(organizations.slug, "tda"));
+
+  if (!organization) {
+    throw new Error("Default TdA organization was not found");
+  }
+
+  return organization.uuid;
+};
+
+const getScopedOrganizationId = (req: Request) =>
+  (req as AuthRequest).organization?.uuid;
+
 export async function getAllCourses(req: Request, res: Response) {
   const userView = String(req.query.userView ?? "").toLowerCase() === "true";
+  const organizationId = getScopedOrganizationId(req);
 
   const allCourses = await db
     .select(toCourseSummary)
     .from(courses)
     .where(
-      userView
-        ? inArray(courses.status, USER_VISIBLE_COURSE_STATUSES)
-        : undefined,
+      organizationId
+        ? and(
+            eq(courses.organizationId, organizationId),
+            userView
+              ? inArray(courses.status, USER_VISIBLE_COURSE_STATUSES)
+              : undefined,
+          )
+        : userView
+          ? inArray(courses.status, USER_VISIBLE_COURSE_STATUSES)
+          : undefined,
     )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
@@ -69,11 +95,16 @@ export async function getAllCourses(req: Request, res: Response) {
 export async function getCourseByUuid(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
+    const organizationId = getScopedOrganizationId(req);
 
     const course = await db
       .select(toCourseSummary)
       .from(courses)
-      .where(eq(courses.uuid, uuid));
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      );
 
     if (course.length === 0) {
       res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -170,11 +201,16 @@ export async function getCourseByUuid(req: Request, res: Response) {
 export async function getCourseDashboardAnalytics(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
+    const organizationId = getScopedOrganizationId(req);
 
     const [existingCourse] = await db
       .select({ uuid: courses.uuid, status: courses.status })
       .from(courses)
-      .where(eq(courses.uuid, uuid));
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      );
 
     if (!existingCourse) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -414,9 +450,12 @@ export async function createCourse(req: Request, res: Response) {
     return;
   }
 
+  const organizationId = getScopedOrganizationId(req) ?? (await getDefaultOrganizationId());
+
   const newCourse = await db
     .insert(courses)
       .values({
+        organizationId,
         name,
         description: description || null,
       })
@@ -444,12 +483,17 @@ const copyMaterialFile = async (
 export async function cloneCourse(req: Request, res: Response) {
   const { uuid } = req.params;
   const copiedFilePaths: string[] = [];
+  const organizationId = getScopedOrganizationId(req);
 
   try {
     const [sourceCourse] = await db
       .select()
       .from(courses)
-      .where(eq(courses.uuid, uuid));
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      );
 
     if (!sourceCourse) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -492,6 +536,7 @@ export async function cloneCourse(req: Request, res: Response) {
       const [newCourse] = await tx
         .insert(courses)
         .values({
+          organizationId: sourceCourse.organizationId,
           name: sourceCourse.name,
           description: sourceCourse.description ?? null,
           status: "draft",
@@ -591,11 +636,16 @@ export async function cloneCourse(req: Request, res: Response) {
 export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
   const { name, description, status, scheduledFor } = req.body;
+  const organizationId = getScopedOrganizationId(req);
 
   const existing = await db
     .select()
     .from(courses)
-    .where(eq(courses.uuid, uuid));
+    .where(
+      organizationId
+        ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+        : eq(courses.uuid, uuid),
+    );
 
   if (existing.length === 0) {
     res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -743,11 +793,16 @@ const validateCourseUpdate = ({
 export async function deleteCourse(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
+    const organizationId = getScopedOrganizationId(req);
 
     // Single atomic delete avoids race between "exists?" check and delete.
     const [deletedCourse] = await db
       .delete(courses)
-      .where(eq(courses.uuid, uuid))
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      )
       .returning({
         uuid: courses.uuid,
         name: courses.name,
@@ -772,6 +827,7 @@ export async function deleteCourse(req: Request, res: Response) {
 export async function getCourseShareLink(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
+    const organizationId = getScopedOrganizationId(req);
     const [course] = await db
       .select({
         uuid: courses.uuid,
@@ -779,7 +835,11 @@ export async function getCourseShareLink(req: Request, res: Response) {
         shareToken: courses.shareToken,
       })
       .from(courses)
-      .where(eq(courses.uuid, uuid));
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      );
 
     if (!course) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -789,8 +849,11 @@ export async function getCourseShareLink(req: Request, res: Response) {
       return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
+    const shareToken =
+      course.shareToken ?? (await createCourseShareToken(course.uuid)).token;
+
     return res.json({
-      shareUrl: buildCourseShareUrl(req, course.uuid),
+      shareUrl: buildCourseShareUrl(req, shareToken),
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch course share link");
@@ -801,13 +864,18 @@ export async function getCourseShareLink(req: Request, res: Response) {
 export async function regenerateCourseShareLink(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
+    const organizationId = getScopedOrganizationId(req);
     const [course] = await db
       .select({
         uuid: courses.uuid,
         status: courses.status,
       })
       .from(courses)
-      .where(eq(courses.uuid, uuid));
+      .where(
+        organizationId
+          ? and(eq(courses.uuid, uuid), eq(courses.organizationId, organizationId))
+          : eq(courses.uuid, uuid),
+      );
 
     if (!course) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
@@ -817,8 +885,10 @@ export async function regenerateCourseShareLink(req: Request, res: Response) {
       return res.status(400).json({ message: "QR kód je dostupný pouze pro aktivní kurzy" });
     }
 
+    const shareTokenData = await createCourseShareToken(course.uuid);
+
     return res.json({
-      shareUrl: buildCourseShareUrl(req, course.uuid),
+      shareUrl: buildCourseShareUrl(req, shareTokenData.token),
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to regenerate course share link");
@@ -837,15 +907,17 @@ export async function resolveCourseShareLink(req: Request, res: Response) {
       .select({
         uuid: courses.uuid,
         status: courses.status,
+        orgSlug: organizations.slug,
       })
       .from(courses)
+      .innerJoin(organizations, eq(organizations.uuid, courses.organizationId))
       .where(eq(courses.shareToken, token));
 
     if (!course || course.status !== "live") {
       return res.status(410).json({ message: "Tento QR kód už není platný" });
     }
 
-    return res.json({ courseId: course.uuid });
+    return res.json({ courseId: course.uuid, orgSlug: course.orgSlug });
   } catch (error) {
     logger.error({ err: error }, "Failed to resolve course share link");
     return res.status(500).json({ message: "Došlo k chybě serveru" });

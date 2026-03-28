@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { userCheck } from '@/api/queries/authQueries'
 
 type AuthMeResponse = {
+  actorType: 'platform_admin'
   username: string
 } | null
 

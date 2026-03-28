@@ -106,6 +106,7 @@ const CourseShareTrigger = ({
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey,
     queryFn: () => getCourseShareLink(courseId),
+    enabled: open,
     staleTime: 1000 * 60 * 5,
   })
 

@@ -33,5 +33,5 @@ const getRequestBaseUrl = (req: Request) => {
   return `${protocol}://${host}`;
 };
 
-export const buildCourseShareUrl = (req: Request, token: string) =>
-  `${getRequestBaseUrl(req)}/share/course/${token}`;
+export const buildCourseShareUrl = (req: Request, courseId: string) =>
+  `${getRequestBaseUrl(req)}/courses/${courseId}`;

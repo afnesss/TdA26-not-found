@@ -2,6 +2,8 @@ import type {
   CourseCreateRequest,
   CourseDashboardAnalytics,
   CourseDetail,
+  CourseShareLink,
+  CourseShareResolve,
   CourseSummary,
   CourseUpdateRequest,
 } from '@/lib/schemas'
@@ -53,4 +55,27 @@ export const cloneCourse = async (courseId: string): Promise<CourseSummary> => {
   return await apiFetch(`/courses/${courseId}/clone`, {
     method: 'POST',
   })
+}
+
+export const getCourseShareLink = async (
+  courseId: string,
+): Promise<CourseShareLink> => {
+  return await apiFetch<CourseShareLink>(`/courses/${courseId}/share-link`)
+}
+
+export const regenerateCourseShareLink = async (
+  courseId: string,
+): Promise<CourseShareLink> => {
+  return await apiFetch<CourseShareLink>(
+    `/courses/${courseId}/share-link/regenerate`,
+    {
+      method: 'POST',
+    },
+  )
+}
+
+export const resolveCourseShareToken = async (
+  token: string,
+): Promise<CourseShareResolve> => {
+  return await apiFetch<CourseShareResolve>(`/course-share/${token}`)
 }

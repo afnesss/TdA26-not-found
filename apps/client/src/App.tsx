@@ -19,6 +19,7 @@ import UserCourseModuleDetailPage from './pages/course-user/UserCourseModuleDeta
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import NotFoundPage from './pages/NotFoundPage'
+import CourseShareRedirectPage from './pages/course-share/CourseShareRedirectPage'
 
 function App() {
   const router = createBrowserRouter(
@@ -26,6 +27,10 @@ function App() {
       <Route path='/' element={<MainLayout />}>
         <Route index element={<HomePage />} />
         <Route path='/courses' element={<CoursesPage />}></Route>
+        <Route
+          path='/share/course/:token'
+          element={<CourseShareRedirectPage />}
+        />
         <Route path='/login' element={<LoginPage />}></Route>
         <Route path='/courses/:courseId/' element={<UserCourseLayoutPage />}>
           <Route index element={<UserCourseOverviewPage />} />

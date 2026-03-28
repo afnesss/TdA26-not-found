@@ -7,6 +7,8 @@ import {
   cloneCourse,
   updateCourse,
   deleteCourse,
+  getCourseShareLink,
+  regenerateCourseShareLink,
   streamCourses,
 } from "../controllers/courseController";
 // import { authMiddleware } from "../middleware/auth";
@@ -35,6 +37,12 @@ router.post(
   createCourse,
 );
 router.post("/:uuid/clone", authMiddleware, cloneCourse);
+router.get("/:uuid/share-link", authMiddleware, getCourseShareLink);
+router.post(
+  "/:uuid/share-link/regenerate",
+  authMiddleware,
+  regenerateCourseShareLink,
+);
 router.put(
   "/:uuid",
   authMiddleware,

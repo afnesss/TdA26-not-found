@@ -144,7 +144,7 @@ const QuizQuestion = ({
                         onQuestionTypeChange?.(value)
                       }
                     >
-                      <SelectTrigger className='w-30 md:w-40'>
+                      <SelectTrigger className='w-30 md:w-40 cursor-pointer'>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -242,24 +242,24 @@ const QuizQuestion = ({
             )
 
             return (
-                <QuizOption
-                  key={optIndex}
-                  option={option}
-                  optIndex={optIndex}
-                  question={question}
-                  mode={mode}
-                  selectedCount={
-                    questionAnalytics ? optionStats?.selectedCount : undefined
-                  }
-                  // Lecturer props
-                  isCorrect={isCorrect}
-                  onCorrectToggle={() => onCorrectToggle?.(optIndex)}
-                  onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
-                  onOptionRemove={() => onOptionRemove?.(optIndex)}
-                  canRemove={question.options.length > 2}
-                  onEditKeyDown={onEditKeyDown}
-                  // User props
-                  isSelected={isSelected}
+              <QuizOption
+                key={optIndex}
+                option={option}
+                optIndex={optIndex}
+                question={question}
+                mode={mode}
+                selectedCount={
+                  questionAnalytics ? optionStats?.selectedCount : undefined
+                }
+                // Lecturer props
+                isCorrect={isCorrect}
+                onCorrectToggle={() => onCorrectToggle?.(optIndex)}
+                onOptionUpdate={(value) => onOptionUpdate?.(optIndex, value)}
+                onOptionRemove={() => onOptionRemove?.(optIndex)}
+                canRemove={question.options.length > 2}
+                onEditKeyDown={onEditKeyDown}
+                // User props
+                isSelected={isSelected}
                 isSubmitted={isSubmitted}
                 showCorrect={showCorrect}
                 onAnswerChange={() => {
@@ -298,10 +298,10 @@ const QuizQuestion = ({
           <Button
             variant='outline'
             size='sm'
-          onClick={onAddOption}
-          className='w-full md:w-auto'
-          aria-label={`Přidat novou možnost k otázce ${qIndex + 1}`}
-        >
+            onClick={onAddOption}
+            className='w-full md:w-auto'
+            aria-label={`Přidat novou možnost k otázce ${qIndex + 1}`}
+          >
             <Plus size={16} />
             Přidat možnost
           </Button>

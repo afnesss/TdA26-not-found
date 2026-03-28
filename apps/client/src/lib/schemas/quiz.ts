@@ -1,5 +1,20 @@
 import { z } from 'zod'
 
+export const QuizDifficultySchema = z.enum([
+  'beginner',
+  'easy',
+  'medium',
+  'hard',
+  'extreme',
+])
+
+const QuizDifficultyValidationSchema = z.enum(
+  ['beginner', 'easy', 'medium', 'hard', 'extreme'],
+  {
+    message: 'Vyberte obtížnost kvízu',
+  },
+)
+
 export const SingleChoiceQuestionSchema = z.object({
   uuid: z.string().uuid().optional(), // Optional on create
   type: z.literal('singleChoice'),
@@ -24,6 +39,7 @@ export const QuestionSchema = z.discriminatedUnion('type', [
 export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
+  difficulty: QuizDifficultySchema.nullable().optional(),
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z.array(QuestionSchema),
@@ -120,6 +136,7 @@ export const QuizValidationSchema = z.object({
     .refine((val) => val.trim().length > 0, {
       message: 'Název kvízu nesmí být prázdný',
     }),
+  difficulty: QuizDifficultyValidationSchema,
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z
@@ -150,6 +167,7 @@ export type MultipleChoiceQuestion = z.infer<
 >
 export type Question = z.infer<typeof QuestionSchema>
 export type Quiz = z.infer<typeof QuizSchema>
+export type QuizDifficulty = z.infer<typeof QuizDifficultySchema>
 export type QuizAnswer = z.infer<typeof QuizAnswerSchema>
 export type QuizSubmitRequest = z.infer<typeof QuizSubmitRequestSchema>
 export type QuizSubmitResponse = z.infer<typeof QuizSubmitResponseSchema>

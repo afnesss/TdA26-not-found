@@ -114,6 +114,7 @@ export async function getCourseByUuid(req: Request, res: Response) {
             .select({
               uuid: quizzes.uuid,
               title: quizzes.title,
+              difficulty: quizzes.difficulty,
               moduleId: quizzes.moduleId,
               questions: quizzes.questions,
               createdAt: quizzes.createdAt,
@@ -570,6 +571,7 @@ export async function cloneCourse(req: Request, res: Response) {
         await tx.insert(quizzes).values({
           moduleId: mappedModuleId,
           title: quiz.title,
+          difficulty: quiz.difficulty ?? null,
           questions: quiz.questions,
         });
       }

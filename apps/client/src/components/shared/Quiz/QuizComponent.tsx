@@ -4,9 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import {
+  QUIZ_DIFFICULTY_OPTIONS,
+  getQuizDifficultyOption,
+} from '@/lib/quizDifficulty'
+import {
   QuizValidationSchema,
   type Question,
   type Quiz,
+  type QuizDifficulty,
   type QuizAnalyticsResponse,
 } from '@/lib/schemas'
 import type { QuizState } from '@/lib/types'
@@ -24,7 +29,7 @@ import {
   X,
 } from 'lucide-react'
 import { Fragment, useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { type Resolver, useForm, useWatch } from 'react-hook-form'
 import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
@@ -34,7 +39,7 @@ const isDirtyText = (className?: string) => {
   return (
     <span
       className={cn(
-        'text-[10px] sm:text-xs font-medium text-primary px-1.5 py-0.5 sm:px-2 sm:py-1 \
+        'inline-flex items-center justify-center text-center leading-none text-[10px] sm:text-xs font-medium text-primary px-1.5 py-0.5 sm:px-2 sm:py-1 \
         bg-primary/10 rounded-full whitespace-nowrap',
         className,
       )}
@@ -52,6 +57,14 @@ const formatQuestionsCount = (count: number) => {
 }
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
+type QuizFormValues = Omit<Quiz, 'difficulty'> & {
+  difficulty?: QuizDifficulty
+}
+
+const toQuizFormValues = (quiz: Quiz): QuizFormValues => ({
+  ...quiz,
+  difficulty: quiz.difficulty ?? undefined,
+})
 
 type QuizComponentProps = {
   quiz: Quiz
@@ -114,9 +127,9 @@ const QuizComponentInner = ({
     setValue,
     getValues,
     reset,
-  } = useForm<Quiz>({
-    resolver: zodResolver(QuizValidationSchema),
-    defaultValues: quiz,
+  } = useForm<QuizFormValues>({
+    resolver: zodResolver(QuizValidationSchema) as Resolver<QuizFormValues>,
+    defaultValues: toQuizFormValues(quiz),
     mode: 'onSubmit',
   })
 
@@ -188,8 +201,15 @@ const QuizComponentInner = ({
     </div>
   )
 
-  const formValues = useWatch({ control, defaultValue: quiz })
+  const formValues = useWatch({
+    control,
+    defaultValue: toQuizFormValues(quiz),
+  })
   const displayQuiz = mode === 'lecturer' ? formValues : quiz
+  const selectedDifficulty = getQuizDifficultyOption(displayQuiz.difficulty)
+  const difficultyMetaText = selectedDifficulty
+    ? `${selectedDifficulty.label}`
+    : null
   const totalQuestions = displayQuiz.questions?.length ?? 0
   const pageCount = Math.max(1, Math.ceil(totalQuestions / pageSize))
   const clampPage = (page: number) => Math.max(0, Math.min(page, pageCount - 1))
@@ -221,6 +241,13 @@ const QuizComponentInner = ({
       formValues.title ?? '',
     )
     setValue(`title`, capitalizedTitle, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  const updateDifficulty = (difficulty: QuizDifficulty) => {
+    setValue('difficulty', difficulty, {
       shouldDirty: true,
       shouldValidate: true,
     })
@@ -362,10 +389,14 @@ const QuizComponentInner = ({
     )
   }
 
-  const handleSave = handleSubmit(async (data: Quiz) => {
-    await onSave?.(data)
+  const handleSave = handleSubmit(async (data) => {
+    const formData = data as QuizFormValues
+    await onSave?.({
+      ...formData,
+      difficulty: formData.difficulty!,
+    })
     // Clear dirty state after successful save
-    reset(data)
+    reset(formData)
     if (mode === 'lecturer' && !isDraft && onToggleExpand) {
       onToggleExpand()
     }
@@ -376,7 +407,7 @@ const QuizComponentInner = ({
       onCancelDraft?.()
       return
     }
-    reset(quiz)
+    reset(toQuizFormValues(quiz))
     setShowIncompleteError(false)
   }
 
@@ -426,7 +457,7 @@ const QuizComponentInner = ({
                   {mode === 'lecturer' &&
                     isDirty &&
                     !isDraft &&
-                    isDirtyText('hidden sm:inline-block')}
+                    isDirtyText('hidden sm:inline-flex')}
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
                       type='delete'
@@ -558,6 +589,17 @@ const QuizComponentInner = ({
             )}
 
             <div className='flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1'>
+              {selectedDifficulty && (
+                <span className='flex items-center gap-1 whitespace-nowrap'>
+                  <img
+                    src={selectedDifficulty.icon}
+                    alt=''
+                    aria-hidden='true'
+                    className='h-6 w-6 shrink-0'
+                  />
+                  <span>{difficultyMetaText}</span>
+                </span>
+              )}
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <CheckCircle size={14} className='text-primary shrink-0' />
                 <span>{quiz.attemptsCount} vyplnění</span>
@@ -582,7 +624,7 @@ const QuizComponentInner = ({
               {mode === 'lecturer' &&
                 isDirty &&
                 !isDraft &&
-                isDirtyText('inline-block sm:hidden')}
+                isDirtyText('inline-flex sm:hidden')}
             </div>
           </div>
         </div>
@@ -591,6 +633,57 @@ const QuizComponentInner = ({
       {/* Expanded Content */}
       {isExpanded && (
         <div className='p-3 md:p-5 space-y-4 border-t border-gray-100 bg-gray-50/50'>
+          {mode === 'lecturer' && (
+            <div className='space-y-2'>
+              <Label
+                className='block text-xs font-semibold text-gray-600'
+                variant='name'
+              >
+                Úroveň kvízu
+              </Label>
+              <div className='overflow-x-auto pb-1'>
+                <div className='grid grid-cols-5 gap-2'>
+                  {QUIZ_DIFFICULTY_OPTIONS.map((option) => {
+                    const isSelected = displayQuiz.difficulty === option.value
+
+                    return (
+                      <Button
+                        key={option.value}
+                        variant='outline'
+                        type='button'
+                        onClick={() => updateDifficulty(option.value)}
+                        className={cn(
+                          'flex items-center justify-center gap-1.5 rounded-xl border cursor-pointer bg-background px-2 py-2 text-xs font-medium transition-colors sm:gap-2 sm:px-2.5 sm:text-sm',
+                          isSelected
+                            ? 'border-primary bg-primary/8 text-primary shadow-sm'
+                            : 'border-border text-foreground hover:border-primary/40 hover:bg-primary/5',
+                          errors.difficulty &&
+                            !isSelected &&
+                            'border-destructive/60',
+                        )}
+                        aria-pressed={isSelected}
+                        aria-label={`Vybrat úroveň ${option.label}`}
+                      >
+                        <img
+                          src={option.icon}
+                          alt=''
+                          aria-hidden='true'
+                          className='h-5.5 w-5.5 shrink-0 sm:h-7 sm:w-7'
+                        />
+                        <span className='hidden md:inline whitespace-nowrap'>
+                          {option.label}
+                        </span>
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+              {errors.difficulty?.message && (
+                <p className='error-text'>{errors.difficulty.message}</p>
+              )}
+            </div>
+          )}
+
           {/* Questions */}
           {displayQuiz.questions
             ?.slice(

@@ -99,6 +99,7 @@ export const quizzes = pgTable("quizzes", {
     .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
   title: varchar("title", { length: 256 }).notNull(),
+  difficulty: varchar("difficulty", { length: 20 }),
   questions: jsonb("questions").notNull(), // Stores Question[]
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

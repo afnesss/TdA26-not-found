@@ -72,6 +72,7 @@ export interface Material {
 export interface Quiz {
   uuid: string;
   title: string;
+  difficulty?: "beginner" | "easy" | "medium" | "hard" | "extreme" | null;
   questions: Question[];
   attemptsCount?: number;
   createdAt?: string;

@@ -30,6 +30,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
       .select({
         uuid: quizzes.uuid,
         title: quizzes.title,
+        difficulty: quizzes.difficulty,
         moduleId: quizzes.moduleId,
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
@@ -78,6 +79,7 @@ export const createQuiz = async (req: Request, res: Response) => {
       .values({
         moduleId,
         title: quizData.title,
+        difficulty: quizData.difficulty ?? null,
         questions: questionsWithIds,
       })
       .returning();
@@ -107,6 +109,7 @@ export const getQuiz = async (req: Request, res: Response) => {
       .select({
         uuid: quizzes.uuid,
         title: quizzes.title,
+        difficulty: quizzes.difficulty,
         moduleId: quizzes.moduleId,
         questions: quizzes.questions,
         createdAt: quizzes.createdAt,
@@ -149,6 +152,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
       .update(quizzes)
       .set({
         title: quizData.title,
+        difficulty: quizData.difficulty ?? null,
         questions: questionsWithIds,
         updatedAt: new Date(),
       })

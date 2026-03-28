@@ -424,9 +424,19 @@ export async function seed() {
 
     await db.insert(courseMaterials).values(materials);
 
+    const quizDifficultyByCourseStatus =
+      course.status === "live"
+        ? { module1: "easy", module2: "medium" }
+        : course.status === "paused"
+          ? { module1: "beginner", module2: "medium" }
+          : course.status === "archived"
+            ? { module1: "easy", module2: "beginner" }
+            : { module1: "beginner", module2: "easy" };
+
     const quizzesData = [
       {
         moduleId: module1Id,
+        difficulty: quizDifficultyByCourseStatus.module1,
         title: "Modul 1: Kvíz ze základů",
         questions: [
           {
@@ -466,6 +476,7 @@ export async function seed() {
       },
       {
         moduleId: module2Id,
+        difficulty: quizDifficultyByCourseStatus.module2,
         title: "Modul 2: Hodnocení klíčových konceptů",
         questions: [
           {

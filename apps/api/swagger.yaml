@@ -562,6 +562,10 @@ components:
           type: string
         title:
           type: string
+        difficulty:
+          type: string
+          enum: [beginner, easy, medium, hard, extreme]
+          nullable: true
         attemptsCount:
           type: integer
         questions:

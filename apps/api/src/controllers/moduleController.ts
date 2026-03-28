@@ -64,6 +64,7 @@ async function buildModuleDetail(moduleUuid: string) {
     .select({
       uuid: quizzes.uuid,
       title: quizzes.title,
+      difficulty: quizzes.difficulty,
       moduleId: quizzes.moduleId,
       questions: quizzes.questions,
       createdAt: quizzes.createdAt,

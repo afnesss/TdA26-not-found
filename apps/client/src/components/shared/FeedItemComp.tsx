@@ -118,7 +118,7 @@ const FeedItemComp = ({
                 />
                 <DeleteConfirmDialog
                   trigger={
-                    <EditBtn type='delete' aria-label='Smazat příspěvek' />
+                    <EditBtn actionType='delete' aria-label='Smazat příspěvek' />
                   }
                   itemType='příspěvek'
                   onConfirm={() => {

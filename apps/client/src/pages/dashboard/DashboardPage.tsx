@@ -4,6 +4,7 @@
 } from '@/api/queries/courseQueries'
 import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
 import FilterDropdown from '@/components/shared/FilterDropdown'
+import CourseBackupActionsDropdown from '@/components/shared/CourseBackupActionsDropdown'
 import HintPageText from '@/components/shared/HintPageText'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
@@ -259,6 +260,9 @@ const DashboardDesign1 = () => {
               className='flex-1 min-w-50 lg:flex-initial'
             />
 
+            <span className='inline-flex'>
+              <CourseBackupActionsDropdown className='px-3 sm:px-4 py-2 md:py-2.5 shrink-0' />
+            </span>
             <span className='lg:hidden'>{createButton(true)}</span>
             <span className='hidden lg:inline-flex'>{createButton(false)}</span>
           </div>

@@ -125,7 +125,7 @@ const QuizQuestion = ({
                     />
                     <EditBtn
                       onClick={onQuestionRemove}
-                      type='delete'
+                      actionType='delete'
                       classNameBtn='md:hidden shrink-0'
                       aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />
@@ -161,7 +161,7 @@ const QuizQuestion = ({
 
                     <EditBtn
                       onClick={onQuestionRemove}
-                      type='delete'
+                      actionType='delete'
                       classNameBtn='hidden md:flex shrink-0'
                       aria-label={`Odstranit otázku ${qIndex + 1}`}
                     />

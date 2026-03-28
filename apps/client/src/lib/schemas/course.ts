@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { MaterialSchema } from './material'
 import { QuizSchema } from './quiz'
+import { QuizAnswerSchema } from './quiz'
 import { FeedItemSchema } from './feed'
 import { CourseModuleSchema } from './module'
 
@@ -107,6 +108,67 @@ export const CourseDashboardAnalyticsSchema = z.object({
   modules: z.array(DashboardModuleAnalyticsSchema),
 })
 
+export const CourseBackupFileSchema = z.object({
+  materialUuid: z.string().uuid(),
+  originalFilename: z.string(),
+  mimeType: z.string().nullable().optional(),
+  base64: z.string(),
+})
+
+export const CourseBackupSubmissionSchema = z.object({
+  quizUuid: z.string().uuid(),
+  score: z.number().int().nonnegative(),
+  maxScore: z.number().int().positive(),
+  answers: z.array(QuizAnswerSchema),
+  createdAt: z.date().or(z.string().datetime()),
+})
+
+export const CourseBackupModuleSchema = z.object({
+  uuid: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  status: z.enum(['active', 'passive']),
+  position: z.number().int().positive(),
+  createdAt: z.date().or(z.string().datetime()),
+  updatedAt: z.date().or(z.string().datetime()),
+  materials: z.array(MaterialSchema),
+  quizzes: z.array(
+    QuizSchema.extend({
+      uuid: z.string().uuid(),
+      createdAt: z.date().or(z.string().datetime()),
+      updatedAt: z.date().or(z.string().datetime()),
+    }),
+  ),
+})
+
+export const CourseBackupSchema = z.object({
+  version: z.literal(1),
+  exportedAt: z.date().or(z.string().datetime()),
+  course: z.object({
+    uuid: z.string().uuid(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    status: CourseStatusSchema,
+    createdAt: z.date().or(z.string().datetime()),
+    updatedAt: z.date().or(z.string().datetime()),
+    startedAt: z.date().or(z.string().datetime()).nullable().optional(),
+    scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
+    status_history: z.array(StatusHistoryEventSchema).optional(),
+  }),
+  modules: z.array(CourseBackupModuleSchema),
+  feed: z.array(FeedItemSchema),
+  quizSubmissions: z.array(CourseBackupSubmissionSchema),
+  files: z.array(CourseBackupFileSchema),
+  analyticsSnapshot: CourseDashboardAnalyticsSchema,
+})
+
+export const CoursesBackupCollectionSchema = z.object({
+  version: z.literal(1),
+  exportedAt: z.date().or(z.string().datetime()),
+  scope: z.literal('all-courses'),
+  courses: z.array(CourseBackupSchema),
+})
+
 export type CourseStatus = z.infer<typeof CourseStatusSchema>
 export type CourseSummary = z.infer<typeof CourseSummarySchema>
 export type CourseCreateRequest = z.infer<typeof CourseCreateRequestSchema>
@@ -120,4 +182,13 @@ export type DashboardModuleAnalytics = z.infer<
 >
 export type CourseDashboardAnalytics = z.infer<
   typeof CourseDashboardAnalyticsSchema
+>
+export type CourseBackupFile = z.infer<typeof CourseBackupFileSchema>
+export type CourseBackupSubmission = z.infer<
+  typeof CourseBackupSubmissionSchema
+>
+export type CourseBackupModule = z.infer<typeof CourseBackupModuleSchema>
+export type CourseBackup = z.infer<typeof CourseBackupSchema>
+export type CoursesBackupCollection = z.infer<
+  typeof CoursesBackupCollectionSchema
 >

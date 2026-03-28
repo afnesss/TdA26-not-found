@@ -455,7 +455,7 @@ const QuizComponentInner = ({
                     isDirtyText('hidden sm:inline-flex')}
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
-                      type='delete'
+                      actionType='delete'
                       icon={X}
                       iconClassName='size-4 md:size-5'
                       onClick={(e) => {
@@ -469,7 +469,7 @@ const QuizComponentInner = ({
                       <DeleteConfirmDialog
                         trigger={
                           <EditBtn
-                            type='delete'
+                            actionType='delete'
                             onClick={(e) => e?.stopPropagation()}
                             aria-label={`Smazat kvíz ${quiz.title}`}
                           />
@@ -532,7 +532,7 @@ const QuizComponentInner = ({
 
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
-                      type='delete'
+                      actionType='delete'
                       icon={X}
                       iconClassName='size-4 md:size-5'
                       onClick={(e) => {
@@ -546,7 +546,7 @@ const QuizComponentInner = ({
                       <DeleteConfirmDialog
                         trigger={
                           <EditBtn
-                            type='delete'
+                            actionType='delete'
                             onClick={(e) => e?.stopPropagation()}
                             aria-label={`Smazat kvíz ${quiz.title}`}
                           />

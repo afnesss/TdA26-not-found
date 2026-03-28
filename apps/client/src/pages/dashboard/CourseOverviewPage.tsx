@@ -36,8 +36,10 @@ import DashboardModeTabs from './components/DashboardModeTabs'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { ModulesSectionActions } from './components/ModuleSectionActions'
 import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
+import CourseExportTrigger from '@/components/shared/CourseExportTrigger'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 import CourseShareTrigger from '@/components/shared/CourseShareTrigger'
+import { useMediaQuery } from 'usehooks-ts'
 
 const CourseModulesOverviewPage = () => {
   const navigate = useNavigate()
@@ -60,6 +62,7 @@ const CourseModulesOverviewPage = () => {
   const [courseDescription, setCourseDescription] = useState<string | null>(
     null,
   )
+  const isMd = useMediaQuery('(min-width: 768px)')
   const [viewMode, setViewMode] = useLocalStorage<'content' | 'analytics'>(
     'dashboard-analytics-mode',
     'content',
@@ -341,9 +344,15 @@ const CourseModulesOverviewPage = () => {
           </div>
         }
         topActions={
-          saveCourseAction ? (
-            <div className='flex items-center gap-2'>{saveCourseAction}</div>
-          ) : undefined
+          <div className='flex items-center gap-2'>
+            {saveCourseAction}
+            <CourseExportTrigger
+              courseId={courseId}
+              courseName={currentCourseName}
+              variant='detail'
+              label={isMd ? 'Exportovat' : ''}
+            />
+          </div>
         }
         footerMeta={planningFooterMeta}
         hideDatesOnSmall={planning.isEditing}

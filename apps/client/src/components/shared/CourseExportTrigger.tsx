@@ -6,8 +6,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { Download, FileJson2, FileSpreadsheet } from 'lucide-react'
-import { useState, type MouseEvent, type PointerEvent, type SyntheticEvent } from 'react'
+import { Download, FileJson2 } from 'lucide-react'
+import {
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+  type SyntheticEvent,
+} from 'react'
 import { toast } from 'sonner'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 
@@ -57,23 +62,18 @@ const CourseExportTrigger = ({
     }
   }
 
-  const handleExport = async (format: 'json' | 'csv') => {
+  const handleExport = async () => {
     if (isExporting || disabled) return
 
     setIsExporting(true)
 
     try {
-      const blob = await exportCourse(courseId, format)
+      const blob = await exportCourse(courseId, 'json')
       const safeCourseName = slugifyFilePart(courseName) || 'course'
-      const suffix = format === 'json' ? 'backup.json' : 'report.csv'
-      downloadBlob(blob, `${safeCourseName}-${suffix}`)
-      toast.success(
-        format === 'json'
-          ? 'Kurz byl exportován do JSON zálohy'
-          : 'Kurz byl exportován do CSV reportu',
-      )
+      downloadBlob(blob, `${safeCourseName}-backup.json`)
+      toast.success('Kurz byl exportovan do JSON zalohy')
     } catch {
-      toast.error('Nepodařilo se exportovat kurz')
+      toast.error('Nepodarilo se exportovat kurz')
     } finally {
       setIsExporting(false)
     }
@@ -103,26 +103,13 @@ const CourseExportTrigger = ({
           onClick={(event) => stopCardClick(event)}
           onSelect={(event) => {
             stopCardClick(event)
-            void handleExport('json')
+            void handleExport()
           }}
           disabled={disabled || isExporting}
           className='gap-2 cursor-pointer text-xs sm:text-sm'
         >
           <FileJson2 className='h-4 w-4 text-gray-400' />
-          <span>Exportovat zálohu JSON</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onPointerDown={(event) => stopCardClick(event)}
-          onClick={(event) => stopCardClick(event)}
-          onSelect={(event) => {
-            stopCardClick(event)
-            void handleExport('csv')
-          }}
-          disabled={disabled || isExporting}
-          className='gap-2 cursor-pointer text-xs sm:text-sm'
-        >
-          <FileSpreadsheet className='h-4 w-4 text-gray-400' />
-          <span>Exportovat report CSV</span>
+          <span>Exportovat zalohu JSON</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

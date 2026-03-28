@@ -7,6 +7,7 @@ import adminOrganizationRoutes from "./routes/adminOrganizationRoutes";
 import courseShareRoutes from "./routes/courseShareRoutes";
 import organizationRequestRoutes from "./routes/organizationRequestRoutes";
 import orgRoutes from "./routes/orgRoutes";
+import shopRoutes from "./routes/shopRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import cookieParser from "cookie-parser";
@@ -60,6 +61,7 @@ app.use("/admin", adminOrganizationRoutes);
 app.use("/organization-requests", organizationRequestRoutes);
 app.use("/orgs", orgRoutes);
 app.use("/course-share", courseShareRoutes);
+app.use("/shop", shopRoutes);
 
 // Error handling middleware
 app.use(

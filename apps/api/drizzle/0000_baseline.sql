@@ -41,7 +41,6 @@ CREATE TABLE "course_sessions" (
 --> statement-breakpoint
 CREATE TABLE "courses" (
 	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"organization_id" uuid NOT NULL,
 	"name" varchar(256) NOT NULL,
 	"description" text,
 	"status" varchar(20) DEFAULT 'draft' NOT NULL,
@@ -93,45 +92,6 @@ CREATE TABLE "course_modules" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "course_modules_position_positive" CHECK ("course_modules"."position" > 0)
-);
---> statement-breakpoint
-CREATE TABLE "organization_requests" (
-	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" varchar(256) NOT NULL,
-	"slug" varchar(128) NOT NULL,
-	"country" varchar(128) NOT NULL,
-	"city" varchar(128) NOT NULL,
-	"address" text NOT NULL,
-	"postal_code" varchar(32) NOT NULL,
-	"region" varchar(128) NOT NULL,
-	"type" varchar(64) NOT NULL,
-	"owner_name" varchar(256) NOT NULL,
-	"contact_email" varchar(256) NOT NULL,
-	"status" varchar(20) DEFAULT 'pending' NOT NULL,
-	"admin_note" text,
-	"decision_at" timestamp,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE "organizations" (
-	"uuid" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" varchar(256) NOT NULL,
-	"slug" varchar(128) NOT NULL,
-	"country" varchar(128) NOT NULL,
-	"city" varchar(128) NOT NULL,
-	"address" text NOT NULL,
-	"postal_code" varchar(32) NOT NULL,
-	"region" varchar(128) NOT NULL,
-	"type" varchar(64) NOT NULL,
-	"owner_name" varchar(256) NOT NULL,
-	"contact_email" varchar(256) NOT NULL,
-	"status" varchar(20) DEFAULT 'waiting' NOT NULL,
-	"password_hash" varchar(256) NOT NULL,
-	"must_change_password" boolean DEFAULT true NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "organizations_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 CREATE TABLE "promo_codes" (
@@ -201,7 +161,6 @@ ALTER TABLE "course_materials" ADD CONSTRAINT "course_materials_module_id_course
 ALTER TABLE "course_session_participants" ADD CONSTRAINT "course_session_participants_course_id_courses_uuid_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "course_session_participants" ADD CONSTRAINT "course_session_participants_session_id_course_sessions_uuid_fk" FOREIGN KEY ("session_id") REFERENCES "public"."course_sessions"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "course_sessions" ADD CONSTRAINT "course_sessions_course_id_courses_uuid_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "courses" ADD CONSTRAINT "courses_organization_id_organizations_uuid_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "feed_items" ADD CONSTRAINT "feed_items_course_id_courses_uuid_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "course_modules" ADD CONSTRAINT "course_modules_course_id_courses_uuid_fk" FOREIGN KEY ("course_id") REFERENCES "public"."courses"("uuid") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "promo_codes" ADD CONSTRAINT "promo_codes_used_in_order_id_shop_orders_uuid_fk" FOREIGN KEY ("used_in_order_id") REFERENCES "public"."shop_orders"("uuid") ON DELETE set null ON UPDATE no action;--> statement-breakpoint

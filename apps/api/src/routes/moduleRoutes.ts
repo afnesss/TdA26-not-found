@@ -7,7 +7,11 @@ import {
   reorderModules,
   updateModule,
 } from "../controllers/moduleController";
-import { authMiddleware, requireRole } from "../middleware/auth";
+import { scopedAuthMiddleware } from "../middleware/auth";
+import {
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
+} from "../middleware/organization";
 import { validate } from "../middleware/validate";
 import {
   requireCourseDraft,
@@ -25,32 +29,36 @@ router.get("/", getModules);
 router.get("/:moduleId", getModuleByUuid);
 router.post(
   "/",
-  authMiddleware,
-  requireRole("lecturer"),
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleCreateRequestSchema),
   requireCourseDraft(),
   createModule,
 );
 router.put(
   "/reorder",
-  authMiddleware,
-  requireRole("lecturer"),
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleReorderRequestSchema),
   requireCourseDraft(),
   reorderModules,
 );
 router.put(
   "/:moduleId",
-  authMiddleware,
-  requireRole("lecturer"),
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   validate(ModuleUpdateRequestSchema),
   requireModuleUpdateAllowed(),
   updateModule,
 );
 router.delete(
   "/:moduleId",
-  authMiddleware,
-  requireRole("lecturer"),
+  scopedAuthMiddleware,
+  requireScopedOrganizationAdmin,
+  requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),
   deleteModule,
 );

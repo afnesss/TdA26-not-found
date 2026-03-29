@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
+import { buildOrgDashboardPath } from '@/lib/routes'
 import {
   CourseUpdateRequestSchema,
   type CourseSummary,
@@ -16,12 +17,14 @@ import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
 import { useUpdateCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
+import { useParams } from 'react-router-dom'
 
 const CourseDetailsForm = ({
   selectedCourse,
 }: {
   selectedCourse: CourseSummary
 }) => {
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
   const {
     register,
     handleSubmit,
@@ -73,7 +76,7 @@ const CourseDetailsForm = ({
           <div className='flex flex-col'>
             <Breadcrumb
               items={[
-                { label: 'Sprava kurzů', path: '/dashboard' },
+                { label: 'Sprava kurzů', path: buildOrgDashboardPath(orgSlug) },
                 { label: 'Detaily kurzu' },
               ]}
               className='mb-2'

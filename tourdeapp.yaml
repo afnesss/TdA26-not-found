@@ -14,8 +14,9 @@ containers:
       SESSION_SECRET: ce3D9f7e6860f7a57c669f3b275cc33fb6ae58ee31b32a5ec37bd88a5e2a63067
       JWT_SECRET: 8f6e4b57e7f54668a1f8c5d4f9a0c2d7e1b3a6c9d2f4e8a1b7c5d3e9f0a2b4c6
       NODE_ENV: production
-      ADMIN_USERNAME: lecturer
+      ADMIN_USERNAME: superadmin
       ADMIN_PASSWORD: TdA26!
+      ORG_DEFAULT_PASSWORD: TdA26!
 
   - name: client
     image: registry.tourde.cloud/not-found/client

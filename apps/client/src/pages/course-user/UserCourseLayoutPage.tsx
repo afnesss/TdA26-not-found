@@ -1,30 +1,30 @@
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
-import { useAuth } from '@/auth/useAuth'
 import StateComp from '@/components/shared/StateComp'
 import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgCoursePath, buildOrgCoursesPath } from '@/lib/routes'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
 import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
 import UserCourseFeedSection from './components/UserCourseFeedSection'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 const UserCourseLayoutPage = () => {
-  const { courseId, moduleId } = useParams<{
+  const { orgSlug, courseId, moduleId } = useParams<{
+    orgSlug?: string
     courseId: string
     moduleId?: string
   }>()
-  const location = useLocation()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
   const moduleRedirectRef = useRef<string | null>(null)
-  const authRedirectedRef = useRef(false)
   const queryClient = useQueryClient()
-  const { user, isLoading: isAuthLoading } = useAuth()
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
+    orgSlug,
     syncModuleActivation: true,
     onCourseRemoved: () => {
       if (redirectedRef.current) return
@@ -32,7 +32,7 @@ const UserCourseLayoutPage = () => {
       if (courseId) {
         queryClient.removeQueries({ queryKey: ['course', courseId] })
       }
-      navigate('/courses', { replace: true })
+      navigate(buildOrgCoursesPath(orgSlug), { replace: true })
     },
   })
 
@@ -47,11 +47,9 @@ const UserCourseLayoutPage = () => {
     isError,
     error,
     refetch,
-  } = useCoursePageQueries(courseId)
+  } = useCoursePageQueries(courseId, orgSlug)
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
-  const isAuthenticatedUser = Boolean(user)
-  const redirectTarget = `${location.pathname}${location.search}${location.hash}`
 
   useTitle(courseData?.name || 'Kurz')
 
@@ -62,33 +60,17 @@ const UserCourseLayoutPage = () => {
     canEvaluateCourseAccess && !hasAccessToCourse && !courseData
 
   useEffect(() => {
-    if (!courseId || isAuthLoading) return
-
-    if (isAuthenticatedUser) {
-      authRedirectedRef.current = false
-      return
-    }
-
-    if (authRedirectedRef.current) return
-    authRedirectedRef.current = true
-
-    navigate(
-      `/login?mode=student&redirect=${encodeURIComponent(redirectTarget)}`,
-      { replace: true },
-    )
-  }, [courseId, isAuthLoading, isAuthenticatedUser, navigate, redirectTarget])
-
-  useEffect(() => {
     if (!courseData || redirectedRef.current) return
 
     const isClosed = courseData.status !== 'live'
+
     if (!isClosed) return
 
     redirectedRef.current = true
     if (courseId) {
       queryClient.removeQueries({ queryKey: ['course', courseId] })
     }
-    navigate('/courses', { replace: true })
+    navigate(buildOrgCoursesPath(orgSlug), { replace: true })
   }, [courseData, courseId, navigate, queryClient])
 
   useEffect(() => {
@@ -99,17 +81,19 @@ const UserCourseLayoutPage = () => {
     )
 
     if (!currentModule || currentModule.status === 'active') return
+
     if (moduleRedirectRef.current === moduleId) return
 
     moduleRedirectRef.current = moduleId
-    navigate(`/courses/${courseId}`, { replace: true })
+    // toast.info('Modul byl skryt lektorem')
+    navigate(buildOrgCoursePath(orgSlug, courseId), { replace: true })
   }, [courseData, courseId, moduleId, navigate])
 
   if (!courseId) {
     return <NotFoundPage />
   }
 
-  if (isLoading || !canEvaluateCourseAccess || isAuthLoading) {
+  if (isLoading || !canEvaluateCourseAccess) {
     return <CourseSkeleton />
   }
 
@@ -132,7 +116,7 @@ const UserCourseLayoutPage = () => {
           }
           onAction={() => {
             if (isNotFound) {
-              navigate('/courses', { replace: true })
+              navigate(buildOrgCoursesPath(orgSlug), { replace: true })
               return
             }
             void refetch()
@@ -149,24 +133,18 @@ const UserCourseLayoutPage = () => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
       <div className='max-w-6xl mx-auto space-y-5'>
-        {!isAuthenticatedUser ? (
-          <CourseSkeleton />
-        ) : (
-          <>
-            <Outlet
-              context={{
-                courseId,
-                courseData,
-                activeModules,
-                isConnected,
-              }}
-            />
-            <UserCourseFeedSection
-              courseId={courseId}
-              initialFeed={courseData.feed ?? []}
-            />
-          </>
-        )}
+        <Outlet
+          context={{
+            courseId,
+            courseData,
+            activeModules,
+            isConnected,
+          }}
+        />
+        <UserCourseFeedSection
+          courseId={courseId}
+          initialFeed={courseData.feed ?? []}
+        />
       </div>
     </div>
   )

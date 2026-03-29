@@ -16,13 +16,14 @@ import {
   type FilterIds,
 } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgDashboardCoursePath } from '@/lib/routes'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, BookOpenText, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
 import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
@@ -57,6 +58,7 @@ const DashboardDesign1 = () => {
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -70,20 +72,20 @@ const DashboardDesign1 = () => {
     refetch: refetchCourses,
   } = useQuery<CourseSummary[], ApiError>({
     queryKey: ['courses'],
-    queryFn: () => getCourses(),
+    queryFn: () => getCourses(false, orgSlug),
     networkMode: 'always',
   })
 
-  const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation()
+  const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation(orgSlug)
   const { mutateAsync: createCourseMutation } =
-    useCreateCourseMutation(setCourseDraft)
+    useCreateCourseMutation(setCourseDraft, orgSlug)
   const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
     skipInvalidateCourses: true,
     optimisticInsert: (previous, optimistic) =>
       sortCoursesByFilter([optimistic, ...(previous ?? [])], selectedFilter),
-  })
+  }, orgSlug)
 
-  const { isConnected } = useDashboardCoursesSSE()
+  const { isConnected } = useDashboardCoursesSSE(orgSlug)
 
   const handleStatusChange = async (
     courseId: string,
@@ -103,7 +105,7 @@ const DashboardDesign1 = () => {
   const displayedStatisticsQueries = useQueries({
     queries: displayedCourses.map((course) => ({
       queryKey: ['course-dashboard-analytics', course.uuid],
-      queryFn: () => getCourseDashboardAnalytics(course.uuid),
+      queryFn: () => getCourseDashboardAnalytics(course.uuid, orgSlug),
       enabled: dashboardMode === 'analytics',
       staleTime: 1000 * 20,
     })),
@@ -116,7 +118,7 @@ const DashboardDesign1 = () => {
       (query) => query.isLoading && query.data === undefined,
     )
 
-  const planning = useCoursePlanning({ queryClient })
+  const planning = useCoursePlanning({ queryClient, orgSlug })
 
   const dashboardTabs: Array<{
     value: 'content' | 'statistics' | 'global'
@@ -142,7 +144,7 @@ const DashboardDesign1 = () => {
   }
 
   const handleEditCourse = (course: CourseSummary) => {
-    navigate(`/dashboard/${course.uuid}`)
+    navigate(buildOrgDashboardCoursePath(orgSlug, course.uuid))
   }
 
   const handleAddCourse = () => {

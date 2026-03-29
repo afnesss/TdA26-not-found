@@ -10,16 +10,20 @@ import { toast } from 'sonner'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import type { FeedItem } from '@/lib/schemas'
 
-const invalidateQueries = (queryClient: QueryClient, courseId: string) => {
+const invalidateQueries = (
+  queryClient: QueryClient,
+  courseId: string,
+  orgSlug?: string,
+) => {
   queryClient.invalidateQueries({
-    queryKey: ['feed-paginated', courseId],
+    queryKey: ['feed-paginated', orgSlug, courseId],
   })
   queryClient.invalidateQueries({
     queryKey: ['course-feed', courseId],
   })
 }
 
-export const useCreatePostMutation = (courseId: string) => {
+export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   return useMutation<
     FeedItem,
@@ -27,15 +31,16 @@ export const useCreatePostMutation = (courseId: string) => {
     { message: string },
     { previousFeed?: InfiniteData<FeedItem[]> }
   >({
-    mutationFn: (data: { message: string }) => createPost(courseId, data),
+    mutationFn: (data: { message: string }) => createPost(courseId, data, orgSlug),
     networkMode: 'always',
     onMutate: async (data) => {
       await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', courseId],
+        queryKey: ['feed-paginated', orgSlug, courseId],
       })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
+        orgSlug,
         courseId,
       ])
 
@@ -47,7 +52,7 @@ export const useCreatePostMutation = (courseId: string) => {
       }
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -62,7 +67,7 @@ export const useCreatePostMutation = (courseId: string) => {
       return { previousFeed }
     },
     onSuccess: () => {
-      invalidateQueries(queryClient, courseId)
+      invalidateQueries(queryClient, courseId, orgSlug)
       toast.success('Příspěvek vytvořen')
     },
 
@@ -71,14 +76,14 @@ export const useCreatePostMutation = (courseId: string) => {
         error,
         'Chyba při vytváření příspěvku',
         queryClient,
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,
       )
     },
   })
 }
 
-export const useUpdatePostMutation = (courseId: string) => {
+export const useUpdatePostMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   return useMutation<
     FeedItem,
@@ -87,20 +92,21 @@ export const useUpdatePostMutation = (courseId: string) => {
     { previousFeed?: InfiniteData<FeedItem[]> }
   >({
     mutationFn: ({ postId, data }: { postId: string; data: FeedItem }) =>
-      updatePost(courseId, postId, data),
+      updatePost(courseId, postId, data, orgSlug),
     networkMode: 'always',
     onMutate: async ({ postId, data }) => {
       await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', courseId],
+        queryKey: ['feed-paginated', orgSlug, courseId],
       })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
+        orgSlug,
         courseId,
       ])
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -117,7 +123,7 @@ export const useUpdatePostMutation = (courseId: string) => {
       return { previousFeed }
     },
     onSuccess: () => {
-      invalidateQueries(queryClient, courseId)
+      invalidateQueries(queryClient, courseId, orgSlug)
       toast.success('Příspěvek uložen')
     },
 
@@ -126,14 +132,14 @@ export const useUpdatePostMutation = (courseId: string) => {
         error,
         'Chyba při ukládání příspěvku',
         queryClient,
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,
       )
     },
   })
 }
 
-export const useDeletePostMutation = (courseId: string) => {
+export const useDeletePostMutation = (courseId: string, orgSlug?: string) => {
   const queryClient = useQueryClient()
   return useMutation<
     void,
@@ -141,20 +147,21 @@ export const useDeletePostMutation = (courseId: string) => {
     string,
     { previousFeed?: InfiniteData<FeedItem[]> }
   >({
-    mutationFn: (postId: string) => deletePost(courseId, postId),
+    mutationFn: (postId: string) => deletePost(courseId, postId, orgSlug),
     networkMode: 'always',
     onMutate: async (postId) => {
       await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', courseId],
+        queryKey: ['feed-paginated', orgSlug, courseId],
       })
 
       const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
         'feed-paginated',
+        orgSlug,
         courseId,
       ])
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -169,7 +176,7 @@ export const useDeletePostMutation = (courseId: string) => {
       return { previousFeed }
     },
     onSuccess: () => {
-      invalidateQueries(queryClient, courseId)
+      invalidateQueries(queryClient, courseId, orgSlug)
       toast.success('Příspěvek smazán')
     },
     onError: (error: ApiError, _variables, context) => {
@@ -177,7 +184,7 @@ export const useDeletePostMutation = (courseId: string) => {
         error,
         'Chyba při mazání příspěvku',
         queryClient,
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,
       )
     },

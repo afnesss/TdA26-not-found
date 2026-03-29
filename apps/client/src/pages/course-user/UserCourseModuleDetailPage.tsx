@@ -4,6 +4,10 @@ import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { Label } from '@/components/ui/label'
+import {
+  buildOrgCoursePath,
+  buildOrgCoursesPath,
+} from '@/lib/routes'
 import type { Quiz } from '@/lib/schemas'
 import type { QuizStateById } from '@/lib/types'
 import { startTransition, useEffect, useRef, useState } from 'react'
@@ -26,7 +30,8 @@ import {
 } from '../CoursePage/utils/quizSubmissionStorage'
 
 const UserCourseModuleDetailPage = () => {
-  const { courseId, moduleId } = useParams<{
+  const { orgSlug, courseId, moduleId } = useParams<{
+    orgSlug?: string
     courseId: string
     moduleId: string
   }>()
@@ -79,7 +84,7 @@ const UserCourseModuleDetailPage = () => {
     if (selectedModule) return
 
     redirectedRef.current = true
-    navigate(`/courses/${courseId}`, { replace: true })
+    navigate(buildOrgCoursePath(orgSlug, courseId), { replace: true })
   }, [courseId, moduleId, navigate, selectedModule])
 
   if (!courseId || !moduleId) {
@@ -114,8 +119,8 @@ const UserCourseModuleDetailPage = () => {
             />
           }
           breadcrumbs={[
-            { label: 'Kurzy', path: '/courses' },
-            { label: courseData.name, path: `/courses/${courseId}` },
+            { label: 'Kurzy', path: buildOrgCoursesPath(orgSlug) },
+            { label: courseData.name, path: buildOrgCoursePath(orgSlug, courseId) },
             { label: selectedModule.name },
           ]}
         />

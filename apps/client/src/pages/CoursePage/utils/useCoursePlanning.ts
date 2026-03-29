@@ -9,12 +9,13 @@ import { invalidateCourseQueries } from './useCourseMutation'
 
 type UseCoursePlanningOptions = {
   courseId?: string
+  orgSlug?: string
   queryClient?: QueryClient
   onSuccess?: () => void
 }
 
 export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
-  const { courseId, queryClient, onSuccess } = options
+  const { courseId, orgSlug, queryClient, onSuccess } = options
 
   const [planningCourseId, setPlanningCourseId] = useState<string | null>(
     courseId ?? null,
@@ -88,7 +89,7 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
           }
         : { scheduledFor: selectedDate.toISOString() }
 
-      await updateCourse(planningCourseId, payload)
+      await updateCourse(planningCourseId, payload, orgSlug)
 
       if (queryClient && planningCourseId) {
         await invalidateCourseQueries(queryClient, planningCourseId)
@@ -155,7 +156,7 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
     closePlanningEditor()
 
     try {
-      await updateCourse(courseId, { status: newStatus })
+      await updateCourse(courseId, { status: newStatus }, orgSlug)
       if (queryClient) {
         await invalidateCourseQueries(queryClient, courseId)
       }

@@ -4,7 +4,7 @@ import type {
   CourseSummary,
   FeedItem,
 } from '@/lib/schemas'
-import type { AuthUser } from './queries/authQueries'
+import { buildOrgApiPrefix } from '@/lib/routes'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -67,47 +67,9 @@ const parseQuizPayload = (
   return null
 }
 
-const syncUserProgressToAuthCache = (
-  rawData: unknown,
-  updateAuthUser: (
-    updater: (oldData: AuthUser | null | undefined) => AuthUser | null | undefined,
-  ) => void,
-) => {
-  if (!rawData || typeof rawData !== 'object') return
-
-  const payload = rawData as {
-    userId?: unknown
-    xp?: unknown
-    level?: unknown
-  }
-
-  if (
-    typeof payload.userId !== 'string' ||
-    typeof payload.xp !== 'number' ||
-    typeof payload.level !== 'number'
-  ) {
-    return
-  }
-
-  const userId = payload.userId
-  const xp = payload.xp
-  const level = payload.level
-
-  updateAuthUser((oldData) => {
-    if (!oldData || oldData.id !== userId || oldData.role !== 'student') {
-      return oldData
-    }
-
-    return {
-      ...oldData,
-      xp,
-      level,
-    }
-  })
-}
-
 type UseCourseFeedSSEOptions = {
   courseId: string
+  orgSlug?: string
   syncModuleActivation?: boolean
   showNewPostToast?: boolean
   showSseToasts?: boolean
@@ -118,6 +80,7 @@ type UseCourseFeedSSEOptions = {
 
 export const useCourseFeedSSE = ({
   courseId,
+  orgSlug,
   syncModuleActivation = true,
   showNewPostToast = true,
   showSseToasts = true,
@@ -135,15 +98,9 @@ export const useCourseFeedSSE = ({
     if (!courseId) return
     const isDev = import.meta.env.DEV
 
-    const eventSource = new EventSource(`/api/courses/${courseId}/feed/stream`)
-    const invalidateSessionQueries = () => {
-      queryClient.invalidateQueries({
-        queryKey: ['course-session-overview', courseId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['course-session-leaderboard', courseId],
-      })
-    }
+    const eventSource = new EventSource(
+      `/api${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`,
+    )
 
     eventSource.onopen = () => {
       if (isDev) console.log('SSE connected')
@@ -156,7 +113,7 @@ export const useCourseFeedSSE = ({
       if (isDev)
         console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
-      // Keep EventSource open; browser will auto-reconnect.
+      eventSource.close()
     }
 
     eventSource.addEventListener('new_post', (event) => {
@@ -408,31 +365,27 @@ export const useCourseFeedSSE = ({
     }
 
     const handleQuizUpdated = (event: MessageEvent) => {
-      const payload = JSON.parse(event.data)
-      const parsed = parseQuizPayload(payload)
+      const parsed = parseQuizPayload(JSON.parse(event.data))
+      if (!parsed) return
 
-      if (parsed) {
-        updateModuleCaches(
-          parsed.moduleId,
-          (module) => ({
-            ...module,
-            quizzes: module.quizzes.map((quiz) =>
-              quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
-            ),
-          }),
-          (moduleDetail) => ({
-            ...moduleDetail,
-            quizzes: moduleDetail.quizzes.map((quiz) =>
-              quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
-            ),
-          }),
-        )
-        queryClient.invalidateQueries({
-          queryKey: ['quizAnalytics', parsed.quiz.uuid],
-        })
-      }
-
-      invalidateSessionQueries()
+      updateModuleCaches(
+        parsed.moduleId,
+        (module) => ({
+          ...module,
+          quizzes: module.quizzes.map((quiz) =>
+            quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
+          ),
+        }),
+        (moduleDetail) => ({
+          ...moduleDetail,
+          quizzes: moduleDetail.quizzes.map((quiz) =>
+            quiz.uuid === parsed.quiz.uuid ? parsed.quiz : quiz,
+          ),
+        }),
+      )
+      queryClient.invalidateQueries({
+        queryKey: ['quizAnalytics', parsed.quiz.uuid],
+      })
     }
 
     eventSource.addEventListener(
@@ -442,19 +395,6 @@ export const useCourseFeedSSE = ({
     eventSource.addEventListener('material_updated', handleMaterialUpdated)
     eventSource.addEventListener('quiz_stats_updated', handleQuizUpdated)
     eventSource.addEventListener('quiz_updated', handleQuizUpdated)
-    eventSource.addEventListener('course_session_updated', () => {
-      invalidateSessionQueries()
-    })
-    eventSource.addEventListener('user_progress_updated', (event) => {
-      const payload = JSON.parse(event.data)
-      syncUserProgressToAuthCache(payload, (updater) => {
-        queryClient.setQueryData<AuthUser | null | undefined>(
-          ['auth', 'me'],
-          updater,
-        )
-      })
-      invalidateSessionQueries()
-    })
 
     // // --- Material Updates ---
     // eventSource.addEventListener('material_added', (event) => {

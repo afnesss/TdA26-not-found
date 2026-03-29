@@ -1,5 +1,6 @@
 import { resolveCourseShareToken } from '@/api/queries/courseQueries'
 import StateComp from '@/components/shared/StateComp'
+import { buildOrgCoursePath, buildOrgCoursesPath } from '@/lib/routes'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -17,12 +18,12 @@ const CourseShareRedirectPage = () => {
 
   useEffect(() => {
     if (data?.courseId) {
-      navigate(`/courses/${data.courseId}`, { replace: true })
+      navigate(buildOrgCoursePath(data.orgSlug, data.courseId), { replace: true })
     }
   }, [data, navigate])
 
   if (!token) {
-    return <StateComp type='not-found' onAction={() => navigate('/courses')} />
+    return <StateComp type='not-found' onAction={() => navigate('/')} />
   }
 
   if (isLoading) {
@@ -49,7 +50,7 @@ const CourseShareRedirectPage = () => {
           actionText={isExpired ? 'Zpět na kurzy' : 'Zkusit znovu'}
           onAction={() => {
             if (isExpired) {
-              navigate('/courses', { replace: true })
+              navigate('/', { replace: true })
               return
             }
 

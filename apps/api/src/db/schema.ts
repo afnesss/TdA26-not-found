@@ -32,8 +32,61 @@ export const courseStatusEnum = [
   "archived",
 ] as const;
 
+export const organizationStatusEnum = [
+  "waiting",
+  "onboarding",
+  "active",
+] as const;
+
+export const organizationRequestStatusEnum = [
+  "pending",
+  "approved",
+  "rejected",
+] as const;
+
+export const organizations = pgTable("organizations", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 256 }).notNull(),
+  slug: varchar("slug", { length: 128 }).notNull().unique(),
+  country: varchar("country", { length: 128 }).notNull(),
+  city: varchar("city", { length: 128 }).notNull(),
+  address: text("address").notNull(),
+  postalCode: varchar("postal_code", { length: 32 }).notNull(),
+  region: varchar("region", { length: 128 }).notNull(),
+  type: varchar("type", { length: 64 }).notNull(),
+  ownerName: varchar("owner_name", { length: 256 }).notNull(),
+  contactEmail: varchar("contact_email", { length: 256 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("waiting"),
+  passwordHash: varchar("password_hash", { length: 256 }).notNull(),
+  mustChangePassword: boolean("must_change_password").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const organizationRequests = pgTable("organization_requests", {
+  uuid: uuid("uuid").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 256 }).notNull(),
+  slug: varchar("slug", { length: 128 }).notNull(),
+  country: varchar("country", { length: 128 }).notNull(),
+  city: varchar("city", { length: 128 }).notNull(),
+  address: text("address").notNull(),
+  postalCode: varchar("postal_code", { length: 32 }).notNull(),
+  region: varchar("region", { length: 128 }).notNull(),
+  type: varchar("type", { length: 64 }).notNull(),
+  ownerName: varchar("owner_name", { length: 256 }).notNull(),
+  contactEmail: varchar("contact_email", { length: 256 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  adminNote: text("admin_note"),
+  decisionAt: timestamp("decision_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const courses = pgTable("courses", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id")
+    .references(() => organizations.uuid, { onDelete: "cascade" })
+    .notNull(),
   name: varchar("name", { length: 256 }).notNull(),
   description: text("description"),
   status: varchar("status", { length: 20 }).notNull().default("draft"),

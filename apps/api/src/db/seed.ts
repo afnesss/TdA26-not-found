@@ -7,12 +7,13 @@ import {
   quizSubmissions,
   feedItems,
   courseStatusEnum,
-  merchItems,
-  promoCodes,
+  organizations,
 } from "./schema";
+import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
+import { eq } from "drizzle-orm";
 import { logger } from "../utils/logger";
 
 const sampleCourses = [
@@ -263,129 +264,6 @@ const moduleBlueprints = [
   },
 ];
 
-const seedMerchItems = [
-  {
-    slug: "platform-hoodie",
-    name: "TDA Batoh",
-    description: "Stylový batoh s logem Think Different Academy.",
-    imageUrl: "/shop/bag123.png",
-    unitPriceCents: 99900,
-    purchaseMode: "money" as const,
-    xpCost: null,
-    voucherDiscountPercent: null,
-    active: true,
-  },
-  {
-    slug: "platform-tshirt",
-    name: "TDA T-Shirt",
-    description: "Lehké tričko pro každodenní nošení.",
-    imageUrl: "/shop/tshirt.png",
-    unitPriceCents: 29900,
-    purchaseMode: "money" as const,
-    xpCost: null,
-    voucherDiscountPercent: null,
-    active: true,
-  },
-  {
-    slug: "platform-earrings",
-    name: "Signal Earrings",
-    description: "Limitovaná sada doplňků ve stylu Academy.",
-    imageUrl: "/shop/earrings.png",
-    unitPriceCents: 69900,
-    purchaseMode: "money" as const,
-    xpCost: null,
-    voucherDiscountPercent: null,
-    active: true,
-  },
-  {
-    slug: "platform-water-bottle",
-    name: "10% slevový kupon",
-    description: "Jednorázový promo voucher se slevou 10 % do shopu.",
-    imageUrl: "/shop/5678.png",
-    unitPriceCents: 0,
-    purchaseMode: "xp" as const,
-    xpCost: 500,
-    voucherDiscountPercent: 10,
-    active: true,
-  },
-  {
-    slug: "platform-notebook",
-    name: "20% slevový kupon",
-    description: "Jednorázový promo voucher se slevou 20 % do shopu.",
-    imageUrl: "/shop/12345.png",
-    unitPriceCents: 0,
-    purchaseMode: "xp" as const,
-    xpCost: 1000,
-    voucherDiscountPercent: 20,
-    active: true,
-  },
-];
-
-const seedPromoCodes = [
-  {
-    code: "WELCOME10",
-    discountType: "percent",
-    discountValue: 10,
-    isActive: true,
-    isUsed: false,
-  },
-  {
-    code: "XP500",
-    discountType: "fixed",
-    discountValue: 50000,
-    isActive: true,
-    isUsed: false,
-    xpRedemptionRef: "seed-xp-redemption-1",
-  },
-  {
-    code: "TDA2026",
-    discountType: "percent",
-    discountValue: 10,
-    isActive: true,
-    isUsed: false,
-  },
-];
-
-async function seedShopCatalogAndPromos() {
-  for (const item of seedMerchItems) {
-    await db
-      .insert(merchItems)
-      .values(item)
-      .onConflictDoUpdate({
-        target: merchItems.slug,
-        set: {
-          name: item.name,
-          description: item.description,
-          imageUrl: item.imageUrl,
-          unitPriceCents: item.unitPriceCents,
-          purchaseMode: item.purchaseMode,
-          xpCost: item.xpCost,
-          voucherDiscountPercent: item.voucherDiscountPercent,
-          active: item.active,
-          updatedAt: new Date(),
-        },
-      });
-  }
-  logger.info(`Upserted ${seedMerchItems.length} merch items`);
-
-  for (const promo of seedPromoCodes) {
-    await db
-      .insert(promoCodes)
-      .values(promo)
-      .onConflictDoUpdate({
-        target: promoCodes.code,
-        set: {
-          discountType: promo.discountType,
-          discountValue: promo.discountValue,
-          isActive: promo.isActive,
-          isUsed: promo.isUsed,
-          xpRedemptionRef: promo.xpRedemptionRef ?? null,
-        },
-      });
-  }
-  logger.info(`Upserted ${seedPromoCodes.length} promo codes`);
-}
-
 export async function seed() {
   logger.info("Seeding database...");
 
@@ -410,7 +288,41 @@ export async function seed() {
     );
   }
 
-  await seedShopCatalogAndPromos();
+  const defaultPassword = process.env.ORG_DEFAULT_PASSWORD || "TdA26!";
+
+  let [tdaOrganization] = await db
+    .select({
+      uuid: organizations.uuid,
+      slug: organizations.slug,
+    })
+    .from(organizations)
+    .where(eq(organizations.slug, "tda"));
+
+  if (!tdaOrganization) {
+    const passwordHash = await bcrypt.hash(defaultPassword, 10);
+    [tdaOrganization] = await db
+      .insert(organizations)
+      .values({
+        name: "TdA",
+        slug: "tda",
+        country: "Czech Republic",
+        city: "Brno",
+        address: "Veveří 95",
+        postalCode: "602 00",
+        region: "Central Europe",
+        type: "HO",
+        ownerName: "TdA Platform",
+        contactEmail: "admin@tda-app.com",
+        status: "active",
+        passwordHash,
+        mustChangePassword: false,
+      })
+      .returning({
+        uuid: organizations.uuid,
+        slug: organizations.slug,
+      });
+    logger.info("Created default TdA organization");
+  }
 
   const existingCourses = await db.select().from(courses);
   if (existingCourses.length > 0) {
@@ -420,7 +332,12 @@ export async function seed() {
 
   const createdCourses = await db
     .insert(courses)
-    .values(seedCourses)
+    .values(
+      seedCourses.map((course) => ({
+        ...course,
+        organizationId: tdaOrganization.uuid,
+      })),
+    )
     .returning();
   logger.info(`Created ${createdCourses.length} courses`);
 
@@ -551,19 +468,9 @@ export async function seed() {
 
     await db.insert(courseMaterials).values(materials);
 
-    const quizDifficultyByCourseStatus =
-      course.status === "live"
-        ? { module1: "easy", module2: "medium" }
-        : course.status === "paused"
-          ? { module1: "beginner", module2: "medium" }
-          : course.status === "archived"
-            ? { module1: "easy", module2: "beginner" }
-            : { module1: "beginner", module2: "easy" };
-
     const quizzesData = [
       {
         moduleId: module1Id,
-        difficulty: quizDifficultyByCourseStatus.module1,
         title: "Modul 1: Kvíz ze základů",
         questions: [
           {
@@ -603,7 +510,6 @@ export async function seed() {
       },
       {
         moduleId: module2Id,
-        difficulty: quizDifficultyByCourseStatus.module2,
         title: "Modul 2: Hodnocení klíčových konceptů",
         questions: [
           {

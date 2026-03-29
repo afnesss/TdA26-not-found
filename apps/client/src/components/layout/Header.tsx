@@ -1,183 +1,160 @@
-﻿import { userLogout } from '@/api/queries/authQueries'
+import { adminLogout, organizationLogout } from '@/api/queries/organizationQueries'
 import { useAuth } from '@/auth/useAuth'
-import { useQueryClient } from '@tanstack/react-query'
-import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
+import { Button } from '@/components/ui/button'
+import {
+  buildOrgCoursesPath,
+  buildOrgDashboardPath,
+  buildOrgLoginPath,
+} from '@/lib/routes'
 import { cn } from '@/lib/utils'
-import { ChevronDown, LogIn, LogOut } from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { useLocation, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { useMediaQuery } from 'usehooks-ts'
 import logo from '../../assets/white_logo.svg'
-import { Button } from '../ui/button'
 
 export default function Header() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const queryClient = useQueryClient()
-  const isMd = useMediaQuery('(min-width: 768px)')
-  const isDashboard = pathname.includes('/dashboard')
-  const isCourses = pathname.includes('/courses')
-  const isShop = pathname.startsWith('/shop')
-  const isLogin = pathname.includes('/login')
-  const { isAuth, user } = useAuth()
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const isAdminArea = pathname.startsWith('/admin')
+  const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
+  const isOrganizationRequestActive = pathname.startsWith('/organization-request')
+  const isAdminLoginActive = pathname === '/admin/login'
+  const isAdminRequestsActive = pathname.startsWith('/admin/requests')
+  const isAdminOrganizationsActive = pathname.startsWith('/admin/organizations')
+  const isOrgCoursesActive =
+    isOrganizationArea && pathname.startsWith(`/${orgSlug}/courses`)
+  const isOrgDashboardActive =
+    isOrganizationArea && pathname.startsWith(`/${orgSlug}/dashboard`)
+  const isOrgLoginActive =
+    isOrganizationArea && pathname === buildOrgLoginPath(orgSlug)
+  const { isAuth: isAdminAuth } = useAuth()
+  const { isAuth: isOrgAuth } = useOrganizationAuth(orgSlug)
+  const selectedSecondaryButtonClass =
+    'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
 
-  const isLecturer = user?.role === 'lecturer'
-  const isStudent = user?.role === 'student'
-  const mobileNavItems = [
-    {
-      label: 'Kurzy',
-      value: 'courses',
-      onClick: () => navigate('/courses'),
-    },
-    {
-      label: 'Shop',
-      value: 'shop',
-      onClick: () => navigate('/shop'),
-    },
-    ...(isLecturer
-      ? [
-          {
-            label: 'Dashboard',
-            value: 'dashboard',
-            onClick: () => navigate('/dashboard'),
-          },
-        ]
-      : []),
-  ]
-  const selectedMobileValue = isDashboard
-    ? 'dashboard'
-    : isShop
-      ? 'shop'
-      : 'courses'
-  const selectedMobileLabel =
-    selectedMobileValue === 'dashboard'
-      ? 'Dashboard'
-      : selectedMobileValue === 'shop'
-        ? 'Shop'
-        : 'Kurzy'
+  const handleLogout = async () => {
+    try {
+      if (isOrganizationArea && orgSlug && isOrgAuth) {
+        await organizationLogout(orgSlug)
+        queryClient.setQueryData(['org-auth', orgSlug], null)
+        toast.success('Odhlášení úspěšné')
+        navigate(buildOrgLoginPath(orgSlug))
+        return
+      }
+
+      if (isAdminAuth) {
+        await adminLogout()
+        queryClient.setQueryData(['auth', 'me'], null)
+        toast.success('Odhlášení úspěšné')
+        navigate('/admin/login')
+      }
+    } catch {
+      toast.error('Chyba při odhlašování')
+    }
+  }
 
   return (
-    <>
-      <header
-        className='fixed top-0 left-0 right-0 z-50 w-full h-15 sm:h-18 md:h-22 flex bg-primary'
-        role='banner'
-      >
-        <div className='w-1/2 px-4 sm:px-8 md:px-12 lg:px-20 flex items-center'>
-          <img
-            src={logo}
-            alt='Logo Think Different Academy'
-            className='h-14 sm:h-17 md:h-18 w-auto py-3 cursor-pointer hover:scale-102 transition-all duration-200'
-            onClick={() => navigate('/')}
-            role='button'
-            aria-label='Přejít na úvodní stránku'
-          />
-        </div>
-        <div className='w-1/2 flex px-4 sm:px-8 md:px-12 lg:px-20 items-center gap-4 md:gap-10 justify-end-safe '>
-          {isStudent && (
-            <div className='hidden md:flex items-center gap-1 rounded-xl border border-white/35 bg-white/12 px-2.5 py-1.5 text-white/95 shadow-sm'>
-              <span className='text-xs font-medium'>Lvl {user.level}</span>
-              <span className='text-[10px] opacity-75'>|</span>
-              <span className='text-xs font-medium'>XP {user.xp}</span>
-            </div>
-          )}
-          {isMd ? (
-            <nav
-              className='flex flex-col sm:flex-row flex-wrap items-center gap-2 md:gap-10'
-              aria-label='Hlavní navigace'
+    <header
+      className='fixed top-0 left-0 right-0 z-50 flex h-15 w-full bg-primary sm:h-18 md:h-22'
+      role='banner'
+    >
+      <div className='flex w-1/2 items-center px-4 sm:px-8 md:px-12 lg:px-20'>
+        <img
+          src={logo}
+          alt='Logo Think Different Academy'
+          className='h-14 w-auto cursor-pointer py-3 transition-all duration-200 hover:scale-102 sm:h-17 md:h-18'
+          onClick={() =>
+            navigate(
+              isOrganizationArea && orgSlug ? `/${orgSlug}` : isAdminArea ? '/admin/requests' : '/',
+            )
+          }
+          role='button'
+          aria-label='Přejít na úvodní stránku'
+        />
+      </div>
+      <div className='flex w-1/2 items-center justify-end gap-3 px-4 sm:px-8 md:px-12 lg:px-20'>
+        {isAdminArea ? (
+          <>
+            {isAdminAuth && (
+              <>
+                <Button
+                  variant='tab'
+                  className={cn(
+                    isAdminRequestsActive && 'text-secondary',
+                  )}
+                  aria-current={isAdminRequestsActive ? 'page' : undefined}
+                  onClick={() => navigate('/admin/requests')}
+                >
+                  Žádosti
+                </Button>
+                <Button
+                  variant='tab'
+                  className={cn(
+                    isAdminOrganizationsActive && 'text-secondary',
+                  )}
+                  aria-current={isAdminOrganizationsActive ? 'page' : undefined}
+                  onClick={() => navigate('/admin/organizations')}
+                >
+                  Organizace
+                </Button>
+              </>
+            )}
+            <Button
+              variant='secondary'
+              className={cn(!isAdminAuth && isAdminLoginActive && selectedSecondaryButtonClass)}
+              onClick={() => (isAdminAuth ? void handleLogout() : navigate('/admin/login'))}
             >
-              <Button
-                variant={'tab'}
-                className={cn(isCourses && 'text-secondary')}
-                onClick={() => navigate('/courses')}
-                aria-label='Přejít na kurzy'
-                aria-current={isCourses ? 'page' : undefined}
-              >
-                Kurzy
-              </Button>
+              {isAdminAuth ? 'Odhlásit se' : 'Přihlásit se'}
+            </Button>
+          </>
+        ) : isOrganizationArea && orgSlug ? (
+          <>
+            <Button
+              variant='tab'
+              className={cn(isOrgCoursesActive && 'text-secondary')}
+              aria-current={isOrgCoursesActive ? 'page' : undefined}
+              onClick={() => navigate(buildOrgCoursesPath(orgSlug))}
+            >
+              Kurzy
+            </Button>
+            {isOrgAuth && (
               <Button
                 variant='tab'
-                className={cn(isShop && 'text-secondary')}
-                onClick={() => navigate('/shop')}
-                aria-label='Přejít na platform shop'
-                aria-current={isShop ? 'page' : undefined}
+                className={cn(isOrgDashboardActive && 'text-secondary')}
+                aria-current={isOrgDashboardActive ? 'page' : undefined}
+                onClick={() => navigate(buildOrgDashboardPath(orgSlug))}
               >
-                Shop
+                Dashboard
               </Button>
-              {isLecturer && (
-                <Button
-                  variant='tab'
-                  className={cn(isDashboard && 'text-secondary')}
-                  onClick={() => navigate('/dashboard')}
-                  aria-label='Přejít na Dashboard'
-                  aria-current={isDashboard ? 'page' : undefined}
-                >
-                  Dashboard
-                </Button>
-              )}
-            </nav>
-          ) : (
-            <DropdownMenuComponent
-              trigger={
-                <Button
-                  variant='tab'
-                  className='gap-1 text-xs hover:bg-primary/10 transition-colors'
-                >
-                  <span>{selectedMobileLabel}</span>
-                  <ChevronDown size={16} className='opacity-60' />
-                </Button>
+            )}
+            <Button
+              variant='secondary'
+              className={cn(!isOrgAuth && isOrgLoginActive && selectedSecondaryButtonClass)}
+              aria-current={isOrgLoginActive ? 'page' : undefined}
+              onClick={() =>
+                isOrgAuth
+                  ? void handleLogout()
+                  : navigate(buildOrgLoginPath(orgSlug))
               }
-              items={mobileNavItems}
-              selectedValue={selectedMobileValue}
-              align='end'
-              width='w-40'
-            />
-          )}
-
+            >
+              {isOrgAuth ? 'Odhlásit se' : 'Přihlášení'}
+            </Button>
+          </>
+        ) : (
           <Button
-            variant={'secondary'}
-            aria-current={isLogin ? 'page' : undefined}
+            variant='secondary'
             className={cn(
-              `text-sm md:text-base px-2 py-2 md:px-4 ${isAuth ? 'text-destructive' : 'text-primary'}`,
-              isLogin && !isAuth && 'bg-secondary text-primary',
+              isOrganizationRequestActive && selectedSecondaryButtonClass,
             )}
-            onClick={async () => {
-              if (isAuth) {
-                try {
-                  await userLogout()
-                  queryClient.setQueryData(['auth', 'me'], null)
-                  toast.success('Odhlášení úspěšné')
-                } catch (_error) {
-                  toast.error('Chyba při odhlašování')
-                  return
-                }
-                if (isDashboard) {
-                  navigate('/login')
-                }
-                return
-              }
-              navigate('/login')
-            }}
-            aria-label={isAuth ? 'Odhlásit se' : 'Přihlásit se'}
+            onClick={() => navigate('/organization-request/new')}
           >
-            <span className='hidden sm:block'>
-              {isAuth ? 'Odhlásit se' : 'Přihlásit se'}
-            </span>
-            {isAuth ? (
-              <LogOut
-                size={20}
-                className='text-destructive block sm:hidden '
-                aria-hidden='true'
-              />
-            ) : (
-              <LogIn
-                size={20}
-                className='block sm:hidden '
-                aria-hidden='true'
-              />
-            )}
+            Založit si organizaci
           </Button>
-        </div>
-      </header>
-    </>
+        )}
+      </div>
+    </header>
   )
 }

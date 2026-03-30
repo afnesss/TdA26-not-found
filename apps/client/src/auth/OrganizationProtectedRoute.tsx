@@ -36,7 +36,11 @@ const OrganizationProtectedRoute = ({
     return <Navigate to={buildOrgLoginPath(orgSlug)} replace />
   }
 
-  if (me?.mustChangePassword && !allowPasswordChangeOnly) {
+  if (
+    me?.actorType === 'organization_admin' &&
+    me.mustChangePassword &&
+    !allowPasswordChangeOnly
+  ) {
     return <Navigate to={buildOrgPasswordPath(orgSlug)} replace />
   }
 

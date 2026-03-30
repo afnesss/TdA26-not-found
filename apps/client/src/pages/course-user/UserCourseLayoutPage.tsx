@@ -1,11 +1,12 @@
 import { useCourseFeedSSE } from '@/api/useCourseFeedSSE'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import StateComp from '@/components/shared/StateComp'
 import CourseSkeleton from '@/components/shared/loadingskeleton/CoursePageSkeleton'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgCoursePath, buildOrgCoursesPath } from '@/lib/routes'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
 import { useCoursePageQueries } from '../CoursePage/utils/useCoursePageQueries'
@@ -18,10 +19,13 @@ const UserCourseLayoutPage = () => {
     courseId: string
     moduleId?: string
   }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
   const moduleRedirectRef = useRef<string | null>(null)
+  const authRedirectedRef = useRef(false)
   const queryClient = useQueryClient()
+  const { user, isLoading: isAuthLoading } = useOrganizationAuth(orgSlug)
   const { isConnected } = useCourseFeedSSE({
     courseId: courseId!,
     orgSlug,
@@ -50,6 +54,8 @@ const UserCourseLayoutPage = () => {
   } = useCoursePageQueries(courseId, orgSlug)
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
+  const isStudentUser = user?.role === 'student'
+  const redirectTarget = `${location.pathname}${location.search}${location.hash}`
 
   useTitle(courseData?.name || 'Kurz')
 
@@ -58,6 +64,23 @@ const UserCourseLayoutPage = () => {
     !isCoursesUserLoading && !isCoursesUserFetching
   const shouldShowNotFoundByAccess =
     canEvaluateCourseAccess && !hasAccessToCourse && !courseData
+
+  useEffect(() => {
+    if (!courseId || isAuthLoading || !orgSlug) return
+
+    if (isStudentUser) {
+      authRedirectedRef.current = false
+      return
+    }
+
+    if (authRedirectedRef.current) return
+    authRedirectedRef.current = true
+
+    navigate(
+      `/${orgSlug}/login?mode=student&redirect=${encodeURIComponent(redirectTarget)}`,
+      { replace: true },
+    )
+  }, [courseId, isAuthLoading, isStudentUser, navigate, orgSlug, redirectTarget])
 
   useEffect(() => {
     if (!courseData || redirectedRef.current) return
@@ -93,7 +116,7 @@ const UserCourseLayoutPage = () => {
     return <NotFoundPage />
   }
 
-  if (isLoading || !canEvaluateCourseAccess) {
+  if (isLoading || !canEvaluateCourseAccess || isAuthLoading) {
     return <CourseSkeleton />
   }
 
@@ -133,18 +156,24 @@ const UserCourseLayoutPage = () => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
       <div className='max-w-6xl mx-auto space-y-5'>
-        <Outlet
-          context={{
-            courseId,
-            courseData,
-            activeModules,
-            isConnected,
-          }}
-        />
-        <UserCourseFeedSection
-          courseId={courseId}
-          initialFeed={courseData.feed ?? []}
-        />
+        {!isStudentUser ? (
+          <CourseSkeleton />
+        ) : (
+          <>
+            <Outlet
+              context={{
+                courseId,
+                courseData,
+                activeModules,
+                isConnected,
+              }}
+            />
+            <UserCourseFeedSection
+              courseId={courseId}
+              initialFeed={courseData.feed ?? []}
+            />
+          </>
+        )}
       </div>
     </div>
   )

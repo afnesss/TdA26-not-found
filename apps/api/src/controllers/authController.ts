@@ -1,12 +1,28 @@
 ﻿import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth";
+import { logger } from "../utils/logger";
 import {
+  LEGACY_AUTH_COOKIE,
   ADMIN_AUTH_COOKIE,
   ORG_AUTH_COOKIE,
   getAdminCookieOptions,
+  getLegacyCookieOptions,
   getOrgCookieOptions,
 } from "../middleware/auth";
+
+const getPlatformAdminCredentials = () => {
+  const username = process.env.ADMIN_USERNAME?.trim() || "superadmin";
+  const password = process.env.ADMIN_PASSWORD || "change-me";
+
+  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+    logger.warn(
+      "ADMIN_USERNAME/ADMIN_PASSWORD not set, using development fallback credentials",
+    );
+  }
+
+  return { username, password };
+};
 
 export async function login(req: Request, res: Response) {
   const { username, password } = req.body;
@@ -16,9 +32,10 @@ export async function login(req: Request, res: Response) {
     return;
   }
 
+  const adminCredentials = getPlatformAdminCredentials();
   if (
-    username !== process.env.ADMIN_USERNAME ||
-    password !== process.env.ADMIN_PASSWORD
+    username !== adminCredentials.username ||
+    password !== adminCredentials.password
   ) {
     res.status(401).json({ error: "Nesprávné přihlašovací údaje" });
     return;
@@ -43,6 +60,7 @@ export async function logoutAdmin(_req: Request, res: Response) {
 
 export async function logoutOrganization(_req: Request, res: Response) {
   res.clearCookie(ORG_AUTH_COOKIE, getOrgCookieOptions());
+  res.clearCookie(LEGACY_AUTH_COOKIE, getLegacyCookieOptions());
   res.json({ message: "Odhlášení proběhlo úspěšně" });
 }
 

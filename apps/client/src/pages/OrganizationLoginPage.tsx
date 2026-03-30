@@ -1,22 +1,41 @@
-import { useState } from 'react'
-import { Eye, EyeOff, Lock } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Eye, EyeOff, Lock, User } from 'lucide-react'
 import AuthPageShell from '@/components/auth/AuthPageShell'
 import FormField from '@/components/shared/FormField'
 import { organizationLogin } from '@/api/queries/organizationQueries'
 import { Button } from '@/components/ui/button'
-import { buildOrgDashboardPath, buildOrgPasswordPath } from '@/lib/routes'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useQueryClient } from '@tanstack/react-query'
 import { useForm, type FieldValues } from 'react-hook-form'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import type { ApiError } from '@/lib/types'
+
+type LoginMode = 'lecturer' | 'student'
 
 const OrganizationLoginPage = () => {
   const { orgSlug } = useParams<{ orgSlug: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [show, setShow] = useState(false)
+  const queryParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  )
+  const requestedMode = queryParams.get('mode')
+  const initialMode: LoginMode =
+    requestedMode === 'lecturer' || requestedMode === 'student'
+      ? requestedMode
+      : 'student'
+  const [mode, setMode] = useState<LoginMode>(initialMode)
+  const redirectParam = queryParams.get('redirect') ?? ''
+  const safeRedirect = redirectParam.startsWith('/') ? redirectParam : ''
   useTitle('Přihlášení organizace')
+
+  useEffect(() => {
+    setMode(initialMode)
+  }, [initialMode])
 
   const {
     register,
@@ -30,24 +49,64 @@ const OrganizationLoginPage = () => {
 
     try {
       const result = await organizationLogin(orgSlug, {
+        mode,
+        username: String(data.username ?? '').trim(),
         password: String(data.password ?? ''),
       })
       queryClient.setQueryData(['org-auth', orgSlug], result)
       toast.success('Přihlášení úspěšné')
-      navigate(
-        result.mustChangePassword
-          ? buildOrgPasswordPath(orgSlug)
-          : buildOrgDashboardPath(orgSlug),
-      )
+      navigate(safeRedirect || `/${orgSlug}/courses`)
       reset()
     } catch (error) {
-      toast.error('Nepodařilo se přihlásit')
+      const apiError = error as ApiError | undefined
+      const message =
+        apiError?.body &&
+        typeof apiError.body === 'object' &&
+        'message' in apiError.body &&
+        typeof (apiError.body as { message?: unknown }).message === 'string'
+          ? (apiError.body as { message: string }).message
+          : 'Nepodařilo se přihlásit'
+
+      toast.error(message)
     }
   }
 
   return (
     <AuthPageShell cardTitle='Přihlášení'>
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3'>
+        <div className='grid grid-cols-2 gap-2'>
+          <Button
+            type='button'
+            variant={mode === 'lecturer' ? 'primary' : 'outline'}
+            size='sm'
+            onClick={() => setMode('lecturer')}
+          >
+            Lektor
+          </Button>
+          <Button
+            type='button'
+            variant={mode === 'student' ? 'primary' : 'outline'}
+            size='sm'
+            onClick={() => setMode('student')}
+          >
+            Student
+          </Button>
+        </div>
+
+        <FormField
+          label='Uživatelské jméno'
+          icon={User}
+          inputProps={{
+            ...register('username', { required: 'Jméno je povinné' }),
+            type: 'text',
+            placeholder: mode === 'lecturer' ? 'lecturer' : 'student',
+          }}
+        />
+
+        {errors.username && (
+          <p className='error-text'>{errors.username.message as string}</p>
+        )}
+
         <FormField
           label='Heslo'
           icon={Lock}

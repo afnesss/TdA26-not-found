@@ -95,7 +95,11 @@ export const getOrganizationAccessStatus = async (
 
 export const organizationLogin = async (
   orgSlug: string,
-  body: { password: string },
+  body: {
+    mode?: 'admin' | 'lecturer' | 'student'
+    username?: string
+    password: string
+  },
 ): Promise<OrganizationAuthMe> =>
   apiFetch(`${buildOrgApiPrefix(orgSlug)}/auth/login`, {
     method: 'POST',

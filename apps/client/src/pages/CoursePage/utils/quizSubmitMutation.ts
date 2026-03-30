@@ -13,6 +13,7 @@ import { onErrorWithRollback } from './helperFunctions'
 import { setQuizSubmission } from './quizSubmissionStorage'
 
 export function useQuizSubmitMutation(
+  orgSlug?: string,
   setQuizState?: (updater: (prev: QuizStateById) => QuizStateById) => void,
 ) {
   const queryClient = useQueryClient()
@@ -97,7 +98,7 @@ export function useQuizSubmitMutation(
         context?.previousData,
       )
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['course', variables.courseId],
       })
@@ -110,6 +111,31 @@ export function useQuizSubmitMutation(
       queryClient.invalidateQueries({
         queryKey: ['auth', 'me'],
       })
+      if (orgSlug) {
+        if (data.participantXp != null && data.participantLevel != null) {
+          queryClient.setQueryData(['org-auth', orgSlug], (previous: unknown) => {
+            if (
+              !previous ||
+              typeof previous !== 'object' ||
+              (previous as { actorType?: unknown }).actorType !==
+                'organization_user' ||
+              (previous as { role?: unknown }).role !== 'student'
+            ) {
+              return previous
+            }
+
+            return {
+              ...(previous as Record<string, unknown>),
+              xp: data.participantXp,
+              level: data.participantLevel,
+            }
+          })
+        }
+
+        queryClient.invalidateQueries({
+          queryKey: ['org-auth', orgSlug],
+        })
+      }
       toast.success('Kvíz byl odeslán')
     },
   })

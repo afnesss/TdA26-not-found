@@ -1,9 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgCoursesPath } from '@/lib/routes'
 import type { ShopOrder } from '@/lib/schemas'
 import { CheckCircle2 } from 'lucide-react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { formatPrice } from './shopUtils'
+import { useEffect } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  buildShopPath,
+  formatPrice,
+  persistShopOrgSlug,
+  resolveShopOrgSlug,
+} from './shopUtils'
 
 type ShopSuccessLocationState = {
   order?: ShopOrder
@@ -12,11 +19,16 @@ type ShopSuccessLocationState = {
 const ShopSuccessPage = () => {
   const navigate = useNavigate()
   const { orderId } = useParams()
+  const [searchParams] = useSearchParams()
+  const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const location = useLocation()
   const state = location.state as ShopSuccessLocationState | null
   const order = state?.order
 
   useTitle('Objednávka vytvořena | Platform Shop')
+  useEffect(() => {
+    persistShopOrgSlug(orgSlug)
+  }, [orgSlug])
 
   return (
     <div className='w-full max-w-3xl mx-auto'>
@@ -59,10 +71,22 @@ const ShopSuccessPage = () => {
         </div>
 
         <div className='flex flex-col sm:flex-row gap-3 justify-center'>
-          <Button variant='primary' onClick={() => navigate('/shop')}>
+          <Button
+            variant='primary'
+            className='h-13 px-8 text-base sm:text-lg font-bold'
+            onClick={() => navigate(buildShopPath('/shop', orgSlug))}
+          >
             Zpět do shopu
           </Button>
-          <Button variant='outline' onClick={() => navigate('/courses')}>
+          <Button
+            variant='outline'
+            className='h-13 px-8 text-base sm:text-lg font-semibold'
+            onClick={() =>
+              navigate(
+                orgSlug ? buildOrgCoursesPath(orgSlug) : buildShopPath('/shop', orgSlug),
+              )
+            }
+          >
             Přejít na kurzy
           </Button>
         </div>

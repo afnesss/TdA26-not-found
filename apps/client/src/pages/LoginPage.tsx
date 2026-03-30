@@ -9,6 +9,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { toast } from 'sonner'
 import { userLogin } from '@/api/queries/authQueries'
 import { useQueryClient } from '@tanstack/react-query'
+import type { ApiError } from '@/lib/types'
 
 const LoginPage = () => {
   const [show, setShow] = useState(false)
@@ -25,15 +26,29 @@ const LoginPage = () => {
   } = useForm()
 
   const onSubmit = async (data: FieldValues) => {
-    const result = await userLogin({
-      username: data.name,
-      password: data.password,
-    })
-    if (result) {
-      queryClient.setQueryData(['auth', 'me'], { username: data.name })
-      toast.success('Přihlášení úspěšné')
-      navigate('/admin/requests')
-      reset()
+    try {
+      const result = await userLogin({
+        username: data.name,
+        password: data.password,
+      })
+
+      if (result) {
+        queryClient.setQueryData(['auth', 'me'], { username: data.name })
+        toast.success('Přihlášení úspěšné')
+        navigate('/admin/requests')
+        reset()
+      }
+    } catch (error) {
+      const apiError = error as ApiError | undefined
+      const message =
+        apiError?.body &&
+        typeof apiError.body === 'object' &&
+        'error' in apiError.body &&
+        typeof (apiError.body as { error?: unknown }).error === 'string'
+          ? (apiError.body as { error: string }).error
+          : 'Přihlášení se nepodařilo'
+
+      toast.error(message)
     }
   }
 

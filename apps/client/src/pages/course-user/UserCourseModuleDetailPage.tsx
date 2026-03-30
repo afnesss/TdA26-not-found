@@ -23,7 +23,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
 import UserModuleTab from '../dashboard/components/ModuleTab'
 import SummarySection from '../CoursePage/components/SummarySection'
-import { useAuth } from '@/auth/useAuth'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import {
   clearQuizSubmission,
   getQuizSubmission,
@@ -37,11 +37,11 @@ const UserCourseModuleDetailPage = () => {
   }>()
   const navigate = useNavigate()
   const redirectedRef = useRef(false)
-  const { user } = useAuth()
+  const { user } = useOrganizationAuth(orgSlug)
   const { courseData, activeModules } = useUserCourseLayoutContext()
   const [quizState, setQuizState] = useState<QuizStateById>({})
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null)
-  const quizMutation = useQuizSubmitMutation(setQuizState)
+  const quizMutation = useQuizSubmitMutation(orgSlug, setQuizState)
 
   const selectedModule =
     activeModules.find((module) => module.uuid === moduleId) ?? null

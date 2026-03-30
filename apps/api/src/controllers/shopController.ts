@@ -210,7 +210,7 @@ export async function purchaseShopVoucherWithXp(
 ) {
   if (
     !req.user ||
-    req.user.actorType !== "legacy_user" ||
+    req.user.actorType !== "organization_user" ||
     req.user.role !== "student"
   ) {
     return res.status(401).json({ message: "Nejste oprávnění" });

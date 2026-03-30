@@ -5,7 +5,10 @@ import {
   getOrganizationAuthMe,
   loginOrganization,
 } from "../controllers/organizationController";
-import { organizationAuthMiddleware } from "../middleware/auth";
+import {
+  organizationAuthMiddleware,
+  organizationScopedAuthMiddleware,
+} from "../middleware/auth";
 import {
   loadOrganization,
   requireOrganizationAdmin,
@@ -28,8 +31,7 @@ router.post("/logout", logoutOrganization);
 router.get(
   "/me",
   loadOrganization({ allowStatuses: ["onboarding", "active"] }),
-  organizationAuthMiddleware,
-  requireOrganizationAdmin,
+  organizationScopedAuthMiddleware,
   getOrganizationAuthMe,
 );
 router.post(

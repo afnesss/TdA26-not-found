@@ -7,13 +7,23 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { formatPrice, resolveCartLines } from './shopUtils'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  buildShopPath,
+  formatPrice,
+  persistShopOrgSlug,
+  resolveCartLines,
+  resolveShopOrgSlug,
+} from './shopUtils'
 
 const ShopCartPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const { cart, updateQuantity, removeItem, setPromoCode, itemCount, clearCart } =
     useShopCart()
+  const [promoDraft, setPromoDraft] = useState(cart.promoCode)
 
   const {
     data: catalog = [],
@@ -39,6 +49,13 @@ const ShopCartPage = () => {
   })
 
   useTitle('Košík | Platform Shop')
+  useEffect(() => {
+    persistShopOrgSlug(orgSlug)
+  }, [orgSlug])
+
+  useEffect(() => {
+    setPromoDraft(cart.promoCode)
+  }, [cart.promoCode])
 
   const cartLines = resolveCartLines(cart.items, catalog)
   const subtotalCents = cartLines.reduce(
@@ -66,7 +83,7 @@ const ShopCartPage = () => {
       <StateComp
         type='no-content'
         message='Košík je zatím prázdný.'
-        onAction={() => navigate('/shop')}
+        onAction={() => navigate(buildShopPath('/shop', orgSlug))}
         actionText='Zpět do shopu'
       />
     )
@@ -75,6 +92,11 @@ const ShopCartPage = () => {
   const handleCheckout = () => {
     window.alert('Pro platbu a vyzvednutí se ozvěte na merch@tda.cz')
     clearCart()
+    navigate(buildShopPath('/shop', orgSlug))
+  }
+
+  const handlePromoSubmit = () => {
+    setPromoCode(promoDraft.toUpperCase().trim())
   }
 
   return (
@@ -87,7 +109,11 @@ const ShopCartPage = () => {
             </h1>
           </div>
 
-          <Button variant='outline' onClick={() => navigate('/shop')}>
+          <Button
+            variant='outline'
+            className='h-12 px-6 text-base font-semibold'
+            onClick={() => navigate(buildShopPath('/shop', orgSlug))}
+          >
             Pokračovat v nákupu
           </Button>
         </div>
@@ -134,12 +160,12 @@ const ShopCartPage = () => {
                 <div className='flex items-center gap-2'>
                   <Button
                     variant='outline'
-                    size='icon-sm'
+                    size='icon-lg'
                     onClick={() =>
                       updateQuantity(line.itemId, Math.max(1, line.quantity - 1))
                     }
                   >
-                    <Minus size={14} />
+                    <Minus size={18} />
                   </Button>
                   <Input
                     type='number'
@@ -152,14 +178,14 @@ const ShopCartPage = () => {
                         Number(event.target.value || line.quantity),
                       )
                     }}
-                    className='w-16 text-center'
+                    className='h-10 w-20 text-center text-base font-semibold'
                   />
                   <Button
                     variant='outline'
-                    size='icon-sm'
+                    size='icon-lg'
                     onClick={() => updateQuantity(line.itemId, line.quantity + 1)}
                   >
-                    <Plus size={14} />
+                    <Plus size={18} />
                   </Button>
                 </div>
 
@@ -213,10 +239,19 @@ const ShopCartPage = () => {
               Promo kód (1 kód na košík)
             </label>
             <Input
-              value={cart.promoCode}
-              onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
+              value={promoDraft}
+              onChange={(event) => setPromoDraft(event.target.value.toUpperCase())}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  handlePromoSubmit()
+                }
+              }}
               placeholder='Např. WELCOME10'
             />
+            <p className='text-xs text-muted-foreground'>
+              Pro ověření promo kódu stiskněte Enter.
+            </p>
             {cart.promoCode.trim().length > 0 && promoValidation.isFetching && (
               <p className='text-xs text-muted-foreground'>Ověřuji promo kód...</p>
             )}
@@ -239,8 +274,8 @@ const ShopCartPage = () => {
 
           <Button
             variant='primary'
-            className='w-full'
-            onClick={handleCheckout}
+            className='h-12 w-full text-base font-bold'
+            onClick={() => navigate(buildShopPath('/shop/checkout', orgSlug))}
             disabled={!hasItems}
           >
             Pokračovat na checkout

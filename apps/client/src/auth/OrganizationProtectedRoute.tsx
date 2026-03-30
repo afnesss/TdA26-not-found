@@ -1,4 +1,4 @@
-import { buildOrgLoginPath, buildOrgPasswordPath } from '@/lib/routes'
+import { buildOrgDashboardPath, buildOrgLoginPath, buildOrgPasswordPath } from '@/lib/routes'
 import { isOrganizationInactiveError } from '@/lib/organizationAccess'
 import type { ApiError } from '@/lib/types'
 import React from 'react'
@@ -13,7 +13,7 @@ const OrganizationProtectedRoute = ({
   allowPasswordChangeOnly?: boolean
 }) => {
   const { orgSlug } = useParams<{ orgSlug: string }>()
-  const { isAuth, isLoading, me, error } = useOrganizationAuth(orgSlug)
+  const { isAuth, isAdmin, isStaff, isLoading, me, error } = useOrganizationAuth(orgSlug)
   const apiError = error as ApiError | null
   const errorStatus = apiError?.status
 
@@ -25,6 +25,14 @@ const OrganizationProtectedRoute = ({
     return <></>
   }
   if (!isAuth) {
+    return <Navigate to={buildOrgLoginPath(orgSlug)} replace />
+  }
+
+  if (allowPasswordChangeOnly && !isAdmin) {
+    return <Navigate to={buildOrgDashboardPath(orgSlug)} replace />
+  }
+
+  if (!allowPasswordChangeOnly && !isStaff) {
     return <Navigate to={buildOrgLoginPath(orgSlug)} replace />
   }
 

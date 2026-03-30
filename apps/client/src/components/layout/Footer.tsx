@@ -39,7 +39,7 @@ const Footer = () => {
               className='cursor-pointer hover:text-secondary'
               onClick={() => navigate('/shop')}
             >
-              Shop (platforma)
+              Shop
             </span>
             <span
               className='cursor-pointer hover:text-secondary'

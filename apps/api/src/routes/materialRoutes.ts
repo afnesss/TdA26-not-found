@@ -9,7 +9,7 @@ import {
   updateMaterial,
 } from "../controllers/materialController";
 import path from "path";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { organizationScopedAuthMiddleware } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
 import {
   requireScopedOrganizationAdmin,
@@ -86,7 +86,7 @@ router.get("/:materialId/download", downloadMaterial);
 router.post("/:materialId/interactions", trackMaterialInteraction);
 router.post(
   "/",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),
@@ -95,7 +95,7 @@ router.post(
 );
 router.put(
   "/:materialId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),
@@ -104,7 +104,7 @@ router.put(
 );
 router.delete(
   "/:materialId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),

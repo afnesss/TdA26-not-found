@@ -21,7 +21,7 @@ import {
   CourseCreateRequestSchema,
   CourseUpdateRequestSchema,
 } from "../schemas/course";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { organizationScopedAuthMiddleware } from "../middleware/auth";
 import {
   requireCourseDraft,
   requireCourseUpdateAllowed,
@@ -38,14 +38,14 @@ router.get("/", getAllCourses);
 router.get("/:uuid/dashboard-analytics", getCourseDashboardAnalytics);
 router.get(
   "/:uuid/session/overview",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   getCourseSessionOverview,
 );
 router.get(
   "/:uuid/session/leaderboard",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   getCourseSessionLeaderboard,
@@ -54,7 +54,7 @@ router.get("/:uuid", getCourseByUuid);
 
 router.post(
   "/",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(CourseCreateRequestSchema),
@@ -62,28 +62,28 @@ router.post(
 );
 router.post(
   "/:uuid/clone",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   cloneCourse,
 );
 router.get(
   "/:uuid/share-link",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   getCourseShareLink,
 );
 router.post(
   "/:uuid/share-link/regenerate",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   regenerateCourseShareLink,
 );
 router.put(
   "/:uuid",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(CourseUpdateRequestSchema),
@@ -92,7 +92,7 @@ router.put(
 );
 router.delete(
   "/:uuid",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   deleteCourse,

@@ -7,9 +7,15 @@ import {
   organizationRequests,
   organizations,
   courses,
+  users,
 } from "../db/schema";
 import { AuthRequest } from "../types/auth";
-import { ORG_AUTH_COOKIE, getOrgCookieOptions } from "../middleware/auth";
+import {
+  LEGACY_AUTH_COOKIE,
+  ORG_AUTH_COOKIE,
+  getLegacyCookieOptions,
+  getOrgCookieOptions,
+} from "../middleware/auth";
 import { logger } from "../utils/logger";
 
 const toOrganizationSelect = {
@@ -51,6 +57,8 @@ const toOrganizationRequestSelect = {
 
 const getOrgDefaultPassword = () =>
   process.env.ORG_DEFAULT_PASSWORD || "TdA26!";
+const getOrgUserDefaultPassword = () =>
+  process.env.ORG_USER_DEFAULT_PASSWORD || getOrgDefaultPassword();
 
 const getJwtSecret = () => {
   const jwtSecret = process.env.JWT_SECRET;
@@ -223,6 +231,7 @@ export async function approveOrganizationRequest(req: Request, res: Response) {
     }
 
     const passwordHash = await bcrypt.hash(getOrgDefaultPassword(), 10);
+    const lecturerPasswordHash = await bcrypt.hash(getOrgUserDefaultPassword(), 10);
 
     const result = await db.transaction(async (tx) => {
       const [organization] = await tx
@@ -254,6 +263,13 @@ export async function approveOrganizationRequest(req: Request, res: Response) {
         })
         .where(eq(organizationRequests.uuid, requestId))
         .returning(toOrganizationRequestSelect);
+
+      await tx.insert(users).values({
+        organizationId: organization.uuid,
+        username: "lecturer",
+        role: "lecturer",
+        passwordHash: lecturerPasswordHash,
+      });
 
       return { organization, request: updatedRequest };
     });
@@ -369,6 +385,8 @@ export async function getOrganizationPublicInfo(req: AuthRequest, res: Response)
 
 export async function loginOrganization(req: AuthRequest, res: Response) {
   try {
+    const mode = String(req.body?.mode ?? "").trim();
+    const username = String(req.body?.username ?? "").trim();
     const password = String(req.body?.password ?? "");
     const organization = req.organization;
 
@@ -396,6 +414,104 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       return res.status(403).json({ message: "Organizace ještě není dostupná" });
     }
 
+    const isAdminLogin = mode === "admin" || (!mode && !username);
+    if (!isAdminLogin) {
+      if (!username) {
+        return res.status(400).json({ message: "Zadejte uživatelské jméno" });
+      }
+
+      let [user] = await db
+        .select({
+          id: users.uuid,
+          username: users.username,
+          role: users.role,
+          xp: users.xp,
+          level: users.level,
+          passwordHash: users.passwordHash,
+        })
+        .from(users)
+        .where(
+          and(
+            eq(users.organizationId, fullOrganization.uuid),
+            eq(users.username, username),
+          ),
+        )
+        .limit(1);
+
+      if (!user && mode === "student") {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const [createdStudent] = await db
+          .insert(users)
+          .values({
+            organizationId: fullOrganization.uuid,
+            username,
+            role: "student",
+            passwordHash,
+          })
+          .returning({
+            id: users.uuid,
+            username: users.username,
+            role: users.role,
+            xp: users.xp,
+            level: users.level,
+            passwordHash: users.passwordHash,
+          });
+
+        user = createdStudent;
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
+      }
+
+      const normalizedRole =
+        user.role === "lecturer" || user.role === "student" ? user.role : null;
+      if (!normalizedRole) {
+        return res.status(403).json({ message: "Nepodporovaná role účtu" });
+      }
+
+      if (
+        (mode === "lecturer" || mode === "student") &&
+        normalizedRole !== mode
+      ) {
+        return res.status(403).json({ message: "Tento účet neodpovídá zvolenému režimu" });
+      }
+
+      const isValidUserPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!isValidUserPassword) {
+        return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
+      }
+
+      const token = jwt.sign(
+        {
+          actorType: "organization_user",
+          id: user.id,
+          username: user.username,
+          role: normalizedRole,
+          organizationId: fullOrganization.uuid,
+          orgSlug: fullOrganization.slug,
+        },
+        getJwtSecret(),
+      );
+
+      res.clearCookie(ORG_AUTH_COOKIE, getOrgCookieOptions());
+      res.cookie(LEGACY_AUTH_COOKIE, token, getLegacyCookieOptions());
+      const studentProgress =
+        normalizedRole === "student"
+          ? { xp: user.xp, level: user.level }
+          : {};
+      return res.json({
+        actorType: "organization_user",
+        id: user.id,
+        username: user.username,
+        role: normalizedRole,
+        ...studentProgress,
+        organizationId: fullOrganization.uuid,
+        orgSlug: fullOrganization.slug,
+        organizationName: fullOrganization.name,
+      });
+    }
+
     const isValid = await bcrypt.compare(password, fullOrganization.passwordHash);
     if (!isValid) {
       return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
@@ -410,6 +526,7 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       getJwtSecret(),
     );
 
+    res.clearCookie(LEGACY_AUTH_COOKIE, getLegacyCookieOptions());
     res.cookie(ORG_AUTH_COOKIE, token, getOrgCookieOptions());
     return res.json({
       actorType: "organization_admin",
@@ -428,22 +545,73 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
 export async function getOrganizationAuthMe(req: AuthRequest, res: Response) {
   try {
     const organization = req.organization;
-    if (
-      !organization ||
-      req.user?.actorType !== "organization_admin" ||
-      req.user.organizationId !== organization.uuid
-    ) {
+    if (!organization || !req.user) {
       return res.status(401).json({ message: "Nejste oprávněni" });
     }
 
-    return res.json({
-      actorType: "organization_admin",
-      organizationId: organization.uuid,
-      orgSlug: organization.slug,
-      organizationName: organization.name,
-      mustChangePassword: organization.mustChangePassword,
-      status: organization.status,
-    });
+    if (
+      req.user.actorType === "organization_admin" &&
+      req.user.organizationId === organization.uuid
+    ) {
+      return res.json({
+        actorType: "organization_admin",
+        organizationId: organization.uuid,
+        orgSlug: organization.slug,
+        organizationName: organization.name,
+        mustChangePassword: organization.mustChangePassword,
+        status: organization.status,
+      });
+    }
+
+    if (
+      req.user.actorType === "organization_user" &&
+      req.user.organizationId === organization.uuid &&
+      req.user.orgSlug === organization.slug
+    ) {
+      const [currentUser] = await db
+        .select({
+          id: users.uuid,
+          username: users.username,
+          role: users.role,
+          xp: users.xp,
+          level: users.level,
+        })
+        .from(users)
+        .where(
+          and(
+            eq(users.uuid, req.user.id),
+            eq(users.organizationId, organization.uuid),
+          ),
+        )
+        .limit(1);
+
+      if (!currentUser) {
+        res.clearCookie(LEGACY_AUTH_COOKIE, getLegacyCookieOptions());
+        return res.status(401).json({ message: "Relace vypršela" });
+      }
+
+      const normalizedRole =
+        currentUser.role === "lecturer" || currentUser.role === "student"
+          ? currentUser.role
+          : "student";
+      const studentProgress =
+        normalizedRole === "student"
+          ? { xp: currentUser.xp, level: currentUser.level }
+          : {};
+
+      return res.json({
+        actorType: "organization_user",
+        organizationId: organization.uuid,
+        orgSlug: organization.slug,
+        organizationName: organization.name,
+        id: currentUser.id,
+        username: currentUser.username,
+        role: normalizedRole,
+        ...studentProgress,
+      });
+    }
+
+    return res.status(401).json({ message: "Nejste oprávněni" });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch organization auth me");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -501,9 +669,9 @@ export async function changeOrganizationPassword(
 
     return res.json({
       actorType: "organization_admin",
-      organizationId: updated.uuid,
-      orgSlug: updated.slug,
-      organizationName: updated.name,
+      organizationId: organization.uuid,
+      orgSlug: organization.slug,
+      organizationName: organization.name,
       mustChangePassword: updated.mustChangePassword,
       status: updated.status,
     });

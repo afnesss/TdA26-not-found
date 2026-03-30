@@ -83,21 +83,44 @@ export const requireOrganizationAdmin = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (req.user?.actorType !== "organization_admin") {
+  if (!req.user) {
     return res
       .status(403)
       .json({ message: "Přístup pouze pro správce organizace" });
   }
 
-  if (
-    req.organization &&
-    req.user.organizationId !== req.organization.uuid &&
-    req.user.orgSlug !== req.organization.slug
-  ) {
-    return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+  if (req.user.actorType === "organization_admin") {
+    if (
+      req.organization &&
+      req.user.organizationId !== req.organization.uuid &&
+      req.user.orgSlug !== req.organization.slug
+    ) {
+      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+    }
+
+    return next();
   }
 
-  return next();
+  if (
+    req.user.actorType === "organization_user" &&
+    req.user.role === "lecturer"
+  ) {
+    if (
+      req.organization &&
+      req.user.organizationId !== req.organization.uuid &&
+      req.user.orgSlug !== req.organization.slug
+    ) {
+      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+    }
+
+    return next();
+  }
+
+  {
+    return res
+      .status(403)
+      .json({ message: "Přístup pouze pro správce organizace" });
+  }
 };
 
 export const requireScopedOrganizationAdmin = (
@@ -117,6 +140,10 @@ export const requireOrganizationPasswordChanged = (
   res: Response,
   next: NextFunction,
 ) => {
+  if (req.user?.actorType === "organization_user") {
+    return next();
+  }
+
   if (req.organization?.mustChangePassword) {
     return res.status(403).json({
       message: "Nejprve změňte výchozí heslo organizace",
@@ -138,6 +165,31 @@ export const requireScopedOrganizationPasswordChanged = (
 
   return requireOrganizationPasswordChanged(req, res, next);
 };
+
+export const requireScopedOrganizationUser =
+  (allowedRoles?: Array<"lecturer" | "student">) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.organization) {
+      return next();
+    }
+
+    if (req.user?.actorType !== "organization_user") {
+      return res.status(403).json({ message: "Přístup pouze pro uživatele organizace" });
+    }
+
+    if (
+      req.user.organizationId !== req.organization.uuid ||
+      req.user.orgSlug !== req.organization.slug
+    ) {
+      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+    }
+
+    if (allowedRoles && !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Nedostatečná oprávnění" });
+    }
+
+    return next();
+  };
 
 export const requireCourseBelongsToOrganization = async (
   req: AuthRequest,

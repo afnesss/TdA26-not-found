@@ -11,7 +11,7 @@ import {
   FeedCreateRequestSchema,
   FeedUpdateRequestSchema,
 } from "../schemas/feed";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { organizationScopedAuthMiddleware } from "../middleware/auth";
 import { requireCourseLiveOrDraft } from "../middleware/courseStatus";
 import {
   requireScopedOrganizationAdmin,
@@ -26,7 +26,7 @@ router.get("/", getFeed);
 
 router.post(
   "/",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(FeedCreateRequestSchema),
@@ -35,7 +35,7 @@ router.post(
 );
 router.put(
   "/:postId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(FeedUpdateRequestSchema),
@@ -44,7 +44,7 @@ router.put(
 );
 router.delete(
   "/:postId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   requireCourseLiveOrDraft(),

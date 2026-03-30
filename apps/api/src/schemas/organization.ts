@@ -72,6 +72,8 @@ export const OrganizationUpdateSchema = z.object({
 });
 
 export const OrganizationAuthLoginSchema = z.object({
+  mode: z.enum(["admin", "lecturer", "student"]).optional(),
+  username: z.string().min(1).optional(),
   password: z.string().min(1),
 });
 
@@ -106,6 +108,17 @@ export const AuthMeSchema = z.discriminatedUnion("actorType", [
     organizationName: z.string(),
     mustChangePassword: z.boolean(),
     status: OrganizationStatusSchema,
+  }),
+  z.object({
+    actorType: z.literal("organization_user"),
+    organizationId: z.string().uuid(),
+    orgSlug: z.string(),
+    organizationName: z.string(),
+    id: z.string().uuid(),
+    username: z.string(),
+    role: z.enum(["lecturer", "student"]),
+    xp: z.number().optional(),
+    level: z.number().optional(),
   }),
 ]);
 

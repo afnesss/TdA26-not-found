@@ -1,6 +1,9 @@
 import { Request } from "express";
 
-export type AuthActorType = "platform_admin" | "organization_admin";
+export type AuthActorType =
+  | "platform_admin"
+  | "organization_admin"
+  | "organization_user";
 
 export type AuthUser =
   | {
@@ -13,6 +16,15 @@ export type AuthUser =
       orgSlug: string;
     }
   | {
+      actorType: "organization_user";
+      id: string;
+      username: string;
+      role: "lecturer" | "student";
+      organizationId: string;
+      orgSlug: string;
+    }
+  | {
+      // Backward compatibility for older JWT cookies.
       actorType: "legacy_user";
       id: string;
       username: string;

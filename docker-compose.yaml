@@ -30,7 +30,7 @@ services:
       JWT_SECRET: 8f6e4b57e7f54668a1f8c5d4f9a0c2d7e1b3a6c9d2f4e8a1b7c5d3e9f0a2b4c6
       NODE_ENV: development
       ADMIN_USERNAME: superadmin
-      ADMIN_PASSWORD: TdA26!
+      ADMIN_PASSWORD: change-me
       ORG_DEFAULT_PASSWORD: TdA26!
     depends_on:
       db:

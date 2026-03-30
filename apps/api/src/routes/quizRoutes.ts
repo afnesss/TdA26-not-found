@@ -2,10 +2,11 @@ import { Router } from "express";
 import * as quizController from "../controllers/quizController";
 import { validate } from "../middleware/validate";
 import { QuizSchema, QuizSubmitRequestSchema } from "../schemas/quiz";
-import { scopedAuthMiddleware } from "../middleware/auth";
+import { authMiddleware, organizationScopedAuthMiddleware } from "../middleware/auth";
 import { requireCourseDraft } from "../middleware/courseStatus";
 import {
   requireScopedOrganizationAdmin,
+  requireScopedOrganizationUser,
   requireScopedOrganizationPasswordChanged,
 } from "../middleware/organization";
 
@@ -15,7 +16,7 @@ router.get("/", quizController.getQuizzes);
 
 router.post(
   "/",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(QuizSchema),
@@ -24,7 +25,7 @@ router.post(
 );
 router.get(
   "/:quizId/analytics",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   quizController.getQuizAnalytics,
@@ -34,7 +35,7 @@ router.get("/:quizId", quizController.getQuiz);
 
 router.put(
   "/:quizId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   validate(QuizSchema),
@@ -43,7 +44,7 @@ router.put(
 );
 router.delete(
   "/:quizId",
-  scopedAuthMiddleware,
+  organizationScopedAuthMiddleware,
   requireScopedOrganizationAdmin,
   requireScopedOrganizationPasswordChanged,
   requireCourseDraft(),
@@ -52,6 +53,8 @@ router.delete(
 
 router.post(
   "/:quizId/submit",
+  authMiddleware,
+  requireScopedOrganizationUser(["student"]),
   validate(QuizSubmitRequestSchema),
   quizController.submitQuiz,
 );

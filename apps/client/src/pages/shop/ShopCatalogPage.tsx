@@ -1,22 +1,33 @@
 import { getShopCatalog, purchaseShopVoucher } from '@/api/queries/shopQueries'
-import type { AuthUser } from '@/api/queries/authQueries'
-import { useAuth } from '@/auth/useAuth'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { useShopCart } from '@/hooks/useShopCart'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgLoginPath } from '@/lib/routes'
 import type { ApiError } from '@/lib/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ShoppingCart } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { formatPrice, resolveCartLines } from './shopUtils'
+import {
+  buildShopPath,
+  formatPrice,
+  persistShopOrgSlug,
+  resolveCartLines,
+  resolveShopOrgSlug,
+} from './shopUtils'
 
 const ShopCatalogPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const queryClient = useQueryClient()
-  const { isAuth, user } = useAuth()
-  const { cart, addItem, itemCount, setPromoCode } = useShopCart()
+  const { isAuth: isOrgAuth, user } = useOrganizationAuth(orgSlug, {
+    enabled: Boolean(orgSlug),
+  })
+  const { cart, addItem, itemCount } = useShopCart()
   const {
     data: catalog = [],
     isLoading,
@@ -28,22 +39,30 @@ const ShopCatalogPage = () => {
   })
 
   useTitle('Platform Shop')
+  useEffect(() => {
+    persistShopOrgSlug(orgSlug)
+  }, [orgSlug])
 
   const purchaseVoucherMutation = useMutation({
     mutationFn: purchaseShopVoucher,
     onSuccess: (response) => {
-      setPromoCode(response.code)
-      queryClient.setQueryData<AuthUser | null>(['auth', 'me'], (previous) =>
-        previous && previous.role === 'student'
-          ? {
-              ...previous,
-              xp: response.remainingXp,
-              level: response.level,
-            }
-          : previous,
-      )
+      if (orgSlug) {
+        queryClient.setQueryData(['org-auth', orgSlug], (previous: unknown) =>
+          previous &&
+          typeof previous === 'object' &&
+          (previous as { actorType?: unknown }).actorType ===
+            'organization_user' &&
+          (previous as { role?: unknown }).role === 'student'
+            ? {
+                ...(previous as Record<string, unknown>),
+                xp: response.remainingXp,
+                level: response.level,
+              }
+            : previous,
+        )
+      }
       window.alert(
-        `Voucher zakoupen za ${response.xpCost} XP.\nVáš promo kód: ${response.code}\nKód jsme předvyplnili do košíku.`,
+        `Voucher zakoupen za ${response.xpCost} XP.\nJednorázový promo kód: ${response.code}\nZadejte ho ručně v košíku/checkoutu.\nPo použití už nebude znovu platný.`,
       )
     },
     onError: (error: ApiError) => {
@@ -61,9 +80,14 @@ const ShopCatalogPage = () => {
   }
 
   const handleVoucherPurchase = (merchItemId: string) => {
-    if (!isAuth || user?.role !== 'student') {
+    if (!isOrgAuth || user?.role !== 'student') {
       toast.error('Voucher lze koupit pouze ze studentského účtu.')
-      navigate('/login')
+      if (orgSlug) {
+        const redirect = `/shop?org=${encodeURIComponent(orgSlug)}`
+        navigate(
+          `${buildOrgLoginPath(orgSlug)}?mode=student&redirect=${encodeURIComponent(redirect)}`,
+        )
+      }
       return
     }
 
@@ -82,7 +106,7 @@ const ShopCatalogPage = () => {
 
           <Button
             variant='secondary'
-            onClick={() => navigate('/shop/cart')}
+            onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
             className='w-fit'
           >
             <ShoppingCart size={18} />

@@ -15,14 +15,20 @@ import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   uuid: uuid("uuid").defaultRandom().primaryKey(),
-  username: varchar("username", { length: 64 }).notNull().unique(),
+  organizationId: uuid("organization_id").notNull(),
+  username: varchar("username", { length: 64 }).notNull(),
   passwordHash: varchar("password_hash", { length: 256 }).notNull(),
   role: varchar("role", { length: 20 }).notNull().default("student"),
   xp: integer("xp").notNull().default(0),
   level: integer("level").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  uniqueIndex("users_organization_username_unique").on(
+    t.organizationId,
+    t.username,
+  ),
+]);
 
 export const courseStatusEnum = [
   "draft",

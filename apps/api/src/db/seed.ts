@@ -8,12 +8,14 @@ import {
   feedItems,
   courseStatusEnum,
   organizations,
+  merchItems,
+  users,
 } from "./schema";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { logger } from "../utils/logger";
 
 const sampleCourses = [
@@ -264,6 +266,67 @@ const moduleBlueprints = [
   },
 ];
 
+const merchCatalogSeed = [
+  {
+    slug: "platform-hoodie",
+    name: "TDA Batoh",
+    description: "Limitovaná merch položka Think Different Academy.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80",
+    unitPriceCents: 129900,
+    purchaseMode: "money" as const,
+    xpCost: null,
+    voucherDiscountPercent: null,
+    active: true,
+  },
+  {
+    slug: "platform-tshirt",
+    name: "TDA T-Shirt",
+    description: "Klasické tričko s brandingem platformy.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1603484477859-abe6a73f9366?auto=format&fit=crop&w=1200&q=80",
+    unitPriceCents: 69900,
+    purchaseMode: "money" as const,
+    xpCost: null,
+    voucherDiscountPercent: null,
+    active: true,
+  },
+  {
+    slug: "platform-earrings",
+    name: "Signal Earrings",
+    description: "Doplňková merch položka pro fanoušky platformy.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1531346680769-a1d79b57de5c?auto=format&fit=crop&w=1200&q=80",
+    unitPriceCents: 39900,
+    purchaseMode: "money" as const,
+    xpCost: null,
+    voucherDiscountPercent: null,
+    active: true,
+  },
+  {
+    slug: "platform-water-bottle",
+    name: "10% slevový kupon",
+    description: "Voucher se slevou 10 % na další objednávku.",
+    imageUrl: "/api/uploads/12345.png",
+    unitPriceCents: 0,
+    purchaseMode: "xp" as const,
+    xpCost: 250,
+    voucherDiscountPercent: 10,
+    active: true,
+  },
+  {
+    slug: "platform-notebook",
+    name: "20% slevový kupon",
+    description: "Voucher se slevou 20 % na další objednávku.",
+    imageUrl: "/api/uploads/5678.png",
+    unitPriceCents: 0,
+    purchaseMode: "xp" as const,
+    xpCost: 450,
+    voucherDiscountPercent: 20,
+    active: true,
+  },
+];
+
 export async function seed() {
   logger.info("Seeding database...");
 
@@ -324,24 +387,93 @@ export async function seed() {
     logger.info("Created default TdA organization");
   }
 
-  const existingCourses = await db.select().from(courses);
-  if (existingCourses.length > 0) {
-    logger.info("Courses already exist, skipping seed");
-    return;
+  const orgUserDefaultPassword =
+    process.env.ORG_USER_DEFAULT_PASSWORD || defaultPassword;
+  const seedOrganizationUsers = [
+    {
+      organizationId: tdaOrganization.uuid,
+      username: "lecturer",
+      role: "lecturer" as const,
+      password: orgUserDefaultPassword,
+    },
+    {
+      organizationId: tdaOrganization.uuid,
+      username: "student",
+      role: "student" as const,
+      password: orgUserDefaultPassword,
+    },
+  ];
+
+  for (const account of seedOrganizationUsers) {
+    const passwordHash = await bcrypt.hash(account.password, 10);
+    const [existingUser] = await db
+      .select({ id: users.uuid })
+      .from(users)
+      .where(
+        and(
+          eq(users.organizationId, account.organizationId),
+          eq(users.username, account.username),
+        ),
+      )
+      .limit(1);
+
+    if (existingUser) {
+      await db
+        .update(users)
+        .set({
+          role: account.role,
+          passwordHash,
+        })
+        .where(eq(users.uuid, existingUser.id));
+      continue;
+    }
+
+    await db.insert(users).values({
+      organizationId: account.organizationId,
+      username: account.username,
+      role: account.role,
+      passwordHash,
+    });
   }
 
-  const createdCourses = await db
-    .insert(courses)
-    .values(
-      seedCourses.map((course) => ({
-        ...course,
-        organizationId: tdaOrganization.uuid,
-      })),
-    )
-    .returning();
-  logger.info(`Created ${createdCourses.length} courses`);
+  const merchSlugs = merchCatalogSeed.map((item) => item.slug);
+  const existingMerch = await db
+    .select({ slug: merchItems.slug })
+    .from(merchItems)
+    .where(inArray(merchItems.slug, merchSlugs));
+  const existingMerchSlugs = new Set(existingMerch.map((item) => item.slug));
+  const merchToInsert = merchCatalogSeed.filter(
+    (item) => !existingMerchSlugs.has(item.slug),
+  );
 
-  for (const course of createdCourses) {
+  if (merchToInsert.length > 0) {
+    await db.insert(merchItems).values(merchToInsert);
+    logger.info(`Inserted ${merchToInsert.length} shop seed items`);
+  } else {
+    logger.info("Shop catalog already seeded, skipping");
+  }
+
+  const [existingCourse] = await db
+    .select({ uuid: courses.uuid })
+    .from(courses)
+    .where(eq(courses.organizationId, tdaOrganization.uuid))
+    .limit(1);
+
+  if (existingCourse) {
+    logger.info("Courses already exist for organization tda, skipping seed");
+  } else {
+    const createdCourses = await db
+      .insert(courses)
+      .values(
+        seedCourses.map((course) => ({
+          ...course,
+          organizationId: tdaOrganization.uuid,
+        })),
+      )
+      .returning();
+    logger.info(`Created ${createdCourses.length} courses for organization tda`);
+
+    for (const course of createdCourses) {
     const analyticsScale =
       course.status === "live"
         ? 3
@@ -655,7 +787,8 @@ export async function seed() {
       },
     ];
 
-    await db.insert(feedItems).values(feed);
+      await db.insert(feedItems).values(feed);
+    }
   }
 
   logger.info("Seeding complete with production-ready data");

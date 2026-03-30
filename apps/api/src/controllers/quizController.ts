@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../db";
 import {
+  courses,
   modules,
   quizSubmissions,
   quizzes,
@@ -42,13 +43,17 @@ const resolveQuizDifficulty = (value: unknown): QuizDifficulty => {
   return "beginner";
 };
 
-const getCourseIdByModuleId = async (moduleId: string) => {
+const getCourseContextByModuleId = async (moduleId: string) => {
   const [module] = await db
-    .select({ courseId: modules.courseId })
+    .select({
+      courseId: modules.courseId,
+      organizationId: courses.organizationId,
+    })
     .from(modules)
+    .innerJoin(courses, eq(courses.uuid, modules.courseId))
     .where(eq(modules.uuid, moduleId));
 
-  return module?.courseId;
+  return module ?? null;
 };
 
 export const getQuizzes = async (req: Request, res: Response) => {
@@ -219,7 +224,8 @@ export const updateQuiz = async (req: Request, res: Response) => {
       averagePercentage: stats.averagePercentage || null,
     };
 
-    const courseId = await getCourseIdByModuleId(moduleId);
+    const courseContext = await getCourseContextByModuleId(moduleId);
+    const courseId = courseContext?.courseId;
     if (courseId) {
       const payload = {
         courseId,
@@ -275,13 +281,17 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
 
     if (
       !req.user ||
-      req.user.actorType !== "legacy_user" ||
+      req.user.actorType !== "organization_user" ||
       req.user.role !== "student"
     ) {
       return res.status(401).json({ message: "Nejste oprávnění" });
     }
 
     const studentId = req.user.id;
+    const courseContext = await getCourseContextByModuleId(moduleId);
+    if (!courseContext) {
+      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+    }
 
     const [currentUser] = await db
       .select({
@@ -290,7 +300,12 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
         level: users.level,
       })
       .from(users)
-      .where(eq(users.uuid, studentId))
+      .where(
+        and(
+          eq(users.uuid, studentId),
+          eq(users.organizationId, courseContext.organizationId),
+        ),
+      )
       .limit(1);
 
     if (!currentUser) {
@@ -306,7 +321,7 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
-    const courseId = await getCourseIdByModuleId(moduleId);
+    const courseId = courseContext.courseId;
     if (!courseId) {
       return res.status(404).json({ message: "Kurz nebyl nalezen" });
     }

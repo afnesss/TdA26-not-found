@@ -10,13 +10,21 @@ import { useShopCart } from '@/hooks/useShopCart'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import type { ApiError } from '@/lib/types'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { formatPrice, resolveCartLines } from './shopUtils'
+import {
+  buildShopPath,
+  formatPrice,
+  persistShopOrgSlug,
+  resolveCartLines,
+  resolveShopOrgSlug,
+} from './shopUtils'
 
 const ShopCheckoutPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const { cart, clearCart } = useShopCart()
   const [contactEmail, setContactEmail] = useState('')
 
@@ -62,7 +70,9 @@ const ShopCheckoutPage = () => {
     mutationFn: createShopOrder,
     onSuccess: (order) => {
       clearCart()
-      navigate(`/shop/success/${order.orderId}`, { state: { order } })
+      navigate(buildShopPath(`/shop/success/${order.orderId}`, orgSlug), {
+        state: { order },
+      })
     },
     onError: (error: ApiError) => {
       toast.error(error?.body?.message ?? 'Objednávku se nepodařilo vytvořit.')
@@ -70,6 +80,9 @@ const ShopCheckoutPage = () => {
   })
 
   useTitle('Checkout | Platform Shop')
+  useEffect(() => {
+    persistShopOrgSlug(orgSlug)
+  }, [orgSlug])
 
   if (isError) {
     return <StateComp type='error' onAction={refetch} />
@@ -80,7 +93,7 @@ const ShopCheckoutPage = () => {
       <StateComp
         type='no-content'
         message='Košík je prázdný, checkout není možné dokončit.'
-        onAction={() => navigate('/shop')}
+        onAction={() => navigate(buildShopPath('/shop', orgSlug))}
         actionText='Přejít do shopu'
       />
     )
@@ -206,7 +219,7 @@ const ShopCheckoutPage = () => {
 
           <Button
             variant='primary'
-            className='w-full'
+            className='h-13 w-full px-6 text-base font-bold'
             disabled={
               isLoading ||
               hasUnavailableItems ||
@@ -220,8 +233,8 @@ const ShopCheckoutPage = () => {
 
           <Button
             variant='outline'
-            className='w-full'
-            onClick={() => navigate('/shop/cart')}
+            className='h-13 w-full px-6 text-base font-semibold'
+            onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
             disabled={createOrderMutation.isPending}
           >
             Zpět do košíku

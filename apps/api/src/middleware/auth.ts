@@ -22,6 +22,11 @@ export const getOrgCookieOptions = () => ({
   path: "/api/orgs",
 });
 
+export const getLegacyCookieOptions = () => ({
+  ...getBaseCookieOptions(),
+  path: "/api",
+});
+
 const clearAuthCookieAndRespond = (
   res: Response,
   cookieName: string,
@@ -57,6 +62,27 @@ const mapPayloadToUser = (payload: jwt.JwtPayload): AuthUser | null => {
   ) {
     return {
       actorType: "organization_admin",
+      organizationId: String(payload.organizationId),
+      orgSlug: String(payload.orgSlug),
+    };
+  }
+
+  if (
+    actorType === "organization_user" &&
+    typeof payload.id === "string" &&
+    typeof payload.username === "string" &&
+    typeof payload.role === "string" &&
+    typeof payload.organizationId === "string" &&
+    typeof payload.orgSlug === "string"
+  ) {
+    return {
+      actorType: "organization_user",
+      id: String(payload.id),
+      username: String(payload.username),
+      role:
+        payload.role === "lecturer" || payload.role === "student"
+          ? payload.role
+          : "student",
       organizationId: String(payload.organizationId),
       orgSlug: String(payload.orgSlug),
     };
@@ -136,6 +162,24 @@ export const scopedAuthMiddleware = (
   return adminAuthMiddleware(req, res, next);
 };
 
+export const organizationScopedAuthMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  // Prefer organization user token when both cookies are present
+  // (e.g. after switching between admin and lecturer sessions).
+  if (req.cookies?.[LEGACY_AUTH_COOKIE]) {
+    return authMiddleware(req, res, next);
+  }
+
+  if (req.cookies?.[ORG_AUTH_COOKIE]) {
+    return organizationAuthMiddleware(req, res, next);
+  }
+
+  return authMiddleware(req, res, next);
+};
+
 // Backward-compatible middleware for legacy student/shop endpoints.
 export const authMiddleware = (
   req: AuthRequest,
@@ -156,7 +200,11 @@ export const authMiddleware = (
     }
 
     const user = mapPayloadToUser(payload as jwt.JwtPayload);
-    if (!user || user.actorType !== "legacy_user") {
+    if (
+      !user ||
+      (user.actorType !== "legacy_user" &&
+        user.actorType !== "organization_user")
+    ) {
       clearAuthCookieAndRespond(res, LEGACY_AUTH_COOKIE, getAdminCookieOptions());
       return;
     }
@@ -170,7 +218,12 @@ export const authMiddleware = (
 
 export const requireRole =
   (role: string) => (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || req.user.actorType !== "legacy_user" || req.user.role !== role) {
+    if (
+      !req.user ||
+      (req.user.actorType !== "legacy_user" &&
+        req.user.actorType !== "organization_user") ||
+      req.user.role !== role
+    ) {
       res.status(403).json({ message: "Nedostatečná oprávnění" });
       return;
     }

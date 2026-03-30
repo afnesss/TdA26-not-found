@@ -7,6 +7,7 @@ import {
   buildOrgDashboardPath,
   buildOrgLoginPath,
 } from '@/lib/routes'
+import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router'
@@ -15,7 +16,7 @@ import logo from '../../assets/white_logo.svg'
 
 export default function Header() {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const queryClient = useQueryClient()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isAdminArea = pathname.startsWith('/admin')
@@ -24,14 +25,23 @@ export default function Header() {
   const isAdminLoginActive = pathname === '/admin/login'
   const isAdminRequestsActive = pathname.startsWith('/admin/requests')
   const isAdminOrganizationsActive = pathname.startsWith('/admin/organizations')
+  const isShopActive = pathname.startsWith('/shop')
   const isOrgCoursesActive =
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/courses`)
   const isOrgDashboardActive =
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/dashboard`)
   const isOrgLoginActive =
     isOrganizationArea && pathname === buildOrgLoginPath(orgSlug)
+  const shopOrgSlug = resolveShopOrgSlug(
+    isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
+  )
   const { isAuth: isAdminAuth } = useAuth()
-  const { isAuth: isOrgAuth } = useOrganizationAuth(orgSlug)
+  const {
+    isAuth: isOrgAuth,
+    isAdmin: isOrgAdmin,
+    isStaff: isOrgStaff,
+    user: orgUser,
+  } = useOrganizationAuth(orgSlug)
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
 
@@ -78,6 +88,14 @@ export default function Header() {
       <div className='flex w-1/2 items-center justify-end gap-3 px-4 sm:px-8 md:px-12 lg:px-20'>
         {isAdminArea ? (
           <>
+            <Button
+              variant='tab'
+              className={cn(isShopActive && 'text-secondary')}
+              aria-current={isShopActive ? 'page' : undefined}
+              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
+            >
+              Shop
+            </Button>
             {isAdminAuth && (
               <>
                 <Button
@@ -114,13 +132,28 @@ export default function Header() {
           <>
             <Button
               variant='tab'
+              className={cn(isShopActive && 'text-secondary')}
+              aria-current={isShopActive ? 'page' : undefined}
+              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
+            >
+              Shop
+            </Button>
+            <Button
+              variant='tab'
               className={cn(isOrgCoursesActive && 'text-secondary')}
               aria-current={isOrgCoursesActive ? 'page' : undefined}
               onClick={() => navigate(buildOrgCoursesPath(orgSlug))}
             >
+              {orgUser?.role === 'student' && (
+                <span className='mr-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-secondary'>
+                  <span>LVL {orgUser.level ?? 1}</span>
+                  <span>•</span>
+                  <span>{orgUser.xp ?? 0} XP</span>
+                </span>
+              )}
               Kurzy
             </Button>
-            {isOrgAuth && (
+            {isOrgStaff && (
               <Button
                 variant='tab'
                 className={cn(isOrgDashboardActive && 'text-secondary')}
@@ -144,15 +177,25 @@ export default function Header() {
             </Button>
           </>
         ) : (
-          <Button
-            variant='secondary'
-            className={cn(
-              isOrganizationRequestActive && selectedSecondaryButtonClass,
-            )}
-            onClick={() => navigate('/organization-request/new')}
-          >
-            Založit si organizaci
-          </Button>
+          <>
+            <Button
+              variant='tab'
+              className={cn(isShopActive && 'text-secondary')}
+              aria-current={isShopActive ? 'page' : undefined}
+              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
+            >
+              Shop
+            </Button>
+            <Button
+              variant='secondary'
+              className={cn(
+                isOrganizationRequestActive && selectedSecondaryButtonClass,
+              )}
+              onClick={() => navigate('/organization-request/new')}
+            >
+              Založit si organizaci
+            </Button>
+          </>
         )}
       </div>
     </header>

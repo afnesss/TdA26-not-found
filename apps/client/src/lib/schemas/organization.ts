@@ -81,14 +81,27 @@ export const AdminAuthMeSchema = z.object({
   username: z.string(),
 })
 
-export const OrganizationAuthMeSchema = z.object({
-  actorType: z.literal('organization_admin'),
-  organizationId: z.string().uuid(),
-  orgSlug: z.string(),
-  organizationName: z.string(),
-  mustChangePassword: z.boolean(),
-  status: OrganizationStatusSchema,
-})
+export const OrganizationAuthMeSchema = z.discriminatedUnion('actorType', [
+  z.object({
+    actorType: z.literal('organization_admin'),
+    organizationId: z.string().uuid(),
+    orgSlug: z.string(),
+    organizationName: z.string(),
+    mustChangePassword: z.boolean(),
+    status: OrganizationStatusSchema,
+  }),
+  z.object({
+    actorType: z.literal('organization_user'),
+    organizationId: z.string().uuid(),
+    orgSlug: z.string(),
+    organizationName: z.string(),
+    id: z.string().uuid(),
+    username: z.string(),
+    role: z.enum(['lecturer', 'student']),
+    xp: z.number().optional(),
+    level: z.number().optional(),
+  }),
+])
 
 export const OrganizationPublicInfoSchema = z.object({
   uuid: z.string().uuid(),

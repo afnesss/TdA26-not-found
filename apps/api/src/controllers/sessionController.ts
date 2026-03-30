@@ -1,7 +1,7 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Request, Response } from "express";
 import { db } from "../db";
-import { modules, quizzes, quizSubmissions, users } from "../db/schema";
+import { courses, modules, quizzes, quizSubmissions, users } from "../db/schema";
 import { logger } from "../utils/logger";
 
 type SubmissionRow = {
@@ -57,7 +57,13 @@ const getCourseSubmissionRows = async (courseId: string): Promise<SubmissionRow[
     .innerJoin(users, eq(quizSubmissions.userId, users.uuid))
     .innerJoin(quizzes, eq(quizSubmissions.quizId, quizzes.uuid))
     .innerJoin(modules, eq(quizzes.moduleId, modules.uuid))
-    .where(eq(modules.courseId, courseId));
+    .innerJoin(courses, eq(modules.courseId, courses.uuid))
+    .where(
+      and(
+        eq(modules.courseId, courseId),
+        eq(users.organizationId, courses.organizationId),
+      ),
+    );
 };
 
 const buildLeaderboard = (

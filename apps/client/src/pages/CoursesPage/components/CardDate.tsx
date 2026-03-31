@@ -15,11 +15,13 @@ export type CoursePlanningState = {
 }
 
 type CardDateProps = {
-  course: CourseSummary
+  course?: CourseSummary
   isDraft?: boolean
   state?: CourseStatus
   planning?: CoursePlanningState
   hideStatusLabel?: boolean
+  label?: string
+  date?: string
 }
 
 const CardDate = ({
@@ -28,8 +30,11 @@ const CardDate = ({
   state = 'draft',
   planning,
   hideStatusLabel = false,
+  label,
+  date,
 }: CardDateProps) => {
   const getStatusLabel = () => {
+    if (label) return label
     if (planning?.isEditing) return
     switch (state) {
       case 'draft':
@@ -48,6 +53,8 @@ const CardDate = ({
   }
 
   const getDateToDisplay = () => {
+    if (date) return date
+    if (!course) return ''
     const showTime =
       state === 'planned' || state === 'live' || state === 'paused'
 

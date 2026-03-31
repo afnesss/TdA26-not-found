@@ -1,27 +1,51 @@
-import { adminLogout, organizationLogout } from '@/api/queries/organizationQueries'
+import {
+  adminLogout,
+  organizationLogout,
+} from '@/api/queries/organizationQueries'
 import { useAuth } from '@/auth/useAuth'
 import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
+import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { Button } from '@/components/ui/button'
 import {
   buildOrgCoursesPath,
   buildOrgDashboardPath,
   buildOrgLoginPath,
 } from '@/lib/routes'
-import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
+import { ChevronDown, LogIn, LogOut } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { useMediaQuery } from 'usehooks-ts'
+import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
 import logo from '../../assets/white_logo.svg'
+
+type NavigationItem = {
+  label: string
+  value: string
+  isActive: boolean
+  onClick: () => void
+}
+
+type SecondaryAction = {
+  label: string
+  icon: typeof LogIn
+  isActive: boolean
+  onClick: () => void
+}
 
 export default function Header() {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const queryClient = useQueryClient()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const isMd = useMediaQuery('(min-width: 768px)')
+
   const isAdminArea = pathname.startsWith('/admin')
   const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
-  const isOrganizationRequestActive = pathname.startsWith('/organization-request')
+  const isOrganizationRequestActive = pathname.startsWith(
+    '/organization-request',
+  )
   const isAdminLoginActive = pathname === '/admin/login'
   const isAdminRequestsActive = pathname.startsWith('/admin/requests')
   const isAdminOrganizationsActive = pathname.startsWith('/admin/organizations')
@@ -32,16 +56,18 @@ export default function Header() {
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/dashboard`)
   const isOrgLoginActive =
     isOrganizationArea && pathname === buildOrgLoginPath(orgSlug)
+
   const shopOrgSlug = resolveShopOrgSlug(
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
   )
+
   const { isAuth: isAdminAuth } = useAuth()
   const {
     isAuth: isOrgAuth,
-    isAdmin: isOrgAdmin,
     isStaff: isOrgStaff,
     user: orgUser,
   } = useOrganizationAuth(orgSlug)
+
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
 
@@ -66,6 +92,94 @@ export default function Header() {
     }
   }
 
+  const navigationItems: NavigationItem[] = isAdminArea
+    ? [
+        {
+          label: 'Shop',
+          value: 'shop',
+          isActive: isShopActive,
+          onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
+        },
+        ...(isAdminAuth
+          ? [
+              {
+                label: 'Žádosti',
+                value: 'requests',
+                isActive: isAdminRequestsActive,
+                onClick: () => navigate('/admin/requests'),
+              },
+              {
+                label: 'Organizace',
+                value: 'organizations',
+                isActive: isAdminOrganizationsActive,
+                onClick: () => navigate('/admin/organizations'),
+              },
+            ]
+          : []),
+      ]
+    : isOrganizationArea && orgSlug
+      ? [
+          {
+            label: 'Shop',
+            value: 'shop',
+            isActive: isShopActive,
+            onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
+          },
+          {
+            label: 'Kurzy',
+            value: 'courses',
+            isActive: isOrgCoursesActive,
+            onClick: () => navigate(buildOrgCoursesPath(orgSlug)),
+          },
+          ...(isOrgStaff
+            ? [
+                {
+                  label: 'Dashboard',
+                  value: 'dashboard',
+                  isActive: isOrgDashboardActive,
+                  onClick: () => navigate(buildOrgDashboardPath(orgSlug)),
+                },
+              ]
+            : []),
+        ]
+      : [
+          {
+            label: 'Shop',
+            value: 'shop',
+            isActive: isShopActive,
+            onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
+          },
+        ]
+
+  const activeNavigationItem =
+    navigationItems.find((item) => item.isActive) ?? navigationItems[0]
+  const isAuthAction = isAdminArea || isOrganizationArea
+
+  const secondaryAction: SecondaryAction = isAdminArea
+    ? {
+        label: isAdminAuth ? 'Odhlásit se' : 'Přihlásit se',
+        icon: isAdminAuth ? LogOut : LogIn,
+        isActive: !isAdminAuth && isAdminLoginActive,
+        onClick: () =>
+          isAdminAuth ? void handleLogout() : navigate('/admin/login'),
+      }
+    : isOrganizationArea && orgSlug
+      ? {
+          label: isOrgAuth ? 'Odhlásit se' : 'Přihlášení',
+          icon: isOrgAuth ? LogOut : LogIn,
+          isActive: !isOrgAuth && isOrgLoginActive,
+          onClick: () =>
+            isOrgAuth
+              ? void handleLogout()
+              : navigate(buildOrgLoginPath(orgSlug)),
+        }
+      : {
+          label: 'Založit si organizaci',
+          icon: LogIn,
+          isActive: isOrganizationRequestActive,
+          onClick: () => navigate('/organization-request/new'),
+        }
+
   return (
     <header
       className='fixed top-0 left-0 right-0 z-50 flex h-15 w-full bg-primary sm:h-18 md:h-22'
@@ -78,125 +192,80 @@ export default function Header() {
           className='h-14 w-auto cursor-pointer py-3 transition-all duration-200 hover:scale-102 sm:h-17 md:h-18'
           onClick={() =>
             navigate(
-              isOrganizationArea && orgSlug ? `/${orgSlug}` : isAdminArea ? '/admin/requests' : '/',
+              isOrganizationArea && orgSlug
+                ? `/${orgSlug}`
+                : isAdminArea
+                  ? '/admin/requests'
+                  : '/',
             )
           }
           role='button'
           aria-label='Přejít na úvodní stránku'
         />
       </div>
-      <div className='flex w-1/2 items-center justify-end gap-3 px-4 sm:px-8 md:px-12 lg:px-20'>
-        {isAdminArea ? (
+      <div className='flex w-1/2 items-center justify-end gap-4 md:gap-6 px-4 sm:px-8 md:px-12 lg:px-20'>
+        {isMd || navigationItems.length <= 1 ? (
           <>
-            <Button
-              variant='tab'
-              className={cn(isShopActive && 'text-secondary')}
-              aria-current={isShopActive ? 'page' : undefined}
-              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
-            >
-              Shop
-            </Button>
-            {isAdminAuth && (
-              <>
-                <Button
-                  variant='tab'
-                  className={cn(
-                    isAdminRequestsActive && 'text-secondary',
-                  )}
-                  aria-current={isAdminRequestsActive ? 'page' : undefined}
-                  onClick={() => navigate('/admin/requests')}
-                >
-                  Žádosti
-                </Button>
-                <Button
-                  variant='tab'
-                  className={cn(
-                    isAdminOrganizationsActive && 'text-secondary',
-                  )}
-                  aria-current={isAdminOrganizationsActive ? 'page' : undefined}
-                  onClick={() => navigate('/admin/organizations')}
-                >
-                  Organizace
-                </Button>
-              </>
-            )}
-            <Button
-              variant='secondary'
-              className={cn(!isAdminAuth && isAdminLoginActive && selectedSecondaryButtonClass)}
-              onClick={() => (isAdminAuth ? void handleLogout() : navigate('/admin/login'))}
-            >
-              {isAdminAuth ? 'Odhlásit se' : 'Přihlásit se'}
-            </Button>
-          </>
-        ) : isOrganizationArea && orgSlug ? (
-          <>
-            <Button
-              variant='tab'
-              className={cn(isShopActive && 'text-secondary')}
-              aria-current={isShopActive ? 'page' : undefined}
-              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
-            >
-              Shop
-            </Button>
-            <Button
-              variant='tab'
-              className={cn(isOrgCoursesActive && 'text-secondary')}
-              aria-current={isOrgCoursesActive ? 'page' : undefined}
-              onClick={() => navigate(buildOrgCoursesPath(orgSlug))}
-            >
-              {orgUser?.role === 'student' && (
-                <span className='mr-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-secondary'>
-                  <span>LVL {orgUser.level ?? 1}</span>
-                  <span>•</span>
-                  <span>{orgUser.xp ?? 0} XP</span>
-                </span>
-              )}
-              Kurzy
-            </Button>
-            {isOrgStaff && (
+            {navigationItems.map((item) => (
               <Button
+                key={item.value}
                 variant='tab'
-                className={cn(isOrgDashboardActive && 'text-secondary')}
-                aria-current={isOrgDashboardActive ? 'page' : undefined}
-                onClick={() => navigate(buildOrgDashboardPath(orgSlug))}
+                className={cn(item.isActive && 'text-secondary')}
+                aria-current={item.isActive ? 'page' : undefined}
+                onClick={item.onClick}
               >
-                Dashboard
+                {item.value === 'courses' && orgUser?.role === 'student' && (
+                  <span className='mr-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-secondary'>
+                    <span>LVL {orgUser.level ?? 1}</span>
+                    <span>•</span>
+                    <span>{orgUser.xp ?? 0} XP</span>
+                  </span>
+                )}
+                {item.label}
               </Button>
-            )}
-            <Button
-              variant='secondary'
-              className={cn(!isOrgAuth && isOrgLoginActive && selectedSecondaryButtonClass)}
-              aria-current={isOrgLoginActive ? 'page' : undefined}
-              onClick={() =>
-                isOrgAuth
-                  ? void handleLogout()
-                  : navigate(buildOrgLoginPath(orgSlug))
-              }
-            >
-              {isOrgAuth ? 'Odhlásit se' : 'Přihlášení'}
-            </Button>
+            ))}
           </>
         ) : (
-          <>
-            <Button
-              variant='tab'
-              className={cn(isShopActive && 'text-secondary')}
-              aria-current={isShopActive ? 'page' : undefined}
-              onClick={() => navigate(buildShopPath('/shop', shopOrgSlug))}
-            >
-              Shop
-            </Button>
-            <Button
-              variant='secondary'
-              className={cn(
-                isOrganizationRequestActive && selectedSecondaryButtonClass,
-              )}
-              onClick={() => navigate('/organization-request/new')}
-            >
-              Založit si organizaci
-            </Button>
-          </>
+          <DropdownMenuComponent
+            trigger={
+              <Button
+                variant='tab'
+                className='gap-1 text-xs transition-colors hover:bg-primary/10'
+              >
+                {activeNavigationItem?.label ?? 'Menu'}
+                <ChevronDown size={16} className='opacity-60' />
+              </Button>
+            }
+            items={navigationItems.map((item) => ({
+              label: item.label,
+              value: item.value,
+              onClick: item.onClick,
+            }))}
+            selectedValue={activeNavigationItem?.value}
+            align='end'
+            width='w-28'
+          />
         )}
+        <Button
+          variant='secondary'
+          className={cn(
+            secondaryAction.isActive && selectedSecondaryButtonClass,
+            secondaryAction.label.includes('Odhl') && 'text-destructive',
+          )}
+          aria-current={secondaryAction.isActive ? 'page' : undefined}
+          onClick={secondaryAction.onClick}
+        >
+          <span className={cn('text-xs md:text-base', isAuthAction && 'hidden md:inline')}>
+            {secondaryAction.label}
+          </span>
+          <secondaryAction.icon
+            size={20}
+            className={cn(
+              isAuthAction ? 'block md:hidden' : 'hidden',
+              secondaryAction.label.includes('Odhl') && 'text-destructive',
+            )}
+          />
+        </Button>
       </div>
     </header>
   )

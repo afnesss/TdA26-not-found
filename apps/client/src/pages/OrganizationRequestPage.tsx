@@ -45,7 +45,7 @@ const OrganizationRequestPage = () => {
       <div className='mx-auto w-full max-w-3xl'>
         <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
           <Label variant='formTitle'>Žádost byla přijata</Label>
-          <div className='px-5 sm:px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
+          <div className='px-5 sm:px-6 lg:px-8 py-4 md:py-8 bg-background'>
             <div className='space-y-6'>
               <p className='text-lg leading-8 text-foreground sm:text-xl'>
                 Vše je v pořádku. Po schválení vám budou přístupové údaje
@@ -71,7 +71,7 @@ const OrganizationRequestPage = () => {
     <div className='mx-auto w-full max-w-5xl'>
       <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
         <Label variant='formTitle'>Založit si organizaci</Label>
-        <div className='px-5 sm:px-6 lg:px-8 py-6 md:py-8 bg-background/95'>
+        <div className='px-5 sm:px-6 lg:px-8 py-4 md:py-8 bg-background'>
           <form
             onSubmit={(event) => {
               event.preventDefault()
@@ -110,7 +110,10 @@ const OrganizationRequestPage = () => {
                 placeholder='PSČ'
                 value={form.postalCode}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, postalCode: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    postalCode: event.target.value,
+                  }))
                 }
               />
               <Input
@@ -131,7 +134,10 @@ const OrganizationRequestPage = () => {
                 placeholder='Vedoucí / kontaktní osoba'
                 value={form.ownerName}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, ownerName: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    ownerName: event.target.value,
+                  }))
                 }
               />
               <Input

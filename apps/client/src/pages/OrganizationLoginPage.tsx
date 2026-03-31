@@ -5,6 +5,7 @@ import FormField from '@/components/shared/FormField'
 import { organizationLogin } from '@/api/queries/organizationQueries'
 import { Button } from '@/components/ui/button'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgCoursesPath, buildOrgDashboardPath } from '@/lib/routes'
 import { useQueryClient } from '@tanstack/react-query'
 import { useForm, type FieldValues } from 'react-hook-form'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -55,7 +56,14 @@ const OrganizationLoginPage = () => {
       })
       queryClient.setQueryData(['org-auth', orgSlug], result)
       toast.success('Přihlášení úspěšné')
-      navigate(safeRedirect || `/${orgSlug}/courses`)
+      const defaultRedirect =
+        result.actorType === 'organization_admin'
+          ? '/admin/requests'
+          : result.actorType === 'organization_user' &&
+              result.role === 'lecturer'
+            ? buildOrgDashboardPath(orgSlug)
+            : buildOrgCoursesPath(orgSlug)
+      navigate(safeRedirect || defaultRedirect)
       reset()
     } catch (error) {
       const apiError = error as ApiError | undefined
@@ -99,7 +107,7 @@ const OrganizationLoginPage = () => {
           inputProps={{
             ...register('username', { required: 'Jméno je povinné' }),
             type: 'text',
-            placeholder: mode === 'lecturer' ? 'lecturer' : 'student',
+            placeholder: mode === 'lecturer' ? 'Lektor' : 'Student',
           }}
         />
 

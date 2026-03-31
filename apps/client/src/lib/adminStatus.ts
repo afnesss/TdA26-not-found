@@ -38,12 +38,12 @@ const organizationStatusUi: Record<OrganizationStatus, StatusUi> = {
   onboarding: {
     label: 'Onboarding',
     line: 'primary',
-    badgeClassName: 'bg-primary/15 text-primary',
+    badgeClassName: 'bg-primary/20 text-primary',
   },
   active: {
     label: 'Aktivní',
     line: 'secondary',
-    badgeClassName: 'bg-secondary/40 text-[#2D8B6B]',
+    badgeClassName: 'bg-secondary/46 text-[#2D8B6B]',
   },
 }
 

@@ -20,7 +20,7 @@ import { Inbox, Mail, MapPin } from 'lucide-react'
 import { useState } from 'react'
 
 const AdminRequestsPage = () => {
-  useTitle('Å½Ã¡dosti organizacÃ­')
+  useTitle('Žádosti organizací')
   const queryClient = useQueryClient()
   const [noteById, setNoteById] = useState<Record<string, string>>({})
   const { data, isLoading, isError, refetch } = useQuery({
@@ -81,7 +81,7 @@ const AdminRequestsPage = () => {
   return (
     <div className='max-w-7xl mx-auto space-y-5 md:space-y-6'>
       <HintPageText
-        text='Å½Ã¡dosti organizacÃ­'
+        text='Žádosti organizací'
         icon={Inbox}
         spanText={String(data.length)}
       />

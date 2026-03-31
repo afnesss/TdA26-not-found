@@ -21,12 +21,20 @@ const Footer = () => {
           <span className='mr-2'>© 2026 Think Different Academy</span>
 
           <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
-            <span
-              className='cursor-pointer hover:text-secondary'
-              onClick={() => navigate(isOrganizationArea && orgSlug ? buildOrgCoursesPath(orgSlug) : '/')}
-            >
-              Kurzy
-            </span>
+            {orgSlug && (
+              <span
+                className='cursor-pointer hover:text-secondary'
+                onClick={() =>
+                  navigate(
+                    isOrganizationArea && orgSlug
+                      ? buildOrgCoursesPath(orgSlug)
+                      : '/',
+                  )
+                }
+              >
+                Kurzy
+              </span>
+            )}
             {isOrganizationArea && orgSlug && (
               <span
                 className='cursor-pointer hover:text-secondary'

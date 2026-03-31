@@ -60,24 +60,29 @@ export default function Header() {
   const shopOrgSlug = resolveShopOrgSlug(
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
   )
+  const effectiveOrgSlug = isOrganizationArea ? orgSlug : shopOrgSlug
 
   const { isAuth: isAdminAuth } = useAuth()
   const {
     isAuth: isOrgAuth,
     isStaff: isOrgStaff,
     user: orgUser,
-  } = useOrganizationAuth(orgSlug)
+  } = useOrganizationAuth(effectiveOrgSlug)
+  const hasOrgNavigation =
+    Boolean(effectiveOrgSlug) &&
+    !isAdminArea &&
+    (isOrganizationArea || (isShopActive && isOrgAuth))
 
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
 
   const handleLogout = async () => {
     try {
-      if (isOrganizationArea && orgSlug && isOrgAuth) {
-        await organizationLogout(orgSlug)
-        queryClient.setQueryData(['org-auth', orgSlug], null)
+      if (effectiveOrgSlug && isOrgAuth) {
+        await organizationLogout(effectiveOrgSlug)
+        queryClient.setQueryData(['org-auth', effectiveOrgSlug], null)
         toast.success('Odhlášení úspěšné')
-        navigate(buildOrgLoginPath(orgSlug))
+        navigate(buildOrgLoginPath(effectiveOrgSlug))
         return
       }
 
@@ -117,7 +122,7 @@ export default function Header() {
             ]
           : []),
       ]
-    : isOrganizationArea && orgSlug
+    : hasOrgNavigation && effectiveOrgSlug
       ? [
           {
             label: 'Shop',
@@ -129,7 +134,7 @@ export default function Header() {
             label: 'Kurzy',
             value: 'courses',
             isActive: isOrgCoursesActive,
-            onClick: () => navigate(buildOrgCoursesPath(orgSlug)),
+            onClick: () => navigate(buildOrgCoursesPath(effectiveOrgSlug)),
           },
           ...(isOrgStaff
             ? [
@@ -137,7 +142,7 @@ export default function Header() {
                   label: 'Dashboard',
                   value: 'dashboard',
                   isActive: isOrgDashboardActive,
-                  onClick: () => navigate(buildOrgDashboardPath(orgSlug)),
+                  onClick: () => navigate(buildOrgDashboardPath(effectiveOrgSlug)),
                 },
               ]
             : []),
@@ -153,7 +158,7 @@ export default function Header() {
 
   const activeNavigationItem =
     navigationItems.find((item) => item.isActive) ?? navigationItems[0]
-  const isAuthAction = isAdminArea || isOrganizationArea
+  const isAuthAction = isAdminArea || hasOrgNavigation
 
   const secondaryAction: SecondaryAction = isAdminArea
     ? {
@@ -163,7 +168,7 @@ export default function Header() {
         onClick: () =>
           isAdminAuth ? void handleLogout() : navigate('/admin/login'),
       }
-    : isOrganizationArea && orgSlug
+    : hasOrgNavigation && effectiveOrgSlug
       ? {
           label: isOrgAuth ? 'Odhlásit se' : 'Přihlášení',
           icon: isOrgAuth ? LogOut : LogIn,
@@ -171,7 +176,7 @@ export default function Header() {
           onClick: () =>
             isOrgAuth
               ? void handleLogout()
-              : navigate(buildOrgLoginPath(orgSlug)),
+              : navigate(buildOrgLoginPath(effectiveOrgSlug)),
         }
       : {
           label: 'Založit si organizaci',
@@ -192,11 +197,7 @@ export default function Header() {
           className='h-14 w-auto cursor-pointer py-3 transition-all duration-200 hover:scale-102 sm:h-17 md:h-18'
           onClick={() =>
             navigate(
-              isOrganizationArea && orgSlug
-                ? `/${orgSlug}`
-                : isAdminArea
-                  ? '/admin/requests'
-                  : '/',
+              hasOrgNavigation && effectiveOrgSlug ? `/${effectiveOrgSlug}` : '/',
             )
           }
           role='button'
@@ -255,7 +256,12 @@ export default function Header() {
           aria-current={secondaryAction.isActive ? 'page' : undefined}
           onClick={secondaryAction.onClick}
         >
-          <span className={cn('text-xs md:text-base', isAuthAction && 'hidden md:inline')}>
+          <span
+            className={cn(
+              'text-xs md:text-base',
+              isAuthAction && 'hidden md:inline',
+            )}
+          >
             {secondaryAction.label}
           </span>
           <secondaryAction.icon

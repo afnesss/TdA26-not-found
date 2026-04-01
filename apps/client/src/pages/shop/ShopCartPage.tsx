@@ -205,6 +205,7 @@ const ShopCartPage = () => {
                       variant='outline'
                       size='icon-sm'
                       className='size-7 sm:size-8 rounded-xl'
+                      disabled={line.quantity === 1}
                       onClick={() =>
                         updateQuantity(
                           line.itemId,

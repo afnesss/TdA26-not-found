@@ -120,7 +120,7 @@ const ShopCheckoutPage = () => {
   }
 
   return (
-    <div className='w-full max-w-5xl mx-auto space-y-6'>
+    <div className='w-full max-w-6xl mx-auto space-y-6'>
       <section className='relative overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm space-y-2'>
         <div
           className={cn(
@@ -184,7 +184,7 @@ const ShopCheckoutPage = () => {
             ))
           )}
 
-          <div className='flex flex-col gap-2 pt-2 border-t border-border/60'>
+          <div className='flex flex-col gap-2 pt-4 border-t border-border/60'>
             <label
               htmlFor='shop-checkout-email'
               className='text-sm font-medium text-foreground'

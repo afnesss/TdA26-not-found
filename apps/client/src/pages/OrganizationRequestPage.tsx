@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useMutation } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 const initialState = {
   name: '',
@@ -20,18 +22,32 @@ const initialState = {
   contactEmail: '',
 }
 
+type StoredRequestTracking = {
+  requestId: string
+  trackingUrl: string
+} | null
+
 const OrganizationRequestPage = () => {
+  const navigate = useNavigate()
   const [form, setForm] = useState(initialState)
-  const [submitted, setSubmitted] = useState<{
-    requestId: string
-    trackingUrl: string
-  } | null>(null)
+  const [lastRequestTracking, setLastRequestTracking] =
+    useLocalStorage<StoredRequestTracking>(
+      'organization-request-tracking',
+      null,
+    )
+
   useTitle('Založit organizaci')
 
   const mutation = useMutation({
     mutationFn: submitOrganizationRequest,
     onSuccess: (data) => {
-      setSubmitted({ requestId: data.requestId, trackingUrl: data.trackingUrl })
+      const tracking = {
+        requestId: data.requestId,
+        trackingUrl: data.trackingUrl,
+      }
+      setLastRequestTracking(tracking)
+      toast.success('Žádost byla přijata')
+      navigate(data.trackingUrl)
     },
   })
 
@@ -40,38 +56,11 @@ const OrganizationRequestPage = () => {
     [form],
   )
 
-  if (submitted) {
-    return (
-      <div className='mx-auto w-full max-w-3xl'>
-        <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
-          <Label variant='formTitle'>Žádost byla přijata</Label>
-          <div className='px-5 sm:px-6 lg:px-8 py-4 md:py-8 bg-background'>
-            <div className='space-y-6'>
-              <p className='text-lg leading-8 text-foreground sm:text-xl'>
-                Vše je v pořádku. Po schválení vám budou přístupové údaje
-                zaslány ručně na kontaktní e-mail.
-              </p>
-              <Link to={submitted.trackingUrl} className='block'>
-                <Button
-                  variant='primary'
-                  size='primary'
-                  className='w-full text-base sm:text-lg'
-                >
-                  Zobrazit stav žádosti
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className='mx-auto w-full max-w-5xl'>
-      <div className='bg-background/80 backdrop-blur-xl rounded-2xl shadow-xl md:shadow-2xl overflow-hidden border border-foreground/10'>
+      <div className='overflow-hidden rounded-2xl border border-foreground/10 bg-background/80 shadow-xl backdrop-blur-lg md:shadow-lg'>
         <Label variant='formTitle'>Založit si organizaci</Label>
-        <div className='px-5 sm:px-6 lg:px-8 py-4 md:py-8 bg-background'>
+        <div className='bg-background px-5 py-4 sm:px-6 lg:px-8 md:py-8'>
           <form
             onSubmit={(event) => {
               event.preventDefault()
@@ -83,6 +72,20 @@ const OrganizationRequestPage = () => {
               Pošlete základní údaje o vaší organizaci. Název veřejné adresy
               připravíme automaticky podle názvu organizace.
             </p>
+
+            {lastRequestTracking ? (
+              <div className='flex flex-col gap-3 rounded-2xl  bg-primary/10 p-4 md:flex-row md:items-center md:justify-between'>
+                <p className='text-sm leading-6 text-foreground'>
+                  Už jste dříve odeslali žádost a můžete se vrátit k jejímu
+                  stavu.
+                </p>
+                <Link to={lastRequestTracking.trackingUrl}>
+                  <Button variant='outline' size='sm' className='rounded-xl'>
+                    Zobrazit poslední žádost
+                  </Button>
+                </Link>
+              </div>
+            ) : null}
 
             <div className='grid gap-4 md:grid-cols-2'>
               <Input

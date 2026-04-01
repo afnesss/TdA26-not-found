@@ -3,7 +3,6 @@ import {
   getAdminOrganizationRequests,
   rejectAdminOrganizationRequest,
 } from '@/api/queries/organizationQueries'
-import CardDate from '@/pages/CoursesPage/components/CardDate'
 import HintPageText from '@/components/shared/HintPageText'
 import StateComp from '@/components/shared/StateComp'
 import { Badge } from '@/components/ui/badge'
@@ -11,9 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useTitle } from '@/lib/dynamicTitleHook'
 import { getRequestStatusUi } from '@/lib/adminStatus'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
+import { useTitle } from '@/lib/dynamicTitleHook'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Inbox, Mail, MapPin } from 'lucide-react'
@@ -23,6 +22,9 @@ const AdminRequestsPage = () => {
   useTitle('Žádosti organizací')
   const queryClient = useQueryClient()
   const [noteById, setNoteById] = useState<Record<string, string>>({})
+  const [rejectErrorById, setRejectErrorById] = useState<
+    Record<string, string>
+  >({})
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-organization-requests'],
     queryFn: getAdminOrganizationRequests,
@@ -90,16 +92,13 @@ const AdminRequestsPage = () => {
         {data.map((request) => {
           const statusUi = getRequestStatusUi(request.status)
           const noteValue = noteById[request.uuid] ?? request.adminNote ?? ''
-          const isPending = request.status === 'pending'
-          const showActions = isPending
-          const createdAt = new Date(request.createdAt).toLocaleDateString(
-            'cs-CZ',
-          )
+          const rejectError = rejectErrorById[request.uuid] ?? ''
+          const showActions = request.status === 'pending'
 
           return (
             <Card
               key={request.uuid}
-              className='border border-border/60 rounded-xl shadow-md bg-background cursor-auto'
+              className='rounded-xl bg-background cursor-auto shadow-md'
             >
               <div
                 className={cn(
@@ -108,13 +107,13 @@ const AdminRequestsPage = () => {
                 )}
               />
 
-              <CardContent className='px-5 py-4 space-y-5'>
-                <div className='space-y-3 min-w-0'>
+              <CardContent className='px-5 py-4'>
+                <div className='min-w-0 space-y-3'>
                   <div className='flex items-start justify-between gap-3'>
                     <div className='flex min-w-0 flex-wrap items-center gap-3'>
-                      <h2 className='text-xl md:text-2xl font-bold text-foreground leading-tight'>
+                      <Label className='text-xl font-bold leading-tight text-foreground md:text-2xl'>
                         {request.name}
-                      </h2>
+                      </Label>
                       <Badge
                         variant='secondary'
                         className={cn(
@@ -132,88 +131,113 @@ const AdminRequestsPage = () => {
                     </div>
                   </div>
 
-                  <div className='flex items-start gap-3 text-sm md:text-base text-muted-foreground'>
-                    <MapPin className='size-4 shrink-0 mt-1 text-destructive' />
+                  <div className='flex items-start gap-3 text-sm text-muted-foreground md:text-base'>
+                    <MapPin className='mt-1 size-4 shrink-0 text-destructive' />
                     <div className='flex flex-wrap gap-x-4 gap-y-1'>
                       <span>
                         {request.city}, {request.country}
                       </span>
                       <span>{request.region}</span>
-                      <span>{request.ownerName}</span>
-                    </div>
-                  </div>
-
-                  <div className='flex items-start gap-3 text-sm md:text-base text-muted-foreground'>
-                    <Mail className='size-4 shrink-0 mt-1 text-primary' />
-                    <div className='flex flex-wrap gap-x-4 gap-y-1'>
-                      <span>{request.contactEmail}</span>
                       <span>{request.type}</span>
                     </div>
                   </div>
 
-                  {noteValue && (
+                  <div className='flex items-start gap-3 text-sm text-muted-foreground md:text-base'>
+                    <Mail className='mt-1 size-4 shrink-0 text-primary' />
+                    <div className='flex flex-wrap gap-x-4 gap-y-1'>
+                      <span>{request.contactEmail}</span>
+                      <span>{request.ownerName}</span>
+                    </div>
+                  </div>
+
+                  {(showActions || noteValue) && (
                     <div className='space-y-2'>
                       <Label size='sm' className='block'>
                         Poznámka správce
                       </Label>
                       <Textarea
                         placeholder='Poznámka pro schválení nebo důvod zamítnutí'
-                        minRows={showActions ? 2 : 1}
+                        minRows={1}
                         value={noteValue}
                         disabled={!showActions}
-                        className={cn(!showActions && 'min-h-0')}
-                        onChange={(event) =>
+                        className={cn(!showActions && 'min-h-0 mb-0')}
+                        onChange={(event) => {
+                          const value = event.target.value
                           setNoteById((prev) => ({
                             ...prev,
-                            [request.uuid]: event.target.value,
+                            [request.uuid]: value,
                           }))
-                        }
+
+                          if (value.trim()) {
+                            setRejectErrorById((prev) => ({
+                              ...prev,
+                              [request.uuid]: '',
+                            }))
+                          }
+                        }}
                       />
+                      {rejectError ? (
+                        <p className='error-text -mt-2'>{rejectError}</p>
+                      ) : null}
                     </div>
                   )}
                 </div>
 
-                <div className='shrink-0 text-xs font-semibold italic text-muted-foreground'>
-                  <span className='font-medium text-gray-500'>Vytvořeno:</span>{' '}
-                  {new Date(request.createdAt).toLocaleDateString('cs-CZ')}
-                </div>
+                <CardFooter className='justify-between items-center gap-3 px-0 pb-0 border-none'>
+                  <div className='shrink-0 text-xs font-semibold italic text-muted-foreground'>
+                    <span className='font-medium text-gray-500'>
+                      Vytvořeno:
+                    </span>{' '}
+                    {new Date(request.createdAt).toLocaleDateString('cs-CZ')}
+                  </div>
 
-                {showActions && (
-                  <CardFooter className='flex-col items-start gap-2 px-0 pb-0'>
-                    <div className='flex w-full items-center justify-between gap-3'>
-                      <div className='flex flex-col gap-2 sm:flex-row'>
-                        <Button
-                          variant='primary'
-                          size='sm'
-                          disabled={approveMutation.isPending}
-                          onClick={() =>
-                            approveMutation.mutate({
-                              requestId: request.uuid,
-                              adminNote: noteValue,
-                            })
+                  {showActions ? (
+                    <div className='flex flex-row justify-end gap-2'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled={rejectMutation.isPending}
+                        onClick={() => {
+                          if (!noteValue.trim()) {
+                            setRejectErrorById((prev) => ({
+                              ...prev,
+                              [request.uuid]:
+                                'Pro zamítnutí nejdřív vyplňte poznámku.',
+                            }))
+                            return
                           }
-                        >
-                          Schválit
-                        </Button>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          disabled={
-                            rejectMutation.isPending || !noteValue.trim()
-                          }
-                          onClick={() =>
-                            rejectMutation.mutate({
-                              requestId: request.uuid,
-                              adminNote: noteValue,
-                            })
-                          }
-                        >
-                          Zamítnout
-                        </Button>
-                      </div>
+
+                          setRejectErrorById((prev) => ({
+                            ...prev,
+                            [request.uuid]: '',
+                          }))
+
+                          rejectMutation.mutate({
+                            requestId: request.uuid,
+                            adminNote: noteValue,
+                          })
+                        }}
+                      >
+                        Zamítnout
+                      </Button>
+                      <Button
+                        variant='primary'
+                        size='sm'
+                        disabled={approveMutation.isPending}
+                        onClick={() =>
+                          approveMutation.mutate({
+                            requestId: request.uuid,
+                            adminNote: noteValue,
+                          })
+                        }
+                      >
+                        Schválit
+                      </Button>
                     </div>
-                  </CardFooter>
-                )}
+                  ) : (
+                    <div />
+                  )}
+                </CardFooter>
               </CardContent>
             </Card>
           )

@@ -2,6 +2,7 @@ import { getCourseSessionLeaderboard } from '@/api/queries/courseQueries'
 import CourseLeaderboard from '@/components/shared/CourseLeaderboard'
 import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
 import CourseQuizCountBadge from '@/components/shared/CourseQuizCountBadge'
+import CourseLeaderboardSkeleton from '@/components/shared/loadingskeleton/CourseLeaderboardSkeleton'
 import StateComp from '@/components/shared/StateComp'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Label } from '@/components/ui/label'
@@ -20,12 +21,13 @@ const UserCourseOverviewPage = () => {
     courseData.status === 'paused' ||
     courseData.status === 'archived'
 
-  const { data: courseSessionOverview } = useQuery({
-    queryKey: ['course-session-leaderboard', courseId],
-    queryFn: () => getCourseSessionLeaderboard(courseId, orgSlug),
-    enabled: Boolean(courseId) && showLeaderboard,
-    refetchOnReconnect: true,
-  })
+  const { data: courseSessionOverview, isLoading: isLeaderboardLoading } =
+    useQuery({
+      queryKey: ['course-session-leaderboard', courseId],
+      queryFn: () => getCourseSessionLeaderboard(courseId, orgSlug),
+      enabled: Boolean(courseId) && showLeaderboard,
+      refetchOnReconnect: true,
+    })
 
   const leaderboard = courseSessionOverview?.leaderboard ?? []
 
@@ -40,21 +42,24 @@ const UserCourseOverviewPage = () => {
         ]}
       />
 
-      {showLeaderboard && (
-        <>
-          <div className='flex items-center justify-between gap-3'>
-            <Label className='font-bold'>
-              <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-                Leaderboard studentů
-              </UnderlinedText>
-            </Label>
-            <CourseQuizCountBadge
-              totalQuizzes={courseSessionOverview?.totalQuizzes ?? 0}
-            />
-          </div>
-          <CourseLeaderboard leaderboard={leaderboard} showLeaderTrophy />
-        </>
-      )}
+      {showLeaderboard &&
+        (isLeaderboardLoading ? (
+          <CourseLeaderboardSkeleton />
+        ) : (
+          <>
+            <div className='flex items-center justify-between gap-3'>
+              <Label className='font-bold'>
+                <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
+                  Leaderboard studentů
+                </UnderlinedText>
+              </Label>
+              <CourseQuizCountBadge
+                totalQuizzes={courseSessionOverview?.totalQuizzes ?? 0}
+              />
+            </div>
+            <CourseLeaderboard leaderboard={leaderboard} showLeaderTrophy />
+          </>
+        ))}
 
       <section>
         <div className='flex flex-wrap items-center justify-between gap-3'>

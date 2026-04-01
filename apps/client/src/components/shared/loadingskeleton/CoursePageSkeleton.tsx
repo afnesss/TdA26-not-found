@@ -1,13 +1,16 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import CourseLeaderboardSkeleton from './CourseLeaderboardSkeleton'
 import { MaterialSkeleton } from './MaterialSkeleton'
 import { QuizSkeleton } from './QuizSkeleton'
 
 type CourseSkeletonProps = {
   containerClassName?: string
+  showLeaderboard?: boolean
 }
 
 const CourseSkeleton = ({
   containerClassName = 'max-w-7xl mx-auto px-3 md:px-6 lg:px-12 pb-8 space-y-8',
+  showLeaderboard = false,
 }: CourseSkeletonProps) => {
   return (
     <div className='h-full overflow-y-auto hide-scrollbar'>
@@ -26,6 +29,8 @@ const CourseSkeleton = ({
             </div>
           </div>
         </section>
+
+        {showLeaderboard && <CourseLeaderboardSkeleton />}
 
         {/* materials */}
         <section>

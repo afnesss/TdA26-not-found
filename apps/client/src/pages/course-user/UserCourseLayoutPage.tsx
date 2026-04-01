@@ -117,11 +117,11 @@ const UserCourseLayoutPage = () => {
   }
 
   if (isLoading || !canEvaluateCourseAccess || isAuthLoading) {
-    return <CourseSkeleton />
+    return <CourseSkeleton showLeaderboard={!moduleId} />
   }
 
   if (courseData && courseData.status !== 'live') {
-    return <CourseSkeleton />
+    return <CourseSkeleton showLeaderboard={!moduleId} />
   }
 
   if (shouldShowNotFoundByAccess) {
@@ -157,7 +157,7 @@ const UserCourseLayoutPage = () => {
     <div className='h-full overflow-y-auto hide-scrollbar'>
       <div className='max-w-6xl mx-auto space-y-5'>
         {!isStudentUser ? (
-          <CourseSkeleton />
+          <CourseSkeleton showLeaderboard={!moduleId} />
         ) : (
           <>
             <Outlet

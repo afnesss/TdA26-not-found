@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import CourseLeaderboardSkeleton from './CourseLeaderboardSkeleton'
 
 const DashboardCourseOverviewSkeleton = () => {
   return (
@@ -28,6 +29,8 @@ const DashboardCourseOverviewSkeleton = () => {
           </div>
         </div>
       </div>
+
+      <CourseLeaderboardSkeleton />
 
       {/* Modules Section */}
       <div className='space-y-4'>

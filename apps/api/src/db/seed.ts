@@ -301,6 +301,18 @@ const merchCatalogSeed = [
     active: true,
   },
   {
+    slug: "platform-cap",
+    name: "TDA Signal Cap",
+    description:
+      "Minimalistická bílá kšiltovka s ikonickým 'Tádou' – symbolem nápadů.",
+    imageUrl: "/api/uploads/cap.png",
+    unitPriceCents: 44900,
+    purchaseMode: "money" as const,
+    xpCost: null,
+    voucherDiscountPercent: null,
+    active: true,
+  },
+  {
     slug: "platform-sale10",
     name: "10% slevový kupon",
     description: "Voucher se slevou 10 % na další objednávku.",

@@ -4,6 +4,7 @@
 } from '@/components/shared/CourseStateBadge'
 import DashboardCourseOverviewSkeleton from '@/components/shared/loadingskeleton/DashboardCourseOverviewSkeleton'
 import CourseLeaderboard from '@/components/shared/CourseLeaderboard'
+import CourseQuizCountBadge from '@/components/shared/CourseQuizCountBadge'
 import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
 import { Button } from '@/components/ui/button'
@@ -93,22 +94,35 @@ const CourseModulesOverviewPage = () => {
   const {
     mutate: updateCourseDetailsMutation,
     isPending: updateCourseDetailsPending,
-  } = useUpdateCourseMutation(courseId, (updatedCourse) => {
-    setCourseName(updatedCourse.name)
-    setCourseDescription(updatedCourse.description ?? '')
-  }, orgSlug)
+  } = useUpdateCourseMutation(
+    courseId,
+    (updatedCourse) => {
+      setCourseName(updatedCourse.name)
+      setCourseDescription(updatedCourse.description ?? '')
+    },
+    orgSlug,
+  )
 
   const { mutate: toggleModuleVisibilityMutation, isPending: togglePending } =
     useToggleModuleMutation(courseId, orgSlug)
-  const { mutate: updateCourseStatusMutation } =
-    useUpdateCourseStatusMutation(courseId, orgSlug)
-  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
-    onSuccess: (clonedCourse) => {
-      navigate(buildOrgDashboardCoursePath(orgSlug, clonedCourse.uuid))
+  const { mutate: updateCourseStatusMutation } = useUpdateCourseStatusMutation(
+    courseId,
+    orgSlug,
+  )
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation(
+    {
+      onSuccess: (clonedCourse) => {
+        navigate(buildOrgDashboardCoursePath(orgSlug, clonedCourse.uuid))
+      },
+      toastMessage: (source) =>
+        `Kurz "${source.name}" byl zkopírován jako návrh`,
     },
-    toastMessage: (source) => `Kurz "${source.name}" byl zkopírován jako návrh`,
-  }, orgSlug)
-  const { mutate: deleteModuleMutation } = useDeleteModuleMutation(courseId, orgSlug)
+    orgSlug,
+  )
+  const { mutate: deleteModuleMutation } = useDeleteModuleMutation(
+    courseId,
+    orgSlug,
+  )
   const { mutate: createModuleMutation, isPending: createModulePending } =
     useCreateModuleMutation(courseId, () => setDraftModule(null), orgSlug)
 
@@ -134,7 +148,7 @@ const CourseModulesOverviewPage = () => {
 
   const { data: courseSessionOverview } = useQuery({
     queryKey: ['course-session-overview', courseId],
-    queryFn: () => getCourseSessionOverview(courseId, orgSlug),
+    queryFn: () => getCourseSessionOverview(courseId),
     enabled: Boolean(course) && showLeaderboard,
     refetchOnReconnect: true,
   })
@@ -396,11 +410,11 @@ const CourseModulesOverviewPage = () => {
                 Leaderboard studentů
               </UnderlinedText>
             </Label>
-            <div className='rounded-full border border-border/70 bg-background px-3 py-1.5 text-xs text-muted-foreground whitespace-nowrap'>
-              Kvízy v kurzu: {courseSessionOverview?.totalQuizzes ?? 0}
-            </div>
+            <CourseQuizCountBadge
+              totalQuizzes={courseSessionOverview?.totalQuizzes ?? 0}
+            />
           </div>
-          <CourseLeaderboard leaderboard={leaderboard} />
+          <CourseLeaderboard leaderboard={leaderboard} showLeaderTrophy />
         </>
       )}
 

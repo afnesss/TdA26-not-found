@@ -1,182 +1,285 @@
 import type { CourseSessionOverview } from '@/api/queries/courseQueries'
+import feedImg from '@/assets/disconnect-blue.svg'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Clock, Trophy } from 'lucide-react'
-import { useState } from 'react'
+import { CheckCircle2, Clock3, Trophy } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Label } from '../ui/label'
+import StateComp from './StateComp'
 
 type LeaderboardEntry = CourseSessionOverview['leaderboard'][number]
 
 type CourseLeaderboardProps = {
   leaderboard: CourseSessionOverview['leaderboard']
   emptyMessage?: string
+  showLeaderTrophy?: boolean
 }
 
-const MEDAL_CONFIG = {
+const RANK_STYLES = {
   1: {
-    icon: 'text-yellow-400',
-    card: 'bg-amber-50/70',
-    stat: 'bg-amber-100/60 text-amber-800',
-    bar: 'bg-amber-300',
-    track: 'bg-amber-100',
+    card: 'bg-amber-50',
+    circle: 'bg-amber-200/70 text-amber-700 size-6 sm:size-7',
+    accent: 'text-amber-800',
   },
   2: {
-    icon: 'text-slate-400',
-    card: 'bg-slate-50/70',
-    stat: 'bg-slate-100/60 text-slate-600',
-    bar: 'bg-slate-300',
-    track: 'bg-slate-100',
+    card: 'bg-muted',
+    circle: 'bg-muted-foreground/15 text-muted-foreground/80 size-6 sm:size-7',
+    accent: 'text-muted-foreground',
   },
   3: {
-    icon: 'text-amber-600',
-    card: 'bg-orange-50/70',
-    stat: 'bg-orange-100/60 text-orange-700',
-    bar: 'bg-orange-300',
-    track: 'bg-orange-100',
+    card: 'bg-orange-100/60',
+    circle: 'bg-orange-200/70 text-orange-700 size-6 sm:size-7',
+    accent: 'text-orange-800',
+  },
+  default: {
+    card: 'bg-sky-50/55',
+    circle: 'bg-sky-100 text-primary size-6 sm:size-6 sm:ml-0.5',
+    accent: 'text-neutral-black',
   },
 } as const
 
-const StatusBadge = ({
-  completed,
+const getRankStyle = (rank: number) =>
+  RANK_STYLES[rank as 1 | 2 | 3] ?? RANK_STYLES.default
+
+const formatAttemptsLabel = (attempts: number) => {
+  if (attempts === 1) return 'pokus'
+  if (attempts >= 2 && attempts <= 4) return 'pokusy'
+  return 'pokusů'
+}
+
+const StatToken = ({
+  label,
+  value,
   className,
 }: {
-  completed: boolean
-  className?: string
-}) =>
-  completed ? (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-secondary/15 px-2 py-0.5 text-xs font-semibold text-secondary',
-        className,
-      )}
-    >
-      <CheckCircle2 className='size-3' />
-      Dokončil kurz
-    </span>
-  ) : (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full bg-accent-teal/12 px-2 py-0.5 text-xs font-semibold text-accent-teal',
-        className,
-      )}
-    >
-      <Clock className='size-3' />
-      Vyplňuje kurz
-    </span>
-  )
+  label: string
+  value: string
+  className: string
+}) => (
+  <span
+    className={cn(
+      'inline-flex w-full items-center justify-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] leading-none sm:px-2.5 sm:py-1',
+      className,
+    )}
+  >
+    <span className='font-semibold text-foreground'>{value}</span>
+    {label && <span className='text-muted-foreground'>{label}</span>}
+  </span>
+)
 
-const MedalCard = ({ entry }: { entry: LeaderboardEntry }) => {
-  const config = MEDAL_CONFIG[entry.rank as 1 | 2 | 3]
-  const isCompleted = entry.status === 'completed'
-  const progress = Math.max(0, Math.min(100, entry.progressPercent))
+const CompletionToken = ({
+  completed,
+  completedQuizzes,
+  totalQuizzes,
+}: {
+  completed: boolean
+  completedQuizzes: number
+  totalQuizzes: number
+}) => (
+  <span
+    className={cn(
+      'inline-flex w-full items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none sm:py-1.5 sm:text-xs md:text-xs',
+      completed
+        ? 'bg-secondary/30 text-[#2D8B6B]'
+        : 'bg-accent-teal/20 text-[#288080]',
+    )}
+  >
+    {completed ? (
+      <CheckCircle2 className='hidden size-3.5 shrink-0 sm:inline-block' />
+    ) : (
+      <Clock3 className='hidden size-3.5 shrink-0 sm:inline-block' />
+    )}
+    <span className='font-semibold text-current'>
+      {completedQuizzes}/{totalQuizzes}
+    </span>
+  </span>
+)
+
+const LeaderboardName = ({
+  username,
+  className,
+}: {
+  username: string
+  className?: string
+}) => {
+  const textRef = useRef<HTMLSpanElement | null>(null)
+  const [isTruncated, setIsTruncated] = useState(false)
+
+  useEffect(() => {
+    const element = textRef.current
+    if (!element) return
+
+    const measure = () => {
+      setIsTruncated(element.scrollWidth > element.clientWidth + 1)
+    }
+
+    measure()
+
+    const observer =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => measure())
+        : null
+
+    if (observer) {
+      observer.observe(element)
+    } else {
+      window.addEventListener('resize', measure)
+    }
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [username])
 
   return (
-    <div className={cn('rounded-2xl p-3.5 transition-all duration-200', config.card)}>
-      <div className='flex items-center gap-2.5'>
-        <Trophy className={cn('size-4 shrink-0', config.icon)} strokeWidth={2.5} />
-
-        <div className='min-w-0 flex-1'>
-          <div className='flex items-center justify-between gap-2'>
-            <p className='truncate text-sm font-bold md:text-base'>{entry.username}</p>
-            <StatusBadge completed={isCompleted} className='shrink-0' />
-          </div>
-
-          {/* Progress bar */}
-          <div className={cn('mt-2 h-1 w-full overflow-hidden rounded-full', config.track)}>
-            <div
-              className={cn('h-full rounded-full transition-all duration-500', config.bar)}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          {/* Stats */}
-          <div className='mt-1.5 flex flex-wrap gap-1.5'>
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', config.stat)}>
-              Úspěšnost {entry.successRate == null ? '—' : `${entry.successRate}%`}
-            </span>
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', config.stat)}>
-              Vyplněno {entry.completedQuizzes}/{entry.totalQuizzes}
-            </span>
-            <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', config.stat)}>
-              Pokusy {entry.submissionsCount}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <span className={cn('group/name relative min-w-0', className)}>
+      <span ref={textRef} className='block min-w-0 truncate'>
+        {username}
+      </span>
+      {isTruncated && (
+        <span className='pointer-events-none absolute left-0 top-full z-20 mt-1 hidden max-w-[16rem] rounded-md bg-background px-2 py-1 text-xs font-semibold text-foreground shadow-lg ring-1 ring-border/70 group-hover/name:block'>
+          {username}
+        </span>
+      )}
+    </span>
   )
 }
 
-const RestEntry = ({ entry }: { entry: LeaderboardEntry }) => {
+const RowContent = ({
+  entry,
+  emphasize = false,
+  showLeaderTrophy = false,
+}: {
+  entry: LeaderboardEntry
+  emphasize?: boolean
+  showLeaderTrophy?: boolean
+}) => {
+  const rankStyle = getRankStyle(entry.rank)
+  const successRate = entry.successRate == null ? '—' : `${entry.successRate}%`
   const isCompleted = entry.status === 'completed'
-  const progress = Math.max(0, Math.min(100, entry.progressPercent))
 
   return (
-    <div className='flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/20 md:px-4'>
-      <span className='flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary'>
+    <div className='flex items-center gap-3 md:gap-4'>
+      <span
+        className={cn(
+          'flex shrink-0 items-center justify-center rounded-full text-xs font-bold sm:text-sm',
+          rankStyle.circle,
+        )}
+      >
         {entry.rank}
       </span>
 
       <div className='min-w-0 flex-1'>
-        <p className='truncate text-sm font-semibold'>{entry.username}</p>
-        <div className='mt-0.5 flex flex-wrap gap-1 text-[11px]'>
-          <span className='rounded-full bg-muted/40 px-2 py-0.5 text-muted-foreground'>
-            Úspěšnost {entry.successRate == null ? '—' : `${entry.successRate}%`}
-          </span>
-          <span className='rounded-full bg-muted/40 px-2 py-0.5 text-muted-foreground'>
-            Vyplněno {entry.completedQuizzes}/{entry.totalQuizzes}
-          </span>
-          <span className='rounded-full bg-muted/40 px-2 py-0.5 text-muted-foreground'>
-            Pokusy {entry.submissionsCount}
-          </span>
+        <div className='flex flex-row items-center justify-between gap-2 md:gap-3'>
+          <p
+            className={cn(
+              'flex min-w-0 items-center gap-1.5 text-sm font-semibold md:text-base',
+              emphasize ? rankStyle.accent : 'text-neutral-black',
+              emphasize && 'font-bold',
+            )}
+          >
+            <LeaderboardName username={entry.username} className='flex-1' />
+            {showLeaderTrophy && entry.rank === 1 && (
+              <Trophy className={cn('size-4 shrink-0', rankStyle.accent)} />
+            )}
+          </p>
+
+          <div className='grid shrink-0 grid-cols-[2.5rem_2.75rem_3rem] items-center gap-x-1 text-center sm:grid-cols-[3.5rem_3.75rem_3.8rem] sm:gap-x-2'>
+            <div className='flex justify-center'>
+              <Label size='md' className='text-center'>
+                {successRate}
+              </Label>
+            </div>
+            <CompletionToken
+              completed={isCompleted}
+              completedQuizzes={entry.completedQuizzes}
+              totalQuizzes={entry.totalQuizzes}
+            />
+            <StatToken
+              label={formatAttemptsLabel(entry.submissionsCount)}
+              value={`${entry.submissionsCount}`}
+              className='bg-transparent text-foreground'
+            />
+          </div>
         </div>
       </div>
-
-      <StatusBadge completed={isCompleted} className='shrink-0' />
     </div>
   )
 }
 
+const TopRankCard = ({
+  entry,
+  showLeaderTrophy = false,
+}: {
+  entry: LeaderboardEntry
+  showLeaderTrophy?: boolean
+}) => {
+  const rankStyle = getRankStyle(entry.rank)
+
+  return (
+    <div className={cn('px-2 py-3 transition-colors sm:px-4', rankStyle.card)}>
+      <RowContent entry={entry} emphasize showLeaderTrophy={showLeaderTrophy} />
+    </div>
+  )
+}
+
+const RestRankRow = ({ entry }: { entry: LeaderboardEntry }) => (
+  <div className='px-2 py-2 transition-colors hover:bg-background/35 sm:px-4 sm:py-2.5 md:px-4'>
+    <RowContent entry={entry} />
+  </div>
+)
+
 const CourseLeaderboard = ({
   leaderboard,
   emptyMessage = 'Zatím žádná studentská odevzdání.',
+  showLeaderTrophy = false,
 }: CourseLeaderboardProps) => {
-  const top3 = leaderboard.slice(0, 3)
+  const topThree = leaderboard.slice(0, 3)
   const rest = leaderboard.slice(3)
   const [isExpanded, setIsExpanded] = useState(false)
+  const visibleEntries = isExpanded ? leaderboard : topThree
 
   return (
-    <section className='space-y-2 rounded-2xl border border-border/70 bg-linear-to-br from-background via-background to-muted/15 p-4 shadow-sm'>
+    <section className='space-y-2 rounded-2xl border border-border/70 bg-background p-3 shadow-sm sm:p-4'>
       {leaderboard.length === 0 ? (
-        <p className='text-sm text-muted-foreground'>{emptyMessage}</p>
+        <div className='overflow-hidden rounded-2xl bg-background'>
+          <StateComp
+            img={feedImg}
+            iconClassName='h-12 w-12 md:h-13 md:w-13'
+            type='no-content'
+            message={emptyMessage}
+            className='pb-6 pt-8'
+          />
+        </div>
       ) : (
-        <>
-          <div className='space-y-1.5'>
-            {top3.map((entry) => (
-              <MedalCard key={entry.userId} entry={entry} />
-            ))}
+        <div className='overflow-hidden rounded-2xl bg-sky-50/55'>
+          <div className='divide-y divide-border/55'>
+            {visibleEntries.map((entry, index) =>
+              index < 3 ? (
+                <TopRankCard
+                  key={entry.userId}
+                  entry={entry}
+                  showLeaderTrophy={showLeaderTrophy}
+                />
+              ) : (
+                <RestRankRow key={entry.userId} entry={entry} />
+              ),
+            )}
           </div>
 
           {rest.length > 0 && (
-            <div className='overflow-hidden rounded-xl border border-border/70 bg-background/80'>
-              {isExpanded && (
-                <div className='divide-y divide-border/60'>
-                  {rest.map((entry) => (
-                    <RestEntry key={entry.userId} entry={entry} />
-                  ))}
-                </div>
+            <button
+              type='button'
+              className={cn(
+                'px-3 py-2 text-sm font-semibold text-primary underline-offset-4 transition-colors hover:underline md:px-4',
+                isExpanded && 'pt-2.5',
               )}
-              <button
-                type='button'
-                className={cn(
-                  'w-full px-4 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/20 hover:text-foreground',
-                  isExpanded && 'border-t border-border/60',
-                )}
-                onClick={() => setIsExpanded((prev) => !prev)}
-              >
-                {isExpanded ? 'Zobrazit méně' : `Zobrazit další (${rest.length})`}
-              </button>
-            </div>
+              onClick={() => setIsExpanded((prev) => !prev)}
+            >
+              {isExpanded ? 'Zobrazit méně' : `Zobrazit další (${rest.length})`}
+            </button>
           )}
-        </>
+        </div>
       )}
     </section>
   )

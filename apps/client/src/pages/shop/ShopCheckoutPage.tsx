@@ -6,13 +6,17 @@ import {
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useShopCart } from '@/hooks/useShopCart'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import type { ApiError } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import playIcon from '@/assets/t-play-blue.svg'
 import {
   buildShopPath,
   formatPrice,
@@ -69,6 +73,7 @@ const ShopCheckoutPage = () => {
   const createOrderMutation = useMutation({
     mutationFn: createShopOrder,
     onSuccess: (order) => {
+      toast.success('Objednávka byla úspěšně vytvořena.')
       clearCart()
       navigate(buildShopPath(`/shop/success/${order.orderId}`, orgSlug), {
         state: { order },
@@ -80,6 +85,7 @@ const ShopCheckoutPage = () => {
   })
 
   useTitle('Checkout | Platform Shop')
+
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
   }, [orgSlug])
@@ -115,26 +121,42 @@ const ShopCheckoutPage = () => {
 
   return (
     <div className='w-full max-w-5xl mx-auto space-y-6'>
-      <section className='rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm space-y-2'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
-          Checkout
-        </h1>
-        <p className='text-sm text-muted-foreground'>
-          V1 checkout je záměrně jednoduchý: objednávka se odešle pouze s
-          kontaktním e-mailem.
-        </p>
+      <section className='relative overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm space-y-2'>
+        <div
+          className={cn(
+            headerLineHeight,
+            colorStyles.line['accent-teal'],
+            '-mx-4 -mt-4 mb-4 rounded-t-2xl sm:-mx-6 sm:-mt-6 sm:mb-6',
+          )}
+        />
+
+        <img
+          src={playIcon}
+          alt=''
+          aria-hidden='true'
+          className='absolute top-3 right-4 h-10 w-10 sm:right-6 sm:h-12 sm:w-12'
+        />
+        <div className='space-y-2 '>
+          <Label size='xl' className='font-bold -mt-1'>
+            Checkout
+          </Label>
+          <p className='text-sm text-muted-foreground'>
+            V1 checkout je záměrně jednoduchý: objednávka se odešle pouze s
+            kontaktním e-mailem.
+          </p>
+        </div>
       </section>
 
-      <div className='grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5 md:gap-6'>
-        <section className='rounded-2xl border border-border/70 bg-background p-4 sm:p-5 shadow-sm space-y-4'>
-          <h2 className='font-semibold text-foreground'>Položky objednávky</h2>
+      <div className='grid grid-cols-1 gap-5 md:gap-6 lg:grid-cols-[1.4fr_1fr]'>
+        <section className='space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
+          <Label size={'default'}>Položky objednávky</Label>
 
           {isLoading ? (
             <div className='space-y-3'>
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={`checkout-skeleton-${index}`}
-                  className='h-18 rounded-xl bg-muted/30 animate-pulse'
+                  className='h-18 animate-pulse rounded-xl bg-muted/30'
                 />
               ))}
             </div>
@@ -162,7 +184,7 @@ const ShopCheckoutPage = () => {
             ))
           )}
 
-          <div className='space-y-2 pt-2 border-t border-border/60'>
+          <div className='flex flex-col gap-2 pt-2 border-t border-border/60'>
             <label
               htmlFor='shop-checkout-email'
               className='text-sm font-medium text-foreground'
@@ -179,8 +201,8 @@ const ShopCheckoutPage = () => {
           </div>
         </section>
 
-        <aside className='rounded-2xl border border-border/70 bg-background p-4 sm:p-5 shadow-sm space-y-4 h-fit'>
-          <h2 className='font-semibold text-foreground'>Rekapitulace</h2>
+        <aside className='h-fit space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
+          <Label size={'default'}>Rekapitulace</Label>
 
           <div className='space-y-2 text-sm'>
             <div className='flex items-center justify-between'>
@@ -189,15 +211,29 @@ const ShopCheckoutPage = () => {
             </div>
             <div className='flex items-center justify-between'>
               <span className='text-muted-foreground'>Promo kód</span>
-              <span>{cart.promoCode.trim() || 'Nepoužit'}</span>
+              <span
+                className={cn(
+                  cart.promoCode.trim()
+                    ? 'font-semibold text-primary'
+                    : 'text-destructive',
+                )}
+              >
+                {cart.promoCode.trim() || 'Nepoužit'}
+              </span>
             </div>
             <div className='flex items-center justify-between'>
               <span className='text-muted-foreground'>Sleva</span>
-              <span className={discountCents > 0 ? 'text-primary font-semibold' : ''}>
+              <span
+                className={
+                  discountCents > 0
+                    ? 'font-semibold text-accent-teal-light'
+                    : ''
+                }
+              >
                 -{formatPrice(discountCents)}
               </span>
             </div>
-            <div className='border-t border-border/60 pt-2 flex items-center justify-between font-semibold text-base'>
+            <div className='flex items-center justify-between border-t border-border/60 pt-2 text-base font-semibold'>
               <span>Celkem</span>
               <span>{formatPrice(totalCents)}</span>
             </div>
@@ -217,28 +253,32 @@ const ShopCheckoutPage = () => {
               </p>
             )}
 
-          <Button
-            variant='primary'
-            className='h-13 w-full px-6 text-base font-bold'
-            disabled={
-              isLoading ||
-              hasUnavailableItems ||
-              createOrderMutation.isPending ||
-              cart.items.length === 0
-            }
-            onClick={submitOrder}
-          >
-            {createOrderMutation.isPending ? 'Odesílám objednávku...' : 'Potvrdit objednávku'}
-          </Button>
-
-          <Button
-            variant='outline'
-            className='h-13 w-full px-6 text-base font-semibold'
-            onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
-            disabled={createOrderMutation.isPending}
-          >
-            Zpět do košíku
-          </Button>
+          <div className='grid grid-cols-[40%_60%] gap-2'>
+            <Button
+              variant='outline'
+              size={'primary'}
+              onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
+              disabled={createOrderMutation.isPending}
+            >
+              <span className='sm:hidden'>Zpět</span>
+              <span className='hidden sm:inline'>Zpět do košíku</span>
+            </Button>
+            <Button
+              variant='primary'
+              size={'primary'}
+              disabled={
+                isLoading ||
+                hasUnavailableItems ||
+                createOrderMutation.isPending ||
+                cart.items.length === 0
+              }
+              onClick={submitOrder}
+            >
+              {createOrderMutation.isPending
+                ? 'Odesílám objednávku...'
+                : 'Potvrdit objednávku'}
+            </Button>
+          </div>
         </aside>
       </div>
     </div>

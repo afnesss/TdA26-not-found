@@ -1,14 +1,20 @@
-import { getShopCatalog, validateShopPromoCode } from '@/api/queries/shopQueries'
+import {
+  getShopCatalog,
+  validateShopPromoCode,
+} from '@/api/queries/shopQueries'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useShopCart } from '@/hooks/useShopCart'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import type { ApiError } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   buildShopPath,
   formatPrice,
@@ -16,13 +22,24 @@ import {
   resolveCartLines,
   resolveShopOrgSlug,
 } from './shopUtils'
+import EditBtn from '../dashboard/components/EditBtn'
+import { useMediaQuery } from 'usehooks-ts'
+import { Label } from '@/components/ui/label'
 
 const ShopCartPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
-  const { cart, updateQuantity, removeItem, setPromoCode, itemCount, clearCart } =
-    useShopCart()
+  const isMd = useMediaQuery('(min-width: 768px)')
+
+  const {
+    cart,
+    updateQuantity,
+    removeItem,
+    setPromoCode,
+    itemCount,
+    clearCart,
+  } = useShopCart()
   const [promoDraft, setPromoDraft] = useState(cart.promoCode)
 
   const {
@@ -52,10 +69,6 @@ const ShopCartPage = () => {
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
   }, [orgSlug])
-
-  useEffect(() => {
-    setPromoDraft(cart.promoCode)
-  }, [cart.promoCode])
 
   const cartLines = resolveCartLines(cart.items, catalog)
   const subtotalCents = cartLines.reduce(
@@ -96,22 +109,29 @@ const ShopCartPage = () => {
   }
 
   const handlePromoSubmit = () => {
-    setPromoCode(promoDraft.toUpperCase().trim())
+    const normalizedPromoCode = promoDraft.toUpperCase().trim()
+    setPromoDraft(normalizedPromoCode)
+    setPromoCode(normalizedPromoCode)
   }
 
   return (
     <div className='w-full max-w-6xl mx-auto space-y-6'>
-      <section className='rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm'>
-        <div className='flex flex-wrap items-center justify-between gap-3'>
-          <div>
-            <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
-              Košík
-            </h1>
-          </div>
+      <section className='overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm'>
+        <div
+          className={cn(
+            headerLineHeight,
+            colorStyles.line['accent-teal'],
+            '-mx-4 -mt-4 mb-4 rounded-t-2xl sm:-mx-6 sm:-mt-6 sm:mb-6',
+          )}
+        />
+        <div className='flex items-center justify-between gap-3'>
+          <Label size={'xl'} className='font-bold mb-0'>
+            Košík
+          </Label>
 
           <Button
             variant='outline'
-            className='h-12 px-6 text-base font-semibold'
+            size={'md'}
             onClick={() => navigate(buildShopPath('/shop', orgSlug))}
           >
             Pokračovat v nákupu
@@ -134,73 +154,110 @@ const ShopCartPage = () => {
             cartLines.map((line) => (
               <article
                 key={line.itemId}
-                className='flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-border/70 p-3'
+                className='flex flex-col gap-3 rounded-xl border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between'
               >
-                {line.item?.imageUrl ? (
-                  <img
-                    src={line.item.imageUrl}
-                    alt={line.item.name}
-                    className='h-16 w-16 rounded-lg object-contain bg-muted/20 p-1'
-                  />
-                ) : (
-                  <div className='h-16 w-16 rounded-lg bg-muted/40' />
-                )}
+                {/* Лівий блок: фото + назва */}
+                <div className='flex items-start justify-between gap-2 sm:items-center'>
+                  <div className='flex items-center gap-2'>
+                    {line.item?.imageUrl ? (
+                      <img
+                        src={line.item.imageUrl}
+                        alt={line.item.name}
+                        className='h-14 w-14 rounded-lg object-contain bg-muted/20 p-1 shrink-0'
+                      />
+                    ) : (
+                      <div className='h-14 w-14 rounded-lg bg-muted/40 shrink-0' />
+                    )}
+                    <div>
+                      <p className='font-semibold text-foreground'>
+                        {line.item?.name ?? 'Položka již není dostupná'}
+                      </p>
+                      <p className='text-sm text-muted-foreground'>
+                        {line.item
+                          ? `${formatPrice(line.item.unitPriceCents)} / ks`
+                          : 'Nelze nacenit'}
+                      </p>
+                    </div>
+                  </div>
 
-                <div className='flex-1 min-w-0'>
-                  <p className='font-semibold text-foreground'>
-                    {line.item?.name ?? 'Položka již není dostupná'}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {line.item
-                      ? `${formatPrice(line.item.unitPriceCents)} / ks`
-                      : 'Nelze nacenit'}
-                  </p>
-                </div>
-
-                <div className='flex items-center gap-2'>
-                  <Button
-                    variant='outline'
-                    size='icon-lg'
-                    onClick={() =>
-                      updateQuantity(line.itemId, Math.max(1, line.quantity - 1))
-                    }
-                  >
-                    <Minus size={18} />
-                  </Button>
-                  <Input
-                    type='number'
-                    min={1}
-                    max={99}
-                    value={line.quantity}
-                    onChange={(event) => {
-                      updateQuantity(
-                        line.itemId,
-                        Number(event.target.value || line.quantity),
+                  {/* Odebrat тільки на mobile */}
+                  <EditBtn
+                    type='delete'
+                    onClick={() => {
+                      removeItem(line.itemId)
+                      toast.success(
+                        `"${line.item?.name ?? 'Položka'}" byla odebrána z košíku.`,
                       )
                     }}
-                    className='h-10 w-20 text-center text-base font-semibold'
+                    classNameBtn='flex sm:hidden'
+                    iconClassName='size-4'
                   />
-                  <Button
-                    variant='outline'
-                    size='icon-lg'
-                    onClick={() => updateQuantity(line.itemId, line.quantity + 1)}
-                  >
-                    <Plus size={18} />
-                  </Button>
                 </div>
 
-                <div className='flex items-center justify-between gap-3 sm:flex-col sm:items-end'>
-                  <span className='font-semibold text-foreground'>
-                    {formatPrice(line.lineTotalCents)}
-                  </span>
-                  <Button
-                    variant='ghost'
-                    className='text-destructive hover:text-destructive'
-                    onClick={() => removeItem(line.itemId)}
-                  >
-                    <Trash2 size={16} />
-                    Odebrat
-                  </Button>
+                {/* Правий блок: стерлер + ціна/Odebrat */}
+                <div
+                  className='flex items-center justify-between gap-2 border-t border-border/50 pt-3
+                  sm:border-none sm:pt-0 sm:flex-row sm:items-center sm:gap-4 shrink-0'
+                >
+                  {/* Стерлер */}
+                  <div className='flex items-center gap-1.5 sm:gap-2'>
+                    <Button
+                      variant='outline'
+                      size='icon-sm'
+                      className='size-7 sm:size-8 rounded-xl'
+                      onClick={() =>
+                        updateQuantity(
+                          line.itemId,
+                          Math.max(1, line.quantity - 1),
+                        )
+                      }
+                    >
+                      <Minus size={16} />
+                    </Button>
+                    <Input
+                      type='text'
+                      inputMode='numeric'
+                      min={1}
+                      max={50}
+                      value={line.quantity}
+                      onChange={(event) =>
+                        updateQuantity(
+                          line.itemId,
+                          Number(event.target.value || line.quantity),
+                        )
+                      }
+                      className='h-8 w-11 sm:h-10 sm:w-15 text-center text-sm sm:text-base font-semibold px-1'
+                    />
+                    <Button
+                      variant='outline'
+                      size='icon-sm'
+                      className='size-7 sm:size-8 rounded-xl'
+                      onClick={() =>
+                        updateQuantity(line.itemId, line.quantity + 1)
+                      }
+                    >
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+
+                  {/* Ціна + Odebrat на desktop — вертикально */}
+                  <div className='flex items-center gap-2 sm:flex-col  sm:gap-1'>
+                    <span className='font-semibold text-foreground'>
+                      {formatPrice(line.lineTotalCents)}
+                    </span>
+                    <EditBtn
+                      type='delete'
+                      onClick={() => {
+                        removeItem(line.itemId)
+                        toast.success(
+                          `"${line.item?.name ?? 'Položka'}" byla odebrána z košíku.`,
+                        )
+                      }}
+                      label='Odebrat'
+                      labelClassName='text-destructive text-xs sm:text-sm'
+                      classNameBtn='hidden sm:flex'
+                    />
+                  </div>
                 </div>
               </article>
             ))
@@ -210,7 +267,9 @@ const ShopCartPage = () => {
         <aside className='rounded-2xl border border-border/70 bg-background p-4 sm:p-5 shadow-sm space-y-4 h-fit'>
           <div className='flex items-center gap-2'>
             <ShoppingBag size={18} className='text-primary' />
-            <h2 className='font-semibold text-foreground'>Souhrn objednávky</h2>
+            <Label size={'default'} className='font-semibold text-foreground'>
+              Souhrn objednávky
+            </Label>
           </div>
 
           <div className='space-y-2 text-sm'>
@@ -224,7 +283,13 @@ const ShopCartPage = () => {
             </div>
             <div className='flex items-center justify-between'>
               <span className='text-muted-foreground'>Sleva</span>
-              <span className={discountCents > 0 ? 'text-primary font-semibold' : ''}>
+              <span
+                className={
+                  discountCents > 0
+                    ? 'text-accent-teal-light font-semibold'
+                    : ''
+                }
+              >
                 -{formatPrice(discountCents)}
               </span>
             </div>
@@ -234,13 +299,15 @@ const ShopCartPage = () => {
             </div>
           </div>
 
-          <div className='space-y-2'>
+          <div className='flex flex-col gap-2'>
             <label className='text-sm font-medium text-foreground'>
               Promo kód (1 kód na košík)
             </label>
             <Input
               value={promoDraft}
-              onChange={(event) => setPromoDraft(event.target.value.toUpperCase())}
+              onChange={(event) =>
+                setPromoDraft(event.target.value.toUpperCase())
+              }
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
                   event.preventDefault()
@@ -253,7 +320,9 @@ const ShopCartPage = () => {
               Pro ověření promo kódu stiskněte Enter.
             </p>
             {cart.promoCode.trim().length > 0 && promoValidation.isFetching && (
-              <p className='text-xs text-muted-foreground'>Ověřuji promo kód...</p>
+              <p className='text-xs text-muted-foreground'>
+                Ověřuji promo kód...
+              </p>
             )}
             {hasValidPromo && (
               <p className='text-xs text-primary font-medium'>

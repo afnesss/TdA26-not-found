@@ -1,16 +1,24 @@
 import { Button } from '@/components/ui/button'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgCoursesPath } from '@/lib/routes'
 import type { ShopOrder } from '@/lib/schemas'
+import { cn } from '@/lib/utils'
 import { CheckCircle2 } from 'lucide-react'
 import { useEffect } from 'react'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import {
   buildShopPath,
   formatPrice,
   persistShopOrgSlug,
   resolveShopOrgSlug,
 } from './shopUtils'
+import { Label } from '@/components/ui/label'
 
 type ShopSuccessLocationState = {
   order?: ShopOrder
@@ -32,15 +40,23 @@ const ShopSuccessPage = () => {
 
   return (
     <div className='w-full max-w-3xl mx-auto'>
-      <section className='rounded-2xl border border-border/70 bg-background p-5 sm:p-8 shadow-sm text-center space-y-5'>
-        <div className='mx-auto w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center'>
+      <section className='overflow-hidden rounded-2xl border border-border/70 bg-background p-5 sm:p-8 shadow-sm text-center space-y-5'>
+        <div
+          className={cn(
+            headerLineHeight,
+            colorStyles.line.secondary,
+            '-mx-5 -mt-5 mb-5 rounded-t-2xl sm:-mx-8 sm:-mt-8 sm:mb-8',
+          )}
+        />
+
+        <div className='mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary/45 text-[#2D8B6B]'>
           <CheckCircle2 size={34} />
         </div>
 
         <div className='space-y-2'>
-          <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
+          <Label size={'xl'} className='font-bold'>
             Objednávka byla vytvořena
-          </h1>
+          </Label>
           <p className='text-sm text-muted-foreground'>
             Děkujeme. Objednávka byla automaticky uložena v systému.
           </p>
@@ -60,7 +76,9 @@ const ShopSuccessPage = () => {
               </div>
               <div className='flex items-center justify-between gap-2 text-sm'>
                 <span className='text-muted-foreground'>Počet položek</span>
-                <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                <span>
+                  {order.items.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
               </div>
               <div className='flex items-center justify-between gap-2 text-sm font-semibold'>
                 <span>Celkem</span>
@@ -83,7 +101,9 @@ const ShopSuccessPage = () => {
             className='h-13 px-8 text-base sm:text-lg font-semibold'
             onClick={() =>
               navigate(
-                orgSlug ? buildOrgCoursesPath(orgSlug) : buildShopPath('/shop', orgSlug),
+                orgSlug
+                  ? buildOrgCoursesPath(orgSlug)
+                  : buildShopPath('/shop', orgSlug),
               )
             }
           >

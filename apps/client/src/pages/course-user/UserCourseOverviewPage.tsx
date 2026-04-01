@@ -52,7 +52,7 @@ const UserCourseOverviewPage = () => {
               totalQuizzes={courseSessionOverview?.totalQuizzes ?? 0}
             />
           </div>
-          <CourseLeaderboard leaderboard={leaderboard} />
+          <CourseLeaderboard leaderboard={leaderboard} showLeaderTrophy />
         </>
       )}
 

@@ -191,6 +191,27 @@ export const requireScopedOrganizationUser =
     return next();
   };
 
+export const requireScopedOrganizationMember =
+  (allowedRoles?: Array<"lecturer" | "student">) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.organization) {
+      return next();
+    }
+
+    if (req.user?.actorType === "organization_admin") {
+      if (
+        req.user.organizationId !== req.organization.uuid &&
+        req.user.orgSlug !== req.organization.slug
+      ) {
+        return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+      }
+
+      return next();
+    }
+
+    return requireScopedOrganizationUser(allowedRoles)(req, res, next);
+  };
+
 export const requireCourseBelongsToOrganization = async (
   req: AuthRequest,
   res: Response,

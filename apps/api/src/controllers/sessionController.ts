@@ -5,6 +5,8 @@ import { courses, modules, quizzes, quizSubmissions, users } from "../db/schema"
 import type { AuthRequest } from "../types/auth";
 import { logger } from "../utils/logger";
 
+type QuizDifficulty = "beginner" | "easy" | "medium" | "hard" | "extreme";
+
 type CourseStudentRow = {
   userId: string;
   username: string;
@@ -20,6 +22,7 @@ type SubmissionRow = {
   quizId: string;
   score: number;
   maxScore: number;
+  difficulty: QuizDifficulty;
   submittedAt: Date;
 };
 
@@ -37,6 +40,29 @@ type LeaderboardEntry = {
   status: "completed" | "in_progress";
 };
 
+const RETRY_PENALTY_PERCENT = 5;
+const QUIZ_DIFFICULTY_WEIGHT: Record<QuizDifficulty, number> = {
+  beginner: 1,
+  easy: 2,
+  medium: 4,
+  hard: 6,
+  extreme: 8,
+};
+
+const resolveQuizDifficulty = (value: unknown): QuizDifficulty => {
+  if (
+    value === "beginner" ||
+    value === "easy" ||
+    value === "medium" ||
+    value === "hard" ||
+    value === "extreme"
+  ) {
+    return value;
+  }
+
+  return "beginner";
+};
+
 const getTotalQuizzes = async (courseId: string) => {
   const [quizStats] = await db
     .select({
@@ -50,7 +76,7 @@ const getTotalQuizzes = async (courseId: string) => {
 };
 
 const getCourseSubmissionRows = async (courseId: string): Promise<SubmissionRow[]> => {
-  return db
+  const rows = await db
     .select({
       userId: users.uuid,
       username: users.username,
@@ -59,6 +85,7 @@ const getCourseSubmissionRows = async (courseId: string): Promise<SubmissionRow[
       quizId: quizzes.uuid,
       score: quizSubmissions.score,
       maxScore: quizSubmissions.maxScore,
+      difficulty: quizzes.difficulty,
       submittedAt: quizSubmissions.createdAt,
     })
     .from(quizSubmissions)
@@ -74,6 +101,11 @@ const getCourseSubmissionRows = async (courseId: string): Promise<SubmissionRow[
         eq(users.role, "student"),
       ),
     );
+
+  return rows.map((row) => ({
+    ...row,
+    difficulty: resolveQuizDifficulty(row.difficulty),
+  }));
 };
 
 const getCourseStudents = async (courseId: string): Promise<CourseStudentRow[]> => {
@@ -102,7 +134,14 @@ const buildLeaderboard = (
       xp: number;
       level: number;
       submissionsCount: number;
-      latestByQuiz: Map<string, SubmissionRow>;
+      quizStats: Map<
+        string,
+        {
+          attempts: number;
+          bestPercent: number;
+          difficulty: QuizDifficulty;
+        }
+      >;
     }
   >();
 
@@ -113,7 +152,7 @@ const buildLeaderboard = (
       xp: student.xp,
       level: student.level,
       submissionsCount: 0,
-      latestByQuiz: new Map(),
+      quizStats: new Map(),
     });
   }
 
@@ -126,34 +165,73 @@ const buildLeaderboard = (
         xp: row.xp,
         level: row.level,
         submissionsCount: 1,
-        latestByQuiz: new Map([[row.quizId, row]]),
+        quizStats: new Map([
+          [
+            row.quizId,
+            {
+              attempts: 1,
+              bestPercent:
+                row.maxScore > 0 ? (row.score / row.maxScore) * 100 : 0,
+              difficulty: row.difficulty,
+            },
+          ],
+        ]),
       });
       continue;
     }
 
     existing.submissionsCount += 1;
-    const latestForQuiz = existing.latestByQuiz.get(row.quizId);
-    if (
-      !latestForQuiz ||
-      new Date(row.submittedAt).getTime() > new Date(latestForQuiz.submittedAt).getTime()
-    ) {
-      existing.latestByQuiz.set(row.quizId, row);
+    const currentPercent = row.maxScore > 0 ? (row.score / row.maxScore) * 100 : 0;
+    const existingQuizStats = existing.quizStats.get(row.quizId);
+
+    if (!existingQuizStats) {
+      existing.quizStats.set(row.quizId, {
+        attempts: 1,
+        bestPercent: currentPercent,
+        difficulty: row.difficulty,
+      });
+      continue;
     }
+
+    existingQuizStats.attempts += 1;
+    existingQuizStats.bestPercent = Math.max(
+      existingQuizStats.bestPercent,
+      currentPercent,
+    );
   }
 
   const ranked = Array.from(userStats.values())
     .map((user) => {
-      const latestSubmissions = Array.from(user.latestByQuiz.values());
-      const completedQuizzes = latestSubmissions.length;
+      const quizStats = Array.from(user.quizStats.values());
+      const completedQuizzes = quizStats.length;
       const successRate =
         completedQuizzes > 0
           ? Math.round(
-              latestSubmissions.reduce((sum, item) => {
-                if (!item.maxScore || item.maxScore <= 0) {
-                  return sum;
-                }
-                return sum + (item.score / item.maxScore) * 100;
-              }, 0) / completedQuizzes,
+              quizStats.reduce(
+                (accumulator, quiz) => {
+                  const penalizedScore = Math.max(
+                    0,
+                    quiz.bestPercent -
+                      Math.max(0, quiz.attempts - 1) * RETRY_PENALTY_PERCENT,
+                  );
+                  const weight = QUIZ_DIFFICULTY_WEIGHT[quiz.difficulty] ?? 1;
+
+                  return {
+                    weightedScoreSum:
+                      accumulator.weightedScoreSum + penalizedScore * weight,
+                    weightSum: accumulator.weightSum + weight,
+                  };
+                },
+                { weightedScoreSum: 0, weightSum: 0 },
+              ).weightedScoreSum /
+                Math.max(
+                  1,
+                  quizStats.reduce(
+                    (sum, quiz) =>
+                      sum + (QUIZ_DIFFICULTY_WEIGHT[quiz.difficulty] ?? 1),
+                    0,
+                  ),
+                ),
             )
           : null;
 

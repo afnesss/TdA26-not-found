@@ -28,6 +28,7 @@ import {
 } from "../middleware/courseStatus";
 import {
   requireScopedOrganizationAdmin,
+  requireScopedOrganizationMember,
   requireScopedOrganizationPasswordChanged,
 } from "../middleware/organization";
 
@@ -39,14 +40,14 @@ router.get("/:uuid/dashboard-analytics", getCourseDashboardAnalytics);
 router.get(
   "/:uuid/session/overview",
   organizationScopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
+  requireScopedOrganizationMember(["lecturer", "student"]),
   requireScopedOrganizationPasswordChanged,
   getCourseSessionOverview,
 );
 router.get(
   "/:uuid/session/leaderboard",
   organizationScopedAuthMiddleware,
-  requireScopedOrganizationAdmin,
+  requireScopedOrganizationMember(["lecturer", "student"]),
   requireScopedOrganizationPasswordChanged,
   getCourseSessionLeaderboard,
 );

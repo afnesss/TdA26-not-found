@@ -38,10 +38,7 @@ const FormField = (props: FormFieldProps) => {
       </Label>
       <div className='relative'>
         {Icon && (
-          <Icon
-            className='absolute left-3 top-2 sm:top-3 sm:w-5 w-4 h-4 sm:h-5 text-foreground/40'
-            aria-hidden='true'
-          />
+          <Icon className='absolute left-3 top-2 sm:top-3 sm:w-5 w-4 h-4 sm:h-5 text-foreground/40' />
         )}
 
         {props.multiline ? (

@@ -43,7 +43,7 @@ export const colorStyles = {
     gray: 'bg-gray-300',
     'accent-teal-light': 'bg-accent-teal-light/50',
     'accent-teal-light-subtle': 'bg-accent-teal-light/40',
-    'accent-teal': 'bg-accent-teal/60',
+    'accent-teal': 'bg-accent-teal/80',
     'accent-teal-dark': 'bg-accent-teal-dark/45',
   },
 }

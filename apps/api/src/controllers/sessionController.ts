@@ -2,7 +2,15 @@ import { and, eq, sql } from "drizzle-orm";
 import { Request, Response } from "express";
 import { db } from "../db";
 import { courses, modules, quizzes, quizSubmissions, users } from "../db/schema";
+import type { AuthRequest } from "../types/auth";
 import { logger } from "../utils/logger";
+
+type CourseStudentRow = {
+  userId: string;
+  username: string;
+  xp: number;
+  level: number;
+};
 
 type SubmissionRow = {
   userId: string;
@@ -36,7 +44,7 @@ const getTotalQuizzes = async (courseId: string) => {
     })
     .from(quizzes)
     .innerJoin(modules, eq(quizzes.moduleId, modules.uuid))
-    .where(eq(modules.courseId, courseId));
+    .where(and(eq(modules.courseId, courseId), eq(modules.status, "active")));
 
   return quizStats?.totalQuizzes ?? 0;
 };
@@ -61,12 +69,28 @@ const getCourseSubmissionRows = async (courseId: string): Promise<SubmissionRow[
     .where(
       and(
         eq(modules.courseId, courseId),
+        eq(modules.status, "active"),
         eq(users.organizationId, courses.organizationId),
+        eq(users.role, "student"),
       ),
     );
 };
 
+const getCourseStudents = async (courseId: string): Promise<CourseStudentRow[]> => {
+  return db
+    .select({
+      userId: users.uuid,
+      username: users.username,
+      xp: users.xp,
+      level: users.level,
+    })
+    .from(users)
+    .innerJoin(courses, eq(users.organizationId, courses.organizationId))
+    .where(and(eq(courses.uuid, courseId), eq(users.role, "student")));
+};
+
 const buildLeaderboard = (
+  students: CourseStudentRow[],
   rows: SubmissionRow[],
   totalQuizzes: number,
 ): LeaderboardEntry[] => {
@@ -81,6 +105,17 @@ const buildLeaderboard = (
       latestByQuiz: Map<string, SubmissionRow>;
     }
   >();
+
+  for (const student of students) {
+    userStats.set(student.userId, {
+      userId: student.userId,
+      username: student.username,
+      xp: student.xp,
+      level: student.level,
+      submissionsCount: 0,
+      latestByQuiz: new Map(),
+    });
+  }
 
   for (const row of rows) {
     const existing = userStats.get(row.userId);
@@ -148,6 +183,14 @@ const buildLeaderboard = (
         return a.status === "completed" ? -1 : 1;
       }
 
+      if (a.completedQuizzes === 0 && b.completedQuizzes > 0) {
+        return 1;
+      }
+
+      if (b.completedQuizzes === 0 && a.completedQuizzes > 0) {
+        return -1;
+      }
+
       if (a.submissionsCount !== b.submissionsCount) {
         return a.submissionsCount - b.submissionsCount;
       }
@@ -172,18 +215,23 @@ const buildLeaderboard = (
   return ranked;
 };
 
-export async function getCourseSessionOverview(req: Request, res: Response) {
+export async function getCourseSessionOverview(req: AuthRequest, res: Response) {
   const { uuid: courseId } = req.params;
 
   try {
     const totalQuizzes = await getTotalQuizzes(courseId);
+    const students = await getCourseStudents(courseId);
     const rows = await getCourseSubmissionRows(courseId);
-    const leaderboard = buildLeaderboard(rows, totalQuizzes);
+    const leaderboard = buildLeaderboard(students, rows, totalQuizzes);
+    const visibleLeaderboard =
+      req.user?.actorType === "organization_user" && req.user.role === "student"
+        ? leaderboard.filter((entry) => entry.completedQuizzes > 0)
+        : leaderboard;
 
     return res.json({
       courseId,
       totalQuizzes,
-      leaderboard,
+      leaderboard: visibleLeaderboard,
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch course leaderboard overview");
@@ -196,20 +244,11 @@ export async function getCourseSessionLeaderboard(req: Request, res: Response) {
 
   try {
     const totalQuizzes = await getTotalQuizzes(courseId);
+    const students = await getCourseStudents(courseId);
     const rows = await getCourseSubmissionRows(courseId);
-    const leaderboard = buildLeaderboard(rows, totalQuizzes).map((entry) => ({
-      rank: entry.rank,
-      userId: entry.userId,
-      username: entry.username,
-      successRate: entry.successRate,
-      xp: entry.xp,
-      level: entry.level,
-      completedQuizzes: entry.completedQuizzes,
-      totalQuizzes: entry.totalQuizzes,
-      submissionsCount: entry.submissionsCount,
-      status: entry.status,
-      progressPercent: entry.progressPercent,
-    }));
+    const leaderboard = buildLeaderboard(students, rows, totalQuizzes).filter(
+      (entry) => entry.completedQuizzes > 0,
+    );
 
     return res.json({
       courseId,

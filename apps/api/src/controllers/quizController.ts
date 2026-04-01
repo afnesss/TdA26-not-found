@@ -390,9 +390,11 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
       })
       .returning();
 
-    const difficulty = resolveQuizDifficulty((quiz as { difficulty?: unknown }).difficulty);
+    const difficulty = resolveQuizDifficulty(
+      (quiz as { difficulty?: unknown }).difficulty,
+    );
     const gainedXp =
-      !hadPreviousSubmission ? XP_BY_DIFFICULTY[difficulty] : 0;
+      !hadPreviousSubmission && score > 0 ? XP_BY_DIFFICULTY[difficulty] : 0;
 
     let accountProgress: { xp: number; level: number } | null = null;
     if (gainedXp > 0) {

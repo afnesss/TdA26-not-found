@@ -386,6 +386,21 @@ export const useCourseFeedSSE = ({
       queryClient.invalidateQueries({
         queryKey: ['quizAnalytics', parsed.quiz.uuid],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-overview', courseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-leaderboard', courseId],
+      })
+    }
+
+    const handleUserProgressUpdated = () => {
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-overview', courseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['course-session-leaderboard', courseId],
+      })
     }
 
     eventSource.addEventListener(
@@ -395,121 +410,10 @@ export const useCourseFeedSSE = ({
     eventSource.addEventListener('material_updated', handleMaterialUpdated)
     eventSource.addEventListener('quiz_stats_updated', handleQuizUpdated)
     eventSource.addEventListener('quiz_updated', handleQuizUpdated)
-
-    // // --- Material Updates ---
-    // eventSource.addEventListener('material_added', (event) => {
-    //   const newMaterial = JSON.parse(event.data)
-    //   console.log('Material added:', newMaterial)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       const moduleId = getPayloadModuleId(newMaterial)
-    //       if (!moduleId) return oldData
-
-    //       return updateCourseModules(oldData, (module) =>
-    //         module.uuid === moduleId
-    //           ? {
-    //               ...module,
-    //               materials: [
-    //                 newMaterial as CourseMaterial,
-    //                 ...module.materials,
-    //               ],
-    //             }
-    //           : module,
-    //       )
-    //     },
-    //   )
-    // })
-
-    // eventSource.addEventListener('material_updated', (event) => {
-    //   const updatedMaterial = JSON.parse(event.data)
-    //   console.log('Material updated:', updatedMaterial)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       return updateCourseModules(oldData, (module) => ({
-    //         ...module,
-    //         materials: module.materials.map((m) =>
-    //           m.uuid === updatedMaterial.uuid
-    //             ? (updatedMaterial as CourseMaterial)
-    //             : m,
-    //         ),
-    //       }))
-    //     },
-    //   )
-    // })
-
-    // eventSource.addEventListener('material_deleted', (event) => {
-    //   const { uuid } = JSON.parse(event.data)
-    //   console.log('Material deleted:', uuid)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       return updateCourseModules(oldData, (module) => ({
-    //         ...module,
-    //         materials: module.materials.filter((m) => m.uuid !== uuid),
-    //       }))
-    //     },
-    //   )
-    // })
-
-    // --- Quiz Updates ---
-    // eventSource.addEventListener('quiz_added', (event) => {
-    //   const newQuiz = JSON.parse(event.data)
-    //   console.log('Quiz added:', newQuiz)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       const moduleId = getPayloadModuleId(newQuiz)
-    //       if (!moduleId) return oldData
-
-    //       return updateCourseModules(oldData, (module) =>
-    //         module.uuid === moduleId
-    //           ? {
-    //               ...module,
-    //               quizzes: [newQuiz as CourseQuiz, ...module.quizzes],
-    //             }
-    //           : module,
-    //       )
-    //     },
-    //   )
-    // })
-
-    // eventSource.addEventListener('quiz_updated', (event) => {
-    //   const updatedQuiz = JSON.parse(event.data)
-    //   console.log('Quiz updated:', updatedQuiz)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       return updateCourseModules(oldData, (module) => ({
-    //         ...module,
-    //         quizzes: module.quizzes.map((q) =>
-    //           q.uuid === updatedQuiz.uuid ? (updatedQuiz as CourseQuiz) : q,
-    //         ),
-    //       }))
-    //     },
-    //   )
-    // })
-
-    // eventSource.addEventListener('quiz_deleted', (event) => {
-    //   const { uuid } = JSON.parse(event.data)
-    //   console.log('Quiz deleted:', uuid)
-
-    //   queryClient.setQueryData<CourseDetail>(
-    //     ['course', courseId],
-    //     (oldData) => {
-    //       return updateCourseModules(oldData, (module) => ({
-    //         ...module,
-    //         quizzes: module.quizzes.filter((q) => q.uuid !== uuid),
-    //       }))
-    //     },
-    //   )
-    // })
+    eventSource.addEventListener(
+      'user_progress_updated',
+      handleUserProgressUpdated,
+    )
 
     return () => {
       if (isDev) console.log('SSE closing')

@@ -64,6 +64,15 @@ export const getCourseSessionOverview = async (
   )
 }
 
+export const getCourseSessionLeaderboard = async (
+  courseId: string,
+  orgSlug?: string,
+): Promise<CourseSessionOverview> => {
+  return await apiFetch<CourseSessionOverview>(
+    buildCourseApiPath(orgSlug, `/courses/${courseId}/session/leaderboard`),
+  )
+}
+
 export const updateCourse = async (
   courseId: string,
   body: CourseUpdateRequest,

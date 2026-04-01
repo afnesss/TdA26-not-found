@@ -160,10 +160,10 @@ const ShopCatalogPage = () => {
             className={cn(
               headerLineHeight,
               colorStyles.line.secondary,
-              '-mx-4 -mt-4 mb-4 rounded-t-2xl sm:-mx-6 sm:-mt-6 sm:mb-6',
+              '-mx-4 mb-2 rounded-t-2xl sm:-mx-6 sm:-mt-6 sm:mb-6',
             )}
           />
-          <div className='absolute top-5 right-5 h-12 w-12 flex items-center text-center justify-center rounded-full bg-secondary/45 text-[#2D8B6B]'>
+          <div className='absolute top-4 right-3 md:top-5 md:right-5 h-12 w-12 flex items-center text-center justify-center rounded-full bg-secondary/45 text-[#2D8B6B]'>
             <CheckCircle2 size={28} />
           </div>
           <AlertDialogHeader className='gap-3'>
@@ -181,7 +181,7 @@ const ShopCatalogPage = () => {
                   <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
                     Jednorázový promo kód
                   </p>
-                  <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                  <div className='flex  gap-3 flex-row items-center justify-between'>
                     <code className='block rounded-xl bg-background px-3 py-2 text-sm font-bold text-primary shadow-sm sm:text-base'>
                       {purchasedVoucher?.code ?? ''}
                     </code>
@@ -194,7 +194,7 @@ const ShopCatalogPage = () => {
                     >
                       {isVoucherCodeCopied ? (
                         <>
-                          <Check size={16} />
+                          <Check className='text-secondary' size={16} />
                           Zkopírováno
                         </>
                       ) : (

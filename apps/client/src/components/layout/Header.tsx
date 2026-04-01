@@ -50,6 +50,8 @@ export default function Header() {
   const isAdminRequestsActive = pathname.startsWith('/admin/requests')
   const isAdminOrganizationsActive = pathname.startsWith('/admin/organizations')
   const isShopActive = pathname.startsWith('/shop')
+  const isLegalPage =
+    pathname === '/terms-of-use' || pathname === '/privacy-policy'
   const isOrgCoursesActive =
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/courses`)
   const isOrgDashboardActive =
@@ -68,10 +70,11 @@ export default function Header() {
     isStaff: isOrgStaff,
     user: orgUser,
   } = useOrganizationAuth(effectiveOrgSlug)
+  const isPublicOrgContextPage = isShopActive || isLegalPage
   const hasOrgNavigation =
     Boolean(effectiveOrgSlug) &&
     !isAdminArea &&
-    (isOrganizationArea || (isShopActive && isOrgAuth))
+    (isOrganizationArea || (isPublicOrgContextPage && isOrgAuth))
 
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
@@ -142,7 +145,8 @@ export default function Header() {
                   label: 'Dashboard',
                   value: 'dashboard',
                   isActive: isOrgDashboardActive,
-                  onClick: () => navigate(buildOrgDashboardPath(effectiveOrgSlug)),
+                  onClick: () =>
+                    navigate(buildOrgDashboardPath(effectiveOrgSlug)),
                 },
               ]
             : []),
@@ -159,6 +163,7 @@ export default function Header() {
   const activeNavigationItem =
     navigationItems.find((item) => item.isActive) ?? navigationItems[0]
   const isAuthAction = isAdminArea || hasOrgNavigation
+  const shouldShowXpInfo = hasOrgNavigation && orgUser?.role === 'student'
 
   const secondaryAction: SecondaryAction = isAdminArea
     ? {
@@ -197,14 +202,23 @@ export default function Header() {
           className='h-14 w-auto cursor-pointer py-3 transition-all duration-200 hover:scale-102 sm:h-17 md:h-18'
           onClick={() =>
             navigate(
-              hasOrgNavigation && effectiveOrgSlug ? `/${effectiveOrgSlug}` : '/',
+              hasOrgNavigation && effectiveOrgSlug
+                ? `/${effectiveOrgSlug}`
+                : '/',
             )
           }
           role='button'
           aria-label='Přejít na úvodní stránku'
         />
       </div>
-      <div className='flex w-1/2 items-center justify-end gap-4 md:gap-6 px-4 sm:px-8 md:px-12 lg:px-20'>
+      <div className='flex w-1/2 items-center justify-end gap-4 px-4 sm:px-8 md:gap-6 md:px-12 lg:px-20'>
+        {shouldShowXpInfo && (
+          <div className='inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-background/25 px-2 py-1 text-xs sm:text-base font-semibold text-background'>
+            <span>LVL {orgUser.level ?? 1}</span>
+            <span>•</span>
+            <span>{orgUser.xp ?? 0} XP</span>
+          </div>
+        )}
         {isMd || navigationItems.length <= 1 ? (
           <>
             {navigationItems.map((item) => (
@@ -215,13 +229,6 @@ export default function Header() {
                 aria-current={item.isActive ? 'page' : undefined}
                 onClick={item.onClick}
               >
-                {item.value === 'courses' && orgUser?.role === 'student' && (
-                  <span className='mr-2 inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-secondary'>
-                    <span>LVL {orgUser.level ?? 1}</span>
-                    <span>•</span>
-                    <span>{orgUser.xp ?? 0} XP</span>
-                  </span>
-                )}
                 {item.label}
               </Button>
             ))}

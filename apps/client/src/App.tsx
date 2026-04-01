@@ -35,6 +35,17 @@ import ShopCatalogPage from './pages/shop/ShopCatalogPage'
 import ShopCartPage from './pages/shop/ShopCartPage'
 import ShopCheckoutPage from './pages/shop/ShopCheckoutPage'
 import ShopSuccessPage from './pages/shop/ShopSuccessPage'
+import { useAuth } from './auth/useAuth'
+
+const AdminIndexRedirect = () => {
+  const { isAuth, isLoading } = useAuth()
+
+  if (isLoading) {
+    return null
+  }
+
+  return <Navigate to={isAuth ? '/admin/requests' : '/admin/login'} replace />
+}
 
 function App() {
   const router = createBrowserRouter(
@@ -52,7 +63,7 @@ function App() {
         <Route path='/dashboard/*' element={<NotFoundPage />} />
         <Route path='/terms-of-use' element={<TermsOfUsePage />} />
         <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
-        <Route path='/admin' element={<Navigate to='/admin/login' replace />} />
+        <Route path='/admin' element={<AdminIndexRedirect />} />
         <Route path='/admin/login' element={<LoginPage />} />
         <Route
           path='/admin/requests'

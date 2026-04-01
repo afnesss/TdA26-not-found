@@ -1,12 +1,16 @@
 import React from 'react'
 import { buildOrgCoursesPath, buildOrgInfoPath } from '@/lib/routes'
+import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 const Footer = () => {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isOrganizationArea = Boolean(orgSlug) && !pathname.startsWith('/admin')
+  const effectiveOrgSlug = resolveShopOrgSlug(
+    isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
+  )
 
   return (
     <footer className='w-full bg-foreground/90'>
@@ -45,18 +49,22 @@ const Footer = () => {
             )}
             <span
               className='cursor-pointer hover:text-secondary'
-              onClick={() => navigate('/shop')}
+              onClick={() => navigate(buildShopPath('/shop', effectiveOrgSlug))}
             >
               Shop
             </span>
             <span
               className='cursor-pointer hover:text-secondary'
-              onClick={() => navigate('/terms-of-use')}
+              onClick={() =>
+                navigate(buildShopPath('/terms-of-use', effectiveOrgSlug))
+              }
             >
               Podmínky použití
             </span>
             <span
-              onClick={() => navigate('/privacy-policy')}
+              onClick={() =>
+                navigate(buildShopPath('/privacy-policy', effectiveOrgSlug))
+              }
               className='cursor-pointer hover:text-secondary'
             >
               Ochrana osobních údajů

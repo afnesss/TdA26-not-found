@@ -1,7 +1,7 @@
 import type { CourseSessionOverview } from '@/api/queries/courseQueries'
 import feedImg from '@/assets/disconnect-blue.svg'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Clock3, Trophy } from 'lucide-react'
+import { CheckCircle2, CircleX, Clock3, Trophy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Label } from '../ui/label'
 import StateComp from './StateComp'
@@ -33,7 +33,7 @@ const RANK_STYLES = {
   default: {
     card: 'bg-sky-50/55',
     circle: 'bg-sky-100 text-primary size-6 sm:size-6 sm:ml-0.5',
-    accent: 'text-neutral-black',
+    accent: 'text-foreground',
   },
 } as const
 
@@ -68,10 +68,12 @@ const StatToken = ({
 
 const CompletionToken = ({
   completed,
+  notStarted,
   completedQuizzes,
   totalQuizzes,
 }: {
   completed: boolean
+  notStarted: boolean
   completedQuizzes: number
   totalQuizzes: number
 }) => (
@@ -80,11 +82,15 @@ const CompletionToken = ({
       'inline-flex w-full items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none sm:py-1.5 sm:text-xs md:text-xs',
       completed
         ? 'bg-secondary/30 text-[#2D8B6B]'
-        : 'bg-accent-teal/20 text-[#288080]',
+        : notStarted
+          ? 'bg-destructive/15 text-destructive'
+          : 'bg-accent-teal/20 text-[#288080]',
     )}
   >
     {completed ? (
       <CheckCircle2 className='hidden size-3.5 shrink-0 sm:inline-block' />
+    ) : notStarted ? (
+      <CircleX className='hidden size-3.5 shrink-0 sm:inline-block' />
     ) : (
       <Clock3 className='hidden size-3.5 shrink-0 sm:inline-block' />
     )}
@@ -157,6 +163,7 @@ const RowContent = ({
   const rankStyle = getRankStyle(entry.rank)
   const successRate = entry.successRate == null ? '—' : `${entry.successRate}%`
   const isCompleted = entry.status === 'completed'
+  const isNotStarted = entry.completedQuizzes === 0
 
   return (
     <div className='flex items-center gap-3 md:gap-4'>
@@ -192,6 +199,7 @@ const RowContent = ({
             </div>
             <CompletionToken
               completed={isCompleted}
+              notStarted={isNotStarted}
               completedQuizzes={entry.completedQuizzes}
               totalQuizzes={entry.totalQuizzes}
             />

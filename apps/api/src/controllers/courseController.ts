@@ -886,10 +886,6 @@ export async function updateCourse(req: Request, res: Response) {
     });
   }
 
-  // if (!isOnlyStatusChange) {
-  //   await createSystemEvent(uuid, `Detaily kurzu aktualizovány`);
-  // }
-
   sseManager.broadcast(uuid, "course_updated", updated[0]);
 
   res.json(updated[0]);

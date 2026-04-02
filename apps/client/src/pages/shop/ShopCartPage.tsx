@@ -182,7 +182,7 @@ const ShopCartPage = () => {
 
                   {/* Odebrat тільки на mobile */}
                   <EditBtn
-                    type='delete'
+                    actionType='delete'
                     onClick={() => {
                       removeItem(line.itemId)
                       toast.success(
@@ -247,7 +247,7 @@ const ShopCartPage = () => {
                       {formatPrice(line.lineTotalCents)}
                     </span>
                     <EditBtn
-                      type='delete'
+                      actionType='delete'
                       onClick={() => {
                         removeItem(line.itemId)
                         toast.success(

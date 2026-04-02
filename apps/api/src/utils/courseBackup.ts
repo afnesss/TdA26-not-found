@@ -126,7 +126,6 @@ const normalizeSingleBackup = (input: unknown): CourseBackup => {
 
   const legacy = input as {
     exportedAt?: string;
-
     course?: {
       uuid: string;
       name: string;

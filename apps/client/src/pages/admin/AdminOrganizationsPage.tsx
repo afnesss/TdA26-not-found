@@ -124,7 +124,7 @@ const AdminOrganizationsPage = () => {
                         <DeleteConfirmDialog
                           trigger={
                             <EditBtn
-                              type='delete'
+                              actionType='delete'
                               onClick={(e) => e?.stopPropagation()}
                               aria-label={`Smazat organizaci ${organization.name}`}
                             />

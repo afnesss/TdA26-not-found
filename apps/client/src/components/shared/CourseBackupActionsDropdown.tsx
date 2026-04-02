@@ -18,8 +18,9 @@ import { useImportCourseMutation } from '@/pages/CoursePage/utils/useCourseMutat
 import { useQueryClient } from '@tanstack/react-query'
 import { Download, FolderInput, Upload } from 'lucide-react'
 import { useRef } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { buildOrgDashboardCoursePath } from '@/lib/routes'
 
 type CourseBackupActionsDropdownProps = {
   className?: string
@@ -68,14 +69,15 @@ const CourseBackupActionsDropdown = ({
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
   const { mutateAsync: importCourses, isPending: importing } =
     useImportCourseMutation({
       onSuccess: (courses) => {
         if (courses.length === 1) {
-          navigate(`/dashboard/${courses[0].uuid}`)
+          navigate(buildOrgDashboardCoursePath(orgSlug, courses[0].uuid))
         }
       },
-    })
+    }, orgSlug)
   const isBusy = importing
 
   const runImport = async (file: File) => {
@@ -148,7 +150,7 @@ const CourseBackupActionsDropdown = ({
             onSelect={() => {
               void (async () => {
                 try {
-                  const blob = await exportAllCourses()
+                  const blob = await exportAllCourses(orgSlug)
                   downloadBlob(blob, 'all-courses-backup.json')
                   toast.success('Vsechny kurzy byly exportovany')
                 } catch {

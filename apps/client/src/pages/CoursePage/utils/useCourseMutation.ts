@@ -341,7 +341,7 @@ export const useUpdateCourseStatusMutation = (
 
 export const useImportCourseMutation = (options?: {
   onSuccess?: (courses: CourseSummary[]) => void
-}) => {
+}, orgSlug?: string) => {
   const queryClient = useQueryClient()
 
   return useMutation<
@@ -349,7 +349,7 @@ export const useImportCourseMutation = (options?: {
     ApiError,
     { file: File }
   >({
-    mutationFn: (input) => importCourseBackup(input),
+    mutationFn: (input) => importCourseBackup({ ...input, orgSlug }),
     networkMode: 'always',
     onSuccess: async (courses) => {
       await queryClient.invalidateQueries({ queryKey: ['courses'] })
@@ -365,11 +365,11 @@ export const useImportCourseMutation = (options?: {
 
 export const useImportAllCoursesMutation = (options?: {
   onSuccess?: (courses: CourseSummary[]) => void
-}) => {
+}, orgSlug?: string) => {
   const queryClient = useQueryClient()
 
   return useMutation<CourseSummary[], ApiError, { file: File }>({
-    mutationFn: (input) => importAllCoursesBackup(input),
+    mutationFn: (input) => importAllCoursesBackup({ ...input, orgSlug }),
     networkMode: 'always',
     onSuccess: async (courses) => {
       await queryClient.invalidateQueries({ queryKey: ['courses'] })

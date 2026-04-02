@@ -15,6 +15,7 @@ import {
 } from 'react'
 import { toast } from 'sonner'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
+import { useParams } from 'react-router'
 
 type CourseExportTriggerProps = {
   courseId: string
@@ -53,6 +54,7 @@ const CourseExportTrigger = ({
   label,
 }: CourseExportTriggerProps) => {
   const [isExporting, setIsExporting] = useState(false)
+  const { orgSlug } = useParams<{ orgSlug?: string }>()
 
   const stopCardClick = (
     event?: Event | MouseEvent | PointerEvent | SyntheticEvent,
@@ -68,7 +70,7 @@ const CourseExportTrigger = ({
     setIsExporting(true)
 
     try {
-      const blob = await exportCourse(courseId, 'json')
+      const blob = await exportCourse(courseId, 'json', orgSlug)
       const safeCourseName = slugifyFilePart(courseName) || 'course'
       downloadBlob(blob, `${safeCourseName}-backup.json`)
       toast.success('Kurz byl exportovan do JSON zalohy')

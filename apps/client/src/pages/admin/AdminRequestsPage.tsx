@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Inbox, Mail, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
 const AdminRequestsPage = () => {
   useTitle('Žádosti organizací')
@@ -43,6 +44,10 @@ const AdminRequestsPage = () => {
         queryKey: ['admin-organization-requests'],
       })
       void queryClient.invalidateQueries({ queryKey: ['admin-organizations'] })
+      toast.success('Žádost byla schválena')
+    },
+    onError: () => {
+      toast.error('Žádost se nepodařilo schválit')
     },
   })
 
@@ -58,6 +63,10 @@ const AdminRequestsPage = () => {
       void queryClient.invalidateQueries({
         queryKey: ['admin-organization-requests'],
       })
+      toast.success('Žádost byla zamítnuta')
+    },
+    onError: () => {
+      toast.error('Žádost se nepodařilo zamítnout')
     },
   })
 

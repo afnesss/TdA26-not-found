@@ -1,11 +1,13 @@
 import { getOrganizationRequestStatus } from '@/api/queries/organizationQueries'
 import StateComp from '@/components/shared/StateComp'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { buildOrgLoginPath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { Mail, MapPin } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
 const safeValue = (value?: string) => {
   const normalized = value?.trim()
@@ -65,11 +67,11 @@ const OrganizationRequestStatusPage = () => {
     <div className='mx-auto w-full max-w-4xl'>
       <div className='overflow-hidden rounded-2xl bg-background/80 shadow-xl backdrop-blur-xl md:shadow-xl'>
         <Label variant='formTitle'>Stav žádosti</Label>
-        <div className='space-y-6 bg-background/95 px-5 py-6 sm:px-6 lg:px-8 md:py-8'>
+        <div className='space-y-4 sm:space-y-5 bg-background/95 px-4 py-4 sm:px-6 lg:px-8 md:py-8'>
           <div className='space-y-3'>
-            <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex gap-2 flex-row items-center justify-between'>
               <div>
-                <p className='text-sm uppercase tracking-[0.18em] text-muted-foreground'>
+                <p className='text-xs sm:text-sm uppercase tracking-[0.18em] text-muted-foreground'>
                   Organizace
                 </p>
                 <p className='text-2xl font-semibold text-foreground'>
@@ -132,15 +134,22 @@ const OrganizationRequestStatusPage = () => {
           </div>
 
           {data.status === 'approved' && (
-            <div className='rounded-2xl bg-secondary/20 p-5'>
-              <p className='font-semibold text-[#2D8B6B]'>Další postup</p>
-              <p className='mt-2 text-sm leading-6 text-muted-foreground'>
-                Přístupové údaje odešleme ručně na kontaktní e-mail{' '}
-                <span className='font-semibold text-foreground'>
-                  {safeValue(data.contactEmail)}
-                </span>
-                .
-              </p>
+            <div className=' flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-secondary/20 p-5'>
+              <div className='flex flex-col'>
+                <p className='font-semibold text-[#2D8B6B]'>Další postup</p>
+                <p className='mt-2 text-sm leading-6 text-muted-foreground'>
+                  Přístupové údaje odešleme ručně na kontaktní e-mail{' '}
+                  <span className='font-semibold text-foreground'>
+                    {safeValue(data.contactEmail)}
+                  </span>
+                  .
+                </p>
+              </div>
+              <Button asChild variant='primary' size='primary' className='mt-4'>
+                <Link to={buildOrgLoginPath(data.slug)}>
+                  Přihlášít se do organizace
+                </Link>
+              </Button>
             </div>
           )}
 

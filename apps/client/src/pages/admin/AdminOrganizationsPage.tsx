@@ -35,8 +35,14 @@ const AdminOrganizationsPage = () => {
       orgId: string
       status: 'waiting' | 'onboarding' | 'active'
     }) => updateAdminOrganization(orgId, { status }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['admin-organizations'] })
+      toast.success(
+        `Stav organizace byl změněn na ${getOrganizationStatusUi(variables.status).label.toLowerCase()}`,
+      )
+    },
+    onError: () => {
+      toast.error('Stav organizace se nepodařilo změnit')
     },
   })
 

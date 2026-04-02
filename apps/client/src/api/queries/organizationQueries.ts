@@ -84,6 +84,11 @@ export const updateAdminOrganization = async (
     body: JSON.stringify(body),
   })
 
+export const deleteAdminOrganization = async (orgId: string): Promise<void> =>
+  apiFetch(`/admin/organizations/${orgId}`, {
+    method: 'DELETE',
+  })
+
 export const getOrganizationPublicInfo = async (
   orgSlug: string,
 ): Promise<OrganizationPublicInfo> => apiFetch(`${buildOrgApiPrefix(orgSlug)}`)

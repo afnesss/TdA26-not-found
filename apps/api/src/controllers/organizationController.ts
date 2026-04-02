@@ -170,7 +170,10 @@ export async function getOrganizationRequestStatus(
       ownerName: request.ownerName,
       contactEmail: request.contactEmail,
       messageKey: request.status,
-      adminNote: request.status === "rejected" ? request.adminNote ?? undefined : undefined,
+      adminNote:
+        request.status === "rejected"
+          ? (request.adminNote ?? undefined)
+          : undefined,
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch organization request status");
@@ -183,7 +186,10 @@ export async function listOrganizationRequests(_req: Request, res: Response) {
     const items = await db
       .select(toOrganizationRequestSelect)
       .from(organizationRequests)
-      .orderBy(desc(organizationRequests.createdAt), desc(organizationRequests.uuid));
+      .orderBy(
+        desc(organizationRequests.createdAt),
+        desc(organizationRequests.uuid),
+      );
 
     return res.json(items);
   } catch (error) {
@@ -235,11 +241,16 @@ export async function approveOrganizationRequest(req: Request, res: Response) {
       .where(eq(organizations.slug, request.slug));
 
     if (existingOrg) {
-      return res.status(409).json({ message: "Organizace s tímto slugem už existuje" });
+      return res
+        .status(409)
+        .json({ message: "Organizace s tímto slugem už existuje" });
     }
 
     const passwordHash = await bcrypt.hash(getOrgDefaultPassword(), 10);
-    const lecturerPasswordHash = await bcrypt.hash(getOrgUserDefaultPassword(), 10);
+    const lecturerPasswordHash = await bcrypt.hash(
+      getOrgUserDefaultPassword(),
+      10,
+    );
 
     const result = await db.transaction(async (tx) => {
       const [organization] = await tx
@@ -308,7 +319,10 @@ export async function rejectOrganizationRequest(req: Request, res: Response) {
     }
 
     const [request] = await db
-      .select({ uuid: organizationRequests.uuid, status: organizationRequests.status })
+      .select({
+        uuid: organizationRequests.uuid,
+        status: organizationRequests.status,
+      })
       .from(organizationRequests)
       .where(eq(organizationRequests.uuid, requestId));
 
@@ -381,7 +395,45 @@ export async function updateOrganization(req: Request, res: Response) {
   }
 }
 
-export async function getOrganizationPublicInfo(req: AuthRequest, res: Response) {
+export async function deleteOrganization(req: Request, res: Response) {
+  try {
+    const { orgId } = req.params;
+
+    const [organization] = await db
+      .select({
+        uuid: organizations.uuid,
+        name: organizations.name,
+        status: organizations.status,
+      })
+      .from(organizations)
+      .where(eq(organizations.uuid, orgId));
+
+    if (!organization) {
+      return res.status(404).json({ message: "Organizace nebyla nalezena" });
+    }
+
+    if (organization.status !== "waiting") {
+      return res.status(400).json({
+        message: "Smazat lze pouze organizaci ve stavu čeká",
+      });
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(users).where(eq(users.organizationId, orgId));
+      await tx.delete(organizations).where(eq(organizations.uuid, orgId));
+    });
+
+    return res.status(204).send();
+  } catch (error) {
+    logger.error({ err: error }, "Failed to delete organization");
+    return res.status(500).json({ message: "Došlo k chybě serveru" });
+  }
+}
+
+export async function getOrganizationPublicInfo(
+  req: AuthRequest,
+  res: Response,
+) {
   if (!req.organization) {
     return res.status(404).json({ message: "Organizace nebyla nalezena" });
   }
@@ -419,7 +471,9 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
     }
 
     if (!["onboarding", "active"].includes(fullOrganization.status)) {
-      return res.status(403).json({ message: "Organizace ještě není dostupná" });
+      return res
+        .status(403)
+        .json({ message: "Organizace ještě není dostupná" });
     }
 
     const isAdminLogin = mode === "admin" || (!mode && !username);
@@ -469,7 +523,9 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       }
 
       if (!user) {
-        return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
+        return res
+          .status(401)
+          .json({ message: "Nesprávné přihlašovací údaje" });
       }
 
       const normalizedRole =
@@ -482,12 +538,19 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
         (mode === "lecturer" || mode === "student") &&
         normalizedRole !== mode
       ) {
-        return res.status(403).json({ message: "Tento účet neodpovídá zvolenému režimu" });
+        return res
+          .status(403)
+          .json({ message: "Tento účet neodpovídá zvolenému režimu" });
       }
 
-      const isValidUserPassword = await bcrypt.compare(password, user.passwordHash);
+      const isValidUserPassword = await bcrypt.compare(
+        password,
+        user.passwordHash,
+      );
       if (!isValidUserPassword) {
-        return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
+        return res
+          .status(401)
+          .json({ message: "Nesprávné přihlašovací údaje" });
       }
 
       const token = jwt.sign(
@@ -505,9 +568,7 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       res.clearCookie(ORG_AUTH_COOKIE, getOrgCookieOptions());
       res.cookie(LEGACY_AUTH_COOKIE, token, getLegacyCookieOptions());
       const studentProgress =
-        normalizedRole === "student"
-          ? { xp: user.xp, level: user.level }
-          : {};
+        normalizedRole === "student" ? { xp: user.xp, level: user.level } : {};
       return res.json({
         actorType: "organization_user",
         id: user.id,
@@ -520,7 +581,10 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       });
     }
 
-    const isValid = await bcrypt.compare(password, fullOrganization.passwordHash);
+    const isValid = await bcrypt.compare(
+      password,
+      fullOrganization.passwordHash,
+    );
     if (!isValid) {
       return res.status(401).json({ message: "Nesprávné přihlašovací údaje" });
     }
@@ -657,7 +721,10 @@ export async function changeOrganizationPassword(
       return res.status(404).json({ message: "Organizace nebyla nalezena" });
     }
 
-    const isValid = await bcrypt.compare(currentPassword, fullOrganization.passwordHash);
+    const isValid = await bcrypt.compare(
+      currentPassword,
+      fullOrganization.passwordHash,
+    );
     if (!isValid) {
       return res.status(401).json({ message: "Aktuální heslo není správné" });
     }
@@ -715,7 +782,10 @@ export async function getOrganizationsPublicDirectory(
   }
 }
 
-export async function getOrganizationSummaryForCourse(req: Request, res: Response) {
+export async function getOrganizationSummaryForCourse(
+  req: Request,
+  res: Response,
+) {
   try {
     const { courseId } = req.params;
     const [course] = await db

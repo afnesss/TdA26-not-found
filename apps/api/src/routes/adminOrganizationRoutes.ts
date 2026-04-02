@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   approveOrganizationRequest,
+  deleteOrganization,
   getOrganizationRequestById,
   listOrganizationRequests,
   listOrganizations,
@@ -38,5 +39,6 @@ router.put(
   validate(OrganizationUpdateSchema),
   updateOrganization,
 );
+router.delete("/organizations/:orgId", deleteOrganization);
 
 export default router;

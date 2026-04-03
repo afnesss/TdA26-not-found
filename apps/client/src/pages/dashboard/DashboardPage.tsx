@@ -22,7 +22,7 @@ import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BarChart3, BookOpenText, Plus } from 'lucide-react'
+import { BarChart3, BookOpenText, ChevronDown, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
@@ -55,6 +55,7 @@ const DashboardDesign1 = () => {
   const [dashboardMode, setDashboardMode] = useLocalStorage<
     'content' | 'analytics'
   >('dashboard-analytics-mode', 'content')
+  const [showMobileActions, setShowMobileActions] = useState(false)
 
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
@@ -78,13 +79,18 @@ const DashboardDesign1 = () => {
   })
 
   const { mutateAsync: deleteCourseMutation } = useDeleteCourseMutation(orgSlug)
-  const { mutateAsync: createCourseMutation } =
-    useCreateCourseMutation(setCourseDraft, orgSlug)
-  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation({
-    skipInvalidateCourses: true,
-    optimisticInsert: (previous, optimistic) =>
-      sortCoursesByFilter([optimistic, ...(previous ?? [])], selectedFilter),
-  }, orgSlug)
+  const { mutateAsync: createCourseMutation } = useCreateCourseMutation(
+    setCourseDraft,
+    orgSlug,
+  )
+  const { mutateAsync: cloneCourseMutation } = useCloneCourseMutation(
+    {
+      skipInvalidateCourses: true,
+      optimisticInsert: (previous, optimistic) =>
+        sortCoursesByFilter([optimistic, ...(previous ?? [])], selectedFilter),
+    },
+    orgSlug,
+  )
 
   const { isConnected } = useDashboardCoursesSSE(orgSlug)
 
@@ -205,7 +211,59 @@ const DashboardDesign1 = () => {
     <>
       <div className='max-w-7xl mx-auto'>
         <div className='space-y-4 md:space-y-5'>
-          <div className='flex items-center justify-center gap-2 sm:gap-3'>
+          <div className='flex flex-col gap-3 sm:hidden'>
+            <div className='flex items-center gap-2 w-full'>
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                count={
+                  (searchQuery && filteredCourses.length.toString()) ||
+                  courses.length.toString()
+                }
+                className='flex-1 min-w-0'
+              />
+              <span className='shrink-0'>{createButton(true)}</span>
+            </div>
+            <button
+              type='button'
+              className='self-center inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline'
+              onClick={() => setShowMobileActions((prev) => !prev)}
+            >
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showMobileActions ? 'rotate-180' : ''}`}
+              />
+              {showMobileActions ? 'Zavřít další' : 'Otevřít další'}
+            </button>
+            {showMobileActions && (
+              <div className='flex items-center justify-center gap-4 flex-wrap'>
+                <DashboardModeTabs
+                  value={dashboardTabsValue}
+                  tabs={dashboardTabs}
+                  onChange={(next) =>
+                    setDashboardMode(
+                      next === 'statistics' ? 'analytics' : 'content',
+                    )
+                  }
+                  className='shrink-0'
+                />
+                <FilterDropdown
+                  items={filterItems}
+                  selectedValue={selectedFilter}
+                  onSelect={setSelectedFilter}
+                  statusCheckboxes={statusFilterCheckboxes}
+                  align='center'
+                  width='w-35 md:w-40'
+                  triggerClassName='bg-background text-primary h-8.5 md:h-10 w-auto hover:bg-gray-50 border border-gray-200 shrink-0 px-3'
+                  triggerLabel='Filtry'
+                />
+                <CourseBackupActionsDropdown
+                  className='rounded-xl px-3 h-8.5 md:h-10'
+                  triggerLabel='Export / import'
+                />
+              </div>
+            )}
+          </div>
+          <div className='hidden sm:flex sm:items-center sm:justify-center sm:gap-2 md:gap-3'>
             <div className='hidden lg:flex'>
               <HintPageText
                 text={
@@ -230,17 +288,15 @@ const DashboardDesign1 = () => {
               }
               className='shrink-0'
             />
-            <div className='hidden sm:block'>
-              <FilterDropdown
-                items={filterItems}
-                selectedValue={selectedFilter}
-                onSelect={setSelectedFilter}
-                statusCheckboxes={statusFilterCheckboxes}
-                align={isMd ? 'center' : 'start'}
-                width='w-35 md:w-40'
-                triggerClassName='bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
-              />
-            </div>
+            <FilterDropdown
+              items={filterItems}
+              selectedValue={selectedFilter}
+              onSelect={setSelectedFilter}
+              statusCheckboxes={statusFilterCheckboxes}
+              align={isMd ? 'center' : 'start'}
+              width='w-35 md:w-40'
+              triggerClassName='bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
+            />
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
@@ -248,24 +304,12 @@ const DashboardDesign1 = () => {
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
               }
-              rightAdornment={
-                <FilterDropdown
-                  items={filterItems}
-                  selectedValue={selectedFilter}
-                  onSelect={setSelectedFilter}
-                  statusCheckboxes={statusFilterCheckboxes}
-                  align='end'
-                  width='w-35 md:w-40'
-                  triggerClassName='!bg-transparent !text-primary !h-auto !w-auto !min-w-0 !p-0 border-0 shadow-none hover:!bg-transparent shrink-0'
-                />
-              }
               className='flex-1 min-w-50 lg:flex-initial'
             />
-
             <span className='inline-flex'>
               <CourseBackupActionsDropdown className='px-3 sm:px-4 py-2 md:py-2.5 shrink-0' />
             </span>
-            <span className='lg:hidden'>{createButton(true)}</span>
+            <span className='sm:inline-flex lg:hidden'>{createButton(true)}</span>
             <span className='hidden lg:inline-flex'>{createButton(false)}</span>
           </div>
 

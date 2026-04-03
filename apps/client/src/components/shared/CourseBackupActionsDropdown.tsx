@@ -24,6 +24,7 @@ import { buildOrgDashboardCoursePath } from '@/lib/routes'
 
 type CourseBackupActionsDropdownProps = {
   className?: string
+  triggerLabel?: string
 }
 
 const downloadBlob = (blob: Blob, fileName: string) => {
@@ -65,6 +66,7 @@ const getBackupCourseIds = (input: unknown): string[] => {
 
 const CourseBackupActionsDropdown = ({
   className,
+  triggerLabel,
 }: CourseBackupActionsDropdownProps) => {
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
@@ -139,6 +141,7 @@ const CourseBackupActionsDropdown = ({
             aria-label='Zalohy kurzu'
           >
             <FolderInput className='h-4 w-4 text-primary' aria-hidden='true' />
+            {triggerLabel && <span>{triggerLabel}</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-56 rounded-xl'>

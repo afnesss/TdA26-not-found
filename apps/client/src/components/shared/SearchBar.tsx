@@ -32,7 +32,7 @@ const SearchBar = ({
         )}
       />
       {(count || rightAdornment) && (
-        <div className='sm:hidden absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2'>
+        <div className='md:hidden absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2'>
           {count && (
             <span className='bg-primary text-background px-1.5 py-0.5 rounded-full text-xs font-bold'>
               {count}

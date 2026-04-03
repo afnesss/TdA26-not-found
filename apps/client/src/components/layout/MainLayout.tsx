@@ -3,6 +3,7 @@ import Header from './Header'
 import { Outlet, useLocation } from 'react-router'
 import Footer from './Footer'
 import { isOrgLoginPath, isOrgPasswordPath, isOrgRootPath } from '@/lib/routes'
+import RandomMerchPopup from './RandomMerchPopup'
 
 const MainLayout = () => {
   const { pathname } = useLocation()
@@ -14,6 +15,7 @@ const MainLayout = () => {
     isOrgPasswordPath(pathname)
   return (
     <div className='flex flex-col min-h-dvh'>
+      <RandomMerchPopup />
       <Header />
       {/* Spacer to prevent content from hiding under fixed header */}
       <div className='h-15 sm:h-18 md:h-22' aria-hidden='true' />

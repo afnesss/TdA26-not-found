@@ -11,6 +11,7 @@ import shopRoutes from "./routes/shopRoutes";
 import { seed } from "./db/seed";
 import path from "path";
 import cookieParser from "cookie-parser";
+import { localeMiddleware } from "./middleware/locale";
 import {
   startIntervalScheduler,
   stopIntervalScheduler,
@@ -35,6 +36,7 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 app.use(httpLogger);
+app.use(localeMiddleware);
 
 // Skip body parsing for multipart requests (handled by multer)
 app.use((req, res, next) => {

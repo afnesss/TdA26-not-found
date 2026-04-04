@@ -17,6 +17,12 @@ import fs from "fs/promises";
 import path from "path";
 import { and, eq, inArray } from "drizzle-orm";
 import { logger } from "../utils/logger";
+import { buildLocalizedField, buildLocalizedQuestions } from "../utils/i18n";
+
+const SEED_SOURCE_LOCALE = "cs" as const;
+
+const localizedText = (value?: string | null) =>
+  buildLocalizedField(SEED_SOURCE_LOCALE, value ?? null);
 
 const sampleCourses = [
   {
@@ -467,8 +473,11 @@ export async function seed() {
     await db
       .update(merchItems)
       .set({
+        sourceLocale: SEED_SOURCE_LOCALE,
         name: item.name,
+        nameI18n: localizedText(item.name),
         description: item.description,
+        descriptionI18n: localizedText(item.description),
         imageUrl: item.imageUrl,
         unitPriceCents: item.unitPriceCents,
         purchaseMode: item.purchaseMode,
@@ -481,7 +490,14 @@ export async function seed() {
   }
 
   if (merchToInsert.length > 0) {
-    await db.insert(merchItems).values(merchToInsert);
+    await db.insert(merchItems).values(
+      merchToInsert.map((item) => ({
+        ...item,
+        sourceLocale: SEED_SOURCE_LOCALE,
+        nameI18n: localizedText(item.name),
+        descriptionI18n: localizedText(item.description),
+      })),
+    );
     logger.info(`Inserted ${merchToInsert.length} shop seed items`);
   }
 
@@ -515,6 +531,9 @@ export async function seed() {
       .values(
         seedCourses.map((course) => ({
           ...course,
+          sourceLocale: SEED_SOURCE_LOCALE,
+          nameI18n: localizedText(course.name),
+          descriptionI18n: localizedText(course.description),
           organizationId: tdaOrganization.uuid,
         })),
       )
@@ -539,8 +558,11 @@ export async function seed() {
         .values(
           moduleBlueprints.map((m) => ({
             courseId: course.uuid,
+            sourceLocale: SEED_SOURCE_LOCALE,
             name: m.name,
+            nameI18n: localizedText(m.name),
             description: m.description,
+            descriptionI18n: localizedText(m.description),
             status: m.status,
             position: m.position,
           })),
@@ -650,7 +672,14 @@ export async function seed() {
         },
       ];
 
-      await db.insert(courseMaterials).values(materials);
+      await db.insert(courseMaterials).values(
+        materials.map((material) => ({
+          ...material,
+          sourceLocale: SEED_SOURCE_LOCALE,
+          nameI18n: localizedText(material.name),
+          descriptionI18n: localizedText(material.description),
+        })),
+      );
 
       const quizzesData = [
         {
@@ -734,7 +763,24 @@ export async function seed() {
 
       const createdQuizzes = await db
         .insert(quizzes)
-        .values(quizzesData)
+        .values(
+          quizzesData.map((quiz) => ({
+            ...quiz,
+            sourceLocale: SEED_SOURCE_LOCALE,
+            titleI18n: localizedText(quiz.title),
+            questionsI18n: buildLocalizedQuestions(
+              SEED_SOURCE_LOCALE,
+              quiz.questions as Array<{
+                uuid?: string;
+                type: "singleChoice" | "multipleChoice";
+                question: string;
+                options: string[];
+                correctIndex?: number;
+                correctIndices?: number[];
+              }>,
+            ),
+          })),
+        )
         .returning({ uuid: quizzes.uuid, moduleId: quizzes.moduleId });
 
       if (shouldSeedAnalytics && createdQuizzes.length > 0) {
@@ -842,7 +888,13 @@ export async function seed() {
         },
       ];
 
-      await db.insert(feedItems).values(feed);
+      await db.insert(feedItems).values(
+        feed.map((item) => ({
+          ...item,
+          sourceLocale: SEED_SOURCE_LOCALE,
+          messageI18n: localizedText(item.message),
+        })),
+      );
     }
   }
 

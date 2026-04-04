@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  LocaleSchema,
+  LocalizedEntityMetaSchema,
+  LocalizedFieldSchema,
+} from "./i18n";
 import { MaterialSchema } from "./material";
 import { QuizSchema } from "./quiz";
 
@@ -7,11 +12,15 @@ export const CourseModulesStatusSchema = z.enum(["active", "passive"]);
 export const ModuleSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional().nullable(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
   status: CourseModulesStatusSchema.default("passive"),
   createdAt: z.date().or(z.string().datetime()),
   updatedAt: z.date().or(z.string().datetime()),
-});
+}).merge(LocalizedEntityMetaSchema);
 
 export const ModuleDetailSchema = ModuleSummarySchema.extend({
   materials: z.array(MaterialSchema),
@@ -21,14 +30,20 @@ export const ModuleDetailSchema = ModuleSummarySchema.extend({
 export const CourseModuleSchema = ModuleDetailSchema;
 
 export const ModuleCreateRequestSchema = z.object({
+  sourceLocale: LocaleSchema.default("en"),
   name: z.string().min(1),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional().nullable(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   status: CourseModulesStatusSchema.optional(),
 });
 
 export const ModuleUpdateRequestSchema = z.object({
+  sourceLocale: LocaleSchema.optional(),
   name: z.string().min(1).optional(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional().nullable(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   status: CourseModulesStatusSchema.optional(),
 });
 

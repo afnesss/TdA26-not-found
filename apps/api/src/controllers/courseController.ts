@@ -24,8 +24,14 @@ import {
   importAllCoursesBackup,
 } from "../utils/courseBackup";
 import { CoursesBackupCollectionSchema } from "../schemas/course";
+import { buildLocalizedField, getRequestLocale } from "../utils/i18n";
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
+import {
+  localizeMessage,
+  localizeNameDescription,
+  localizeTitleQuestions,
+} from "../utils/localizedResponse";
 import {
   buildCourseShareUrl,
   generateCourseShareToken,
@@ -35,8 +41,11 @@ const USER_VISIBLE_COURSE_STATUSES = ["paused", "planned", "live"];
 
 const toCourseSummary = {
   uuid: courses.uuid,
+  sourceLocale: courses.sourceLocale,
   name: courses.name,
+  nameI18n: courses.nameI18n,
   description: courses.description,
+  descriptionI18n: courses.descriptionI18n,
   status: courses.status,
   createdAt: courses.createdAt,
   updatedAt: courses.updatedAt,
@@ -82,6 +91,7 @@ const getScopedOrganizationId = (req: Request) =>
 export async function getAllCourses(req: Request, res: Response) {
   const userView = String(req.query.userView ?? "").toLowerCase() === "true";
   const organizationId = getScopedOrganizationId(req);
+  const locale = getRequestLocale(req);
 
   const allCourses = await db
     .select(toCourseSummary)
@@ -100,13 +110,14 @@ export async function getAllCourses(req: Request, res: Response) {
     )
     .orderBy(desc(courses.createdAt), desc(courses.uuid));
 
-  res.json(allCourses);
+  res.json(allCourses.map((course) => localizeNameDescription(course, locale)));
 }
 
 export async function getCourseByUuid(req: Request, res: Response) {
   try {
     const { uuid } = req.params;
     const organizationId = getScopedOrganizationId(req);
+    const locale = getRequestLocale(req);
 
     const course = await db
       .select(toCourseSummary)
@@ -128,8 +139,11 @@ export async function getCourseByUuid(req: Request, res: Response) {
     const baseModules = await db
       .select({
         uuid: modules.uuid,
+        sourceLocale: modules.sourceLocale,
         name: modules.name,
+        nameI18n: modules.nameI18n,
         description: modules.description,
+        descriptionI18n: modules.descriptionI18n,
         status: modules.status,
         position: modules.position,
         courseId: modules.courseId,
@@ -158,10 +172,13 @@ export async function getCourseByUuid(req: Request, res: Response) {
           db
             .select({
               uuid: quizzes.uuid,
+              sourceLocale: quizzes.sourceLocale,
               title: quizzes.title,
+              titleI18n: quizzes.titleI18n,
               difficulty: quizzes.difficulty,
               moduleId: quizzes.moduleId,
               questions: quizzes.questions,
+              questionsI18n: quizzes.questionsI18n,
               createdAt: quizzes.createdAt,
               updatedAt: quizzes.updatedAt,
               attemptsCount:
@@ -187,9 +204,13 @@ export async function getCourseByUuid(req: Request, res: Response) {
         ]);
 
         return {
-          ...module,
-          materials: fetchedMaterials.map(mapMaterial),
-          quizzes: fetchedQuizzes,
+          ...localizeNameDescription(module, locale),
+          materials: fetchedMaterials.map((material) =>
+            localizeNameDescription(mapMaterial(material), locale),
+          ),
+          quizzes: fetchedQuizzes.map((quiz) =>
+            localizeTitleQuestions(quiz, locale),
+          ),
         };
       }),
     );
@@ -202,10 +223,9 @@ export async function getCourseByUuid(req: Request, res: Response) {
       .limit(15);
 
     res.json({
-      ...course[0],
-
+      ...localizeNameDescription(course[0], locale),
       modules: fetchedModules,
-      feed: fetchedFeed,
+      feed: fetchedFeed.map((item) => localizeMessage(item, locale)),
     });
   } catch (error) {
     logger.error({ err: error }, "Failed to fetch course");
@@ -461,7 +481,10 @@ export async function getCourseDashboardAnalytics(req: Request, res: Response) {
 }
 
 export async function createCourse(req: Request, res: Response) {
-  const { name, description } = req.body;
+  const { name, description, sourceLocale } = req.body;
+  const locale = getRequestLocale(req);
+  const nextSourceLocale =
+    sourceLocale === "cs" || sourceLocale === "en" ? sourceLocale : locale;
 
   if (!name) {
     res.status(400).json({ message: "Zadejte prosím název kurzu" });
@@ -475,13 +498,20 @@ export async function createCourse(req: Request, res: Response) {
     .insert(courses)
     .values({
       organizationId,
+      sourceLocale: nextSourceLocale,
       name,
+      nameI18n: buildLocalizedField(nextSourceLocale, name, req.body.nameI18n),
       description: description || null,
+      descriptionI18n: buildLocalizedField(
+        nextSourceLocale,
+        description || null,
+        req.body.descriptionI18n,
+      ),
     })
 
     .returning(toCourseSummary);
 
-  res.status(201).json(newCourse[0]);
+  res.status(201).json(localizeNameDescription(newCourse[0], locale));
 }
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
@@ -504,6 +534,7 @@ export async function cloneCourse(req: Request, res: Response) {
   const { uuid } = req.params;
   const copiedFilePaths: string[] = [];
   const organizationId = getScopedOrganizationId(req);
+  const locale = getRequestLocale(req);
 
   try {
     const [sourceCourse] = await db
@@ -560,8 +591,11 @@ export async function cloneCourse(req: Request, res: Response) {
         .insert(courses)
         .values({
           organizationId: sourceCourse.organizationId,
+          sourceLocale: sourceCourse.sourceLocale,
           name: sourceCourse.name,
+          nameI18n: sourceCourse.nameI18n,
           description: sourceCourse.description ?? null,
+          descriptionI18n: sourceCourse.descriptionI18n,
           status: "draft",
           shareToken: null,
           shareTokenUpdatedAt: null,
@@ -578,8 +612,11 @@ export async function cloneCourse(req: Request, res: Response) {
           .insert(modules)
           .values({
             courseId: newCourse.uuid,
+            sourceLocale: sourceModule.sourceLocale,
             name: sourceModule.name,
+            nameI18n: sourceModule.nameI18n,
             description: sourceModule.description ?? null,
+            descriptionI18n: sourceModule.descriptionI18n,
             status: sourceModule.status,
             position: sourceModule.position,
           })
@@ -607,9 +644,12 @@ export async function cloneCourse(req: Request, res: Response) {
           await tx.insert(courseMaterials).values({
             uuid: materialId,
             moduleId: mappedModuleId,
+            sourceLocale: material.sourceLocale,
             type: "file",
             name: material.name,
+            nameI18n: material.nameI18n,
             description: material.description ?? null,
+            descriptionI18n: material.descriptionI18n,
             fileUrl,
             mimeType: material.mimeType ?? null,
             sizeBytes: material.sizeBytes ?? null,
@@ -621,9 +661,12 @@ export async function cloneCourse(req: Request, res: Response) {
 
         await tx.insert(courseMaterials).values({
           moduleId: mappedModuleId,
+          sourceLocale: material.sourceLocale,
           type: "url",
           name: material.name,
+          nameI18n: material.nameI18n,
           description: material.description ?? null,
+          descriptionI18n: material.descriptionI18n,
           url: material.url ?? null,
           faviconUrl: material.faviconUrl ?? null,
         });
@@ -637,7 +680,9 @@ export async function cloneCourse(req: Request, res: Response) {
 
         await tx.insert(quizzes).values({
           moduleId: mappedModuleId,
+          sourceLocale: quiz.sourceLocale,
           title: quiz.title,
+          titleI18n: quiz.titleI18n,
           difficulty:
             (quiz as { difficulty?: unknown }).difficulty === "beginner" ||
             (quiz as { difficulty?: unknown }).difficulty === "easy" ||
@@ -652,14 +697,16 @@ export async function cloneCourse(req: Request, res: Response) {
                   | "extreme")
               : "beginner",
           questions: quiz.questions,
+          questionsI18n: quiz.questionsI18n,
         });
       }
 
       return newCourse;
     });
 
-    sseManager.broadcast("courses", "course_upserted", clonedCourse);
-    return res.status(201).json(clonedCourse);
+    const localizedClonedCourse = localizeNameDescription(clonedCourse, locale);
+    sseManager.broadcast("courses", "course_upserted", localizedClonedCourse);
+    return res.status(201).json(localizedClonedCourse);
   } catch (error) {
     for (const filePath of copiedFilePaths) {
       await fs.unlink(filePath).catch(() => undefined);
@@ -784,8 +831,9 @@ export async function importCourse(req: Request, res: Response) {
 
 export async function updateCourse(req: Request, res: Response) {
   const { uuid } = req.params;
-  const { name, description, status, scheduledFor } = req.body;
+  const { name, description, status, scheduledFor, sourceLocale } = req.body;
   const organizationId = getScopedOrganizationId(req);
+  const locale = getRequestLocale(req);
 
   const existing = await db
     .select()
@@ -830,9 +878,27 @@ export async function updateCourse(req: Request, res: Response) {
   const updated = await db
     .update(courses)
     .set({
+      sourceLocale:
+        sourceLocale === "cs" || sourceLocale === "en"
+          ? sourceLocale
+          : existing[0].sourceLocale,
       name: name ?? existing[0].name,
+      nameI18n: buildLocalizedField(
+        sourceLocale === "cs" || sourceLocale === "en"
+          ? sourceLocale
+          : existing[0].sourceLocale,
+        name ?? existing[0].name,
+        req.body.nameI18n ?? existing[0].nameI18n,
+      ),
       description:
         description !== undefined ? description : existing[0].description,
+      descriptionI18n: buildLocalizedField(
+        sourceLocale === "cs" || sourceLocale === "en"
+          ? sourceLocale
+          : existing[0].sourceLocale,
+        description !== undefined ? description : existing[0].description,
+        req.body.descriptionI18n ?? existing[0].descriptionI18n,
+      ),
       status: status ?? existing[0].status,
       shareToken:
         status === "live" && isStatusChanged && !existing[0].shareToken
@@ -868,6 +934,8 @@ export async function updateCourse(req: Request, res: Response) {
     .where(eq(courses.uuid, uuid))
     .returning(toCourseSummary);
 
+  const localizedUpdated = localizeNameDescription(updated[0], locale);
+
   // Only create feed event if something other than status was changed
   const isOnlyStatusChange =
     status !== undefined && name === undefined && description === undefined;
@@ -877,18 +945,18 @@ export async function updateCourse(req: Request, res: Response) {
   );
   const isUserVisible = USER_VISIBLE_COURSE_STATUSES.includes(nextStatus);
   if ((!wasUserVisible && isUserVisible) || (wasUserVisible && isUserVisible)) {
-    sseManager.broadcast("courses", "course_upserted", updated[0]);
+    sseManager.broadcast("courses", "course_upserted", localizedUpdated);
   } else if (wasUserVisible && !isUserVisible) {
     sseManager.broadcast("courses", "course_removed", {
-      uuid: updated[0].uuid,
-      name: updated[0].name,
-      status: updated[0].status,
+      uuid: localizedUpdated.uuid,
+      name: localizedUpdated.name,
+      status: localizedUpdated.status,
     });
   }
 
-  sseManager.broadcast(uuid, "course_updated", updated[0]);
+  sseManager.broadcast(uuid, "course_updated", localizedUpdated);
 
-  res.json(updated[0]);
+  res.json(localizedUpdated);
 }
 
 type CourseUpdateValidation = {

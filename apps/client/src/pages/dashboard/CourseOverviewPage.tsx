@@ -38,6 +38,7 @@ import { Label } from '@/components/ui/label'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import DashboardModeTabs from './components/DashboardModeTabs'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { getStoredUiLocale } from '@/lib/i18n'
 import { ModulesSectionActions } from './components/ModuleSectionActions'
 import EditSaveCancelButtons from '@/components/shared/EditSaveCancelButtons'
 import CourseExportTrigger from '@/components/shared/CourseExportTrigger'
@@ -257,6 +258,7 @@ const CourseModulesOverviewPage = () => {
     createModuleMutation({
       name: trimmedName,
       description: draftModule.description.trim() || undefined,
+      sourceLocale: getStoredUiLocale(),
       status: 'passive',
     })
   }

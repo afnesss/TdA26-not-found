@@ -9,6 +9,7 @@ import {
   updateCourse,
 } from '@/api/queries/courseQueries'
 import { pendingCloneIds } from '@/api/pendingCloneIds'
+import { getStoredUiLocale } from '@/lib/i18n'
 import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { CourseDetail, CourseStatus, CourseSummary } from '@/lib/schemas'
@@ -191,7 +192,14 @@ export const useUpdateCourseMutation = (
     { previousCourses?: CourseSummary[]; previousCourse?: CourseDetail }
   >({
     mutationFn: async (data: { name: string; description?: string }) => {
-      const result = await updateCourse(courseId, data, orgSlug)
+      const result = await updateCourse(
+        courseId,
+        {
+          ...data,
+          sourceLocale: getStoredUiLocale(),
+        },
+        orgSlug,
+      )
       if (!result) {
         throw new Error('Update course returned null')
       }
@@ -271,7 +279,13 @@ export const useCreateCourseMutation = (
     { previousCourses?: CourseSummary[] }
   >({
     mutationFn: async (data: { name: string; description?: string }) => {
-      const result = await createCourse(data, orgSlug)
+      const result = await createCourse(
+        {
+          ...data,
+          sourceLocale: getStoredUiLocale(),
+        },
+        orgSlug,
+      )
       if (!result) {
         throw new Error('Create course returned null')
       }
@@ -329,7 +343,12 @@ export const useUpdateCourseStatusMutation = (
 ) => {
   const queryClient = useQueryClient()
   return useMutation<CourseSummary, ApiError, { status: CourseStatus }>({
-    mutationFn: ({ status }) => updateCourse(courseId, { status }, orgSlug),
+    mutationFn: ({ status }) =>
+      updateCourse(
+        courseId,
+        { status, sourceLocale: getStoredUiLocale() },
+        orgSlug,
+      ),
     onSuccess: async () => {
       await invalidateCourseQueries(queryClient, courseId)
     },

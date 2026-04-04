@@ -6,9 +6,12 @@ import App from './App.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from './components/ui/sonner.tsx'
 import type { ApiError } from './lib/types.ts'
+import { getStoredUiLocale } from './lib/i18n.ts'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Root element not found')
+
+document.documentElement.lang = getStoredUiLocale()
 
 const client = new QueryClient({
   defaultOptions: {

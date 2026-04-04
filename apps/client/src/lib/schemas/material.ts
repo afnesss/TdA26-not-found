@@ -1,10 +1,17 @@
 import { z } from 'zod'
+import {
+  LocaleSchema,
+  LocalizedEntityMetaSchema,
+  LocalizedFieldSchema,
+} from './i18n'
 
 export const FileMaterialSchema = z.object({
   uuid: z.string().uuid(),
   type: z.literal('file'),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   fileUrl: z.string().refine(
     (val) => {
       try {
@@ -20,17 +27,25 @@ export const FileMaterialSchema = z.object({
   sizeBytes: z.number().int().optional(),
   originalFilename: z.string().optional(),
   downloadCount: z.number().int().nonnegative().optional(),
+}).merge(LocalizedEntityMetaSchema).extend({
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
 })
 
 export const UrlMaterialSchema = z.object({
   uuid: z.string().uuid(),
   type: z.literal('url'),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   url: z.string().url(),
   faviconUrl: z.string().url().optional(),
   copyCount: z.number().int().nonnegative().optional(),
   openCount: z.number().int().nonnegative().optional(),
+}).merge(LocalizedEntityMetaSchema).extend({
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
 })
 
 export const MaterialSchema = z.discriminatedUnion('type', [

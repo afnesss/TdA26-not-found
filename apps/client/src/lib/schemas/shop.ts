@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { LocalizedEntityMetaSchema, LocalizedFieldSchema } from './i18n'
 
 export const ShopCartItemInputSchema = z.object({
   itemId: z.string().uuid(),
@@ -9,13 +10,15 @@ export const ShopCatalogItemSchema = z.object({
   uuid: z.string().uuid(),
   slug: z.string(),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().nullable().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   imageUrl: z.string().nullable().optional(),
   unitPriceCents: z.number().int().nonnegative(),
   purchaseMode: z.enum(['money', 'xp']).default('money'),
   xpCost: z.number().int().positive().nullable().optional(),
   voucherDiscountPercent: z.number().int().min(1).max(100).nullable().optional(),
-})
+}).merge(LocalizedEntityMetaSchema)
 
 export const ShopPromoValidateRequestSchema = z.object({
   code: z.string().trim().min(1).max(64),

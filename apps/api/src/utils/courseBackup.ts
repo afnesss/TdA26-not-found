@@ -20,6 +20,10 @@ import {
   type CourseDashboardAnalytics,
 } from "../schemas/course";
 import { mapMaterial } from "../controllers/materialController";
+import {
+  buildLocalizedField,
+  buildLocalizedQuestions,
+} from "./i18n";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
@@ -37,6 +41,13 @@ const toDate = (value: string | Date | null | undefined) =>
 
 const serializeDate = (value: string | Date | null | undefined) =>
   value == null ? null : value instanceof Date ? value.toISOString() : value;
+
+const withLocalizedText = (
+  value: string | null | undefined,
+  sourceLocale: "cs" | "en" = "cs",
+) => ({
+  ...(value != null ? { [sourceLocale]: value } : {}),
+});
 
 const getDefaultOrganizationId = async () => {
   const [organization] = await db
@@ -167,12 +178,15 @@ const normalizeSingleBackup = (input: unknown): CourseBackup => {
   }
 
   const normalizedBackup: CourseBackup = {
-    version: 1 as const,
+    version: 2 as const,
     exportedAt: legacy.exportedAt ?? new Date().toISOString(),
     course: {
       uuid: legacy.course.uuid,
+      sourceLocale: "cs",
       name: legacy.course.name,
+      nameI18n: withLocalizedText(legacy.course.name),
       description: legacy.course.description ?? null,
+      descriptionI18n: withLocalizedText(legacy.course.description ?? null),
       status: legacy.course.status,
       createdAt: legacy.course.createdAt,
       updatedAt: legacy.course.updatedAt,
@@ -186,21 +200,34 @@ const normalizeSingleBackup = (input: unknown): CourseBackup => {
     },
     modules: legacy.course.modules.map((module, index) => ({
       uuid: module.uuid,
+      sourceLocale: "cs" as const,
       name: module.name,
+      nameI18n: withLocalizedText(module.name),
       description: module.description ?? null,
+      descriptionI18n: withLocalizedText(module.description ?? null),
       status: module.status,
       position: module.position ?? index + 1,
       createdAt: module.createdAt ?? legacy.course!.createdAt,
       updatedAt: module.updatedAt ?? legacy.course!.updatedAt,
       materials: module.materials ?? [],
-      quizzes: (module.quizzes ?? []).map((quiz: any) => ({
-        ...quiz,
-        uuid: quiz.uuid,
-        createdAt: quiz.createdAt ?? legacy.course!.createdAt,
-        updatedAt: quiz.updatedAt ?? legacy.course!.updatedAt,
-      })),
+      quizzes: (module.quizzes ?? []).map((quiz: any) => {
+        const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+        return {
+          ...quiz,
+          sourceLocale: "cs" as const,
+          titleI18n: withLocalizedText(quiz.title),
+          questionsI18n: buildLocalizedQuestions("cs", questions),
+          uuid: quiz.uuid,
+          createdAt: quiz.createdAt ?? legacy.course!.createdAt,
+          updatedAt: quiz.updatedAt ?? legacy.course!.updatedAt,
+        };
+      }),
     })),
-    feed: legacy.course.feed ?? [],
+    feed: (legacy.course.feed ?? []).map((item) => ({
+      ...item,
+      sourceLocale: "cs" as const,
+      messageI18n: withLocalizedText(item.message),
+    })),
     quizSubmissions: [],
     files: [],
     analyticsSnapshot: buildEmptyAnalyticsSnapshot({
@@ -443,8 +470,11 @@ export async function buildCourseBackup(
   const [course] = await db
     .select({
       uuid: courses.uuid,
+      sourceLocale: courses.sourceLocale,
       name: courses.name,
+      nameI18n: courses.nameI18n,
       description: courses.description,
+      descriptionI18n: courses.descriptionI18n,
       status: courses.status,
       createdAt: courses.createdAt,
       updatedAt: courses.updatedAt,
@@ -469,8 +499,11 @@ export async function buildCourseBackup(
   const baseModules = await db
     .select({
       uuid: modules.uuid,
+      sourceLocale: modules.sourceLocale,
       name: modules.name,
+      nameI18n: modules.nameI18n,
       description: modules.description,
+      descriptionI18n: modules.descriptionI18n,
       status: modules.status,
       position: modules.position,
       createdAt: modules.createdAt,
@@ -550,7 +583,7 @@ export async function buildCourseBackup(
   );
 
   return CourseBackupSchema.parse({
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     course: {
       ...course,
@@ -606,7 +639,7 @@ export async function buildAllCoursesBackup(
   ).filter((course): course is CourseBackup => Boolean(course));
 
   return CoursesBackupCollectionSchema.parse({
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     scope: "all-courses",
     courses: backups,
@@ -736,8 +769,21 @@ export async function importCourseBackup(
         .values({
           uuid: importedCourseUuid,
           organizationId,
+          sourceLocale: backup.course.sourceLocale ?? "cs",
           name: backup.course.name,
+          nameI18n:
+            backup.course.nameI18n ??
+            buildLocalizedField(
+              backup.course.sourceLocale ?? "cs",
+              backup.course.name,
+            ),
           description: backup.course.description ?? null,
+          descriptionI18n:
+            backup.course.descriptionI18n ??
+            buildLocalizedField(
+              backup.course.sourceLocale ?? "cs",
+              backup.course.description ?? null,
+            ),
           status: backup.course.status,
           shareToken: null,
           shareTokenUpdatedAt: null,
@@ -749,8 +795,11 @@ export async function importCourseBackup(
         })
         .returning({
           uuid: courses.uuid,
+          sourceLocale: courses.sourceLocale,
           name: courses.name,
+          nameI18n: courses.nameI18n,
           description: courses.description,
+          descriptionI18n: courses.descriptionI18n,
           status: courses.status,
           createdAt: courses.createdAt,
           updatedAt: courses.updatedAt,
@@ -772,8 +821,21 @@ export async function importCourseBackup(
         await tx.insert(modules).values({
           uuid: moduleId,
           courseId: newCourse.uuid,
+          sourceLocale: module.sourceLocale ?? backup.course.sourceLocale ?? "cs",
           name: module.name,
+          nameI18n:
+            module.nameI18n ??
+            buildLocalizedField(
+              module.sourceLocale ?? backup.course.sourceLocale ?? "cs",
+              module.name,
+            ),
           description: module.description ?? null,
+          descriptionI18n:
+            module.descriptionI18n ??
+            buildLocalizedField(
+              module.sourceLocale ?? backup.course.sourceLocale ?? "cs",
+              module.description ?? null,
+            ),
           status: module.status,
           position: module.position,
           createdAt: toDate(module.createdAt) ?? new Date(),
@@ -794,9 +856,32 @@ export async function importCourseBackup(
               await tx.insert(courseMaterials).values({
                 uuid: materialId,
                 moduleId,
+                sourceLocale:
+                  material.sourceLocale ??
+                  module.sourceLocale ??
+                  backup.course.sourceLocale ??
+                  "cs",
                 type: "file",
                 name: material.name,
+                nameI18n:
+                  material.nameI18n ??
+                  buildLocalizedField(
+                    material.sourceLocale ??
+                      module.sourceLocale ??
+                      backup.course.sourceLocale ??
+                      "cs",
+                    material.name,
+                  ),
                 description: material.description ?? null,
+                descriptionI18n:
+                  material.descriptionI18n ??
+                  buildLocalizedField(
+                    material.sourceLocale ??
+                      module.sourceLocale ??
+                      backup.course.sourceLocale ??
+                      "cs",
+                    material.description ?? null,
+                  ),
                 fileUrl: material.fileUrl,
                 mimeType: material.mimeType ?? null,
                 sizeBytes: material.sizeBytes ?? null,
@@ -824,9 +909,32 @@ export async function importCourseBackup(
             await tx.insert(courseMaterials).values({
               uuid: materialId,
               moduleId,
+              sourceLocale:
+                material.sourceLocale ??
+                module.sourceLocale ??
+                backup.course.sourceLocale ??
+                "cs",
               type: "file",
               name: material.name,
+              nameI18n:
+                material.nameI18n ??
+                buildLocalizedField(
+                  material.sourceLocale ??
+                    module.sourceLocale ??
+                    backup.course.sourceLocale ??
+                    "cs",
+                  material.name,
+                ),
               description: material.description ?? null,
+              descriptionI18n:
+                material.descriptionI18n ??
+                buildLocalizedField(
+                  material.sourceLocale ??
+                    module.sourceLocale ??
+                    backup.course.sourceLocale ??
+                    "cs",
+                  material.description ?? null,
+                ),
               fileUrl: `/api/uploads/${fileName}`,
               mimeType: material.mimeType ?? fileRecord.mimeType ?? null,
               sizeBytes: material.sizeBytes ?? null,
@@ -845,9 +953,32 @@ export async function importCourseBackup(
           await tx.insert(courseMaterials).values({
             uuid: uuidv4(),
             moduleId,
+            sourceLocale:
+              material.sourceLocale ??
+              module.sourceLocale ??
+              backup.course.sourceLocale ??
+              "cs",
             type: "url",
             name: material.name,
+            nameI18n:
+              material.nameI18n ??
+              buildLocalizedField(
+                material.sourceLocale ??
+                  module.sourceLocale ??
+                  backup.course.sourceLocale ??
+                  "cs",
+                material.name,
+              ),
             description: material.description ?? null,
+            descriptionI18n:
+              material.descriptionI18n ??
+              buildLocalizedField(
+                material.sourceLocale ??
+                  module.sourceLocale ??
+                  backup.course.sourceLocale ??
+                  "cs",
+                material.description ?? null,
+              ),
             url: material.url,
             faviconUrl: material.faviconUrl ?? null,
             copyCount: includeStatistics ? (material.copyCount ?? 0) : 0,
@@ -864,9 +995,22 @@ export async function importCourseBackup(
           await tx.insert(quizzes).values({
             uuid: quizId,
             moduleId,
+            sourceLocale: quiz.sourceLocale ?? module.sourceLocale ?? "cs",
             title: quiz.title,
+            titleI18n:
+              quiz.titleI18n ??
+              buildLocalizedField(
+                quiz.sourceLocale ?? module.sourceLocale ?? "cs",
+                quiz.title,
+              ),
             difficulty: quiz.difficulty,
             questions: quiz.questions,
+            questionsI18n:
+              quiz.questionsI18n ??
+              buildLocalizedQuestions(
+                quiz.sourceLocale ?? module.sourceLocale ?? "cs",
+                quiz.questions,
+              ),
             createdAt: toDate(quiz.createdAt) ?? new Date(),
             updatedAt: toDate(quiz.updatedAt) ?? new Date(),
           });
@@ -895,8 +1039,15 @@ export async function importCourseBackup(
         await tx.insert(feedItems).values({
           uuid: uuidv4(),
           courseId: newCourse.uuid,
+          sourceLocale: item.sourceLocale ?? backup.course.sourceLocale ?? "cs",
           type: item.type,
           message: item.message,
+          messageI18n:
+            item.messageI18n ??
+            buildLocalizedField(
+              item.sourceLocale ?? backup.course.sourceLocale ?? "cs",
+              item.message,
+            ),
           edited: item.edited,
           createdAt: toDate(item.createdAt) ?? new Date(),
           updatedAt: toDate(item.updatedAt) ?? new Date(),
@@ -921,7 +1072,25 @@ export async function importAllCoursesBackup(
   input: unknown,
   options?: { organizationId?: string },
 ) {
-  const backupCollection = CoursesBackupCollectionSchema.parse(input);
+  const parsedCollection = CoursesBackupCollectionSchema.safeParse(input);
+  const backupCollection = parsedCollection.success
+    ? parsedCollection.data
+    : (() => {
+        const legacy = input as {
+          exportedAt?: string;
+          scope?: string;
+          courses?: unknown[];
+        };
+
+        return CoursesBackupCollectionSchema.parse({
+          version: 2,
+          exportedAt: legacy.exportedAt ?? new Date().toISOString(),
+          scope: "all-courses",
+          courses: Array.isArray(legacy.courses)
+            ? legacy.courses.map((course) => normalizeSingleBackup(course))
+            : [],
+        });
+      })();
   const importedCourses = [];
   const includeStatistics = backupCollection.courses.length > 1;
   const duplicateCourseIdsInBackup = backupCollection.courses.reduce<

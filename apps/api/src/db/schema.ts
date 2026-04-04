@@ -10,7 +10,7 @@ import {
   uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
-import { StatusHistoryEvent } from "../schemas";
+import { LocalizedField, LocalizedQuestion, StatusHistoryEvent } from "../schemas";
 import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -93,8 +93,14 @@ export const courses = pgTable("courses", {
   organizationId: uuid("organization_id")
     .references(() => organizations.uuid, { onDelete: "cascade" })
     .notNull(),
+  sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
   name: varchar("name", { length: 256 }).notNull(),
+  nameI18n: jsonb("name_i18n").$type<LocalizedField>().notNull().default({}),
   description: text("description"),
+  descriptionI18n: jsonb("description_i18n")
+    .$type<LocalizedField>()
+    .notNull()
+    .default({}),
   status: varchar("status", { length: 20 }).notNull().default("draft"),
   shareToken: varchar("share_token", { length: 128 }),
   shareTokenUpdatedAt: timestamp("share_token_updated_at"),
@@ -115,8 +121,14 @@ export const modules = pgTable(
     courseId: uuid("course_id")
       .references(() => courses.uuid, { onDelete: "cascade" })
       .notNull(),
+    sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
     name: varchar("name", { length: 256 }).notNull(),
+    nameI18n: jsonb("name_i18n").$type<LocalizedField>().notNull().default({}),
     description: text("description"),
+    descriptionI18n: jsonb("description_i18n")
+      .$type<LocalizedField>()
+      .notNull()
+      .default({}),
     status: varchar("status", { length: 20 }).notNull().default("passive"),
     position: integer("position").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -136,9 +148,15 @@ export const courseMaterials = pgTable("course_materials", {
   moduleId: uuid("module_id")
     .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
+  sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
   type: varchar("type", { length: 50 }).notNull(), // 'file' or 'url'
   name: varchar("name", { length: 256 }).notNull(),
+  nameI18n: jsonb("name_i18n").$type<LocalizedField>().notNull().default({}),
   description: text("description"),
+  descriptionI18n: jsonb("description_i18n")
+    .$type<LocalizedField>()
+    .notNull()
+    .default({}),
   // For file
   fileUrl: text("file_url"),
   mimeType: varchar("mime_type", { length: 256 }),
@@ -160,9 +178,15 @@ export const quizzes = pgTable("quizzes", {
   moduleId: uuid("module_id")
     .references(() => modules.uuid, { onDelete: "cascade" })
     .notNull(),
+  sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
   title: varchar("title", { length: 256 }).notNull(),
+  titleI18n: jsonb("title_i18n").$type<LocalizedField>().notNull().default({}),
   difficulty: varchar("difficulty", { length: 20 }).notNull().default("beginner"),
   questions: jsonb("questions").notNull(), // Stores Question[]
+  questionsI18n: jsonb("questions_i18n")
+    .$type<LocalizedQuestion[]>()
+    .notNull()
+    .default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -232,8 +256,13 @@ export const feedItems = pgTable("feed_items", {
   courseId: uuid("course_id")
     .references(() => courses.uuid, { onDelete: "cascade" })
     .notNull(),
+  sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
   type: varchar("type", { length: 20 }).notNull(), // 'manual' or 'system'
   message: text("message").notNull(),
+  messageI18n: jsonb("message_i18n")
+    .$type<LocalizedField>()
+    .notNull()
+    .default({}),
   edited: boolean("edited").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -252,8 +281,14 @@ export const merchItems = pgTable(
   {
     uuid: uuid("uuid").defaultRandom().primaryKey(),
     slug: varchar("slug", { length: 128 }).notNull(),
+    sourceLocale: varchar("source_locale", { length: 2 }).notNull().default("en"),
     name: varchar("name", { length: 256 }).notNull(),
+    nameI18n: jsonb("name_i18n").$type<LocalizedField>().notNull().default({}),
     description: text("description"),
+    descriptionI18n: jsonb("description_i18n")
+      .$type<LocalizedField>()
+      .notNull()
+      .default({}),
     imageUrl: text("image_url"),
     unitPriceCents: integer("unit_price_cents").notNull(),
     purchaseMode: varchar("purchase_mode", { length: 16 })

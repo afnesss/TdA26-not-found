@@ -50,4 +50,5 @@ export type RequestOrganization = {
 export type AuthRequest = Request & {
   user?: AuthUser;
   organization?: RequestOrganization;
+  locale?: "cs" | "en";
 };

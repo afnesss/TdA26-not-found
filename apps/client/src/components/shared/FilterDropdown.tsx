@@ -56,7 +56,9 @@ const FilterDropdown = <T extends string = string>({
           aria-label='Filtrovat kurzy'
         >
           <Filter size={16} />
-          {triggerLabel && <span>{triggerLabel}</span>}
+          {triggerLabel && (
+            <span className='text-foreground'>{triggerLabel}</span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuPortal>

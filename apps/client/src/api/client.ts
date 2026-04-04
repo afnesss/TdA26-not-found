@@ -3,6 +3,7 @@ import {
   getOrgSlugFromApiInput,
   isOrganizationInactiveError,
 } from '@/lib/organizationAccess'
+import { buildLocaleHeaders } from '@/lib/i18n'
 
 type ApiClientOptions = {
   headers?: HeadersInit
@@ -31,6 +32,7 @@ export default async function apiFetch<T>(
       credentials: 'include',
       headers: {
         ...defaultHeaders,
+        ...buildLocaleHeaders(),
         ...headers,
         ...safeOptions?.headers,
       },

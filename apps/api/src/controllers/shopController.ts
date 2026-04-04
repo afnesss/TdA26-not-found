@@ -4,7 +4,9 @@ import { db } from "../db";
 import { merchItems, promoCodes, shopOrders, users } from "../db/schema";
 import type { ShopCartItemInput } from "../schemas";
 import { AuthRequest } from "../types/auth";
+import { getRequestLocale } from "../utils/i18n";
 import { logger } from "../utils/logger";
+import { localizeNameDescription } from "../utils/localizedResponse";
 
 type ResolvedCartLine = {
   merchItemId: string;
@@ -85,7 +87,9 @@ const resolveCartItems = async (
   const catalogItems = await queryable
     .select({
       uuid: merchItems.uuid,
+      sourceLocale: merchItems.sourceLocale,
       name: merchItems.name,
+      nameI18n: merchItems.nameI18n,
       unitPriceCents: merchItems.unitPriceCents,
       active: merchItems.active,
       purchaseMode: merchItems.purchaseMode,
@@ -185,12 +189,16 @@ const findPromoCode = async (code: string, queryable: typeof db) => {
 };
 
 export async function getShopCatalog(_req: Request, res: Response) {
+  const locale = getRequestLocale(_req);
   const items = await db
     .select({
       uuid: merchItems.uuid,
       slug: merchItems.slug,
+      sourceLocale: merchItems.sourceLocale,
       name: merchItems.name,
+      nameI18n: merchItems.nameI18n,
       description: merchItems.description,
+      descriptionI18n: merchItems.descriptionI18n,
       imageUrl: merchItems.imageUrl,
       unitPriceCents: merchItems.unitPriceCents,
       purchaseMode: merchItems.purchaseMode,
@@ -201,7 +209,7 @@ export async function getShopCatalog(_req: Request, res: Response) {
     .where(eq(merchItems.active, true))
     .orderBy(asc(merchItems.createdAt), asc(merchItems.name));
 
-  res.json(items);
+  res.json(items.map((item) => localizeNameDescription(item, locale)));
 }
 
 export async function purchaseShopVoucherWithXp(

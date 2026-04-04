@@ -17,8 +17,10 @@ import {
   QuizSubmitRequest,
   QuizSubmitResponse,
 } from "../schemas/quiz";
+import { buildLocalizedField, buildLocalizedQuestions, getRequestLocale } from "../utils/i18n";
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
+import { localizeTitleQuestions } from "../utils/localizedResponse";
 import { AuthRequest } from "../types/auth";
 
 const XP_PER_LEVEL = 100;
@@ -59,14 +61,18 @@ const getCourseContextByModuleId = async (moduleId: string) => {
 export const getQuizzes = async (req: Request, res: Response) => {
   try {
     const { moduleId } = req.params;
+    const locale = getRequestLocale(req);
 
     const result = await db
       .select({
         uuid: quizzes.uuid,
+        sourceLocale: quizzes.sourceLocale,
         title: quizzes.title,
+        titleI18n: quizzes.titleI18n,
         difficulty: quizzes.difficulty,
         moduleId: quizzes.moduleId,
         questions: quizzes.questions,
+        questionsI18n: quizzes.questionsI18n,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
@@ -90,7 +96,7 @@ export const getQuizzes = async (req: Request, res: Response) => {
       .groupBy(quizzes.uuid)
       .orderBy(desc(quizzes.createdAt));
 
-    res.json(result);
+    res.json(result.map((quiz) => localizeTitleQuestions(quiz, locale)));
   } catch (error) {
     logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -101,6 +107,11 @@ export const createQuiz = async (req: Request, res: Response) => {
   try {
     const { moduleId } = req.params;
     const quizData = req.body as Quiz;
+    const locale = getRequestLocale(req);
+    const sourceLocale =
+      quizData.sourceLocale === "cs" || quizData.sourceLocale === "en"
+        ? quizData.sourceLocale
+        : locale;
 
     // Assign UUIDs to questions if missing
     const questionsWithIds = quizData.questions.map((q) => ({
@@ -112,19 +123,27 @@ export const createQuiz = async (req: Request, res: Response) => {
       .insert(quizzes)
       .values({
         moduleId,
+        sourceLocale,
         title: quizData.title,
+        titleI18n: buildLocalizedField(
+          sourceLocale,
+          quizData.title,
+          quizData.titleI18n,
+        ),
         difficulty: quizData.difficulty ?? "beginner",
         questions: questionsWithIds,
+        questionsI18n:
+          quizData.questionsI18n ?? buildLocalizedQuestions(sourceLocale, questionsWithIds),
       })
       .returning();
 
     // await createSystemEvent(courseId, `Přidán nový kvíz: ${quizData.title}`);
 
-    const createdQuiz = {
+    const createdQuiz = localizeTitleQuestions({
       ...newQuiz,
       attemptsCount: 0,
       averagePercentage: null,
-    };
+    }, locale);
     // sseManager.broadcast(courseId, "quiz_added", createdQuiz);
 
     // Return with attemptsCount 0 and no average yet
@@ -138,14 +157,18 @@ export const createQuiz = async (req: Request, res: Response) => {
 export const getQuiz = async (req: Request, res: Response) => {
   try {
     const { moduleId, quizId } = req.params;
+    const locale = getRequestLocale(req);
 
     const [quiz] = await db
       .select({
         uuid: quizzes.uuid,
+        sourceLocale: quizzes.sourceLocale,
         title: quizzes.title,
+        titleI18n: quizzes.titleI18n,
         difficulty: quizzes.difficulty,
         moduleId: quizzes.moduleId,
         questions: quizzes.questions,
+        questionsI18n: quizzes.questionsI18n,
         createdAt: quizzes.createdAt,
         updatedAt: quizzes.updatedAt,
         attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
@@ -164,7 +187,7 @@ export const getQuiz = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Kvíz nebyl nalezen" });
     }
 
-    res.json(quiz);
+    res.json(localizeTitleQuestions(quiz, locale));
   } catch (error) {
     logger.error({ err: error }, "Quiz request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -175,6 +198,7 @@ export const updateQuiz = async (req: Request, res: Response) => {
   try {
     const { moduleId, quizId } = req.params;
     const quizData = req.body as Quiz;
+    const locale = getRequestLocale(req);
 
     // Assign UUIDs to questions if missing (though they should persist on update)
     const questionsWithIds = quizData.questions.map((q) => ({
@@ -190,9 +214,28 @@ export const updateQuiz = async (req: Request, res: Response) => {
     const [updatedQuiz] = await db
       .update(quizzes)
       .set({
+        sourceLocale:
+          quizData.sourceLocale === "cs" || quizData.sourceLocale === "en"
+            ? quizData.sourceLocale
+            : locale,
         title: quizData.title,
+        titleI18n: buildLocalizedField(
+          quizData.sourceLocale === "cs" || quizData.sourceLocale === "en"
+            ? quizData.sourceLocale
+            : locale,
+          quizData.title,
+          quizData.titleI18n,
+        ),
         ...(nextDifficulty ? { difficulty: nextDifficulty } : {}),
         questions: questionsWithIds,
+        questionsI18n:
+          quizData.questionsI18n ??
+          buildLocalizedQuestions(
+            quizData.sourceLocale === "cs" || quizData.sourceLocale === "en"
+              ? quizData.sourceLocale
+              : locale,
+            questionsWithIds,
+          ),
         updatedAt: new Date(),
       })
       .where(and(eq(quizzes.uuid, quizId), eq(quizzes.moduleId, moduleId)))
@@ -218,11 +261,11 @@ export const updateQuiz = async (req: Request, res: Response) => {
     //   `Kvíz aktualizován: ${updatedQuiz.title}`,
     // );
 
-    const finalQuiz = {
+    const finalQuiz = localizeTitleQuestions({
       ...updatedQuiz,
       attemptsCount: stats.count,
       averagePercentage: stats.averagePercentage || null,
-    };
+    }, locale);
 
     const courseContext = await getCourseContextByModuleId(moduleId);
     const courseId = courseContext?.courseId;

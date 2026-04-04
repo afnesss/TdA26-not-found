@@ -1,4 +1,9 @@
 import { z } from 'zod'
+import {
+  LocaleSchema,
+  LocalizedEntityMetaSchema,
+  LocalizedFieldSchema,
+} from './i18n'
 import { MaterialSchema } from './material'
 import { QuizSchema } from './quiz'
 import { QuizAnswerSchema } from './quiz'
@@ -22,7 +27,11 @@ export const StatusHistoryEventSchema = z.object({
 export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional().nullable(), // Nullable from DB
+  descriptionI18n: LocalizedFieldSchema.optional(),
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
   status: CourseStatusSchema.default('draft'),
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
@@ -30,14 +39,18 @@ export const CourseSummarySchema = z.object({
   startedAt: z.date().or(z.string().datetime()).nullable().optional(),
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
   status_history: z.array(StatusHistoryEventSchema).optional(),
-})
+}).merge(LocalizedEntityMetaSchema)
 
 export const CourseCreateRequestSchema = z.object({
+  sourceLocale: LocaleSchema.default('en'),
   name: z.string().min(1),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
 })
 
 export const CourseUpdateRequestSchema = z.object({
+  sourceLocale: LocaleSchema.optional(),
   name: z
     .string()
     .min(1, 'Název kurzu nesmí být prázdný')
@@ -45,7 +58,9 @@ export const CourseUpdateRequestSchema = z.object({
       message: 'Název kurzu nesmí být prázdný',
     })
     .optional(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   status: CourseStatusSchema.optional(),
   startedAt: z.date().or(z.string().datetime()).nullable().optional(),
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
@@ -55,7 +70,11 @@ export const CourseUpdateRequestSchema = z.object({
 export const CourseDetailSchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().optional().nullable(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
   status: CourseStatusSchema.default('draft'),
   modules: z.array(CourseModuleSchema),
   feed: z.array(FeedItemSchema),
@@ -64,7 +83,7 @@ export const CourseDetailSchema = z.object({
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
   createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
   updatedAt: z.date().or(z.string().datetime()),
-})
+}).merge(LocalizedEntityMetaSchema)
 
 export const CourseShareLinkSchema = z.object({
   shareUrl: z.string().url(),
@@ -127,7 +146,9 @@ export const CourseBackupSubmissionSchema = z.object({
 export const CourseBackupModuleSchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
+  nameI18n: LocalizedFieldSchema.optional(),
   description: z.string().nullable().optional(),
+  descriptionI18n: LocalizedFieldSchema.optional(),
   status: z.enum(['active', 'passive']),
   position: z.number().int().positive(),
   createdAt: z.date().or(z.string().datetime()),
@@ -140,22 +161,24 @@ export const CourseBackupModuleSchema = z.object({
       updatedAt: z.date().or(z.string().datetime()),
     }),
   ),
-})
+}).merge(LocalizedEntityMetaSchema)
 
 export const CourseBackupSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   exportedAt: z.date().or(z.string().datetime()),
   course: z.object({
     uuid: z.string().uuid(),
     name: z.string(),
+    nameI18n: LocalizedFieldSchema.optional(),
     description: z.string().nullable().optional(),
+    descriptionI18n: LocalizedFieldSchema.optional(),
     status: CourseStatusSchema,
     createdAt: z.date().or(z.string().datetime()),
     updatedAt: z.date().or(z.string().datetime()),
     startedAt: z.date().or(z.string().datetime()).nullable().optional(),
     scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
     status_history: z.array(StatusHistoryEventSchema).optional(),
-  }),
+  }).merge(LocalizedEntityMetaSchema),
   modules: z.array(CourseBackupModuleSchema),
   feed: z.array(FeedItemSchema),
   quizSubmissions: z.array(CourseBackupSubmissionSchema),
@@ -164,7 +187,7 @@ export const CourseBackupSchema = z.object({
 })
 
 export const CoursesBackupCollectionSchema = z.object({
-  version: z.literal(1),
+  version: z.literal(2),
   exportedAt: z.date().or(z.string().datetime()),
   scope: z.literal('all-courses'),
   courses: z.array(CourseBackupSchema),

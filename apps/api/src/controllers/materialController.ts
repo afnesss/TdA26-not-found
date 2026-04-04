@@ -14,6 +14,8 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { sseManager } from "../utils/sseManager";
 import { logger } from "../utils/logger";
+import { buildLocalizedField, getRequestLocale } from "../utils/i18n";
+import { localizeNameDescription } from "../utils/localizedResponse";
 
 const UPLOAD_DIR = path.join(process.cwd(), "uploads"); // Mounted to /app/uploads in Docker
 
@@ -25,8 +27,11 @@ fs.mkdir(UPLOAD_DIR, { recursive: true }).catch((err) =>
 export const mapMaterial = (m: typeof courseMaterials.$inferSelect) => {
   const base = {
     uuid: m.uuid,
+    sourceLocale: m.sourceLocale,
     name: m.name,
+    nameI18n: m.nameI18n,
     description: m.description ?? undefined,
+    descriptionI18n: m.descriptionI18n,
   };
 
   if (m.type === "file") {
@@ -77,6 +82,7 @@ const getCourseIdByModuleId = async (moduleId: string) => {
 export const getMaterials = async (req: Request, res: Response) => {
   try {
     const { moduleId } = req.params;
+    const locale = getRequestLocale(req);
 
     const materials = await db
       .select()
@@ -84,7 +90,7 @@ export const getMaterials = async (req: Request, res: Response) => {
       .where(eq(courseMaterials.moduleId, moduleId))
       .orderBy(desc(courseMaterials.createdAt), desc(courseMaterials.uuid));
 
-    res.json(materials.map(mapMaterial));
+    res.json(materials.map((material) => localizeNameDescription(mapMaterial(material), locale)));
   } catch (error) {
     logger.error({ err: error }, "Material request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -109,6 +115,11 @@ export const createMaterial = async (req: Request, res: Response) => {
   try {
     const { moduleId } = req.params;
     const { type } = req.body;
+    const locale = getRequestLocale(req);
+    const sourceLocale =
+      req.body.sourceLocale === "cs" || req.body.sourceLocale === "en"
+        ? req.body.sourceLocale
+        : locale;
 
     if (type === "file") {
       // Validate request body
@@ -149,9 +160,16 @@ export const createMaterial = async (req: Request, res: Response) => {
         .values({
           uuid: id,
           moduleId,
+          sourceLocale,
           type: "file",
           name,
+          nameI18n: buildLocalizedField(sourceLocale, name, req.body.nameI18n),
           description,
+          descriptionI18n: buildLocalizedField(
+            sourceLocale,
+            description,
+            req.body.descriptionI18n,
+          ),
           fileUrl,
           mimeType: file.mimetype,
           sizeBytes: file.size,
@@ -161,7 +179,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 
       // await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
-      const mappedMaterial = mapMaterial(material);
+      const mappedMaterial = localizeNameDescription(mapMaterial(material), locale);
       // sseManager.broadcast(courseId, "material_added", mappedMaterial);
 
       res.status(201).json(mappedMaterial);
@@ -189,9 +207,16 @@ export const createMaterial = async (req: Request, res: Response) => {
         .insert(courseMaterials)
         .values({
           moduleId,
+          sourceLocale,
           type: "url",
           name,
+          nameI18n: buildLocalizedField(sourceLocale, name, req.body.nameI18n),
           description,
+          descriptionI18n: buildLocalizedField(
+            sourceLocale,
+            description,
+            req.body.descriptionI18n,
+          ),
           url,
           faviconUrl,
         })
@@ -199,7 +224,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 
       // await createSystemEvent(courseId, `Přidán nový materiál: ${name}`);
 
-      const mappedMaterial = mapMaterial(material);
+      const mappedMaterial = localizeNameDescription(mapMaterial(material), locale);
       // sseManager.broadcast(courseId, "material_added", mappedMaterial);
 
       res.status(201).json(mappedMaterial);
@@ -218,6 +243,7 @@ export const createMaterial = async (req: Request, res: Response) => {
 export const updateMaterial = async (req: Request, res: Response) => {
   try {
     const { moduleId, materialId } = req.params;
+    const locale = getRequestLocale(req);
 
     // Check if material exists
     const existing = await db.query.courseMaterials.findFirst({
@@ -247,7 +273,26 @@ export const updateMaterial = async (req: Request, res: Response) => {
       }
 
       const { name, description } = validation.data;
-      const updates: any = { name, description, updatedAt: new Date() };
+      const sourceLocale =
+        req.body.sourceLocale === "cs" || req.body.sourceLocale === "en"
+          ? req.body.sourceLocale
+          : existing.sourceLocale;
+      const updates: any = {
+        sourceLocale,
+        name: name ?? existing.name,
+        nameI18n: buildLocalizedField(
+          sourceLocale,
+          name ?? existing.name,
+          req.body.nameI18n ?? existing.nameI18n,
+        ),
+        description: description ?? existing.description,
+        descriptionI18n: buildLocalizedField(
+          sourceLocale,
+          description ?? existing.description,
+          req.body.descriptionI18n ?? existing.descriptionI18n,
+        ),
+        updatedAt: new Date(),
+      };
 
       if (req.file) {
         // Delete old file
@@ -287,7 +332,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
       //   `Materiál aktualizován: ${updated.name}`,
       // );
 
-      const mappedUpdated = mapMaterial(updated);
+      const mappedUpdated = localizeNameDescription(
+        mapMaterial(updated),
+        locale,
+      );
       // sseManager.broadcast(courseId, "material_updated", mappedUpdated);
 
       res.json(mappedUpdated);
@@ -302,7 +350,26 @@ export const updateMaterial = async (req: Request, res: Response) => {
       }
 
       const { name, description, url } = validation.data;
-      const updates: any = { name, description, updatedAt: new Date() };
+      const sourceLocale =
+        req.body.sourceLocale === "cs" || req.body.sourceLocale === "en"
+          ? req.body.sourceLocale
+          : existing.sourceLocale;
+      const updates: any = {
+        sourceLocale,
+        name: name ?? existing.name,
+        nameI18n: buildLocalizedField(
+          sourceLocale,
+          name ?? existing.name,
+          req.body.nameI18n ?? existing.nameI18n,
+        ),
+        description: description ?? existing.description,
+        descriptionI18n: buildLocalizedField(
+          sourceLocale,
+          description ?? existing.description,
+          req.body.descriptionI18n ?? existing.descriptionI18n,
+        ),
+        updatedAt: new Date(),
+      };
 
       if (url && url !== existing.url) {
         updates.url = url;
@@ -325,7 +392,10 @@ export const updateMaterial = async (req: Request, res: Response) => {
       //   `Materiál aktualizován: ${updated.name}`,
       // );
 
-      const mappedUpdated = mapMaterial(updated);
+      const mappedUpdated = localizeNameDescription(
+        mapMaterial(updated),
+        locale,
+      );
       // sseManager.broadcast(courseId, "material_updated", mappedUpdated);
 
       res.json(mappedUpdated);
@@ -340,6 +410,7 @@ export const updateMaterial = async (req: Request, res: Response) => {
 export const trackMaterialInteraction = async (req: Request, res: Response) => {
   try {
     const { moduleId, materialId } = req.params;
+    const locale = getRequestLocale(req);
     const validation = MaterialInteractionRequestSchema.safeParse(req.body);
 
     if (!validation.success) {
@@ -394,7 +465,7 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
       const payload = {
         courseId,
         moduleId,
-        material: mapMaterial(updatedMaterial),
+        material: localizeNameDescription(mapMaterial(updatedMaterial), locale),
       };
       sseManager.broadcast(courseId, "material_interaction_updated", payload);
       sseManager.broadcast("courses", "material_interaction_updated", payload);
@@ -402,7 +473,7 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
       sseManager.broadcast("courses", "material_updated", payload);
     }
 
-    return res.json(mapMaterial(updatedMaterial));
+    return res.json(localizeNameDescription(mapMaterial(updatedMaterial), locale));
   } catch (error) {
     logger.error({ err: error }, "Material request failed");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -412,6 +483,7 @@ export const trackMaterialInteraction = async (req: Request, res: Response) => {
 export const downloadMaterial = async (req: Request, res: Response) => {
   try {
     const { moduleId, materialId } = req.params;
+    const locale = getRequestLocale(req);
     const material = await getMaterialByModuleAndId(moduleId, materialId);
 
     if (!material) {
@@ -438,7 +510,7 @@ export const downloadMaterial = async (req: Request, res: Response) => {
       const payload = {
         courseId,
         moduleId,
-        material: mapMaterial(updatedMaterial),
+        material: localizeNameDescription(mapMaterial(updatedMaterial), locale),
       };
       sseManager.broadcast(courseId, "material_interaction_updated", payload);
       sseManager.broadcast("courses", "material_interaction_updated", payload);

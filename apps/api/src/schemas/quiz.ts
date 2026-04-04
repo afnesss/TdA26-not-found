@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  LocaleSchema,
+  LocalizedEntityMetaSchema,
+  LocalizedFieldSchema,
+  LocalizedQuestionSchema,
+} from "./i18n";
 
 export const QuizDifficultySchema = z.enum([
   "beginner",
@@ -32,11 +38,15 @@ export const QuestionSchema = z.discriminatedUnion("type", [
 export const QuizSchema = z.object({
   uuid: z.string().uuid().optional(),
   title: z.string(),
+  titleI18n: LocalizedFieldSchema.optional(),
+  questionsI18n: z.array(LocalizedQuestionSchema).optional(),
+  resolvedLocale: LocaleSchema.optional(),
+  isFallback: z.boolean().optional(),
   difficulty: QuizDifficultySchema.default("beginner"),
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z.array(QuestionSchema),
-});
+}).merge(LocalizedEntityMetaSchema);
 
 export const QuizAnswerSchema = z.object({
   uuid: z.string().uuid(),

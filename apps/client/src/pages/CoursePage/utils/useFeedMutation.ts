@@ -1,4 +1,5 @@
 import { createPost, deletePost, updatePost } from '@/api/queries/feedQueries'
+import { getStoredUiLocale } from '@/lib/i18n'
 import type { ApiError } from '@/lib/types'
 import {
   QueryClient,
@@ -31,7 +32,15 @@ export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
     { message: string },
     { previousFeed?: InfiniteData<FeedItem[]> }
   >({
-    mutationFn: (data: { message: string }) => createPost(courseId, data, orgSlug),
+    mutationFn: (data: { message: string }) =>
+      createPost(
+        courseId,
+        {
+          ...data,
+          sourceLocale: getStoredUiLocale(),
+        },
+        orgSlug,
+      ),
     networkMode: 'always',
     onMutate: async (data) => {
       await queryClient.cancelQueries({

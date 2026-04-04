@@ -11,13 +11,18 @@ import { mapMaterial } from "./materialController";
 import { ModuleReorderRequest } from "../schemas";
 import { sseManager } from "../utils/sseManager";
 import { createSystemEvent } from "../utils/systemEvent";
+import { buildLocalizedField, getRequestLocale } from "../utils/i18n";
 import { logger } from "../utils/logger";
+import { localizeNameDescription, localizeTitleQuestions } from "../utils/localizedResponse";
 
 const MODULE_STATUSES = new Set(["active", "passive"]);
 const moduleSummarySelect = {
   uuid: modules.uuid,
+  sourceLocale: modules.sourceLocale,
   name: modules.name,
+  nameI18n: modules.nameI18n,
   description: modules.description,
+  descriptionI18n: modules.descriptionI18n,
   status: modules.status,
   createdAt: modules.createdAt,
   updatedAt: modules.updatedAt,
@@ -63,10 +68,13 @@ async function buildModuleDetail(moduleUuid: string) {
   const fetchedQuizzes = await db
     .select({
       uuid: quizzes.uuid,
+      sourceLocale: quizzes.sourceLocale,
       title: quizzes.title,
+      titleI18n: quizzes.titleI18n,
       difficulty: quizzes.difficulty,
       moduleId: quizzes.moduleId,
       questions: quizzes.questions,
+      questionsI18n: quizzes.questionsI18n,
       createdAt: quizzes.createdAt,
       updatedAt: quizzes.updatedAt,
       attemptsCount: sql<number>`count(${quizSubmissions.uuid})`.mapWith(
@@ -101,6 +109,7 @@ async function buildModuleDetail(moduleUuid: string) {
 export async function getModules(req: Request, res: Response) {
   try {
     const { courseId } = req.params;
+    const locale = getRequestLocale(req);
 
     const moduleSummaries = await db
       .select(moduleSummarySelect)
@@ -112,7 +121,7 @@ export async function getModules(req: Request, res: Response) {
         asc(modules.uuid),
       );
 
-    res.json(moduleSummaries);
+    res.json(moduleSummaries.map((module) => localizeNameDescription(module, locale)));
   } catch (error) {
     logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -122,13 +131,22 @@ export async function getModules(req: Request, res: Response) {
 export async function getModuleByUuid(req: Request, res: Response) {
   try {
     const { courseId, moduleId } = req.params;
+    const locale = getRequestLocale(req);
     const detailedModule = await buildModuleDetail(moduleId);
 
     if (!detailedModule || detailedModule.courseId !== courseId) {
       return res.status(404).json({ message: "Modul nebyl nalezen" });
     }
 
-    res.json(detailedModule);
+    res.json({
+      ...localizeNameDescription(detailedModule, locale),
+      materials: detailedModule.materials.map((material) =>
+        localizeNameDescription(material, locale),
+      ),
+      quizzes: detailedModule.quizzes.map((quiz) =>
+        localizeTitleQuestions(quiz, locale),
+      ),
+    });
   } catch (error) {
     logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -143,6 +161,11 @@ export async function createModule(req: Request, res: Response) {
       description?: string | null;
       status?: string;
     };
+    const locale = getRequestLocale(req);
+    const sourceLocale =
+      req.body.sourceLocale === "cs" || req.body.sourceLocale === "en"
+        ? req.body.sourceLocale
+        : locale;
 
     if (!name?.trim()) {
       return res.status(400).json({ message: "Zadejte prosím název modulu" });
@@ -167,8 +190,15 @@ export async function createModule(req: Request, res: Response) {
         .insert(modules)
         .values({
           courseId,
+          sourceLocale,
           name: name.trim(),
+          nameI18n: buildLocalizedField(sourceLocale, name.trim(), req.body.nameI18n),
           description: description ?? null,
+          descriptionI18n: buildLocalizedField(
+            sourceLocale,
+            description ?? null,
+            req.body.descriptionI18n,
+          ),
           status: status ?? "passive",
           position: nextPosition,
         })
@@ -177,7 +207,7 @@ export async function createModule(req: Request, res: Response) {
       return [created];
     });
 
-    res.status(201).json(newModule);
+    res.status(201).json(localizeNameDescription(newModule, locale));
   } catch (error) {
     logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });
@@ -192,6 +222,7 @@ export async function updateModule(req: Request, res: Response) {
       description?: string | null;
       status?: string;
     };
+    const locale = getRequestLocale(req);
 
     const [existingModule] = await db
       .select()
@@ -201,6 +232,11 @@ export async function updateModule(req: Request, res: Response) {
     if (!existingModule) {
       return res.status(404).json({ message: "Modul nebyl nalezen" });
     }
+
+    const sourceLocale =
+      req.body.sourceLocale === "cs" || req.body.sourceLocale === "en"
+        ? req.body.sourceLocale
+        : existingModule.sourceLocale;
 
     if (name !== undefined && !name.trim()) {
       return res
@@ -244,9 +280,20 @@ export async function updateModule(req: Request, res: Response) {
     const [updatedModule] = await db
       .update(modules)
       .set({
+        sourceLocale,
         name: name?.trim() ?? existingModule.name,
+        nameI18n: buildLocalizedField(
+          sourceLocale,
+          name?.trim() ?? existingModule.name,
+          req.body.nameI18n ?? existingModule.nameI18n,
+        ),
         description:
           description !== undefined ? description : existingModule.description,
+        descriptionI18n: buildLocalizedField(
+          sourceLocale,
+          description !== undefined ? description : existingModule.description,
+          req.body.descriptionI18n ?? existingModule.descriptionI18n,
+        ),
         status: status ?? existingModule.status,
         updatedAt: new Date(),
       })
@@ -265,7 +312,7 @@ export async function updateModule(req: Request, res: Response) {
       );
     }
 
-    res.json(updatedModule);
+    res.json(localizeNameDescription(updatedModule, locale));
   } catch (error) {
     logger.error({ err: error }, "Module request failed");
     res.status(500).json({ message: "Došlo k chybě serveru" });

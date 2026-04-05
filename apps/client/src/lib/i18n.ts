@@ -18,6 +18,17 @@ export const setStoredUiLocale = (locale: Locale) => {
   window.localStorage.setItem(UI_LOCALE_STORAGE_KEY, locale)
 }
 
+export const setUiLocale = async (locale: Locale) => {
+  setStoredUiLocale(locale)
+
+  if (typeof window === 'undefined') return
+
+  const { default: i18n } = await import('../i18n')
+  if (i18n.language !== locale) {
+    await i18n.changeLanguage(locale)
+  }
+}
+
 export const buildLocaleHeaders = (): HeadersInit => ({
   'X-Locale': getStoredUiLocale(),
 })

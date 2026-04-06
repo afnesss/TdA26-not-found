@@ -33,6 +33,11 @@ export const buildLocaleHeaders = (): HeadersInit => ({
   'X-Locale': getStoredUiLocale(),
 })
 
+export const getIntlLocale = () => {
+  const locale = getStoredUiLocale()
+  return locale === 'cs' ? 'cs-CZ' : 'en-US'
+}
+
 export const appendLocaleQuery = (path: string) => {
   const locale = getStoredUiLocale()
   const separator = path.includes('?') ? '&' : '?'

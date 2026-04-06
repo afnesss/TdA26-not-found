@@ -6,15 +6,19 @@ import { useAuth } from '@/auth/useAuth'
 import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
 import { Button } from '@/components/ui/button'
+import { getStoredUiLocale, setUiLocale } from '@/lib/i18n'
 import {
   buildOrgCoursesPath,
   buildOrgDashboardPath,
   buildOrgLoginPath,
 } from '@/lib/routes'
+import type { Locale } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, LogIn, LogOut } from 'lucide-react'
+import { ChevronDown, Languages, LogIn, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
 import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
@@ -31,8 +35,11 @@ type SecondaryAction = {
   label: string
   icon: typeof LogIn
   isActive: boolean
+  isDestructive?: boolean
   onClick: () => void
 }
+
+const localeOptions: Locale[] = ['en', 'cs']
 
 export default function Header() {
   const navigate = useNavigate()
@@ -40,6 +47,15 @@ export default function Header() {
   const queryClient = useQueryClient()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { t, i18n } = useTranslation('header')
+  const [uiLocale, setCurrentUiLocale] = useState<Locale>(getStoredUiLocale())
+
+  // useEffect(() => {
+  //   const nextLocale = i18n.resolvedLanguage
+  //   if (nextLocale === 'en' || nextLocale === 'cs') {
+  //     setCurrentUiLocale(nextLocale)
+  //   }
+  // }, [i18n.resolvedLanguage])
 
   const isAdminArea = pathname.startsWith('/admin')
   const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
@@ -79,6 +95,12 @@ export default function Header() {
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
 
+  const handleLanguageChange = async (locale: Locale) => {
+    if (locale === uiLocale) return
+    await setUiLocale(locale)
+    setCurrentUiLocale(locale)
+  }
+
   const handleLogout = async () => {
     try {
       if (effectiveOrgSlug && isOrgAuth) {
@@ -103,7 +125,7 @@ export default function Header() {
   const navigationItems: NavigationItem[] = isAdminArea
     ? [
         {
-          label: 'Shop',
+          label: t('navigation.shop'),
           value: 'shop',
           isActive: isShopActive,
           onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
@@ -111,13 +133,13 @@ export default function Header() {
         ...(isAdminAuth
           ? [
               {
-                label: 'Žádosti',
+                label: t('navigation.requests'),
                 value: 'requests',
                 isActive: isAdminRequestsActive,
                 onClick: () => navigate('/admin/requests'),
               },
               {
-                label: 'Organizace',
+                label: t('navigation.organizations'),
                 value: 'organizations',
                 isActive: isAdminOrganizationsActive,
                 onClick: () => navigate('/admin/organizations'),
@@ -128,13 +150,13 @@ export default function Header() {
     : hasOrgNavigation && effectiveOrgSlug
       ? [
           {
-            label: 'Shop',
+            label: t('navigation.shop'),
             value: 'shop',
             isActive: isShopActive,
             onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
           },
           {
-            label: 'Kurzy',
+            label: t('navigation.courses'),
             value: 'courses',
             isActive: isOrgCoursesActive,
             onClick: () => navigate(buildOrgCoursesPath(effectiveOrgSlug)),
@@ -142,7 +164,7 @@ export default function Header() {
           ...(isOrgStaff
             ? [
                 {
-                  label: 'Dashboard',
+                  label: t('navigation.dashboard'),
                   value: 'dashboard',
                   isActive: isOrgDashboardActive,
                   onClick: () =>
@@ -153,7 +175,7 @@ export default function Header() {
         ]
       : [
           {
-            label: 'Shop',
+            label: t('navigation.shop'),
             value: 'shop',
             isActive: isShopActive,
             onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
@@ -167,28 +189,54 @@ export default function Header() {
 
   const secondaryAction: SecondaryAction = isAdminArea
     ? {
-        label: isAdminAuth ? 'Odhlásit se' : 'Přihlásit se',
+        label: isAdminAuth ? t('actions.signOut') : t('actions.signIn'),
         icon: isAdminAuth ? LogOut : LogIn,
         isActive: !isAdminAuth && isAdminLoginActive,
+        isDestructive: isAdminAuth,
         onClick: () =>
           isAdminAuth ? void handleLogout() : navigate('/admin/login'),
       }
     : hasOrgNavigation && effectiveOrgSlug
       ? {
-          label: isOrgAuth ? 'Odhlásit se' : 'Přihlášení',
+          label: isOrgAuth ? t('actions.signOut') : t('actions.signIn'),
           icon: isOrgAuth ? LogOut : LogIn,
           isActive: !isOrgAuth && isOrgLoginActive,
+          isDestructive: isOrgAuth,
           onClick: () =>
             isOrgAuth
               ? void handleLogout()
               : navigate(buildOrgLoginPath(effectiveOrgSlug)),
         }
       : {
-          label: 'Založit si organizaci',
+          label: t('actions.createOrganization'),
           icon: LogIn,
           isActive: isOrganizationRequestActive,
           onClick: () => navigate('/organization-request/new'),
         }
+
+  const localeSwitcherFooter = (
+    <div className='flex w-full overflow-hidden rounded-lg  bg-background'>
+      {localeOptions.map((locale) => {
+        const isActive = uiLocale === locale
+        return (
+          <button
+            key={locale}
+            type='button'
+            onClick={() => void handleLanguageChange(locale)}
+            className={cn(
+              'flex-1 cursor-pointer px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] transition-colors',
+              isActive
+                ? 'bg-primary/10 text-primary'
+                : 'text-foreground hover:bg-primary/15 hover:text-primary',
+            )}
+            aria-pressed={isActive}
+          >
+            {locale}
+          </button>
+        )
+      })}
+    </div>
+  )
 
   return (
     <header
@@ -219,6 +267,28 @@ export default function Header() {
             <span>{orgUser.xp ?? 0} XP</span>
           </div>
         )}
+        {isMd && (
+          <DropdownMenuComponent
+            trigger={
+              <Button
+                variant='tab'
+                className='gap-1 text-xs transition-colors hover:bg-primary/10'
+              >
+                <Languages size={16} />
+                {uiLocale.toUpperCase()}
+                <ChevronDown size={16} className='opacity-60' />
+              </Button>
+            }
+            items={localeOptions.map((locale) => ({
+              label: locale.toUpperCase(),
+              value: locale,
+              onClick: () => void handleLanguageChange(locale),
+            }))}
+            selectedValue={uiLocale}
+            align='end'
+            width='w-24'
+          />
+        )}
         {isMd || navigationItems.length <= 1 ? (
           <>
             {navigationItems.map((item) => (
@@ -240,7 +310,7 @@ export default function Header() {
                 variant='tab'
                 className='gap-1 text-xs transition-colors hover:bg-primary/10'
               >
-                {activeNavigationItem?.label ?? 'Menu'}
+                {activeNavigationItem?.label ?? t('navigation.menu')}
                 <ChevronDown size={16} className='opacity-60' />
               </Button>
             }
@@ -251,14 +321,15 @@ export default function Header() {
             }))}
             selectedValue={activeNavigationItem?.value}
             align='end'
-            width='w-28'
+            width='w-40'
+            footer={<div className='w-full px-1'>{localeSwitcherFooter}</div>}
           />
         )}
         <Button
           variant='secondary'
           className={cn(
             secondaryAction.isActive && selectedSecondaryButtonClass,
-            secondaryAction.label.includes('Odhl') && 'text-destructive',
+            secondaryAction.isDestructive && 'text-destructive',
           )}
           aria-current={secondaryAction.isActive ? 'page' : undefined}
           onClick={secondaryAction.onClick}
@@ -275,7 +346,7 @@ export default function Header() {
             size={20}
             className={cn(
               isAuthAction ? 'block md:hidden' : 'hidden',
-              secondaryAction.label.includes('Odhl') && 'text-destructive',
+              secondaryAction.isDestructive && 'text-destructive',
             )}
           />
         </Button>

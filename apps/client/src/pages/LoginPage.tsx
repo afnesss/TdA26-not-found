@@ -1,15 +1,16 @@
-﻿import { useState } from 'react'
-import { Eye, EyeOff, Lock, User } from 'lucide-react'
-import { useForm, type FieldValues } from 'react-hook-form'
-import { Button } from '@/components/ui/button'
+import { userLogin } from '@/api/queries/authQueries'
 import AuthPageShell from '@/components/auth/AuthPageShell'
 import FormField from '@/components/shared/FormField'
-import { useLocation, useNavigate } from 'react-router'
+import { Button } from '@/components/ui/button'
 import { useTitle } from '@/lib/dynamicTitleHook'
-import { toast } from 'sonner'
-import { userLogin } from '@/api/queries/authQueries'
-import { useQueryClient } from '@tanstack/react-query'
 import type { ApiError } from '@/lib/types'
+import { useQueryClient } from '@tanstack/react-query'
+import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { useState } from 'react'
+import { useForm, type FieldValues } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 const LoginPage = () => {
   const [show, setShow] = useState(false)
@@ -17,6 +18,7 @@ const LoginPage = () => {
   const location = useLocation()
   const queryClient = useQueryClient()
   const isAdminLogin = location.pathname.startsWith('/admin')
+  const { t } = useTranslation('login')
 
   const {
     register,
@@ -34,7 +36,7 @@ const LoginPage = () => {
 
       if (result) {
         queryClient.setQueryData(['auth', 'me'], { username: data.name })
-        toast.success('Přihlášení úspěšné')
+        toast.success(t('admin.success'))
         navigate('/admin/requests')
         reset()
       }
@@ -46,24 +48,28 @@ const LoginPage = () => {
         'error' in apiError.body &&
         typeof (apiError.body as { error?: unknown }).error === 'string'
           ? (apiError.body as { error: string }).error
-          : 'Přihlášení se nepodařilo'
+          : t('admin.failure')
 
       toast.error(message)
     }
   }
 
-  useTitle('Přihlášení')
+  useTitle(t('admin.pageTitle'))
 
   return (
-    <AuthPageShell cardTitle={isAdminLogin ? 'Přihlášení správce platformy' : 'Přihlášení'}>
+    <AuthPageShell
+      cardTitle={isAdminLogin ? t('admin.cardTitle') : t('admin.pageTitle')}
+    >
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3'>
         <FormField
-          label='Jméno'
+          label={t('admin.fields.name.label')}
           icon={User}
           inputProps={{
-            ...register('name', { required: 'Jméno je povinné' }),
+            ...register('name', {
+              required: t('admin.fields.name.required'),
+            }),
             type: 'text',
-            placeholder: isAdminLogin ? 'Přihlašovací jméno správce' : 'Vaše jméno',
+            placeholder: t('admin.fields.name.placeholder'),
           }}
         />
         {errors.name && (
@@ -71,12 +77,14 @@ const LoginPage = () => {
         )}
 
         <FormField
-          label='Heslo'
+          label={t('admin.fields.password.label')}
           icon={Lock}
           inputProps={{
-            ...register('password', { required: 'Heslo je povinné' }),
+            ...register('password', {
+              required: t('admin.fields.password.required'),
+            }),
             type: show ? 'text' : 'password',
-            placeholder: '••••••••',
+            placeholder: t('admin.fields.password.placeholder'),
           }}
           rightElement={
             <button
@@ -84,7 +92,11 @@ const LoginPage = () => {
               onClick={() => setShow((s) => !s)}
               className='bg-transparent cursor-pointer'
               aria-pressed={show}
-              aria-label={show ? 'Skrýt heslo' : 'Zobrazit heslo'}
+              aria-label={
+                show
+                  ? t('admin.actions.hidePassword')
+                  : t('admin.actions.showPassword')
+              }
             >
               {show ? (
                 <Eye className='w-4 sm:w-5 h-4 sm:h-5 text-gray-800/50' />
@@ -106,7 +118,7 @@ const LoginPage = () => {
           size='primary'
           className='mt-3'
         >
-          Přihlásit se
+          {t('admin.actions.submit')}
         </Button>
       </form>
     </AuthPageShell>

@@ -5,62 +5,72 @@ import TitleText from '@/components/shared/TitleText'
 import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'usehooks-ts'
 
+type LandingHeroVariant = 'home' | 'organization'
+
 type LandingHeroProps = {
+  variant: LandingHeroVariant
   highlightedText: string
-  primaryCtaLabel: string
   onPrimaryCta: () => void
-  secondaryCtaLabel?: string
   onSecondaryCta?: () => void
   showHelperText?: boolean
 }
 
 const LandingHero = ({
+  variant,
   highlightedText,
-  primaryCtaLabel,
   onPrimaryCta,
-  secondaryCtaLabel,
   onSecondaryCta,
   showHelperText = false,
 }: LandingHeroProps) => {
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { t } = useTranslation('homepage')
+
+  const primaryCtaLabel =
+    variant === 'home'
+      ? t('actions.createOrganization')
+      : t('actions.browseCourses')
+
+  const secondaryCtaLabel =
+    variant === 'organization' && onSecondaryCta ? t('actions.info') : undefined
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-[68%_32%] items-center justify-center max-w-9xl mx-auto md:px-10 lg:px-16 gap-x-10 lg:gap-x-16'>
       <div className='flex flex-col max-sm:justify-center gap-7 sm:gap-10 md:gap-10 w-full md:px-7 '>
-        <HintPageText text='Učení může být zábava' icon={ActivitiesIcon} />
+        <HintPageText text={t('hero.eyebrow')} icon={ActivitiesIcon} />
 
         <TitleText
           className='max-sm:text-4xl text-5xl sm:text-5xl md:text-5xl lg:text-6xl'
-          underlinedText='Kreativní'
-          addtext2=' myšlení s'
+          underlinedText={t('hero.title.underlined')}
+          addtext2={t('hero.title.suffix')}
           highlightedText={highlightedText}
           underlineHeight={isMd ? '19' : '16'}
           underlineStrokeWidth='4'
           underlineOffset={isMd ? '-bottom-2.5' : '-bottom-1.5'}
         />
 
-        <Label variant={'description'}>
-          Nezisková organizace pro vzdělávání studentů i veřejnosti. Přinášíme{' '}
+        <Label variant='description'>
+          {t('hero.description.prefix')}{' '}
           <UnderlinedText
             strokeWidth={isMd ? undefined : '4'}
             height={isMd ? undefined : '9'}
             offset={isMd ? undefined : '-bottom-0.5'}
             className='font-bold'
           >
-            moderní
+            {t('hero.description.modern')}
           </UnderlinedText>{' '}
-          a{' '}
+          {t('hero.description.connector')}{' '}
           <UnderlinedText
             strokeWidth={isMd ? undefined : '4'}
             height={isMd ? undefined : '9'}
             offset={isMd ? undefined : '-bottom-0.5'}
             className='font-bold'
           >
-            interaktivní
+            {t('hero.description.interactive')}
           </UnderlinedText>{' '}
-          výuku - bez úmorného pročítání textů.
+          {t('hero.description.suffix')}
         </Label>
 
         <div className='flex flex-row gap-5'>
@@ -84,10 +94,7 @@ const LandingHero = ({
           ) : null}
         </div>
         {showHelperText ? (
-          <p className='text-sm text-muted-foreground'>
-            Už máte organizaci? Otevřete její vlastní URL nebo požádejte lektora o
-            odkaz či QR kód.
-          </p>
+          <p className='text-sm text-muted-foreground'>{t('hero.helper')}</p>
         ) : null}
       </div>
 

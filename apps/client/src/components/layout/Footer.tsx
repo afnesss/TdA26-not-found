@@ -1,10 +1,11 @@
-import React from 'react'
 import { buildOrgCoursesPath, buildOrgInfoPath } from '@/lib/routes'
 import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 const Footer = () => {
   const navigate = useNavigate()
+  const { t } = useTranslation('footer')
   const { pathname, search } = useLocation()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isOrganizationArea = Boolean(orgSlug) && !pathname.startsWith('/admin')
@@ -22,7 +23,7 @@ const Footer = () => {
                sm:flex-nowrap sm:items-center sm:justify-between'
       >
         <div className='flex flex-wrap items-center gap-2 sm:gap-4'>
-          <span className='mr-2'>© 2026 Think Different Academy</span>
+          <span className='mr-2'>{t('copyright')}</span>
 
           <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
             {orgSlug && (
@@ -36,7 +37,7 @@ const Footer = () => {
                   )
                 }
               >
-                Kurzy
+                {t('navigation.courses')}
               </span>
             )}
             {isOrganizationArea && orgSlug && (
@@ -44,14 +45,14 @@ const Footer = () => {
                 className='cursor-pointer hover:text-secondary'
                 onClick={() => navigate(buildOrgInfoPath(orgSlug))}
               >
-                Info
+                {t('navigation.info')}
               </span>
             )}
             <span
               className='cursor-pointer hover:text-secondary'
               onClick={() => navigate(buildShopPath('/shop', effectiveOrgSlug))}
             >
-              Shop
+              {t('navigation.shop')}
             </span>
             <span
               className='cursor-pointer hover:text-secondary'
@@ -59,7 +60,7 @@ const Footer = () => {
                 navigate(buildShopPath('/terms-of-use', effectiveOrgSlug))
               }
             >
-              Podmínky použití
+              {t('navigation.terms')}
             </span>
             <span
               onClick={() =>
@@ -67,7 +68,7 @@ const Footer = () => {
               }
               className='cursor-pointer hover:text-secondary'
             >
-              Ochrana osobních údajů
+              {t('navigation.privacy')}
             </span>
           </div>
         </div>

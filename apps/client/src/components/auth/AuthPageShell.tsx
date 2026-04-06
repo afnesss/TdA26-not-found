@@ -4,6 +4,7 @@ import TitleText from '@/components/shared/TitleText'
 import { Label } from '@/components/ui/label'
 import { Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type AuthPageShellProps = {
   cardTitle: string
@@ -11,14 +12,16 @@ type AuthPageShellProps = {
 }
 
 const AuthPageShell = ({ cardTitle, children }: AuthPageShellProps) => {
+  const { t } = useTranslation('login')
+
   return (
     <div className='w-full max-w-6xl mx-auto grid h-full md:grid-cols-2 lg:grid-cols-2'>
       <div className='relative justify-center h-full hidden md:flex items-center px-4 md:pl-6 lg:pl-10 lg:pr-20'>
         <div className='space-y-8 text-left'>
-          <HintPageText icon={Sparkles} text='Začněte svou cestu' />
+          <HintPageText icon={Sparkles} text={t('shell.eyebrow')} />
           <TitleText
-            underlinedText='Vítejte zpět v'
-            highlightedText='Think Different Academy'
+            underlinedText={t('shell.title.underlined')}
+            highlightedText={t('shell.title.highlighted')}
           />
 
           <div className='relative flex items-center justify-center pt-8'>

@@ -8,8 +8,8 @@ const HomePage = () => {
 
   return (
     <LandingHero
+      variant='home'
       highlightedText='Think Different Academy'
-      primaryCtaLabel='Založit si organizaci'
       onPrimaryCta={() => navigate('/organization-request/new')}
       showHelperText
     />

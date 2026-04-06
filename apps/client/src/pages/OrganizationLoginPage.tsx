@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { organizationLogin } from '@/api/queries/organizationQueries'
 import AuthPageShell from '@/components/auth/AuthPageShell'
 import FormField from '@/components/shared/FormField'
-import { organizationLogin } from '@/api/queries/organizationQueries'
 import { Button } from '@/components/ui/button'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgCoursesPath, buildOrgDashboardPath } from '@/lib/routes'
+import type { ApiError } from '@/lib/types'
 import { useQueryClient } from '@tanstack/react-query'
+import { Eye, EyeOff, Lock, User } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm, type FieldValues } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import type { ApiError } from '@/lib/types'
 
 type LoginMode = 'lecturer' | 'student'
 
@@ -20,6 +21,7 @@ const OrganizationLoginPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [show, setShow] = useState(false)
+  const { t } = useTranslation('login')
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search],
@@ -32,7 +34,7 @@ const OrganizationLoginPage = () => {
   const [mode, setMode] = useState<LoginMode>(initialMode)
   const redirectParam = queryParams.get('redirect') ?? ''
   const safeRedirect = redirectParam.startsWith('/') ? redirectParam : ''
-  useTitle('Přihlášení organizace')
+  useTitle(t('organization.pageTitle'))
 
   useEffect(() => {
     setMode(initialMode)
@@ -55,7 +57,7 @@ const OrganizationLoginPage = () => {
         password: String(data.password ?? ''),
       })
       queryClient.setQueryData(['org-auth', orgSlug], result)
-      toast.success('Přihlášení úspěšné')
+      toast.success(t('organization.success'))
       const defaultRedirect =
         result.actorType === 'organization_admin'
           ? '/admin/requests'
@@ -73,14 +75,14 @@ const OrganizationLoginPage = () => {
         'message' in apiError.body &&
         typeof (apiError.body as { message?: unknown }).message === 'string'
           ? (apiError.body as { message: string }).message
-          : 'Nepodařilo se přihlásit'
+          : t('organization.failure')
 
       toast.error(message)
     }
   }
 
   return (
-    <AuthPageShell cardTitle='Přihlášení'>
+    <AuthPageShell cardTitle={t('organization.cardTitle')}>
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3'>
         <div className='grid grid-cols-2 gap-2'>
           <Button
@@ -89,7 +91,7 @@ const OrganizationLoginPage = () => {
             size='sm'
             onClick={() => setMode('lecturer')}
           >
-            Lektor
+            {t('organization.roles.lecturer')}
           </Button>
           <Button
             type='button'
@@ -97,17 +99,22 @@ const OrganizationLoginPage = () => {
             size='sm'
             onClick={() => setMode('student')}
           >
-            Student
+            {t('organization.roles.student')}
           </Button>
         </div>
 
         <FormField
-          label='Uživatelské jméno'
+          label={t('organization.fields.username.label')}
           icon={User}
           inputProps={{
-            ...register('username', { required: 'Jméno je povinné' }),
+            ...register('username', {
+              required: t('organization.fields.username.required'),
+            }),
             type: 'text',
-            placeholder: mode === 'lecturer' ? 'Lektor' : 'Student',
+            placeholder:
+              mode === 'lecturer'
+                ? t('organization.fields.username.lecturerPlaceholder')
+                : t('organization.fields.username.studentPlaceholder'),
           }}
         />
 
@@ -116,12 +123,14 @@ const OrganizationLoginPage = () => {
         )}
 
         <FormField
-          label='Heslo'
+          label={t('organization.fields.password.label')}
           icon={Lock}
           inputProps={{
-            ...register('password', { required: 'Heslo je povinné' }),
+            ...register('password', {
+              required: t('organization.fields.password.required'),
+            }),
             type: show ? 'text' : 'password',
-            placeholder: '••••••••',
+            placeholder: t('organization.fields.password.placeholder'),
           }}
           rightElement={
             <button
@@ -129,7 +138,11 @@ const OrganizationLoginPage = () => {
               onClick={() => setShow((s) => !s)}
               className='bg-transparent cursor-pointer'
               aria-pressed={show}
-              aria-label={show ? 'Skrýt heslo' : 'Zobrazit heslo'}
+              aria-label={
+                show
+                  ? t('organization.actions.hidePassword')
+                  : t('organization.actions.showPassword')
+              }
             >
               {show ? (
                 <Eye className='w-4 sm:w-5 h-4 sm:h-5 text-gray-800/50' />
@@ -151,7 +164,7 @@ const OrganizationLoginPage = () => {
           size='primary'
           className='mt-3'
         >
-          Přihlásit se
+          {t('organization.actions.submit')}
         </Button>
       </form>
     </AuthPageShell>

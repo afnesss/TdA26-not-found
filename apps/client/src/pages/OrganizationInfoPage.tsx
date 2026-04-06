@@ -2,7 +2,6 @@ import { getOrganizationPublicInfo } from '@/api/queries/organizationQueries'
 import Breadcrumb from '@/components/shared/Breadcrumb'
 import HintPageText from '@/components/shared/HintPageText'
 import StateComp from '@/components/shared/StateComp'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
@@ -11,19 +10,25 @@ import { buildOrgBasePath, buildOrgCoursesPath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, Mail, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 
 const OrganizationInfoPage = () => {
   const { orgSlug } = useParams<{ orgSlug: string }>()
+  const { t } = useTranslation('organizationInfo')
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['organization-public-info', orgSlug],
     queryFn: () => getOrganizationPublicInfo(orgSlug!),
     enabled: Boolean(orgSlug),
   })
-  useTitle(data?.name ? `Info | ${data.name}` : 'Info organizace')
+  useTitle(
+    data?.name
+      ? t('pageTitle.withName', { name: data.name })
+      : t('pageTitle.fallback'),
+  )
 
   if (isLoading) {
-    return <StateComp type='no-content' message='Načítám organizaci…' />
+    return <StateComp type='no-content' message={t('states.loading')} />
   }
 
   if (isError || !data) {
@@ -32,7 +37,7 @@ const OrganizationInfoPage = () => {
 
   return (
     <div className='max-w-6xl mx-auto space-y-5 '>
-      <HintPageText text='Informace o organizaci' icon={Building2} />
+      <HintPageText text={t('hero.title')} icon={Building2} />
 
       <Card className='border border-border/60 shadow-md bg-background rounded-xl cursor-auto'>
         <div className={cn(headerLineHeight, colorStyles.line.secondary)} />
@@ -42,7 +47,7 @@ const OrganizationInfoPage = () => {
               <Breadcrumb
                 items={[
                   { label: data.name, path: buildOrgBasePath(orgSlug) },
-                  { label: 'Info' },
+                  { label: t('summary.breadcrumbCurrent') },
                 ]}
               />
               <div className='flex shrink-0 items-center rounded-full bg-secondary/30 px-3 py-1.5 text-xs sm:text-sm font-semibold text-[#2D8B6B]'>
@@ -55,8 +60,7 @@ const OrganizationInfoPage = () => {
                 {data.name}
               </Label>
               <p className='text-sm md:text-base text-gray-600 leading-relaxed'>
-                Veřejné informace o organizaci, kontaktní údaje a základní
-                přehled jejího působení.
+                {t('summary.description')}
               </p>
             </div>
           </div>
@@ -68,17 +72,17 @@ const OrganizationInfoPage = () => {
           <CardContent className='p-4 lg:p-5 space-y-4'>
             <div className='space-y-1'>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
-                Základní přehled
+                {t('sections.overviewEyebrow')}
               </p>
               <Label className='mb-0 font-bold' size='default'>
-                Organizace
+                {t('sections.overviewTitle')}
               </Label>
             </div>
 
             <div className='grid gap-3 sm:grid-cols-2'>
               <div className='space-y-1 rounded-xl border border-gray-100 bg-muted/25 p-3.5'>
                 <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                  Název
+                  {t('fields.name')}
                 </p>
                 <p className='text-base md:text-lg font-semibold text-foreground'>
                   {data.name}
@@ -87,7 +91,7 @@ const OrganizationInfoPage = () => {
 
               <div className='space-y-1 rounded-xl border border-gray-100 bg-muted/25 p-3.5'>
                 <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                  Typ
+                  {t('fields.type')}
                 </p>
                 <p className='text-foreground'>{data.type}</p>
               </div>
@@ -99,7 +103,7 @@ const OrganizationInfoPage = () => {
                   </div>
                   <div className='min-w-0 space-y-1 h-full'>
                     <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                      Adresa
+                      {t('fields.address')}
                     </p>
                     <div className='space-y-0.5 text-sm md:text-base text-foreground leading-snug'>
                       <p>{data.address}</p>
@@ -121,10 +125,10 @@ const OrganizationInfoPage = () => {
           <CardContent className='p-4 lg:p-5 space-y-4'>
             <div className='space-y-1'>
               <p className='text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground'>
-                Kontakt
+                {t('sections.contactEyebrow')}
               </p>
               <Label className='mb-0 font-bold' size='default'>
-                Spojení s organizací
+                {t('sections.contactTitle')}
               </Label>
             </div>
 
@@ -137,7 +141,7 @@ const OrganizationInfoPage = () => {
                     </div>
                     <div className='min-w-0 space-y-1'>
                       <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                        Kontaktní e-mail
+                        {t('fields.contactEmail')}
                       </p>
                       <a
                         href={`mailto:${data.contactEmail}`}
@@ -151,27 +155,26 @@ const OrganizationInfoPage = () => {
 
                 <div className='space-y-1 rounded-xl border border-gray-100 bg-muted/25 p-3.5'>
                   <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                    Kontaktní osoba
+                    {t('fields.contactPerson')}
                   </p>
                   <p className='text-foreground'>{data.ownerName}</p>
                 </div>
               </div>
               <div className='rounded-xl border border-gray-100 bg-background p-3.5'>
                 <p className='text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground'>
-                  URL organizace
+                  {t('fields.organizationUrl')}
                 </p>
                 <p className='mt-1.5 text-sm md:text-base font-semibold text-foreground'>
                   /{data.slug}
                 </p>
                 <p className='mt-1.5 text-sm text-muted-foreground'>
-                  Kurzy této organizace jsou dostupné pouze přes její vlastní
-                  prostor.
+                  {t('organizationUrl.description')}
                 </p>
                 <a
                   href={buildOrgCoursesPath(orgSlug)}
                   className='mt-2.5 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline'
                 >
-                  Přehled kurzů organizace
+                  {t('organizationUrl.cta')}
                 </a>
               </div>
             </div>

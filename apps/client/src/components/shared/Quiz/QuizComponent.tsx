@@ -30,12 +30,13 @@ import {
 } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { type Resolver, useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Textarea } from '../../ui/textarea'
 import QuizQuestion from './QuizQuestion'
 import QuizPageSwitcher from './QuizPageSwitcher'
 
-const isDirtyText = (className?: string) => {
+const isDirtyText = (label: string, className?: string) => {
   return (
     <span
       className={cn(
@@ -44,16 +45,9 @@ const isDirtyText = (className?: string) => {
         className,
       )}
     >
-      Neuloženo
+      {label}
     </span>
   )
-}
-
-const formatQuestionsCount = (count: number) => {
-  const absCount = Math.abs(count)
-  if (absCount === 1) return `${count} otázka`
-  if (absCount >= 2 && absCount <= 4) return `${count} otázky`
-  return `${count} otázek`
 }
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
@@ -105,6 +99,7 @@ const QuizComponentInner = ({
   onToggleExpand,
   showAnalytics = false,
 }: QuizComponentProps) => {
+  const { t } = useTranslation('common')
   const [showIncompleteError, setShowIncompleteError] = useState(false)
   const [showCorrect, setShowCorrect] = useState(false)
   const [pageIndex, setPageIndex] = useState(0)
@@ -113,6 +108,12 @@ const QuizComponentInner = ({
     courseId: string
     moduleId: string
   }>()
+  const formatQuestionsCount = (count: number) =>
+    t('quizComponent.questionsCount', { count })
+  const formatAttemptsCount = (count: number) =>
+    t('quizComponent.attempts', { count })
+  const getDifficultyLabel = (difficulty: QuizDifficulty) =>
+    t(`quizComponent.difficulty.${difficulty}`)
 
   const {
     register,
@@ -148,10 +149,12 @@ const QuizComponentInner = ({
               setShowIncompleteError(false)
               onSubmit?.()
             }}
-            aria-label='Odeslat odpovědi do kvízu'
+            aria-label={t('quizComponent.submitAnswersAria')}
           >
-            <span className='sm:hidden'>Odeslat</span>
-            <span className='hidden sm:inline'>Odeslat odpovědi</span>
+            <span className='sm:hidden'>{t('quizComponent.submitShort')}</span>
+            <span className='hidden sm:inline'>
+              {t('quizComponent.submitLong')}
+            </span>
           </Button>
         </div>
       )}
@@ -163,20 +166,26 @@ const QuizComponentInner = ({
           onClick={onToggleShowCorrect}
           aria-label={
             userState?.showCorrect
-              ? 'Skrýt správné odpovědi'
-              : 'Zobrazit správné odpovědi'
+              ? t('quizComponent.hideCorrectAria')
+              : t('quizComponent.showCorrectAria')
           }
         >
           {userState?.showCorrect ? (
             <>
-              <span className='sm:hidden'>Skrýt odpovědi</span>
-              <span className='hidden sm:inline'>Skrýt správné odpovědi</span>
+              <span className='sm:hidden'>
+                {t('quizComponent.hideAnswersShort')}
+              </span>
+              <span className='hidden sm:inline'>
+                {t('quizComponent.hideCorrectLong')}
+              </span>
             </>
           ) : (
             <>
-              <span className='sm:hidden'>Zobrazit odpovědi</span>
+              <span className='sm:hidden'>
+                {t('quizComponent.showAnswersShort')}
+              </span>
               <span className='hidden sm:inline'>
-                Zobrazit správné odpovědi
+                {t('quizComponent.showCorrectLong')}
               </span>
             </>
           )}
@@ -190,7 +199,7 @@ const QuizComponentInner = ({
           className='w-fit'
           onClick={onReset}
         >
-          Začít znovu
+          {t('quizComponent.restart')}
         </Button>
       )}
     </div>
@@ -203,7 +212,7 @@ const QuizComponentInner = ({
   const displayQuiz = mode === 'lecturer' ? formValues : quiz
   const selectedDifficulty = getQuizDifficultyOption(displayQuiz.difficulty)
   const difficultyMetaText = selectedDifficulty
-    ? `${selectedDifficulty.label}`
+    ? getDifficultyLabel(selectedDifficulty.value)
     : null
   const totalQuestions = displayQuiz.questions?.length ?? 0
   const pageCount = Math.max(1, Math.ceil(totalQuestions / pageSize))
@@ -438,7 +447,7 @@ const QuizComponentInner = ({
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => updateTitle(e.target.value)}
                     onKeyDown={handleEditKeyDown}
-                    placeholder='Zadejte název kvízu'
+                    placeholder={t('quizComponent.titlePlaceholder')}
                   />
                   {errors.title?.message && (
                     <p className='error-text'>{errors.title.message}</p>
@@ -452,7 +461,7 @@ const QuizComponentInner = ({
                   {mode === 'lecturer' &&
                     isDirty &&
                     !isDraft &&
-                    isDirtyText('hidden sm:inline-flex')}
+                    isDirtyText(t('quizComponent.unsaved'), 'hidden sm:inline-flex')}
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
                       actionType='delete'
@@ -462,7 +471,7 @@ const QuizComponentInner = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
-                      aria-label='Zrušit koncept kvízu'
+                      aria-label={t('quizComponent.cancelDraftAria')}
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -471,11 +480,13 @@ const QuizComponentInner = ({
                           <EditBtn
                             actionType='delete'
                             onClick={(e) => e?.stopPropagation()}
-                            aria-label={`Smazat kvíz ${quiz.title}`}
+                            aria-label={t('quizComponent.deleteAria', {
+                              name: quiz.title,
+                            })}
                           />
                         }
                         itemName={quiz.title}
-                        itemType='kvíz'
+                        itemType={t('quizComponent.deleteItemType')}
                         onConfirm={() => {
                           onDelete?.()
                         }}
@@ -490,7 +501,11 @@ const QuizComponentInner = ({
                         e.stopPropagation()
                         toggleExpand()
                       }}
-                      aria-label={isExpanded ? 'Sbalit kvíz' : 'Rozbalit kvíz'}
+                      aria-label={
+                        isExpanded
+                          ? t('quizComponent.collapseAria')
+                          : t('quizComponent.expandAria')
+                      }
                       aria-expanded={isExpanded}
                     >
                       {isExpanded ? (
@@ -524,12 +539,6 @@ const QuizComponentInner = ({
                 </div>
 
                 <div className='flex items-center gap-1 sm:gap-2 shrink-0 self-center'>
-                  {/* {mode === 'lecturer' && isDirty && (
-                    <span className='text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full whitespace-nowrap'>
-                      Neuloženo
-                    </span>
-                  )} */}
-
                   {mode === 'lecturer' && isDraft ? (
                     <EditBtn
                       actionType='delete'
@@ -539,7 +548,7 @@ const QuizComponentInner = ({
                         e?.stopPropagation()
                         onCancelDraft?.()
                       }}
-                      aria-label='Zrušit koncept kvízu'
+                      aria-label={t('quizComponent.cancelDraftAria')}
                     />
                   ) : (
                     mode === 'lecturer' && (
@@ -548,11 +557,13 @@ const QuizComponentInner = ({
                           <EditBtn
                             actionType='delete'
                             onClick={(e) => e?.stopPropagation()}
-                            aria-label={`Smazat kvíz ${quiz.title}`}
+                            aria-label={t('quizComponent.deleteAria', {
+                              name: quiz.title,
+                            })}
                           />
                         }
                         itemName={quiz.title}
-                        itemType='kvíz'
+                        itemType={t('quizComponent.deleteItemType')}
                         onConfirm={() => {
                           onDelete?.()
                         }}
@@ -562,7 +573,11 @@ const QuizComponentInner = ({
 
                   <button
                     className='p-1.5 hover:bg-gray-200 rounded-lg transition-colors shrink-0 cursor-pointer'
-                    aria-label={isExpanded ? 'Sbalit kvíz' : 'Rozbalit kvíz'}
+                    aria-label={
+                      isExpanded
+                        ? t('quizComponent.collapseAria')
+                        : t('quizComponent.expandAria')
+                    }
                     aria-expanded={isExpanded}
                   >
                     {isExpanded ? (
@@ -597,7 +612,7 @@ const QuizComponentInner = ({
               )}
               <span className='flex items-center gap-1 whitespace-nowrap'>
                 <CheckCircle size={14} className='text-primary shrink-0' />
-                <span>{quiz.attemptsCount} vyplnění</span>
+                <span>{formatAttemptsCount(quiz.attemptsCount ?? 0)}</span>
               </span>
 
               <span className='flex items-center gap-1 whitespace-nowrap'>
@@ -609,7 +624,7 @@ const QuizComponentInner = ({
 
               {showAnalytics && (displayQuiz.attemptsCount ?? 0) > 0 && (
                 <span className='flex items-center gap-1 whitespace-nowrap font-medium'>
-                  <span>Průměr:</span>
+                  <span>{t('quizComponent.average')}</span>
                   <span className='text-accent-teal'>
                     {displayQuiz.averagePercentage ?? 0}%
                   </span>
@@ -619,7 +634,7 @@ const QuizComponentInner = ({
               {mode === 'lecturer' &&
                 isDirty &&
                 !isDraft &&
-                isDirtyText('inline-flex sm:hidden')}
+                isDirtyText(t('quizComponent.unsaved'), 'inline-flex sm:hidden')}
             </div>
           </div>
         </div>
@@ -634,7 +649,7 @@ const QuizComponentInner = ({
                 className='block text-xs font-semibold text-gray-600'
                 variant='name'
               >
-                Úroveň kvízu
+                {t('quizComponent.difficultyLabel')}
               </Label>
               <div className='overflow-x-auto pb-1'>
                 <div className='grid grid-cols-5 gap-2'>
@@ -657,7 +672,9 @@ const QuizComponentInner = ({
                             'border-destructive/60',
                         )}
                         aria-pressed={isSelected}
-                        aria-label={`Vybrat úroveň ${option.label}`}
+                        aria-label={t('quizComponent.selectDifficultyAria', {
+                          label: getDifficultyLabel(option.value),
+                        })}
                       >
                         <img
                           src={option.icon}
@@ -666,7 +683,7 @@ const QuizComponentInner = ({
                           className='h-5.5 w-5.5 shrink-0 sm:h-7 sm:w-7'
                         />
                         <span className='hidden md:inline whitespace-nowrap'>
-                          {option.label}
+                          {getDifficultyLabel(option.value)}
                         </span>
                       </Button>
                     )
@@ -763,10 +780,10 @@ const QuizComponentInner = ({
                   !Array.isArray(errors.questions) &&
                   'border-destructive',
               )}
-              aria-label='Přidat novou otázku'
+              aria-label={t('quizComponent.addQuestionAria')}
             >
               <Plus size={20} />
-              Přidat otázku
+              {t('quizComponent.addQuestion')}
             </Button>
           )}
 
@@ -787,7 +804,7 @@ const QuizComponentInner = ({
 
                   {showIncompleteError && (
                     <p className='error-text'>
-                      Zodpovězte prosím všechny otázky
+                      {t('quizComponent.answerAllQuestions')}
                     </p>
                   )}
                 </div>
@@ -800,20 +817,28 @@ const QuizComponentInner = ({
                   variant='link'
                   className='rounded-lg shadow-none'
                   onClick={() => setShowCorrect((prev) => !prev)}
-                  aria-label='Zobrazit správné odpovědi'
+                  aria-label={
+                    showCorrect
+                      ? t('quizComponent.hideCorrectAria')
+                      : t('quizComponent.showCorrectAria')
+                  }
                 >
                   {showCorrect ? (
                     <>
-                      <span className='sm:hidden'>Skrýt odpovědi</span>
+                      <span className='sm:hidden'>
+                        {t('quizComponent.hideAnswersShort')}
+                      </span>
                       <span className='hidden sm:inline'>
-                        Skrýt správné odpovědi
+                        {t('quizComponent.hideCorrectLong')}
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className='sm:hidden'>Zobrazit odpovědi</span>
+                      <span className='sm:hidden'>
+                        {t('quizComponent.showAnswersShort')}
+                      </span>
                       <span className='hidden sm:inline'>
-                        Zobrazit správné odpovědi
+                        {t('quizComponent.showCorrectLong')}
                       </span>
                     </>
                   )}
@@ -834,7 +859,7 @@ const QuizComponentInner = ({
                     !isDirty
                   }
                 >
-                  Uložit změny
+                  {t('quizComponent.saveChanges')}
                 </Button>
               </div>
             )}

@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { colorStyles } from './constants'
 
 type AccentLine = keyof typeof colorStyles.line
@@ -11,47 +12,50 @@ type StatusUi = {
   badgeClassName: string
 }
 
-const requestStatusUi: Record<RequestStatus, StatusUi> = {
+const requestStatusUi: Record<RequestStatus, Omit<StatusUi, 'label'>> = {
   pending: {
-    label: 'Čeká na schválení',
     line: 'primary',
     badgeClassName: 'bg-primary/15 text-primary',
   },
   approved: {
-    label: 'Schváleno',
     line: 'secondary',
     badgeClassName: 'bg-secondary/40 text-[#2D8B6B]',
   },
   rejected: {
-    label: 'Zamítnuto',
     line: 'gray',
     badgeClassName: 'bg-muted text-muted-foreground',
   },
 }
 
-const organizationStatusUi: Record<OrganizationStatus, StatusUi> = {
+const organizationStatusUi: Record<
+  OrganizationStatus,
+  Omit<StatusUi, 'label'>
+> = {
   waiting: {
-    label: 'Čeká',
     line: 'gray',
     badgeClassName: 'bg-muted text-muted-foreground',
   },
   onboarding: {
-    label: 'Onboarding',
     line: 'primary',
     badgeClassName: 'bg-primary/20 text-primary',
   },
   active: {
-    label: 'Aktivní',
     line: 'secondary',
     badgeClassName: 'bg-secondary/46 text-[#2D8B6B]',
   },
 }
 
-export const getRequestStatusUi = (status: RequestStatus) =>
-  requestStatusUi[status]
+export const getRequestStatusUi = (status: RequestStatus): StatusUi => ({
+  ...requestStatusUi[status],
+  label: i18n.t(`statuses.request.${status}`, { ns: 'admin' }),
+})
 
-export const getOrganizationStatusUi = (status: OrganizationStatus) =>
-  organizationStatusUi[status]
+export const getOrganizationStatusUi = (
+  status: OrganizationStatus,
+): StatusUi => ({
+  ...organizationStatusUi[status],
+  label: i18n.t(`statuses.organization.${status}`, { ns: 'admin' }),
+})
 
 export const getStatusToggleClassName = (
   line: AccentLine,

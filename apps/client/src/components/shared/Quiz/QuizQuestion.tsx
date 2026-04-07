@@ -15,6 +15,7 @@ import { Check, Plus, X } from 'lucide-react'
 import QuizOption from './QuizOption'
 import { cn } from '@/lib/utils'
 import type { FieldError } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 type QuestionType = 'singleChoice' | 'multipleChoice'
 
@@ -69,6 +70,7 @@ const QuizQuestion = ({
   questionError,
   showCorrectAnswers,
 }: QuizQuestionProps) => {
+  const { t } = useTranslation('common')
   // User mode answer logic
   const answer = question.uuid
     ? (userState?.answers as unknown as Record<string, QuizAnswer>)?.[
@@ -121,13 +123,15 @@ const QuizQuestion = ({
                         'text-xs sm:text-sm font-medium flex-1 overflow-hidden px-2 block w-full',
                         questionError?.question && 'border-destructive',
                       )}
-                      placeholder='Zadejte otázku'
+                      placeholder={t('quizQuestion.questionPlaceholder')}
                     />
                     <EditBtn
                       onClick={onQuestionRemove}
                       actionType='delete'
                       classNameBtn='md:hidden shrink-0'
-                      aria-label={`Odstranit otázku ${qIndex + 1}`}
+                      aria-label={t('quizQuestion.removeQuestionAria', {
+                        index: qIndex + 1,
+                      })}
                     />
                   </div>
 
@@ -136,7 +140,7 @@ const QuizQuestion = ({
                       size='sm'
                       className='text-gray-600 shrink-0 hidden md:block'
                     >
-                      Typ:
+                      {t('quizQuestion.typeLabel')}
                     </Label>
                     <Select
                       value={question.type}
@@ -149,10 +153,10 @@ const QuizQuestion = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value='singleChoice'>
-                          Jedna správná
+                          {t('quizQuestion.typeSingle')}
                         </SelectItem>
                         <SelectItem value='multipleChoice'>
-                          Více správných
+                          {t('quizQuestion.typeMultiple')}
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -163,7 +167,9 @@ const QuizQuestion = ({
                       onClick={onQuestionRemove}
                       actionType='delete'
                       classNameBtn='hidden md:flex shrink-0'
-                      aria-label={`Odstranit otázku ${qIndex + 1}`}
+                      aria-label={t('quizQuestion.removeQuestionAria', {
+                        index: qIndex + 1,
+                      })}
                     />
                   </div>
                 </div>
@@ -177,7 +183,9 @@ const QuizQuestion = ({
                     {questionAnalytics && (
                       <div className='flex items-center  text-xs lg:text-sm text-gray-600 shrink-0 '>
                         <span className='font-medium text-accent-teal'>
-                          {questionAnalytics.correctRate.toFixed(0)}% správně
+                          {t('quizQuestion.correctRate', {
+                            rate: questionAnalytics.correctRate.toFixed(0),
+                          })}
                         </span>
                       </div>
                     )}
@@ -202,11 +210,11 @@ const QuizQuestion = ({
                     <p className='text-[10px] md:text-xs text-gray-500 mt-1 flex items-center gap-1.5'>
                       {question.type === 'singleChoice' ? (
                         <>
-                          <span>Vyberte jednu správnou odpověď</span>
+                          <span>{t('quizQuestion.selectOneHint')}</span>
                         </>
                       ) : (
                         <>
-                          <span>Vyberte všechny správné odpovědi</span>
+                          <span>{t('quizQuestion.selectManyHint')}</span>
                         </>
                       )}
                     </p>
@@ -284,7 +292,9 @@ const QuizQuestion = ({
           })}
         </div>
         {mode === 'lecturer' && hasOptionErrors && !questionError?.question && (
-          <p className='error-text mt-2'>Všechny možnosti musí být vyplněny</p>
+          <p className='error-text mt-2'>
+            {t('quizQuestion.allOptionsRequired')}
+          </p>
         )}
         {mode === 'lecturer' &&
           questionError?.correctIndices &&
@@ -300,10 +310,12 @@ const QuizQuestion = ({
             size='sm'
             onClick={onAddOption}
             className='w-full md:w-auto'
-            aria-label={`Přidat novou možnost k otázce ${qIndex + 1}`}
+            aria-label={t('quizQuestion.addOptionAria', {
+              index: qIndex + 1,
+            })}
           >
             <Plus size={16} />
-            Přidat možnost
+            {t('quizQuestion.addOption')}
           </Button>
         )}
       </div>

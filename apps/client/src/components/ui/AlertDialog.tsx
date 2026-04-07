@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from 'react'
 import buttonVariants from './variants'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 type DeleteConfirmDialogProps = {
   trigger: ReactNode
@@ -29,18 +30,27 @@ type DeleteConfirmDialogProps = {
 const DeleteConfirmDialog = ({
   trigger,
   itemName,
-  itemType = 'položku',
+  itemType,
   title,
   description,
   onConfirm,
-  cancelText = 'Zrušit',
-  confirmText = 'Smazat',
+  cancelText,
+  confirmText,
   isLoading = false,
 }: DeleteConfirmDialogProps) => {
-  const defaultTitle = `Smazat ${itemType}?`
+  const { t } = useTranslation('common')
+  const effectiveItemType = itemType ?? t('deleteConfirm.itemTypeDefault')
+  const defaultTitle = t('deleteConfirm.title', {
+    itemType: effectiveItemType,
+  })
   const defaultDescription = itemName
-    ? `Opravdu chcete smazat ${itemType} "${itemName}"?`
-    : `Opravdu chcete smazat tento ${itemType}?`
+    ? t('deleteConfirm.descriptionNamed', {
+        itemType: effectiveItemType,
+        itemName,
+      })
+    : t('deleteConfirm.descriptionUnnamed', {
+        itemType: effectiveItemType,
+      })
 
   return (
     <AlertDialog>
@@ -63,7 +73,7 @@ const DeleteConfirmDialog = ({
               'w-15 h-7 md:w-18 md:h-8 font-semibold shadow-sm',
             )}
           >
-            {cancelText}
+            {cancelText ?? t('actions.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
@@ -73,7 +83,9 @@ const DeleteConfirmDialog = ({
             disabled={isLoading}
             className='bg-destructive/80 text-destructive-foreground hover:bg-destructive w-15 h-7 md:w-18 md:h-8 rounded-xl cursor-pointer text-xs sm:text-sm shadow-sm'
           >
-            {isLoading ? 'Mazání...' : confirmText}
+            {isLoading
+              ? t('deleteConfirm.deleting')
+              : (confirmText ?? t('actions.delete'))}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

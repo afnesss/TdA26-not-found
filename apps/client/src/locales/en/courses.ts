@@ -19,6 +19,7 @@ const courses = {
   actions: {
     resetFilters: 'Reset filters',
     loadMore: 'Load more courses',
+    view: 'View',
   },
   userCourse: {
     breadcrumbRoot: 'Courses',

@@ -8,24 +8,19 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { handleCapitalizedInput } from '@/lib/capitalize'
-import {
-  colorStyles,
-  headerLineHeight,
-} from '@/lib/constants'
+import { colorStyles, headerLineHeight } from '@/lib/constants'
 import type {
   CourseDashboardAnalytics,
   CourseStatus,
   CourseSummary,
 } from '@/lib/schemas'
-import {
-  buildOrgCoursePath,
-  buildOrgDashboardCoursePath,
-} from '@/lib/routes'
+import { buildOrgCoursePath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery } from '@tanstack/react-query'
 import { Edit } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
 import {
   handleSaveOnEnter,
@@ -66,10 +61,9 @@ interface CourseEdit {
 
 type CourseCompProps = CourseClassic | CourseEdit
 
-// ─── Course component ─────────────────────────────────────────────────────────
-
 const CourseComponent = (props: CourseCompProps) => {
   const { course, type } = props
+  const { t } = useTranslation(['courses', 'dashboard'])
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const courseColor: keyof typeof colorStyles.bg =
@@ -136,18 +130,29 @@ const CourseComponent = (props: CourseCompProps) => {
     overviewCourse?.modules.filter(
       (module) => module.status === 'active' && module.interactions === 0,
     ).length ?? 0
-  const quizzesWithoutSubmits = overviewCourse?.quizzesWithoutSubmits ?? 0
   const lowScoreQuizzes = overviewCourse?.lowScoreQuizzes ?? 0
 
   const attentionParts: string[] = []
   if (activeModulesWithoutInteraction > 0) {
     attentionParts.push(
-      `Aktivní moduly bez interakcí: ${activeModulesWithoutInteraction}`,
+      t('courseOverview.card.analytics.attention.activeModulesWithoutInteraction', {
+        ns: 'dashboard',
+        count: activeModulesWithoutInteraction,
+      }),
     )
   } else if (overviewActiveModulesCount === 0) {
-    attentionParts.push(`Žádné aktivní moduly`)
+    attentionParts.push(
+      t('courseOverview.card.analytics.attention.noActiveModules', {
+        ns: 'dashboard',
+      }),
+    )
   } else if (lowScoreQuizzes > 0) {
-    attentionParts.push(`Kvízy s nízkým skóre: ${lowScoreQuizzes}`)
+    attentionParts.push(
+      t('courseOverview.card.analytics.attention.lowScoreQuizzes', {
+        ns: 'dashboard',
+        count: lowScoreQuizzes,
+      }),
+    )
   }
 
   const handleNameChange = (name: string) => {
@@ -155,13 +160,18 @@ const CourseComponent = (props: CourseCompProps) => {
     setState((prev) => ({
       ...prev,
       tempName: capitalizedName,
-      nameError: !capitalizedName.trim() ? 'Název je povinný' : '',
+      nameError: !capitalizedName.trim()
+        ? t('courseOverview.card.nameRequired', { ns: 'dashboard' })
+        : '',
     }))
   }
 
   const saveEdit = async () => {
     if (!state.tempName.trim()) {
-      setState((prev) => ({ ...prev, nameError: 'Název je povinný' }))
+      setState((prev) => ({
+        ...prev,
+        nameError: t('courseOverview.card.nameRequired', { ns: 'dashboard' }),
+      }))
       return
     }
 
@@ -177,7 +187,7 @@ const CourseComponent = (props: CourseCompProps) => {
           name: state.tempName,
           description: state.tempDescription,
         })
-      } catch (err) {
+      } catch {
         setState((prev) => ({ ...prev, saving: false }))
       }
     }
@@ -204,8 +214,9 @@ const CourseComponent = (props: CourseCompProps) => {
 
   const handleCardClick = () => {
     if (state.isEditing) return
-    if (type === 'edit' && 'planning' in props && props.planning?.isEditing)
+    if (type === 'edit' && 'planning' in props && props.planning?.isEditing) {
       return
+    }
 
     if (type === 'classic') {
       if (!canOpenCourse) return
@@ -257,7 +268,10 @@ const CourseComponent = (props: CourseCompProps) => {
                         e?.stopPropagation()
                         props.onEdit()
                       }}
-                      aria-label={`Upravit kurz ${course.name}`}
+                      aria-label={t('courseOverview.card.editAria', {
+                        ns: 'dashboard',
+                        name: course.name,
+                      })}
                     />
                   )}
                   <CourseExportTrigger
@@ -270,11 +284,16 @@ const CourseComponent = (props: CourseCompProps) => {
                       <EditBtn
                         actionType='delete'
                         onClick={(e) => e?.stopPropagation()}
-                        aria-label={`Smazat kurz ${course.name}`}
+                        aria-label={t('courseOverview.card.deleteAria', {
+                          ns: 'dashboard',
+                          name: course.name,
+                        })}
                       />
                     }
                     itemName={course.name}
-                    itemType='kurz'
+                    itemType={t('courseOverview.card.deleteItemType', {
+                      ns: 'dashboard',
+                    })}
                     onConfirm={() => {
                       if (props.onDelete) {
                         props.onDelete()
@@ -291,7 +310,9 @@ const CourseComponent = (props: CourseCompProps) => {
               onCancel={cancelEdit}
               saveDisabled={state.saving || !!state.nameError}
               cancelDisabled={state.saving}
-              saveAriaLabel='Uložit kurz'
+              saveAriaLabel={t('courseOverview.planning.saveAriaLabel', {
+                ns: 'dashboard',
+              })}
             />
           ))}
       </div>
@@ -311,7 +332,9 @@ const CourseComponent = (props: CourseCompProps) => {
                 )}
                 minRows={1}
                 maxRows={3}
-                placeholder='Název kurzu'
+                placeholder={t('courseOverview.card.namePlaceholder', {
+                  ns: 'dashboard',
+                })}
                 disabled={state.saving}
               />
               {state.nameError && (
@@ -340,7 +363,9 @@ const CourseComponent = (props: CourseCompProps) => {
               className='mb-2 md:mb-3 text-xs sm:text-sm md:text-sm lg:text-sm sm:py-1.8'
               minRows={2}
               maxRows={4}
-              placeholder='Popis kurzu (volitelné)'
+              placeholder={t('courseOverview.card.descriptionPlaceholder', {
+                ns: 'dashboard',
+              })}
               disabled={state.saving}
             />
           ) : (
@@ -370,7 +395,9 @@ const CourseComponent = (props: CourseCompProps) => {
                 )}
                 disabled={!canOpenCourse}
               >
-                <span className='font-semibold'>Zobrazit</span>
+                <span className='font-semibold'>
+                  {t('actions.view', { ns: 'courses' })}
+                </span>
               </Button>
             </div>
           )}

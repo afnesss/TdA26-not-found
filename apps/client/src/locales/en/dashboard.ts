@@ -72,6 +72,31 @@ const dashboard = {
       descriptionPlaceholder: 'Enter a description (optional)',
       createdAt: 'Created',
       updatedAt: 'Updated',
+      editAria: 'Edit course {{name}}',
+      deleteAria: 'Delete course {{name}}',
+      deleteItemType: 'course',
+      analytics: {
+        averageScore: 'Average score',
+        submissions_one: '{{count}} submission',
+        submissions_other: '{{count}} submissions',
+        noQuizSubmissionsTitle: 'No quiz submissions yet',
+        noQuizSubmissionsDescription:
+          'Average score will appear after the first attempts.',
+        modulesLabel: 'Modules:',
+        activeModules_one: '{{count}} active module',
+        activeModules_other: '{{count}} active modules',
+        materialsLabel: 'Materials:',
+        quizzesLabel: 'Quizzes:',
+        noCriticalSignals: 'No critical signals',
+        loading: 'Loading...',
+        loadError: 'Failed to load overview.',
+        attention: {
+          activeModulesWithoutInteraction:
+            'Active modules without interactions: {{count}}',
+          noActiveModules: 'No active modules',
+          lowScoreQuizzes: 'Quizzes with low score: {{count}}',
+        },
+      },
     },
     export: {
       label: 'Export',

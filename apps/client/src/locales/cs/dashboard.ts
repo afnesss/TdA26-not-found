@@ -71,6 +71,33 @@ const dashboard = {
       descriptionPlaceholder: 'Zadejte popis (volitelné)',
       createdAt: 'Vytvořeno',
       updatedAt: 'Upraveno',
+      editAria: 'Upravit kurz {{name}}',
+      deleteAria: 'Smazat kurz {{name}}',
+      deleteItemType: 'kurz',
+      analytics: {
+        averageScore: 'Průměrné skóre',
+        submissions_one: '{{count}} odeslání',
+        submissions_few: '{{count}} odeslání',
+        submissions_other: '{{count}} odeslání',
+        noQuizSubmissionsTitle: 'Žádná odeslání kvízů',
+        noQuizSubmissionsDescription:
+          'Průměrné skóre se zobrazí po prvních pokusech.',
+        modulesLabel: 'Moduly:',
+        activeModules_one: '{{count}} aktivní modul',
+        activeModules_few: '{{count}} aktivní moduly',
+        activeModules_other: '{{count}} aktivních modulů',
+        materialsLabel: 'Materiály:',
+        quizzesLabel: 'Kvízy:',
+        noCriticalSignals: 'Bez kritických signálů',
+        loading: 'Načítání...',
+        loadError: 'Přehled se nepodařilo načíst.',
+        attention: {
+          activeModulesWithoutInteraction:
+            'Aktivní moduly bez interakcí: {{count}}',
+          noActiveModules: 'Žádné aktivní moduly',
+          lowScoreQuizzes: 'Kvízy s nízkým skóre: {{count}}',
+        },
+      },
     },
     export: {
       label: 'Exportovat',

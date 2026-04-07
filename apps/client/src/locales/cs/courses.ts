@@ -19,6 +19,7 @@ const courses = {
   actions: {
     resetFilters: 'Zrušit filtry',
     loadMore: 'Načíst další kurzy',
+    view: 'Zobrazit',
   },
   userCourse: {
     breadcrumbRoot: 'Kurzy',

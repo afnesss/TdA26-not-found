@@ -1,4 +1,5 @@
-﻿import type { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas/course'
 import { cn } from '@/lib/utils'
 import CardDate, {
@@ -27,6 +28,8 @@ const CoursePlanningSection = ({
   className,
   rowClassName,
 }: CoursePlanningSectionProps) => {
+  const { t } = useTranslation('dashboard')
+
   return (
     <div className={cn('w-full', className)}>
       <div
@@ -50,13 +53,12 @@ const CoursePlanningSection = ({
             onCancel={() => planning.onCancel()}
             saveDisabled={planning.saving || !!planning.error}
             cancelDisabled={planning.saving}
-            saveAriaLabel='Uložit kurz'
+            saveAriaLabel={t('courseOverview.planning.saveAriaLabel')}
           />
         ) : (
           rightActions
         )}
       </div>
-
     </div>
   )
 }

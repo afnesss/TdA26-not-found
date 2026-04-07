@@ -5,16 +5,19 @@ import {
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useShopCart } from '@/hooks/useShopCart'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import type { ApiError } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
-import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingBag } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import EditBtn from '../dashboard/components/EditBtn'
 import {
   buildShopPath,
   formatPrice,
@@ -22,15 +25,13 @@ import {
   resolveCartLines,
   resolveShopOrgSlug,
 } from './shopUtils'
-import EditBtn from '../dashboard/components/EditBtn'
-import { useMediaQuery } from 'usehooks-ts'
-import { Label } from '@/components/ui/label'
 
 const ShopCartPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
-  const isMd = useMediaQuery('(min-width: 768px)')
+  const { t, i18n } = useTranslation('shop')
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
 
   const {
     cart,
@@ -38,7 +39,6 @@ const ShopCartPage = () => {
     removeItem,
     setPromoCode,
     itemCount,
-    clearCart,
   } = useShopCart()
   const [promoDraft, setPromoDraft] = useState(cart.promoCode)
 
@@ -48,14 +48,19 @@ const ShopCartPage = () => {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['shop-catalog'],
+    queryKey: ['shop-catalog', uiLocale],
     queryFn: getShopCatalog,
   })
 
   const hasItems = cart.items.length > 0
 
   const promoValidation = useQuery({
-    queryKey: ['shop-promo-validation', cart.promoCode.trim(), cart.items],
+    queryKey: [
+      'shop-promo-validation',
+      uiLocale,
+      cart.promoCode.trim(),
+      cart.items,
+    ],
     queryFn: () =>
       validateShopPromoCode({
         code: cart.promoCode.trim(),
@@ -65,7 +70,8 @@ const ShopCartPage = () => {
     retry: false,
   })
 
-  useTitle('Košík | Platform Shop')
+  useTitle(t('cart.pageTitle'))
+
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
   }, [orgSlug])
@@ -75,7 +81,6 @@ const ShopCartPage = () => {
     (sum, line) => sum + line.lineTotalCents,
     0,
   )
-
   const hasValidPromo =
     cart.promoCode.trim().length > 0 && promoValidation.data?.valid === true
   const discountCents = hasValidPromo
@@ -85,7 +90,7 @@ const ShopCartPage = () => {
 
   const promoError = promoValidation.error as ApiError | null
   const promoErrorMessage =
-    promoError?.body?.message ?? 'Promo kód se nepodařilo ověřit.'
+    promoError?.body?.message ?? t('cart.promoValidationFailed')
 
   if (isError) {
     return <StateComp type='error' onAction={refetch} />
@@ -95,17 +100,11 @@ const ShopCartPage = () => {
     return (
       <StateComp
         type='no-content'
-        message='Košík je zatím prázdný.'
+        message={t('cart.emptyCart')}
         onAction={() => navigate(buildShopPath('/shop', orgSlug))}
-        actionText='Zpět do shopu'
+        actionText={t('cart.backToShop')}
       />
     )
-  }
-
-  const handleCheckout = () => {
-    window.alert('Pro platbu a vyzvednutí se ozvěte na merch@tda.cz')
-    clearCart()
-    navigate(buildShopPath('/shop', orgSlug))
   }
 
   const handlePromoSubmit = () => {
@@ -115,8 +114,8 @@ const ShopCartPage = () => {
   }
 
   return (
-    <div className='w-full max-w-6xl mx-auto space-y-6'>
-      <section className='overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm'>
+    <div className='mx-auto w-full max-w-6xl space-y-6'>
+      <section className='overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 shadow-sm sm:p-6'>
         <div
           className={cn(
             headerLineHeight,
@@ -125,28 +124,28 @@ const ShopCartPage = () => {
           )}
         />
         <div className='flex items-center justify-between gap-3'>
-          <Label size={'xl'} className='font-bold mb-0'>
-            Košík
+          <Label size='xl' className='mb-0 font-bold'>
+            {t('cart.title')}
           </Label>
 
           <Button
             variant='outline'
-            size={'md'}
+            size='md'
             onClick={() => navigate(buildShopPath('/shop', orgSlug))}
           >
-            Pokračovat v nákupu
+            {t('cart.continueShopping')}
           </Button>
         </div>
       </section>
 
-      <div className='grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-5 md:gap-6'>
-        <section className='rounded-2xl border border-border/70 bg-background p-4 sm:p-5 shadow-sm space-y-4'>
+      <div className='grid grid-cols-1 gap-5 md:gap-6 xl:grid-cols-[1.7fr_1fr]'>
+        <section className='space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
           {isLoading ? (
             <div className='space-y-3'>
               {Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={`cart-line-skeleton-${index}`}
-                  className='h-24 rounded-xl bg-muted/30 animate-pulse'
+                  className='h-24 animate-pulse rounded-xl bg-muted/30'
                 />
               ))}
             </div>
@@ -156,37 +155,39 @@ const ShopCartPage = () => {
                 key={line.itemId}
                 className='flex flex-col gap-3 rounded-xl border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between'
               >
-                {/* Лівий блок: фото + назва */}
                 <div className='flex items-start justify-between gap-2 sm:items-center'>
                   <div className='flex items-center gap-2'>
                     {line.item?.imageUrl ? (
                       <img
                         src={line.item.imageUrl}
                         alt={line.item.name}
-                        className='h-14 w-14 rounded-lg object-contain bg-muted/20 p-1 shrink-0'
+                        className='h-14 w-14 shrink-0 rounded-lg bg-muted/20 p-1 object-contain'
                       />
                     ) : (
-                      <div className='h-14 w-14 rounded-lg bg-muted/40 shrink-0' />
+                      <div className='h-14 w-14 shrink-0 rounded-lg bg-muted/40' />
                     )}
                     <div>
                       <p className='font-semibold text-foreground'>
-                        {line.item?.name ?? 'Položka již není dostupná'}
+                        {line.item?.name ?? t('cart.unavailableItem')}
                       </p>
                       <p className='text-sm text-muted-foreground'>
                         {line.item
-                          ? `${formatPrice(line.item.unitPriceCents)} / ks`
-                          : 'Nelze nacenit'}
+                          ? t('cart.perUnit', {
+                              price: formatPrice(line.item.unitPriceCents),
+                            })
+                          : t('cart.cannotPrice')}
                       </p>
                     </div>
                   </div>
 
-                  {/* Odebrat тільки на mobile */}
                   <EditBtn
                     actionType='delete'
                     onClick={() => {
                       removeItem(line.itemId)
                       toast.success(
-                        `"${line.item?.name ?? 'Položka'}" byla odebrána z košíku.`,
+                        t('cart.itemRemoved', {
+                          name: line.item?.name ?? t('cart.fallbackItemName'),
+                        }),
                       )
                     }}
                     classNameBtn='flex sm:hidden'
@@ -194,17 +195,12 @@ const ShopCartPage = () => {
                   />
                 </div>
 
-                {/* Правий блок: стерлер + ціна/Odebrat */}
-                <div
-                  className='flex items-center justify-between gap-2 border-t border-border/50 pt-3
-                  sm:border-none sm:pt-0 sm:flex-row sm:items-center sm:gap-4 shrink-0'
-                >
-                  {/* Стерлер */}
+                <div className='flex shrink-0 items-center justify-between gap-2 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:gap-4 sm:border-none sm:pt-0'>
                   <div className='flex items-center gap-1.5 sm:gap-2'>
                     <Button
                       variant='outline'
                       size='icon-sm'
-                      className='size-7 sm:size-8 rounded-xl'
+                      className='size-7 rounded-xl sm:size-8'
                       disabled={line.quantity === 1}
                       onClick={() =>
                         updateQuantity(
@@ -227,12 +223,12 @@ const ShopCartPage = () => {
                           Number(event.target.value || line.quantity),
                         )
                       }
-                      className='h-8 w-11 sm:h-10 sm:w-15 text-center text-sm sm:text-base font-semibold px-1'
+                      className='h-8 w-11 px-1 text-center text-sm font-semibold sm:h-10 sm:w-15 sm:text-base'
                     />
                     <Button
                       variant='outline'
                       size='icon-sm'
-                      className='size-7 sm:size-8 rounded-xl'
+                      className='size-7 rounded-xl sm:size-8'
                       onClick={() =>
                         updateQuantity(line.itemId, line.quantity + 1)
                       }
@@ -241,8 +237,7 @@ const ShopCartPage = () => {
                     </Button>
                   </div>
 
-                  {/* Ціна + Odebrat на desktop — вертикально */}
-                  <div className='flex items-center gap-2 sm:flex-col  sm:gap-1'>
+                  <div className='flex items-center gap-2 sm:flex-col sm:gap-1'>
                     <span className='font-semibold text-foreground'>
                       {formatPrice(line.lineTotalCents)}
                     </span>
@@ -251,10 +246,12 @@ const ShopCartPage = () => {
                       onClick={() => {
                         removeItem(line.itemId)
                         toast.success(
-                          `"${line.item?.name ?? 'Položka'}" byla odebrána z košíku.`,
+                          t('cart.itemRemoved', {
+                            name: line.item?.name ?? t('cart.fallbackItemName'),
+                          }),
                         )
                       }}
-                      label='Odebrat'
+                      label={t('cart.remove')}
                       labelClassName='text-destructive text-xs sm:text-sm'
                       classNameBtn='hidden sm:flex'
                     />
@@ -265,44 +262,44 @@ const ShopCartPage = () => {
           )}
         </section>
 
-        <aside className='rounded-2xl border border-border/70 bg-background p-4 sm:p-5 shadow-sm space-y-4 h-fit'>
+        <aside className='h-fit space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
           <div className='flex items-center gap-2'>
             <ShoppingBag size={18} className='text-primary' />
-            <Label size={'default'} className='font-semibold text-foreground'>
-              Souhrn objednávky
+            <Label size='default' className='font-semibold text-foreground'>
+              {t('cart.summaryTitle')}
             </Label>
           </div>
 
           <div className='space-y-2 text-sm'>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Počet kusů</span>
+              <span className='text-muted-foreground'>{t('cart.itemCount')}</span>
               <span>{itemCount}</span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Mezisoučet</span>
+              <span className='text-muted-foreground'>{t('cart.subtotal')}</span>
               <span>{formatPrice(subtotalCents)}</span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Sleva</span>
+              <span className='text-muted-foreground'>{t('cart.discount')}</span>
               <span
                 className={
                   discountCents > 0
-                    ? 'text-accent-teal-light font-semibold'
+                    ? 'font-semibold text-accent-teal-light'
                     : ''
                 }
               >
                 -{formatPrice(discountCents)}
               </span>
             </div>
-            <div className='border-t border-border/60 pt-2 flex items-center justify-between font-semibold text-base'>
-              <span>Celkem</span>
+            <div className='flex items-center justify-between border-t border-border/60 pt-2 text-base font-semibold'>
+              <span>{t('cart.total')}</span>
               <span>{formatPrice(totalCents)}</span>
             </div>
           </div>
 
           <div className='flex flex-col gap-2'>
             <label className='text-sm font-medium text-foreground'>
-              Promo kód (1 kód na košík)
+              {t('cart.promoLabel')}
             </label>
             <Input
               value={promoDraft}
@@ -315,26 +312,24 @@ const ShopCartPage = () => {
                   handlePromoSubmit()
                 }
               }}
-              placeholder='Např. WELCOME10'
+              placeholder={t('cart.promoPlaceholder')}
             />
-            <p className='text-xs text-muted-foreground'>
-              Pro ověření promo kódu stiskněte Enter.
-            </p>
+            <p className='text-xs text-muted-foreground'>{t('cart.promoHint')}</p>
             {cart.promoCode.trim().length > 0 && promoValidation.isFetching && (
               <p className='text-xs text-muted-foreground'>
-                Ověřuji promo kód...
+                {t('cart.promoValidating')}
               </p>
             )}
             {hasValidPromo && (
-              <p className='text-xs text-primary font-medium'>
-                Promo kód je aktivní. Sleva byla přepočítána.
+              <p className='text-xs font-medium text-primary'>
+                {t('cart.promoActive')}
               </p>
             )}
             {cart.promoCode.trim().length > 0 &&
               !promoValidation.isFetching &&
               promoValidation.data?.valid === false && (
                 <p className='text-xs text-destructive'>
-                  {promoValidation.data.message}
+                  {t('cart.promoInvalidOrUsed')}
                 </p>
               )}
             {promoError && (
@@ -348,7 +343,7 @@ const ShopCartPage = () => {
             onClick={() => navigate(buildShopPath('/shop/checkout', orgSlug))}
             disabled={!hasItems}
           >
-            Pokračovat na checkout
+            {t('cart.proceedToCheckout')}
           </Button>
         </aside>
       </div>

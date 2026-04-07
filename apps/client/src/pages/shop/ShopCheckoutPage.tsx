@@ -3,6 +3,7 @@ import {
   getShopCatalog,
   validateShopPromoCode,
 } from '@/api/queries/shopQueries'
+import playIcon from '@/assets/t-play-blue.svg'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +15,9 @@ import type { ApiError } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import playIcon from '@/assets/t-play-blue.svg'
 import {
   buildShopPath,
   formatPrice,
@@ -29,6 +30,8 @@ const ShopCheckoutPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const { t, i18n } = useTranslation('shop')
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { cart, clearCart } = useShopCart()
   const [contactEmail, setContactEmail] = useState('')
 
@@ -38,12 +41,17 @@ const ShopCheckoutPage = () => {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['shop-catalog'],
+    queryKey: ['shop-catalog', uiLocale],
     queryFn: getShopCatalog,
   })
 
   const promoValidation = useQuery({
-    queryKey: ['shop-promo-validation', cart.promoCode.trim(), cart.items],
+    queryKey: [
+      'shop-promo-validation',
+      uiLocale,
+      cart.promoCode.trim(),
+      cart.items,
+    ],
     queryFn: () =>
       validateShopPromoCode({
         code: cart.promoCode.trim(),
@@ -73,18 +81,18 @@ const ShopCheckoutPage = () => {
   const createOrderMutation = useMutation({
     mutationFn: createShopOrder,
     onSuccess: (order) => {
-      toast.success('Objednávka byla úspěšně vytvořena.')
+      toast.success(t('checkout.orderCreated'))
       clearCart()
       navigate(buildShopPath(`/shop/success/${order.orderId}`, orgSlug), {
         state: { order },
       })
     },
     onError: (error: ApiError) => {
-      toast.error(error?.body?.message ?? 'Objednávku se nepodařilo vytvořit.')
+      toast.error(error?.body?.message ?? t('checkout.orderCreateFailed'))
     },
   })
 
-  useTitle('Checkout | Platform Shop')
+  useTitle(t('checkout.pageTitle'))
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
@@ -98,9 +106,9 @@ const ShopCheckoutPage = () => {
     return (
       <StateComp
         type='no-content'
-        message='Košík je prázdný, checkout není možné dokončit.'
+        message={t('checkout.emptyCheckout')}
         onAction={() => navigate(buildShopPath('/shop', orgSlug))}
-        actionText='Přejít do shopu'
+        actionText={t('checkout.goToShop')}
       />
     )
   }
@@ -108,7 +116,7 @@ const ShopCheckoutPage = () => {
   const submitOrder = () => {
     const trimmedEmail = contactEmail.trim()
     if (!trimmedEmail) {
-      toast.error('Vyplňte prosím kontaktní e-mail.')
+      toast.error(t('checkout.missingEmail'))
       return
     }
 
@@ -120,8 +128,8 @@ const ShopCheckoutPage = () => {
   }
 
   return (
-    <div className='w-full max-w-6xl mx-auto space-y-6'>
-      <section className='relative overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 sm:p-6 shadow-sm space-y-2'>
+    <div className='mx-auto w-full max-w-6xl space-y-6'>
+      <section className='relative space-y-2 overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 shadow-sm sm:p-6'>
         <div
           className={cn(
             headerLineHeight,
@@ -134,22 +142,21 @@ const ShopCheckoutPage = () => {
           src={playIcon}
           alt=''
           aria-hidden='true'
-          className='absolute top-3 right-4 h-10 w-10 sm:right-6 sm:h-12 sm:w-12'
+          className='absolute right-4 top-3 h-10 w-10 sm:right-6 sm:h-12 sm:w-12'
         />
-        <div className='space-y-2 '>
-          <Label size='xl' className='font-bold -mt-1'>
-            Checkout
+        <div className='space-y-2'>
+          <Label size='xl' className='-mt-1 font-bold'>
+            {t('checkout.title')}
           </Label>
           <p className='text-sm text-muted-foreground'>
-            V1 checkout je záměrně jednoduchý: objednávka se odešle pouze s
-            kontaktním e-mailem.
+            {t('checkout.description')}
           </p>
         </div>
       </section>
 
       <div className='grid grid-cols-1 gap-5 md:gap-6 lg:grid-cols-[1.4fr_1fr]'>
         <section className='space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
-          <Label size={'default'}>Položky objednávky</Label>
+          <Label size='default'>{t('checkout.orderItems')}</Label>
 
           {isLoading ? (
             <div className='space-y-3'>
@@ -168,12 +175,14 @@ const ShopCheckoutPage = () => {
               >
                 <div>
                   <p className='font-medium text-foreground'>
-                    {line.item?.name ?? 'Nedostupná položka'}
+                    {line.item?.name ?? t('checkout.unavailableItem')}
                   </p>
                   <p className='text-xs text-muted-foreground'>
-                    {line.quantity} ks
+                    {t('checkout.quantity', { count: line.quantity })}
                     {line.item
-                      ? ` • ${formatPrice(line.item.unitPriceCents)} / ks`
+                      ? ` • ${t('cart.perUnit', {
+                          price: formatPrice(line.item.unitPriceCents),
+                        })}`
                       : ''}
                   </p>
                 </div>
@@ -184,33 +193,33 @@ const ShopCheckoutPage = () => {
             ))
           )}
 
-          <div className='flex flex-col gap-2 pt-4 border-t border-border/60'>
+          <div className='flex flex-col gap-2 border-t border-border/60 pt-4'>
             <label
               htmlFor='shop-checkout-email'
               className='text-sm font-medium text-foreground'
             >
-              Kontaktní e-mail
+              {t('checkout.contactEmail')}
             </label>
             <Input
               id='shop-checkout-email'
               type='email'
               value={contactEmail}
               onChange={(event) => setContactEmail(event.target.value)}
-              placeholder='napr. jmeno@example.com'
+              placeholder={t('checkout.contactEmailPlaceholder')}
             />
           </div>
         </section>
 
         <aside className='h-fit space-y-4 rounded-2xl border border-border/70 bg-background p-4 shadow-sm sm:p-5'>
-          <Label size={'default'}>Rekapitulace</Label>
+          <Label size='default'>{t('checkout.summaryTitle')}</Label>
 
           <div className='space-y-2 text-sm'>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Mezisoučet</span>
+              <span className='text-muted-foreground'>{t('cart.subtotal')}</span>
               <span>{formatPrice(subtotalCents)}</span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Promo kód</span>
+              <span className='text-muted-foreground'>{t('checkout.promoCode')}</span>
               <span
                 className={cn(
                   cart.promoCode.trim()
@@ -218,11 +227,11 @@ const ShopCheckoutPage = () => {
                     : 'text-destructive',
                 )}
               >
-                {cart.promoCode.trim() || 'Nepoužit'}
+                {cart.promoCode.trim() || t('checkout.promoUnused')}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>Sleva</span>
+              <span className='text-muted-foreground'>{t('cart.discount')}</span>
               <span
                 className={
                   discountCents > 0
@@ -234,38 +243,37 @@ const ShopCheckoutPage = () => {
               </span>
             </div>
             <div className='flex items-center justify-between border-t border-border/60 pt-2 text-base font-semibold'>
-              <span>Celkem</span>
+              <span>{t('cart.total')}</span>
               <span>{formatPrice(totalCents)}</span>
             </div>
           </div>
 
           {hasUnavailableItems && (
             <p className='text-xs text-destructive'>
-              V košíku jsou položky, které už nejsou dostupné. Vraťte se prosím
-              do košíku a upravte objednávku.
+              {t('checkout.unavailableItemsWarning')}
             </p>
           )}
           {cart.promoCode.trim().length > 0 &&
             !promoValidation.isFetching &&
             promoValidation.data?.valid === false && (
               <p className='text-xs text-destructive'>
-                {promoValidation.data.message}
+                {t('cart.promoInvalidOrUsed')}
               </p>
             )}
 
           <div className='grid grid-cols-[40%_60%] gap-2'>
             <Button
               variant='outline'
-              size={'primary'}
+              size='primary'
               onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
               disabled={createOrderMutation.isPending}
             >
-              <span className='sm:hidden'>Zpět</span>
-              <span className='hidden sm:inline'>Zpět do košíku</span>
+              <span className='sm:hidden'>{t('checkout.back')}</span>
+              <span className='hidden sm:inline'>{t('checkout.backToCart')}</span>
             </Button>
             <Button
               variant='primary'
-              size={'primary'}
+              size='primary'
               disabled={
                 isLoading ||
                 hasUnavailableItems ||
@@ -275,8 +283,8 @@ const ShopCheckoutPage = () => {
               onClick={submitOrder}
             >
               {createOrderMutation.isPending
-                ? 'Odesílám objednávku...'
-                : 'Potvrdit objednávku'}
+                ? t('checkout.submittingOrder')
+                : t('checkout.confirmOrder')}
             </Button>
           </div>
         </aside>

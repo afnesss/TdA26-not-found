@@ -1,9 +1,10 @@
 import type { ShopCartItemInput, ShopCatalogItem } from '@/lib/schemas'
+import { getIntlLocale } from '@/lib/i18n'
 
 const SHOP_ORG_STORAGE_KEY = 'shop-org-slug-v1'
 
 export const formatPrice = (cents: number) => {
-  return new Intl.NumberFormat('cs-CZ', {
+  return new Intl.NumberFormat(getIntlLocale(), {
     style: 'currency',
     currency: 'CZK',
     minimumFractionDigits: 2,

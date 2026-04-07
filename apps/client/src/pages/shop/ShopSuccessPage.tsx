@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgCoursesPath } from '@/lib/routes'
@@ -6,6 +7,7 @@ import type { ShopOrder } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { CheckCircle2 } from 'lucide-react'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   useLocation,
   useNavigate,
@@ -18,7 +20,6 @@ import {
   persistShopOrgSlug,
   resolveShopOrgSlug,
 } from './shopUtils'
-import { Label } from '@/components/ui/label'
 
 type ShopSuccessLocationState = {
   order?: ShopOrder
@@ -29,18 +30,20 @@ const ShopSuccessPage = () => {
   const { orderId } = useParams()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const { t } = useTranslation('shop')
   const location = useLocation()
   const state = location.state as ShopSuccessLocationState | null
   const order = state?.order
 
-  useTitle('Objednávka vytvořena | Platform Shop')
+  useTitle(t('success.pageTitle'))
+
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
   }, [orgSlug])
 
   return (
-    <div className='w-full max-w-3xl mx-auto'>
-      <section className='overflow-hidden rounded-2xl border border-border/70 bg-background p-5 sm:p-8 shadow-sm text-center space-y-5'>
+    <div className='mx-auto w-full max-w-3xl'>
+      <section className='space-y-5 overflow-hidden rounded-2xl border border-border/70 bg-background p-5 text-center shadow-sm sm:p-8'>
         <div
           className={cn(
             headerLineHeight,
@@ -54,51 +57,55 @@ const ShopSuccessPage = () => {
         </div>
 
         <div className='space-y-2'>
-          <Label size={'xl'} className='font-bold'>
-            Objednávka byla vytvořena
+          <Label size='xl' className='font-bold'>
+            {t('success.title')}
           </Label>
           <p className='text-sm text-muted-foreground'>
-            Děkujeme. Objednávka byla automaticky uložena v systému.
+            {t('success.description')}
           </p>
         </div>
 
-        <div className='rounded-xl border border-border/60 bg-muted/20 p-4 text-left space-y-2'>
+        <div className='space-y-2 rounded-xl border border-border/60 bg-muted/20 p-4 text-left'>
           <div className='flex items-center justify-between gap-2 text-sm'>
-            <span className='text-muted-foreground'>ID objednávky</span>
+            <span className='text-muted-foreground'>{t('success.orderId')}</span>
             <span className='font-mono text-xs sm:text-sm'>{orderId}</span>
           </div>
 
           {order && (
             <>
               <div className='flex items-center justify-between gap-2 text-sm'>
-                <span className='text-muted-foreground'>Kontaktní e-mail</span>
+                <span className='text-muted-foreground'>
+                  {t('success.contactEmail')}
+                </span>
                 <span>{order.contactEmail}</span>
               </div>
               <div className='flex items-center justify-between gap-2 text-sm'>
-                <span className='text-muted-foreground'>Počet položek</span>
+                <span className='text-muted-foreground'>
+                  {t('success.itemCount')}
+                </span>
                 <span>
                   {order.items.reduce((sum, item) => sum + item.quantity, 0)}
                 </span>
               </div>
               <div className='flex items-center justify-between gap-2 text-sm font-semibold'>
-                <span>Celkem</span>
+                <span>{t('success.total')}</span>
                 <span>{formatPrice(order.totalCents)}</span>
               </div>
             </>
           )}
         </div>
 
-        <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+        <div className='flex flex-col justify-center gap-3 sm:flex-row'>
           <Button
             variant='primary'
-            className='h-13 px-8 text-base sm:text-lg font-bold'
+            className='h-13 px-8 text-base font-bold sm:text-lg'
             onClick={() => navigate(buildShopPath('/shop', orgSlug))}
           >
-            Zpět do shopu
+            {t('success.backToShop')}
           </Button>
           <Button
             variant='outline'
-            className='h-13 px-8 text-base sm:text-lg font-semibold'
+            className='h-13 px-8 text-base font-semibold sm:text-lg'
             onClick={() =>
               navigate(
                 orgSlug
@@ -107,7 +114,7 @@ const ShopSuccessPage = () => {
               )
             }
           >
-            Přejít na kurzy
+            {t('success.goToCourses')}
           </Button>
         </div>
       </section>

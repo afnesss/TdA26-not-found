@@ -24,6 +24,14 @@ const SEED_SOURCE_LOCALE = "cs" as const;
 const localizedText = (value?: string | null) =>
   buildLocalizedField(SEED_SOURCE_LOCALE, value ?? null);
 
+const localizedTextWithEnglish = (
+  csValue?: string | null,
+  enValue?: string | null,
+) => ({
+  ...buildLocalizedField(SEED_SOURCE_LOCALE, csValue ?? null),
+  ...(typeof enValue === "string" && enValue.trim() ? { en: enValue.trim() } : {}),
+});
+
 const sampleCourses = [
   {
     name: "Úvod do Pythonu",
@@ -276,6 +284,8 @@ const merchCatalogSeed = [
   {
     slug: "platform-backpack",
     name: "TDA Batoh",
+    nameEn: "TDA Backpack",
+    descriptionEn: "Limited Think Different Academy merch item.",
     description: "Limitovaná merch položka Think Different Academy.",
     imageUrl: "/api/uploads/bag123.png",
     unitPriceCents: 99900,
@@ -287,6 +297,8 @@ const merchCatalogSeed = [
   {
     slug: "platform-tshirt",
     name: "TDA T-Shirt",
+    nameEn: "TDA T-Shirt",
+    descriptionEn: "Classic T-shirt with platform branding.",
     description: "Klasické tričko s brandingem platformy.",
     imageUrl: "/api/uploads/tshirt.png",
     unitPriceCents: 59900,
@@ -298,6 +310,8 @@ const merchCatalogSeed = [
   {
     slug: "platform-earrings",
     name: "Signal Earrings",
+    nameEn: "Signal Earrings",
+    descriptionEn: "Accessory merch item for platform fans.",
     description: "Doplňková merch položka pro fanoušky platformy.",
     imageUrl: "/api/uploads/earrings.png",
     unitPriceCents: 39900,
@@ -309,6 +323,9 @@ const merchCatalogSeed = [
   {
     slug: "platform-cap",
     name: "TDA Signal Cap",
+    nameEn: "TDA Signal Cap",
+    descriptionEn:
+      "Minimalist white cap with the iconic 'Tada' mark, a symbol of ideas.",
     description:
       "Minimalistická bílá kšiltovka s ikonickým 'Tádou' – symbolem nápadů.",
     imageUrl: "/api/uploads/cap.png",
@@ -320,6 +337,8 @@ const merchCatalogSeed = [
   },
   {
     slug: "platform-sale10",
+    nameEn: "10% discount coupon",
+    descriptionEn: "Voucher with 10% off your next order.",
     name: "10% slevový kupon",
     description: "Voucher se slevou 10 % na další objednávku.",
     imageUrl: "/api/uploads/10sleva.png",
@@ -331,6 +350,8 @@ const merchCatalogSeed = [
   },
   {
     slug: "platform-sale20",
+    nameEn: "20% discount coupon",
+    descriptionEn: "Voucher with 20% off your next order.",
     name: "20% slevový kupon",
     description: "Voucher se slevou 20 % na další objednávku.",
     imageUrl: "/api/uploads/20sleva.png",
@@ -341,6 +362,50 @@ const merchCatalogSeed = [
     active: true,
   },
 ];
+
+const merchCatalogSeedNormalized = merchCatalogSeed.map((item) => {
+  switch (item.slug) {
+    case "platform-backpack":
+      return {
+        ...item,
+        name: "Batoh TDA",
+        description: "Limitovaná merch položka Think Different Academy.",
+      };
+    case "platform-tshirt":
+      return {
+        ...item,
+        name: "Tričko TDA",
+        description: "Klasické tričko s brandingem platformy.",
+      };
+    case "platform-earrings":
+      return {
+        ...item,
+        name: "Náušnice Signal",
+        description: "Doplňková merch položka pro fanoušky platformy.",
+      };
+    case "platform-cap":
+      return {
+        ...item,
+        name: "Kšiltovka TDA Signal",
+        description:
+          "Minimalistická bílá kšiltovka s ikonickým 'Tádou' – symbolem nápadů.",
+      };
+    case "platform-sale10":
+      return {
+        ...item,
+        name: "10% slevový kupon",
+        description: "Voucher se slevou 10 % na další objednávku.",
+      };
+    case "platform-sale20":
+      return {
+        ...item,
+        name: "20% slevový kupon",
+        description: "Voucher se slevou 20 % na další objednávku.",
+      };
+    default:
+      return item;
+  }
+});
 
 export async function seed() {
   logger.info("Seeding database...");
@@ -451,7 +516,7 @@ export async function seed() {
     });
   }
 
-  const merchSlugs = merchCatalogSeed.map((item) => item.slug);
+  const merchSlugs = merchCatalogSeedNormalized.map((item) => item.slug);
   const existingMerch = await db
     .select({ uuid: merchItems.uuid, slug: merchItems.slug })
     .from(merchItems)
@@ -460,11 +525,11 @@ export async function seed() {
     existingMerch.map((item) => [item.slug, item.uuid]),
   );
   const existingMerchSlugs = new Set(existingMerch.map((item) => item.slug));
-  const merchToInsert = merchCatalogSeed.filter(
+  const merchToInsert = merchCatalogSeedNormalized.filter(
     (item) => !existingMerchSlugs.has(item.slug),
   );
 
-  for (const item of merchCatalogSeed) {
+  for (const item of merchCatalogSeedNormalized) {
     const existingMerchId = existingMerchBySlug.get(item.slug);
     if (!existingMerchId) {
       continue;
@@ -475,9 +540,12 @@ export async function seed() {
       .set({
         sourceLocale: SEED_SOURCE_LOCALE,
         name: item.name,
-        nameI18n: localizedText(item.name),
+        nameI18n: localizedTextWithEnglish(item.name, item.nameEn),
         description: item.description,
-        descriptionI18n: localizedText(item.description),
+        descriptionI18n: localizedTextWithEnglish(
+          item.description,
+          item.descriptionEn,
+        ),
         imageUrl: item.imageUrl,
         unitPriceCents: item.unitPriceCents,
         purchaseMode: item.purchaseMode,
@@ -492,10 +560,21 @@ export async function seed() {
   if (merchToInsert.length > 0) {
     await db.insert(merchItems).values(
       merchToInsert.map((item) => ({
-        ...item,
+        slug: item.slug,
+        name: item.name,
+        description: item.description,
+        imageUrl: item.imageUrl,
+        unitPriceCents: item.unitPriceCents,
+        purchaseMode: item.purchaseMode,
+        xpCost: item.xpCost,
+        voucherDiscountPercent: item.voucherDiscountPercent,
+        active: item.active,
         sourceLocale: SEED_SOURCE_LOCALE,
-        nameI18n: localizedText(item.name),
-        descriptionI18n: localizedText(item.description),
+        nameI18n: localizedTextWithEnglish(item.name, item.nameEn),
+        descriptionI18n: localizedTextWithEnglish(
+          item.description,
+          item.descriptionEn,
+        ),
       })),
     );
     logger.info(`Inserted ${merchToInsert.length} shop seed items`);
@@ -887,6 +966,21 @@ export async function seed() {
           createdAt: new Date(),
         },
       ];
+
+      const normalizedFeedMessages = [
+        `Vítejte v kurzu '${course.name}'! Připravte se na zajímavou cestu učení.`,
+        "Připomínka: První živá diskuze je naplánována na příští úterý. Připravte si své otázky!",
+        "Konzultační hodiny tento týden: Pondělí 14-15 a Středa 11-12. Přijďte prodiskutovat cokoliv!",
+        "Termín odevzdání úkolu 1 prodloužen o 3 dny na základě vašich požadavků. Nový termín je v pátek!",
+        "Příští týden nás čeká hostem přednáška: 'Budoucnost AI v softwarovém inženýrství'. Podrobnosti brzy.",
+        "Nezapomeňte odevzdat úkoly z modulu 2 do konce dne. Pokud potřebujete pomoc, ozvěte se!",
+        "Skvělá práce na posledních úkolech! Pokračujte v tom výborném úsilí.",
+        "Krátká anketa: Jaká témata byste rádi probírali podrobněji? Vaše zpětná vazba je cenná!",
+      ];
+
+      feed.forEach((item, index) => {
+        item.message = normalizedFeedMessages[index] ?? item.message;
+      });
 
       await db.insert(feedItems).values(
         feed.map((item) => ({

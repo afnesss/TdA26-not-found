@@ -8,7 +8,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -21,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, CheckCircle2, Copy, ShoppingCart } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -42,6 +42,8 @@ const ShopCatalogPage = () => {
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const queryClient = useQueryClient()
+  const { t, i18n } = useTranslation('shop')
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const [purchasedVoucher, setPurchasedVoucher] =
     useState<PurchasedVoucher | null>(null)
   const [isVoucherCodeCopied, setIsVoucherCodeCopied] = useState(false)
@@ -55,11 +57,11 @@ const ShopCatalogPage = () => {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['shop-catalog'],
+    queryKey: ['shop-catalog', uiLocale],
     queryFn: getShopCatalog,
   })
 
-  useTitle('Platform Shop')
+  useTitle(t('catalog.pageTitle'))
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
@@ -90,7 +92,7 @@ const ShopCatalogPage = () => {
       })
     },
     onError: (error: ApiError) => {
-      toast.error(error?.body?.message ?? 'Voucher se nepodařilo zakoupit.')
+      toast.error(error?.body?.message ?? t('catalog.voucherPurchaseFailed'))
     },
   })
 
@@ -108,7 +110,7 @@ const ShopCatalogPage = () => {
     voucherXpCost?: number | null,
   ) => {
     if (!isOrgAuth || user?.role !== 'student') {
-      toast.error('Voucher lze koupit pouze ze studentského účtu.')
+      toast.error(t('catalog.voucherStudentOnly'))
       if (orgSlug) {
         const redirect = `/shop?org=${encodeURIComponent(orgSlug)}`
         navigate(
@@ -140,7 +142,7 @@ const ShopCatalogPage = () => {
       setIsVoucherCodeCopied(true)
       window.setTimeout(() => setIsVoucherCodeCopied(false), 2000)
     } catch {
-      toast.error('Promo kód se nepodařilo zkopírovat.')
+      toast.error(t('catalog.promoCopyFailed'))
     }
   }
 
@@ -163,25 +165,27 @@ const ShopCatalogPage = () => {
               '-mx-4 mb-2 rounded-t-2xl sm:-mx-6 sm:-mt-6 sm:mb-6',
             )}
           />
-          <div className='absolute top-4 right-3 md:top-5 md:right-5 h-12 w-12 flex items-center text-center justify-center rounded-full bg-secondary/45 text-[#2D8B6B]'>
+          <div className='absolute right-3 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary/45 text-center text-[#2D8B6B] md:right-5 md:top-5'>
             <CheckCircle2 size={28} />
           </div>
           <AlertDialogHeader className='gap-3'>
-            <Label size={'lg'} className='font-bold'>
-              Voucher zakoupen
+            <Label size='lg' className='font-bold'>
+              {t('catalog.voucherPurchasedTitle')}
             </Label>
             <AlertDialogDescription asChild>
               <div className='space-y-4 text-sm text-foreground sm:text-base'>
                 <p className='leading-relaxed'>
                   {purchasedVoucher?.alreadyActive
-                    ? 'Tento voucher už máte aktivní.'
-                    : `Voucher zakoupen za ${purchasedVoucher?.xpCost ?? 0} XP.`}
+                    ? t('catalog.voucherAlreadyActive')
+                    : t('catalog.voucherPurchasedForXp', {
+                        xp: purchasedVoucher?.xpCost ?? 0,
+                      })}
                 </p>
                 <div className='rounded-2xl border border-border/70 bg-muted/20 p-3 sm:p-4'>
                   <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground'>
-                    Jednorázový promo kód
+                    {t('catalog.voucherCodeLabel')}
                   </p>
-                  <div className='flex  gap-3 flex-row items-center justify-between'>
+                  <div className='flex flex-row items-center justify-between gap-3'>
                     <code className='block rounded-xl bg-background px-3 py-2 text-sm font-bold text-primary shadow-sm sm:text-base'>
                       {purchasedVoucher?.code ?? ''}
                     </code>
@@ -195,23 +199,21 @@ const ShopCatalogPage = () => {
                       {isVoucherCodeCopied ? (
                         <>
                           <Check className='text-secondary' size={16} />
-                          Zkopírováno
+                          {t('catalog.copied')}
                         </>
                       ) : (
                         <>
                           <Copy size={16} />
-                          Kopírovat
+                          {t('catalog.copy')}
                         </>
                       )}
                     </Button>
                   </div>
                 </div>
                 <div className='space-y-1.5'>
-                  <p className='font-semibold'>
-                    Zadejte ho ručně v košíku nebo checkoutu.
-                  </p>
+                  <p className='font-semibold'>{t('catalog.voucherInstructions')}</p>
                   <p className='text-sm text-destructive sm:text-base'>
-                    Po použití už nebude znovu platný.
+                    {t('catalog.voucherSingleUseWarning')}
                   </p>
                 </div>
               </div>
@@ -224,18 +226,18 @@ const ShopCatalogPage = () => {
                   setPurchasedVoucher(null)
                   setIsVoucherCodeCopied(false)
                 }}
-                variant={'primary'}
-                size={'md'}
+                variant='primary'
+                size='md'
                 className='rounded-xl font-bold'
               >
-                Pokračovat
+                {t('catalog.continue')}
               </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className='w-full max-w-7xl mx-auto space-y-6'>
+      <div className='mx-auto w-full max-w-7xl space-y-6'>
         <section className='overflow-hidden rounded-2xl border border-border/70 bg-background/95 p-4 shadow-sm sm:p-6'>
           <div
             className={cn(
@@ -246,9 +248,8 @@ const ShopCatalogPage = () => {
           />
           <div className='flex flex-row items-center justify-between gap-3'>
             <div className='space-y-1.5'>
-              <Label size={'xl'} className='mb-0 font-bold'>
-                Merch{' '}
-                <span className='text-primary'>Think Different Academy</span>
+              <Label size='xl' className='mb-0 font-bold'>
+                {t('catalog.title')}
               </Label>
             </div>
 
@@ -260,8 +261,8 @@ const ShopCatalogPage = () => {
               className='w-fit rounded-xl'
             >
               <ShoppingCart size={18} />
-              <span className='hidden sm:inline-block'>Košík</span> ({itemCount}
-              ){' '}
+              <span className='hidden sm:inline-block'>{t('catalog.cartCta')}</span>{' '}
+              ({itemCount}){' '}
               <span className='hidden md:inline-block'>
                 {itemCount > 0 ? `• ${formatPrice(cartSubtotal)}` : ''}
               </span>
@@ -281,9 +282,9 @@ const ShopCatalogPage = () => {
         ) : catalog.length === 0 ? (
           <StateComp
             type='no-content'
-            message='Katalog je zatím prázdný.'
+            message={t('catalog.emptyCatalog')}
             onAction={refetch}
-            actionText='Načíst znovu'
+            actionText={t('catalog.reload')}
           />
         ) : (
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6'>
@@ -295,13 +296,15 @@ const ShopCatalogPage = () => {
                 {item.purchaseMode === 'xp' && (
                   <div className='flex items-center justify-between gap-3 px-4 pt-4'>
                     <span className='inline-flex w-fit rounded-full bg-secondary/45 px-2.5 py-1 text-[11px] font-semibold text-[#2D8B6B]'>
-                      XP voucher
+                      {t('catalog.voucherBadge')}
                     </span>
                     {user?.role === 'student' &&
                       (item.xpCost ?? 0) > (user.xp ?? 0) && (
                         <p className='text-right text-xs text-destructive'>
-                          Nemáte dostatek XP ({user.xp ?? 0} /{' '}
-                          {item.xpCost ?? 0} XP).
+                          {t('catalog.insufficientXp', {
+                            current: user.xp ?? 0,
+                            required: item.xpCost ?? 0,
+                          })}
                         </p>
                       )}
                   </div>
@@ -313,7 +316,7 @@ const ShopCatalogPage = () => {
                     alt={item.name}
                     className={cn(
                       item.purchaseMode === 'xp' ? 'h-38' : 'h-48',
-                      'w-full object-contain bg-muted/20 p-2',
+                      'w-full bg-muted/20 p-2 object-contain',
                     )}
                     loading='lazy'
                   />
@@ -327,8 +330,7 @@ const ShopCatalogPage = () => {
                       {item.name}
                     </h2>
                     <p className='min-h-8 text-sm text-muted-foreground'>
-                      {item.description ??
-                        'Stylový merch z platformového obchodu.'}
+                      {item.description ?? t('catalog.defaultDescription')}
                     </p>
                   </div>
 
@@ -361,14 +363,16 @@ const ShopCatalogPage = () => {
                           colorStyles.text.secondary,
                         )}
                       >
-                        Koupit
+                        {t('catalog.buy')}
                       </Button>
                     ) : (
                       <Button
                         variant='grid'
                         onClick={() => {
                           addItem(item.uuid)
-                          toast.success(`"${item.name}" byl přidán do košíku.`)
+                          toast.success(
+                            t('catalog.addedToCart', { name: item.name }),
+                          )
                         }}
                         className={cn(
                           'min-h-10 bg-linear-to-br px-7 text-base font-semibold',
@@ -376,7 +380,7 @@ const ShopCatalogPage = () => {
                           colorStyles.text['accent-teal'],
                         )}
                       >
-                        Přidat
+                        {t('catalog.add')}
                       </Button>
                     )}
                   </div>

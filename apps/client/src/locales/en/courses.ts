@@ -23,6 +23,7 @@ const courses = {
   },
   userCourse: {
     breadcrumbRoot: 'Courses',
+    breadcrumbCurrent: 'Course details',
     titleFallback: 'Course',
     leaderboardTitle: 'Student leaderboard',
     activeModulesTitle: 'Active modules',

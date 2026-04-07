@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { z } from 'zod'
 import {
   LocaleSchema,
@@ -7,20 +8,26 @@ import {
 import { MaterialSchema } from './material'
 import { QuizSchema } from './quiz'
 
+const moduleIdsDuplicateMessage = i18n.t('validation.moduleIdsDuplicate', {
+  ns: 'common',
+})
+
 export const CourseModulesStatusSchema = z.enum(['active', 'passive'])
 
-export const ModuleSummarySchema = z.object({
-  uuid: z.string().uuid(),
-  name: z.string(),
-  nameI18n: LocalizedFieldSchema.optional(),
-  description: z.string().optional().nullable(),
-  descriptionI18n: LocalizedFieldSchema.optional(),
-  resolvedLocale: LocaleSchema.optional(),
-  isFallback: z.boolean().optional(),
-  status: CourseModulesStatusSchema.default('passive'),
-  createdAt: z.date().or(z.string().datetime()),
-  updatedAt: z.date().or(z.string().datetime()),
-}).merge(LocalizedEntityMetaSchema)
+export const ModuleSummarySchema = z
+  .object({
+    uuid: z.string().uuid(),
+    name: z.string(),
+    nameI18n: LocalizedFieldSchema.optional(),
+    description: z.string().optional().nullable(),
+    descriptionI18n: LocalizedFieldSchema.optional(),
+    resolvedLocale: LocaleSchema.optional(),
+    isFallback: z.boolean().optional(),
+    status: CourseModulesStatusSchema.default('passive'),
+    createdAt: z.date().or(z.string().datetime()),
+    updatedAt: z.date().or(z.string().datetime()),
+  })
+  .merge(LocalizedEntityMetaSchema)
 
 export const ModuleDetailSchema = ModuleSummarySchema.extend({
   materials: z.array(MaterialSchema),
@@ -52,9 +59,10 @@ export const ModuleReorderRequestSchema = z.object({
     .array(z.string().uuid())
     .min(1)
     .refine((ids) => new Set(ids).size === ids.length, {
-      message: 'moduleIds obsahuje duplicity',
+      message: moduleIdsDuplicateMessage,
     }),
 })
+
 export type ModuleSummary = z.infer<typeof ModuleSummarySchema>
 export type ModuleDetail = z.infer<typeof ModuleDetailSchema>
 export type CourseModule = ModuleDetail

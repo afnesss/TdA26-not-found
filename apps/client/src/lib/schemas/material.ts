@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { z } from 'zod'
 import {
   LocaleSchema,
@@ -5,48 +6,66 @@ import {
   LocalizedFieldSchema,
 } from './i18n'
 
-export const FileMaterialSchema = z.object({
-  uuid: z.string().uuid(),
-  type: z.literal('file'),
-  name: z.string(),
-  nameI18n: LocalizedFieldSchema.optional(),
-  description: z.string().optional(),
-  descriptionI18n: LocalizedFieldSchema.optional(),
-  fileUrl: z.string().refine(
-    (val) => {
-      try {
-        new URL(val)
-        return true
-      } catch {
-        return val.startsWith('/')
-      }
-    },
-    { message: 'Invalid URL' },
-  ),
-  mimeType: z.string().optional(),
-  sizeBytes: z.number().int().optional(),
-  originalFilename: z.string().optional(),
-  downloadCount: z.number().int().nonnegative().optional(),
-}).merge(LocalizedEntityMetaSchema).extend({
-  resolvedLocale: LocaleSchema.optional(),
-  isFallback: z.boolean().optional(),
+const invalidUrlMessage = i18n.t('errors.invalidUrl', { ns: 'common' })
+const materialNameRequiredMessage = i18n.t('validation.materialNameRequired', {
+  ns: 'common',
 })
+const materialUrlRequiredMessage = i18n.t('validation.materialUrlRequired', {
+  ns: 'common',
+})
+const materialUrlInvalidMessage = i18n.t('validation.materialUrlInvalid', {
+  ns: 'common',
+})
+const selectFileMessage = i18n.t('materialCard.selectFile', { ns: 'common' })
 
-export const UrlMaterialSchema = z.object({
-  uuid: z.string().uuid(),
-  type: z.literal('url'),
-  name: z.string(),
-  nameI18n: LocalizedFieldSchema.optional(),
-  description: z.string().optional(),
-  descriptionI18n: LocalizedFieldSchema.optional(),
-  url: z.string().url(),
-  faviconUrl: z.string().url().optional(),
-  copyCount: z.number().int().nonnegative().optional(),
-  openCount: z.number().int().nonnegative().optional(),
-}).merge(LocalizedEntityMetaSchema).extend({
-  resolvedLocale: LocaleSchema.optional(),
-  isFallback: z.boolean().optional(),
-})
+export const FileMaterialSchema = z
+  .object({
+    uuid: z.string().uuid(),
+    type: z.literal('file'),
+    name: z.string(),
+    nameI18n: LocalizedFieldSchema.optional(),
+    description: z.string().optional(),
+    descriptionI18n: LocalizedFieldSchema.optional(),
+    fileUrl: z.string().refine(
+      (val) => {
+        try {
+          new URL(val)
+          return true
+        } catch {
+          return val.startsWith('/')
+        }
+      },
+      { message: invalidUrlMessage },
+    ),
+    mimeType: z.string().optional(),
+    sizeBytes: z.number().int().optional(),
+    originalFilename: z.string().optional(),
+    downloadCount: z.number().int().nonnegative().optional(),
+  })
+  .merge(LocalizedEntityMetaSchema)
+  .extend({
+    resolvedLocale: LocaleSchema.optional(),
+    isFallback: z.boolean().optional(),
+  })
+
+export const UrlMaterialSchema = z
+  .object({
+    uuid: z.string().uuid(),
+    type: z.literal('url'),
+    name: z.string(),
+    nameI18n: LocalizedFieldSchema.optional(),
+    description: z.string().optional(),
+    descriptionI18n: LocalizedFieldSchema.optional(),
+    url: z.string().url(),
+    faviconUrl: z.string().url().optional(),
+    copyCount: z.number().int().nonnegative().optional(),
+    openCount: z.number().int().nonnegative().optional(),
+  })
+  .merge(LocalizedEntityMetaSchema)
+  .extend({
+    resolvedLocale: LocaleSchema.optional(),
+    isFallback: z.boolean().optional(),
+  })
 
 export const MaterialSchema = z.discriminatedUnion('type', [
   FileMaterialSchema,
@@ -57,7 +76,7 @@ export const FileMaterialCreateRequestSchema = z.object({
   type: z.literal('file'),
   name: z.string(),
   description: z.string().optional(),
-  file: z.any(), // File uploads are handled via multipart/form-data, validation might need specific handling
+  file: z.any(),
 })
 
 export const UrlMaterialCreateRequestSchema = z.object({
@@ -91,9 +110,9 @@ export const MaterialValidationSchema = z.discriminatedUnion('type', [
     type: z.literal('file'),
     name: z
       .string()
-      .min(1, 'Název je povinný')
+      .min(1, materialNameRequiredMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'Název je povinný',
+        message: materialNameRequiredMessage,
       }),
     description: z.string().optional(),
     fileUrl: z.string().optional(),
@@ -101,23 +120,22 @@ export const MaterialValidationSchema = z.discriminatedUnion('type', [
     mimeType: z.string().optional(),
     sizeBytes: z.number().int().optional(),
   }),
-  // URL material validation
   z.object({
     uuid: z.string().optional(),
     type: z.literal('url'),
     name: z
       .string()
-      .min(1, 'Název je povinný')
+      .min(1, materialNameRequiredMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'Název je povinný',
+        message: materialNameRequiredMessage,
       }),
     description: z.string().optional(),
     url: z
       .string()
-      .min(1, 'URL nemůže být prázdné')
-      .url('Neplatný formát URL')
+      .min(1, materialUrlRequiredMessage)
+      .url(materialUrlInvalidMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'URL nemůže být prázdné',
+        message: materialUrlRequiredMessage,
       }),
     faviconUrl: z.string().optional(),
   }),
@@ -128,32 +146,32 @@ export const MaterialCreateSchema = z.discriminatedUnion('type', [
     type: z.literal('file'),
     name: z
       .string()
-      .min(1, 'Název je povinný')
+      .min(1, materialNameRequiredMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'Název je povinný',
+        message: materialNameRequiredMessage,
       }),
     description: z.string().optional(),
-    file: z.instanceof(File, { message: 'Vyberte soubor' }),
+    file: z.instanceof(File, { message: selectFileMessage }),
   }),
-  // URL link
   z.object({
     type: z.literal('url'),
     name: z
       .string()
-      .min(1, 'Název je povinný')
+      .min(1, materialNameRequiredMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'Název je povinný',
+        message: materialNameRequiredMessage,
       }),
     description: z.string().optional(),
     url: z
       .string()
-      .min(1, 'URL nemůže být prázdné')
-      .url('Neplatný formát URL')
+      .min(1, materialUrlRequiredMessage)
+      .url(materialUrlInvalidMessage)
       .refine((val) => val.trim().length > 0, {
-        message: 'URL nemůže být prázdné',
+        message: materialUrlRequiredMessage,
       }),
   }),
 ])
+
 export type MaterialValidation = z.infer<typeof MaterialValidationSchema>
 export type MaterialCreate = z.infer<typeof MaterialCreateSchema>
 export type FileMaterial = z.infer<typeof FileMaterialSchema>

@@ -62,6 +62,8 @@ const dashboard = {
       archived: 'Kurz byl archivován',
     },
     card: {
+      breadcrumbRoot: 'Správa kurzů',
+      breadcrumbCurrent: 'Detaily kurzu',
       saveMobile: 'Uložit',
       saveDesktop: 'Uložit změny',
       name: 'Název',
@@ -176,6 +178,7 @@ const dashboard = {
     planning: {
       saveAriaLabel: 'Uložit kurz',
       cancelAriaLabel: 'Zrušit úpravy',
+      editDateTimeAria: 'Upravit datum a čas',
     },
     leaderboard: {
       title: 'Leaderboard studentů',

@@ -11,6 +11,7 @@ const header = {
     signIn: 'Sign in',
     signOut: 'Sign out',
     createOrganization: 'Create organization',
+    goHome: 'Go to home page',
   },
   toasts: {
     logoutSuccess: 'Signed out successfully',

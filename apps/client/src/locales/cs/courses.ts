@@ -23,6 +23,7 @@ const courses = {
   },
   userCourse: {
     breadcrumbRoot: 'Kurzy',
+    breadcrumbCurrent: 'Detaily kurzu',
     titleFallback: 'Kurz',
     leaderboardTitle: 'Leaderboard studentů',
     activeModulesTitle: 'Aktivní moduly',

@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import {
   emitOrganizationInactiveEvent,
   getOrgSlugFromApiInput,
@@ -18,7 +19,7 @@ export default async function apiFetch<T>(
   const safeOptions: RequestInit = options ?? {}
   const safeClientOptions: ApiClientOptions = clientOptions ?? {}
 
-  const { headers, token } = safeClientOptions
+  const { headers } = safeClientOptions
 
   const defaultHeaders: HeadersInit = {}
   if (!(safeOptions.body instanceof FormData)) {
@@ -34,16 +35,15 @@ export default async function apiFetch<T>(
         ...defaultHeaders,
         ...buildLocaleHeaders(),
         ...headers,
-        ...safeOptions?.headers,
+        ...safeOptions.headers,
       },
     })
-  } catch (error) {
-    // Network error (no internet, server down, etc.)
+  } catch {
     throw {
       status: 0,
       statusText: 'Network Error',
       isNetworkError: true,
-      body: { message: 'Chyba připojení' },
+      body: { message: i18n.t('errors.connection', { ns: 'common' }) },
     }
   }
 
@@ -52,7 +52,7 @@ export default async function apiFetch<T>(
 
     try {
       errorBody = await response.json()
-    } catch (error) {
+    } catch {
       throw new Error(`API ${response.status}: ${response.statusText}`)
     }
 

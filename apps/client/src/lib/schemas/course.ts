@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { z } from 'zod'
 import {
   LocaleSchema,
@@ -9,6 +10,10 @@ import { QuizSchema } from './quiz'
 import { QuizAnswerSchema } from './quiz'
 import { FeedItemSchema } from './feed'
 import { CourseModuleSchema } from './module'
+
+const courseNameRequiredMessage = i18n.t('validation.courseNameRequired', {
+  ns: 'common',
+})
 
 export const CourseStatusSchema = z.enum([
   'draft',
@@ -28,14 +33,13 @@ export const CourseSummarySchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   nameI18n: LocalizedFieldSchema.optional(),
-  description: z.string().optional().nullable(), // Nullable from DB
+  description: z.string().optional().nullable(),
   descriptionI18n: LocalizedFieldSchema.optional(),
   resolvedLocale: LocaleSchema.optional(),
   isFallback: z.boolean().optional(),
   status: CourseStatusSchema.default('draft'),
-  createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
+  createdAt: z.date().or(z.string().datetime()),
   updatedAt: z.date().or(z.string().datetime()),
-
   startedAt: z.date().or(z.string().datetime()).nullable().optional(),
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
   status_history: z.array(StatusHistoryEventSchema).optional(),
@@ -53,9 +57,9 @@ export const CourseUpdateRequestSchema = z.object({
   sourceLocale: LocaleSchema.optional(),
   name: z
     .string()
-    .min(1, 'Název kurzu nesmí být prázdný')
+    .min(1, courseNameRequiredMessage)
     .refine((val) => val.trim().length > 0, {
-      message: 'Název kurzu nesmí být prázdný',
+      message: courseNameRequiredMessage,
     })
     .optional(),
   nameI18n: LocalizedFieldSchema.optional(),
@@ -81,7 +85,7 @@ export const CourseDetailSchema = z.object({
   status_history: z.array(StatusHistoryEventSchema).optional(),
   startedAt: z.date().or(z.string().datetime()).nullable().optional(),
   scheduledFor: z.date().or(z.string().datetime()).nullable().optional(),
-  createdAt: z.date().or(z.string().datetime()), // Date from DB, string from API
+  createdAt: z.date().or(z.string().datetime()),
   updatedAt: z.date().or(z.string().datetime()),
 }).merge(LocalizedEntityMetaSchema)
 

@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { z } from 'zod'
 import {
   LocaleSchema,
@@ -5,6 +6,33 @@ import {
   LocalizedFieldSchema,
   LocalizedQuestionSchema,
 } from './i18n'
+
+const quizDifficultyRequiredMessage = i18n.t(
+  'validation.quizDifficultyRequired',
+  { ns: 'common' },
+)
+const quizQuestionRequiredMessage = i18n.t(
+  'validation.quizQuestionRequired',
+  { ns: 'common' },
+)
+const quizAnswerRequiredMessage = i18n.t('validation.quizAnswerRequired', {
+  ns: 'common',
+})
+const quizAtLeastOneAnswerMessage = i18n.t(
+  'validation.quizAtLeastOneAnswer',
+  { ns: 'common' },
+)
+const quizAtLeastOneCorrectAnswerMessage = i18n.t(
+  'validation.quizAtLeastOneCorrectAnswer',
+  { ns: 'common' },
+)
+const quizTitleRequiredMessage = i18n.t('validation.quizTitleRequired', {
+  ns: 'common',
+})
+const quizAtLeastOneQuestionMessage = i18n.t(
+  'validation.quizAtLeastOneQuestion',
+  { ns: 'common' },
+)
 
 export const QuizDifficultySchema = z.enum([
   'beginner',
@@ -17,12 +45,12 @@ export const QuizDifficultySchema = z.enum([
 const QuizDifficultyValidationSchema = z.enum(
   ['beginner', 'easy', 'medium', 'hard', 'extreme'],
   {
-    message: 'Vyberte obtížnost kvízu',
+    message: quizDifficultyRequiredMessage,
   },
 )
 
 export const SingleChoiceQuestionSchema = z.object({
-  uuid: z.string().uuid().optional(), // Optional on create
+  uuid: z.string().uuid().optional(),
   type: z.literal('singleChoice'),
   question: z.string(),
   options: z.array(z.string()),
@@ -30,7 +58,7 @@ export const SingleChoiceQuestionSchema = z.object({
 })
 
 export const MultipleChoiceQuestionSchema = z.object({
-  uuid: z.string().uuid().optional(), // Optional on create
+  uuid: z.string().uuid().optional(),
   type: z.literal('multipleChoice'),
   question: z.string(),
   options: z.array(z.string()),
@@ -42,24 +70,25 @@ export const QuestionSchema = z.discriminatedUnion('type', [
   MultipleChoiceQuestionSchema,
 ])
 
-export const QuizSchema = z.object({
-  uuid: z.string().uuid().optional(),
-  title: z.string(),
-  titleI18n: LocalizedFieldSchema.optional(),
-  questionsI18n: z.array(LocalizedQuestionSchema).optional(),
-  resolvedLocale: LocaleSchema.optional(),
-  isFallback: z.boolean().optional(),
-  difficulty: QuizDifficultySchema.default('beginner'),
-  attemptsCount: z.number().int().optional(),
-  averagePercentage: z.number().min(0).max(100).nullable().optional(),
-  questions: z.array(QuestionSchema),
-}).merge(LocalizedEntityMetaSchema)
+export const QuizSchema = z
+  .object({
+    uuid: z.string().uuid().optional(),
+    title: z.string(),
+    titleI18n: LocalizedFieldSchema.optional(),
+    questionsI18n: z.array(LocalizedQuestionSchema).optional(),
+    resolvedLocale: LocaleSchema.optional(),
+    isFallback: z.boolean().optional(),
+    difficulty: QuizDifficultySchema.default('beginner'),
+    attemptsCount: z.number().int().optional(),
+    averagePercentage: z.number().min(0).max(100).nullable().optional(),
+    questions: z.array(QuestionSchema),
+  })
+  .merge(LocalizedEntityMetaSchema)
 
 export const QuizAnswerSchema = z.object({
   uuid: z.string().uuid(),
   selectedIndex: z.number().int().optional(),
   selectedIndices: z.array(z.number().int()).optional(),
-  // comment: z.string().optional(),
 })
 
 export const QuizSubmitRequestSchema = z.object({
@@ -94,20 +123,20 @@ export const SingleChoiceQuestionValidationSchema = z.object({
   type: z.literal('singleChoice'),
   question: z
     .string()
-    .min(1, 'Otázka nesmí být prázdná')
+    .min(1, quizQuestionRequiredMessage)
     .refine((val) => val.trim().length > 0, {
-      message: 'Otázka nesmí být prázdná',
+      message: quizQuestionRequiredMessage,
     }),
   options: z
     .array(
       z
         .string()
-        .min(1, 'Odpověď nesmí být prázdná')
+        .min(1, quizAnswerRequiredMessage)
         .refine((val) => val.trim().length > 0, {
-          message: 'Odpověď nesmí být prázdná',
+          message: quizAnswerRequiredMessage,
         }),
     )
-    .min(1, 'Musí být alespoň jedna odpověď'),
+    .min(1, quizAtLeastOneAnswerMessage),
   correctIndex: z.number().int().min(0),
 })
 
@@ -116,23 +145,23 @@ export const MultipleChoiceQuestionValidationSchema = z.object({
   type: z.literal('multipleChoice'),
   question: z
     .string()
-    .min(1, 'Otázka nesmí být prázdná')
+    .min(1, quizQuestionRequiredMessage)
     .refine((val) => val.trim().length > 0, {
-      message: 'Otázka nesmí být prázdná',
+      message: quizQuestionRequiredMessage,
     }),
   options: z
     .array(
       z
         .string()
-        .min(1, 'Odpověď nesmí být prázdná')
+        .min(1, quizAnswerRequiredMessage)
         .refine((val) => val.trim().length > 0, {
-          message: 'Odpověď nesmí být prázdná',
+          message: quizAnswerRequiredMessage,
         }),
     )
-    .min(1, 'Musí být alespoň jedna odpověď'),
+    .min(1, quizAtLeastOneAnswerMessage),
   correctIndices: z
     .array(z.number().int())
-    .min(1, 'Musí být alespoň jedna správná odpověď'),
+    .min(1, quizAtLeastOneCorrectAnswerMessage),
 })
 
 export const QuestionValidationSchema = z.discriminatedUnion('type', [
@@ -144,16 +173,16 @@ export const QuizValidationSchema = z.object({
   uuid: z.string().optional(),
   title: z
     .string()
-    .min(1, 'Název kvízu nesmí být prázdný')
+    .min(1, quizTitleRequiredMessage)
     .refine((val) => val.trim().length > 0, {
-      message: 'Název kvízu nesmí být prázdný',
+      message: quizTitleRequiredMessage,
     }),
   difficulty: QuizDifficultyValidationSchema.default('beginner'),
   attemptsCount: z.number().int().optional(),
   averagePercentage: z.number().min(0).max(100).nullable().optional(),
   questions: z
     .array(QuestionValidationSchema)
-    .min(1, 'Musí být alespoň jedna otázka'),
+    .min(1, quizAtLeastOneQuestionMessage),
 })
 
 export const QuestionAnalyticsSchema = z.object({
@@ -173,6 +202,7 @@ export const QuizAnalyticsResponseSchema = z.object({
   averagePercentage: z.number().min(0),
   questionAnalytics: z.array(QuestionAnalyticsSchema),
 })
+
 export type SingleChoiceQuestion = z.infer<typeof SingleChoiceQuestionSchema>
 export type MultipleChoiceQuestion = z.infer<
   typeof MultipleChoiceQuestionSchema

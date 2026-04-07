@@ -12,6 +12,8 @@ const common = {
   },
   errors: {
     connection: 'Connection error',
+    exportFailed: 'Export failed',
+    invalidUrl: 'Invalid URL',
   },
   organizationAccess: {
     inactive: 'The organization was temporarily suspended. Access has ended.',
@@ -28,6 +30,29 @@ const common = {
   },
   search: {
     placeholder: 'Search...',
+  },
+  pagination: {
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+  },
+  summary: {
+    showMore: 'Show more',
+    showLess: 'Show less',
+  },
+  courseStatus: {
+    draft: 'Draft',
+    planned: 'Planned',
+    live: 'Active',
+    paused: 'Paused',
+    archived: 'Archived',
+  },
+  courseDate: {
+    newCourse: 'New course',
+    created: 'Created',
+    starts: 'Starts',
+    runningSince: 'Running since',
+    paused: 'Paused',
+    completed: 'Completed',
   },
   stateComp: {
     emptySearch: {
@@ -51,6 +76,17 @@ const common = {
       action: 'Try again',
     },
   },
+  feedItem: {
+    manualLabel: 'Post',
+    eventLabel: 'Event',
+    editedAt: 'edited {{date}}',
+    saveAria: 'Save post',
+    editAria: 'Edit post',
+    deleteAria: 'Delete post',
+    itemType: 'post',
+    placeholder: 'Post text',
+    messageRequired: 'Post must not be empty',
+  },
   materialCard: {
     linkCopied: 'Link copied',
     copyFailed: 'Failed to copy',
@@ -72,6 +108,7 @@ const common = {
     currentFile: 'Current file:',
     downloadableFile: 'Downloadable file:',
     linkLabel: 'Link:',
+    urlPlaceholder: 'https://example.com',
   },
   quizComponent: {
     unsaved: 'Unsaved',
@@ -123,6 +160,25 @@ const common = {
     allOptionsRequired: 'All options must be filled in',
     addOptionAria: 'Add a new option to question {{index}}',
     addOption: 'Add option',
+  },
+  quizOption: {
+    placeholder: 'Enter an option',
+    removeAria: 'Remove option {{index}}',
+    choiceAria: 'Option {{index}}: {{option}}',
+  },
+  validation: {
+    courseNameRequired: 'Course name must not be empty',
+    moduleIdsDuplicate: 'Module list contains duplicates',
+    materialNameRequired: 'Name is required',
+    materialUrlRequired: 'URL cannot be empty',
+    materialUrlInvalid: 'Invalid URL format',
+    quizDifficultyRequired: 'Select quiz difficulty',
+    quizQuestionRequired: 'Question must not be empty',
+    quizAnswerRequired: 'Answer must not be empty',
+    quizAtLeastOneAnswer: 'At least one answer is required',
+    quizAtLeastOneCorrectAnswer: 'At least one correct answer is required',
+    quizTitleRequired: 'Quiz title must not be empty',
+    quizAtLeastOneQuestion: 'At least one question is required',
   },
   deleteConfirm: {
     itemTypeDefault: 'item',

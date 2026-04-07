@@ -63,6 +63,7 @@ const dashboard = {
     },
     card: {
       breadcrumbRoot: 'Course management',
+      breadcrumbCurrent: 'Course details',
       saveMobile: 'Save',
       saveDesktop: 'Save changes',
       name: 'Name',
@@ -175,6 +176,7 @@ const dashboard = {
     planning: {
       saveAriaLabel: 'Save course',
       cancelAriaLabel: 'Cancel edits',
+      editDateTimeAria: 'Edit date and time',
     },
     leaderboard: {
       title: 'Student leaderboard',

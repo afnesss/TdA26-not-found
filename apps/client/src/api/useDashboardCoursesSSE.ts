@@ -1,4 +1,5 @@
 import { pendingCloneIds } from '@/api/pendingCloneIds'
+import i18n from '@/i18n'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseDetail, CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
@@ -59,7 +60,12 @@ export const useDashboardCoursesSSE = (orgSlug?: string) => {
         )
       })
 
-      toast.info(`Kurz ${startedCourse.name} byl automaticky spuštěn`)
+      toast.info(
+        i18n.t('toasts.sse.courseAutoStarted', {
+          ns: 'dashboard',
+          name: startedCourse.name,
+        }),
+      )
     })
 
     eventSource.addEventListener('material_interaction_updated', (event) => {

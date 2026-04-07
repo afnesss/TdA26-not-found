@@ -1,4 +1,5 @@
 import type { FilterIds } from '@/lib/constants'
+import i18n from '@/i18n'
 import { type CourseSummary } from '@/lib/schemas'
 import type { QueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
@@ -153,7 +154,9 @@ export const sortCoursesByFilter = (
 
 export const onError = (error: ApiError, message: string) => {
   if (error?.isNetworkError) {
-    toast.error(error.body?.message || 'Chyba připojení')
+    toast.error(
+      error.body?.message || i18n.t('errors.connection', { ns: 'common' }),
+    )
   } else {
     toast.error(error.body?.message || message)
   }

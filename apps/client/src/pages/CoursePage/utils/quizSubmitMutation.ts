@@ -1,4 +1,5 @@
 import { submitQuiz } from '@/api/queries/quizQueries'
+import i18n from '@/i18n'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   type CourseDetail,
@@ -92,7 +93,7 @@ export function useQuizSubmitMutation(
     onError: (error, variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při odesílání kvízu',
+        i18n.t('toasts.quiz.submitError', { ns: 'dashboard' }),
         queryClient,
         ['course', variables.courseId],
         context?.previousData,
@@ -136,7 +137,7 @@ export function useQuizSubmitMutation(
           queryKey: ['org-auth', orgSlug],
         })
       }
-      toast.success('Kvíz byl odeslán')
+      toast.success(i18n.t('quizComponent.submitted', { ns: 'common' }))
     },
   })
 

@@ -1,4 +1,5 @@
 import { createQuiz, deleteQuiz, updateQuiz } from '@/api/queries/quizQueries'
+import i18n from '@/i18n'
 import type { Quiz } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -48,7 +49,7 @@ export const useUpdateQuizMutation = (courseId: string, moduleId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
       queryClient.invalidateQueries({ queryKey: moduleQueryKey })
-      toast.success('Kvíz aktualizován')
+      toast.success(i18n.t('toasts.quiz.updated', { ns: 'dashboard' }))
     },
     onError: (
       error: ApiError,
@@ -57,7 +58,7 @@ export const useUpdateQuizMutation = (courseId: string, moduleId: string) => {
     ) => {
       onErrorWithRollback(
         error,
-        'Chyba při ukládání',
+        i18n.t('toasts.quiz.updateError', { ns: 'dashboard' }),
         queryClient,
         quizzesQueryKey,
         context?.previousQuizzes,
@@ -84,7 +85,7 @@ export const useCreateQuizMutation = (
       queryClient.invalidateQueries({ queryKey: moduleQueryKey })
 
       setDraftQuiz(null)
-      toast.success('Kvíz vytvořen')
+      toast.success(i18n.t('toasts.quiz.created', { ns: 'dashboard' }))
     },
     onMutate: async (data: Quiz) => {
       await queryClient.cancelQueries({ queryKey: quizzesQueryKey })
@@ -110,7 +111,7 @@ export const useCreateQuizMutation = (
     ) => {
       onErrorWithRollback(
         error,
-        'Chyba při vytváření kvízu',
+        i18n.t('toasts.quiz.createError', { ns: 'dashboard' }),
         queryClient,
         quizzesQueryKey,
         context?.previousQuizzes,
@@ -133,7 +134,7 @@ export const useDeleteQuizMutation = (courseId: string, moduleId: string) => {
       queryClient.invalidateQueries({ queryKey: quizzesQueryKey })
       queryClient.invalidateQueries({ queryKey: moduleQueryKey })
 
-      toast.success('Kvíz smazán')
+      toast.success(i18n.t('toasts.quiz.deleted', { ns: 'dashboard' }))
     },
     onMutate: async (quizId) => {
       await queryClient.cancelQueries({ queryKey: quizzesQueryKey })
@@ -153,7 +154,7 @@ export const useDeleteQuizMutation = (courseId: string, moduleId: string) => {
     ) => {
       onErrorWithRollback(
         error,
-        'Chyba při mazání kvízu',
+        i18n.t('toasts.quiz.deleteError', { ns: 'dashboard' }),
         queryClient,
         quizzesQueryKey,
         context?.previousQuizzes,

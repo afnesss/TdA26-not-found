@@ -1,4 +1,5 @@
 import { createPost, deletePost, updatePost } from '@/api/queries/feedQueries'
+import i18n from '@/i18n'
 import { getStoredUiLocale } from '@/lib/i18n'
 import type { ApiError } from '@/lib/types'
 import {
@@ -77,13 +78,13 @@ export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
     },
     onSuccess: () => {
       invalidateQueries(queryClient, courseId, orgSlug)
-      toast.success('Příspěvek vytvořen')
+      toast.success(i18n.t('toasts.feed.created', { ns: 'dashboard' }))
     },
 
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při vytváření příspěvku',
+        i18n.t('toasts.feed.createError', { ns: 'dashboard' }),
         queryClient,
         ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,
@@ -133,13 +134,13 @@ export const useUpdatePostMutation = (courseId: string, orgSlug?: string) => {
     },
     onSuccess: () => {
       invalidateQueries(queryClient, courseId, orgSlug)
-      toast.success('Příspěvek uložen')
+      toast.success(i18n.t('toasts.feed.updated', { ns: 'dashboard' }))
     },
 
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při ukládání příspěvku',
+        i18n.t('toasts.feed.updateError', { ns: 'dashboard' }),
         queryClient,
         ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,
@@ -186,12 +187,12 @@ export const useDeletePostMutation = (courseId: string, orgSlug?: string) => {
     },
     onSuccess: () => {
       invalidateQueries(queryClient, courseId, orgSlug)
-      toast.success('Příspěvek smazán')
+      toast.success(i18n.t('toasts.feed.deleted', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při mazání příspěvku',
+        i18n.t('toasts.feed.deleteError', { ns: 'dashboard' }),
         queryClient,
         ['feed-paginated', orgSlug, courseId],
         context?.previousFeed,

@@ -12,6 +12,10 @@ const header = {
     signOut: 'Sign out',
     createOrganization: 'Create organization',
   },
+  toasts: {
+    logoutSuccess: 'Signed out successfully',
+    logoutError: 'Failed to sign out',
+  },
 } as const
 
 export default header

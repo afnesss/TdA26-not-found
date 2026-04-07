@@ -3,6 +3,7 @@ import {
   deleteMaterial,
   updateMaterial,
 } from '@/api/queries/materialQueries'
+import i18n from '@/i18n'
 import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Material } from '@/lib/schemas'
@@ -32,7 +33,9 @@ const validateFileSize = (file?: File): void => {
     throw {
       status: 400,
       statusText: 'Bad Request',
-      body: { message: 'Soubor je příliš velký (max 30MB)' },
+      body: {
+        message: i18n.t('toasts.material.fileTooLarge', { ns: 'dashboard' }),
+      },
     }
   }
 }
@@ -126,12 +129,12 @@ export const useUpdateMutation = (courseId: string, moduleId: string) => {
         )
       })
       invalidateQueries(courseId, moduleId, queryClient)
-      toast.success('Materiál aktualizován')
+      toast.success(i18n.t('toasts.material.updated', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při aktualizaci materiálu',
+        i18n.t('toasts.material.updateError', { ns: 'dashboard' }),
         queryClient,
         materialsQueryKey,
         context?.previousMaterials,
@@ -192,12 +195,13 @@ export const useCreateMutation = (
       queryClient.invalidateQueries({ queryKey: materialsQueryKey })
       setDraftMaterial(null)
       invalidateQueries(courseId, moduleId, queryClient)
-      toast.success('Materiál vytvořen')
+      toast.success(i18n.t('toasts.material.created', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        error.body?.message || 'Chyba při vytváření materiálu',
+        error.body?.message ||
+          i18n.t('toasts.material.createError', { ns: 'dashboard' }),
         queryClient,
         materialsQueryKey,
         context?.previousMaterials,
@@ -241,12 +245,12 @@ export const useDeleteMaterialMutation = (
         queryKey: materialsQueryKey,
       })
       invalidateQueries(courseId, moduleId, queryClient)
-      toast.success('Materiál smazán')
+      toast.success(i18n.t('toasts.material.deleted', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při mazání materiálu',
+        i18n.t('toasts.material.deleteError', { ns: 'dashboard' }),
         queryClient,
         materialsQueryKey,
         context?.previousMaterials,

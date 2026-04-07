@@ -106,7 +106,7 @@ export default function Header() {
       if (effectiveOrgSlug && isOrgAuth) {
         await organizationLogout(effectiveOrgSlug)
         queryClient.setQueryData(['org-auth', effectiveOrgSlug], null)
-        toast.success('Odhlášení úspěšné')
+        toast.success(t('toasts.logoutSuccess'))
         navigate(buildOrgLoginPath(effectiveOrgSlug))
         return
       }
@@ -114,11 +114,11 @@ export default function Header() {
       if (isAdminAuth) {
         await adminLogout()
         queryClient.setQueryData(['auth', 'me'], null)
-        toast.success('Odhlášení úspěšné')
+        toast.success(t('toasts.logoutSuccess'))
         navigate('/admin/login')
       }
     } catch {
-      toast.error('Chyba při odhlašování')
+      toast.error(t('toasts.logoutError'))
     }
   }
 

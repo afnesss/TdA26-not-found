@@ -3,14 +3,18 @@ const header = {
     shop: 'Shop',
     courses: 'Kurzy',
     dashboard: 'Dashboard',
-    requests: 'Žádosti',
+    requests: 'Zadosti',
     organizations: 'Organizace',
     menu: 'Menu',
   },
   actions: {
-    signIn: 'Přihlásit se',
-    signOut: 'Odhlásit se',
-    createOrganization: 'Založit organizaci',
+    signIn: 'Prihlasit se',
+    signOut: 'Odhlasit se',
+    createOrganization: 'Zalozit organizaci',
+  },
+  toasts: {
+    logoutSuccess: 'Odhlaseni uspesne',
+    logoutError: 'Chyba pri odhlasovani',
   },
 } as const
 

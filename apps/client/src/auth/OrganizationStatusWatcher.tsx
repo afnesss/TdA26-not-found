@@ -9,6 +9,7 @@ import {
 import type { ApiError } from '@/lib/types'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -20,6 +21,7 @@ const OrganizationStatusWatcher = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const handledRef = useRef(false)
+  const { t } = useTranslation('common')
 
   const isLoginPath = location.pathname === `/${orgSlug}/login`
   const isPasswordPath = location.pathname === `/${orgSlug}/settings/password`
@@ -38,7 +40,7 @@ const OrganizationStatusWatcher = () => {
       void organizationLogout(orgSlug).catch(() => undefined)
 
       if (showToast) {
-        toast.error('Organizace byla dočasně pozastavena. Přístup byl ukončen.', {
+        toast.error(t('organizationAccess.inactive'), {
           id: `org-inactive-${orgSlug}`,
           duration: 5000,
         })
@@ -46,7 +48,7 @@ const OrganizationStatusWatcher = () => {
 
       navigate('/', { replace: true })
     },
-    [navigate, orgSlug, queryClient],
+    [navigate, orgSlug, queryClient, t],
   )
 
   const { data, error } = useQuery({

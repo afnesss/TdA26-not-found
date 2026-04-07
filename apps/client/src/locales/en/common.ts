@@ -10,6 +10,12 @@ const common = {
     loading: 'Loading...',
     empty: 'No data available.',
   },
+  errors: {
+    connection: 'Connection error',
+  },
+  organizationAccess: {
+    inactive: 'The organization was temporarily suspended. Access has ended.',
+  },
   materialCard: {
     linkCopied: 'Link copied',
     copyFailed: 'Failed to copy',
@@ -52,6 +58,7 @@ const common = {
     addQuestionAria: 'Add a new question',
     addQuestion: 'Add question',
     answerAllQuestions: 'Please answer all questions',
+    submitted: 'Quiz submitted',
     saveChanges: 'Save changes',
     titlePlaceholder: 'Enter quiz title',
     cancelDraftAria: 'Cancel quiz draft',

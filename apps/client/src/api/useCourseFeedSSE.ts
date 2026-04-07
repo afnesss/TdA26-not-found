@@ -5,6 +5,7 @@ import type {
   FeedItem,
 } from '@/lib/schemas'
 import { buildOrgApiPrefix } from '@/lib/routes'
+import i18n from '@/i18n'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -224,9 +225,19 @@ export const useCourseFeedSSE = ({
       if (isDev) console.log('Course updated:', updatedCourse)
 
       if (showSseToasts && updatedCourse.status === 'paused') {
-        toast.info(`Kurz "${updatedCourse.name}" byl pozastaven lektorem`)
+        toast.info(
+          i18n.t('toasts.sse.coursePausedByInstructor', {
+            ns: 'dashboard',
+            name: updatedCourse.name,
+          }),
+        )
       } else if (showSseToasts && updatedCourse.status === 'archived') {
-        toast.info(`Kurz "${updatedCourse.name}" byl ukončen lektorem`)
+        toast.info(
+          i18n.t('toasts.sse.courseArchivedByInstructor', {
+            ns: 'dashboard',
+            name: updatedCourse.name,
+          }),
+        )
       }
 
       queryClient.setQueryData<CourseDetail>(
@@ -266,8 +277,13 @@ export const useCourseFeedSSE = ({
       ) {
         toast.info(
           removedCourseName
-            ? `Kurz "${removedCourseName}" byl odstraněn lektorem`
-            : 'Kurz byl odstraněn lektorem',
+            ? i18n.t('toasts.sse.courseRemovedByInstructorNamed', {
+                ns: 'dashboard',
+                name: removedCourseName,
+              })
+            : i18n.t('toasts.sse.courseRemovedByInstructorUnnamed', {
+                ns: 'dashboard',
+              }),
         )
       }
 

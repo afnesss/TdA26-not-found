@@ -1,4 +1,5 @@
 import type { ApiError } from '@/lib/types'
+import i18n from '@/i18n'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import {
   cloneCourse,
@@ -62,12 +63,12 @@ export const useDeleteCourseMutation = (orgSlug?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] })
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
-      toast.success('Kurz smazán')
+      toast.success(i18n.t('toasts.course.deleted', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při mazání kurzu',
+        i18n.t('toasts.course.deleteError', { ns: 'dashboard' }),
         queryClient,
         ['courses'],
         context?.previousCourses,
@@ -171,7 +172,7 @@ export const useCloneCourseMutation = (options?: {
       if (context?.tempId) pendingCloneIds.delete(context.tempId)
       onErrorWithRollback(
         error,
-        'Chyba při kopírování kurzu',
+        i18n.t('toasts.course.copyError', { ns: 'dashboard' }),
         queryClient,
         ['courses'],
         context?.previousCourses,
@@ -248,7 +249,7 @@ export const useUpdateCourseMutation = (
         queryKey: ['course', courseId],
       })
 
-      toast.success('Kurz aktualizován')
+      toast.success(i18n.t('toasts.course.updated', { ns: 'dashboard' }))
 
       // Zavolat callback pro reset formy
       if (onSuccessCallback) {
@@ -262,7 +263,7 @@ export const useUpdateCourseMutation = (
       if (context?.previousCourse) {
         queryClient.setQueryData(['course', courseId], context.previousCourse)
       }
-      onError(error, 'Chyba při aktualizaci kurzu')
+      onError(error, i18n.t('toasts.course.updateError', { ns: 'dashboard' }))
     },
   })
 }
@@ -323,12 +324,12 @@ export const useCreateCourseMutation = (
         queryKey: ['courses-user'],
       })
       setDraftCourse(null)
-      toast.success('Kurz vytvořen')
+      toast.success(i18n.t('toasts.course.created', { ns: 'dashboard' }))
     },
     onError: (error: ApiError, _variables, context) => {
       onErrorWithRollback(
         error,
-        'Chyba při vytváření kurzu',
+        i18n.t('toasts.course.createError', { ns: 'dashboard' }),
         queryClient,
         ['courses'],
         context?.previousCourses,
@@ -353,7 +354,7 @@ export const useUpdateCourseStatusMutation = (
       await invalidateCourseQueries(queryClient, courseId)
     },
     onError: () => {
-      toast.error('Chyba při změně stavu')
+      toast.error(i18n.t('toasts.course.statusChangeError', { ns: 'dashboard' }))
     },
   })
 }
@@ -373,11 +374,11 @@ export const useImportCourseMutation = (options?: {
     onSuccess: async (courses) => {
       await queryClient.invalidateQueries({ queryKey: ['courses'] })
       await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
-      toast.success('Kurz importován')
+      toast.success(i18n.t('toasts.course.imported', { ns: 'dashboard' }))
       options?.onSuccess?.(courses)
     },
     onError: (error) => {
-      onError(error, 'Chyba při importu kurzu')
+      onError(error, i18n.t('toasts.course.importError', { ns: 'dashboard' }))
     },
   })
 }
@@ -394,14 +395,15 @@ export const useImportAllCoursesMutation = (options?: {
       await queryClient.invalidateQueries({ queryKey: ['courses'] })
       await queryClient.invalidateQueries({ queryKey: ['courses-user'] })
       toast.success(
-        courses.length === 1
-          ? '1 kurz importován'
-          : `${courses.length} kurzů importováno`,
+        i18n.t('toasts.course.importedMany', {
+          ns: 'dashboard',
+          count: courses.length,
+        }),
       )
       options?.onSuccess?.(courses)
     },
     onError: (error) => {
-      onError(error, 'Chyba při importu kurzů')
+      onError(error, i18n.t('toasts.course.importManyError', { ns: 'dashboard' }))
     },
   })
 }

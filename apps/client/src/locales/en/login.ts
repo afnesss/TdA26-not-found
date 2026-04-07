@@ -20,7 +20,7 @@ const login = {
       password: {
         label: 'Password',
         required: 'Password is required',
-        placeholder: '••••••••',
+        placeholder: '........',
       },
     },
     actions: {
@@ -48,13 +48,19 @@ const login = {
       password: {
         label: 'Password',
         required: 'Password is required',
-        placeholder: '••••••••',
+        placeholder: '........',
       },
     },
     actions: {
       submit: 'Sign in',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
+    },
+  },
+  organizationPassword: {
+    toasts: {
+      passwordChanged: 'Password changed',
+      passwordChangeError: 'Failed to change password',
     },
   },
 } as const

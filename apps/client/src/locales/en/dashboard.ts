@@ -221,4 +221,89 @@ const dashboard = {
   },
 } as const
 
+Object.assign(dashboard, {
+  toasts: {
+    sse: {
+      courseAutoStarted: 'Course {{name}} started automatically',
+      coursePausedByInstructor:
+        'Course "{{name}}" was paused by the instructor',
+      courseStarted: 'Course "{{name}}" was started',
+      courseScheduled: 'Course "{{name}}" was scheduled',
+      courseScheduleChanged: 'Course date for "{{name}}" was changed',
+      courseCompletedByInstructor:
+        'Course "{{name}}" was completed by the instructor',
+      courseDeletedByInstructorNamed:
+        'Course "{{name}}" was deleted by the instructor',
+      courseDeletedByInstructorUnnamed: 'Course was deleted by the instructor',
+      courseArchivedByInstructor:
+        'Course "{{name}}" was ended by the instructor',
+      courseRemovedByInstructorNamed:
+        'Course "{{name}}" was removed by the instructor',
+      courseRemovedByInstructorUnnamed: 'Course was removed by the instructor',
+    },
+    course: {
+      deleted: 'Course deleted',
+      deleteError: 'Failed to delete course',
+      copyError: 'Failed to copy course',
+      updated: 'Course updated',
+      updateError: 'Failed to update course',
+      created: 'Course created',
+      createError: 'Failed to create course',
+      statusChangeError: 'Failed to change status',
+      imported: 'Course imported',
+      importedMany_one: '{{count}} course imported',
+      importedMany_other: '{{count}} courses imported',
+      importError: 'Failed to import course',
+      importManyError: 'Failed to import courses',
+      planningSelectDateTime: 'Select a date and time',
+      planningInvalidDateFormat: 'Invalid date format',
+      planningDateMustBeFuture: 'Date must be in the future',
+      planned: 'Course was scheduled',
+      rescheduled: 'Course date was changed',
+      planningSaveError: 'Failed to save the course date',
+      notFound: 'Course not found',
+      statusChangeSaveError: 'Failed to change course status',
+    },
+    module: {
+      created: 'Module created',
+      createError: 'Failed to create module',
+      updated: 'Module updated',
+      updateError: 'Failed to update module',
+      deleted: 'Module deleted',
+      deleteError: 'Failed to delete module',
+      reordered: 'Module order updated',
+      reorderError: 'Failed to change module order',
+      activated: 'Module was activated successfully',
+      hidden: 'Module was hidden successfully',
+      statusError: 'Failed to change module status',
+    },
+    material: {
+      fileTooLarge: 'File is too large (max 30MB)',
+      created: 'Material created',
+      createError: 'Failed to create material',
+      updated: 'Material updated',
+      updateError: 'Failed to update material',
+      deleted: 'Material deleted',
+      deleteError: 'Failed to delete material',
+    },
+    quiz: {
+      created: 'Quiz created',
+      createError: 'Failed to create quiz',
+      updated: 'Quiz updated',
+      updateError: 'Failed to save quiz',
+      deleted: 'Quiz deleted',
+      deleteError: 'Failed to delete quiz',
+      submitError: 'Failed to submit quiz',
+    },
+    feed: {
+      created: 'Post created',
+      createError: 'Failed to create post',
+      updated: 'Post saved',
+      updateError: 'Failed to save post',
+      deleted: 'Post deleted',
+      deleteError: 'Failed to delete post',
+    },
+  },
+})
+
 export default dashboard

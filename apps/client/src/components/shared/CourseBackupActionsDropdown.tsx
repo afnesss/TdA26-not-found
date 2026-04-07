@@ -18,6 +18,7 @@ import { useImportCourseMutation } from '@/pages/CoursePage/utils/useCourseMutat
 import { useQueryClient } from '@tanstack/react-query'
 import { Download, FolderInput, Upload } from 'lucide-react'
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { buildOrgDashboardCoursePath } from '@/lib/routes'
@@ -79,16 +80,25 @@ const CourseBackupActionsDropdown = ({
   menuLabel = 'Export a import',
   exportLabel = 'Exportovat vše',
   importLabel = 'Importovat kurzy',
-  invalidJsonMessage = 'Vyber JSON zálohu',
-  duplicateCourseMessage = (courseId: string) =>
-    `Kurz s ID ${courseId} už existuje`,
-  exportSuccessMessage = 'Všechny kurzy byly exportovány',
-  exportErrorMessage = 'Nepodařilo se exportovat všechny kurzy',
+  invalidJsonMessage,
+  duplicateCourseMessage,
+  exportSuccessMessage,
+  exportErrorMessage,
 }: CourseBackupActionsDropdownProps) => {
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const { t } = useTranslation('dashboard')
+  const resolvedInvalidJsonMessage =
+    invalidJsonMessage ?? t('backup.invalidJsonMessage')
+  const resolvedDuplicateCourseMessage =
+    duplicateCourseMessage ??
+    ((courseId: string) => t('backup.duplicateCourseMessage', { courseId }))
+  const resolvedExportSuccessMessage =
+    exportSuccessMessage ?? t('backup.exportSuccessMessage')
+  const resolvedExportErrorMessage =
+    exportErrorMessage ?? t('backup.exportErrorMessage')
   const { mutateAsync: importCourses, isPending: importing } =
     useImportCourseMutation({
       onSuccess: (courses) => {
@@ -110,7 +120,7 @@ const CourseBackupActionsDropdown = ({
   const handleJsonFile = async (file: File | undefined) => {
     if (!file) return
     if (!file.name.toLowerCase().endsWith('.json')) {
-      toast.error(invalidJsonMessage)
+      toast.error(resolvedInvalidJsonMessage)
       return
     }
 
@@ -124,7 +134,7 @@ const CourseBackupActionsDropdown = ({
       )
 
       if (duplicateCourseId) {
-        toast.error(duplicateCourseMessage(duplicateCourseId))
+        toast.error(resolvedDuplicateCourseMessage(duplicateCourseId))
         return
       }
     } catch {
@@ -172,9 +182,9 @@ const CourseBackupActionsDropdown = ({
                 try {
                   const blob = await exportAllCourses(orgSlug)
                   downloadBlob(blob, 'all-courses-backup.json')
-                  toast.success(exportSuccessMessage)
+                  toast.success(resolvedExportSuccessMessage)
                 } catch {
-                  toast.error(exportErrorMessage)
+                  toast.error(resolvedExportErrorMessage)
                 }
               })()
             }}

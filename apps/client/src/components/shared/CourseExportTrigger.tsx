@@ -13,6 +13,7 @@ import {
   type PointerEvent,
   type SyntheticEvent,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { useParams } from 'react-router'
@@ -58,11 +59,15 @@ const CourseExportTrigger = ({
   label,
   triggerAriaLabel = 'Export kurzu',
   itemLabel = 'Exportovat zálohu JSON',
-  successMessage = 'Kurz byl exportován do JSON zálohy',
-  errorMessage = 'Nepodařilo se exportovat kurz',
+  successMessage,
+  errorMessage,
 }: CourseExportTriggerProps) => {
   const [isExporting, setIsExporting] = useState(false)
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const { t } = useTranslation('dashboard')
+  const resolvedSuccessMessage =
+    successMessage ?? t('courseOverview.export.success')
+  const resolvedErrorMessage = errorMessage ?? t('courseOverview.export.error')
 
   const stopCardClick = (
     event?: Event | MouseEvent | PointerEvent | SyntheticEvent,
@@ -81,9 +86,9 @@ const CourseExportTrigger = ({
       const blob = await exportCourse(courseId, 'json', orgSlug)
       const safeCourseName = slugifyFilePart(courseName) || 'course'
       downloadBlob(blob, `${safeCourseName}-backup.json`)
-      toast.success(successMessage)
+      toast.success(resolvedSuccessMessage)
     } catch {
-      toast.error(errorMessage)
+      toast.error(resolvedErrorMessage)
     } finally {
       setIsExporting(false)
     }

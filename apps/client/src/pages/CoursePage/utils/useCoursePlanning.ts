@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import i18n from '@/i18n'
 import { toast } from 'sonner'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas'
 import { updateCourse } from '@/api/queries/courseQueries'
@@ -57,7 +58,9 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
     if (!planningCourseId) return
 
     if (!planningDateTime) {
-      const message = 'Vyberte datum a čas'
+      const message = i18n.t('toasts.course.planningSelectDateTime', {
+        ns: 'dashboard',
+      })
       setPlanningError(message)
       toast.error(message)
       return
@@ -65,7 +68,9 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
 
     const selectedDate = new Date(planningDateTime)
     if (Number.isNaN(selectedDate.getTime())) {
-      const message = 'Neplatný formát data'
+      const message = i18n.t('toasts.course.planningInvalidDateFormat', {
+        ns: 'dashboard',
+      })
       setPlanningError(message)
       toast.error(message)
       return
@@ -73,7 +78,9 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
 
     const now = new Date()
     if (selectedDate <= now) {
-      const message = 'Datum musí být v budoucnosti'
+      const message = i18n.t('toasts.course.planningDateMustBeFuture', {
+        ns: 'dashboard',
+      })
       setPlanningError(message)
       toast.error(message)
       return
@@ -97,14 +104,14 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
 
       toast.success(
         planningNeedsStatusUpdate
-          ? 'Kurz byl naplánován'
-          : 'Termín kurzu byl změněn',
+          ? i18n.t('toasts.course.planned', { ns: 'dashboard' })
+          : i18n.t('toasts.course.rescheduled', { ns: 'dashboard' }),
       )
 
       onSuccess?.()
       closePlanningEditor()
     } catch {
-      toast.error('Nepodařilo se uložit termín kurzu')
+      toast.error(i18n.t('toasts.course.planningSaveError', { ns: 'dashboard' }))
       setPlanningSaving(false)
     }
   }
@@ -136,17 +143,19 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
     courses?: CourseSummary[],
   ) => {
     const statusMessages: Record<CourseStatus, string> = {
-      draft: 'Kurz byl převeden do návrhu',
-      planned: 'Kurz byl naplánován',
-      live: 'Kurz byl spuštěn',
-      paused: 'Kurz byl pozastaven',
-      archived: 'Kurz byl archivován',
+      draft: i18n.t('courseOverview.statusChanged.draft', { ns: 'dashboard' }),
+      planned: i18n.t('courseOverview.statusChanged.planned', { ns: 'dashboard' }),
+      live: i18n.t('courseOverview.statusChanged.live', { ns: 'dashboard' }),
+      paused: i18n.t('courseOverview.statusChanged.paused', { ns: 'dashboard' }),
+      archived: i18n.t('courseOverview.statusChanged.archived', {
+        ns: 'dashboard',
+      }),
     }
 
     if (newStatus === 'planned') {
       const course = courses?.find((c) => c.uuid === courseId)
       if (!course) {
-        toast.error('Kurz nebyl nalezen')
+        toast.error(i18n.t('toasts.course.notFound', { ns: 'dashboard' }))
         return
       }
       openPlanningEditor(course, true)
@@ -162,7 +171,9 @@ export function useCoursePlanning(options: UseCoursePlanningOptions = {}) {
       }
       toast.success(statusMessages[newStatus])
     } catch {
-      toast.error('Nepodařilo se změnit stav kurzu')
+      toast.error(
+        i18n.t('toasts.course.statusChangeSaveError', { ns: 'dashboard' }),
+      )
     }
   }
 

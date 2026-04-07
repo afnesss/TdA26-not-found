@@ -1,60 +1,66 @@
 const login = {
   shell: {
-    eyebrow: 'Začněte svou cestu',
+    eyebrow: 'Zacnete svou cestu',
     title: {
-      underlined: 'Vítejte zpět v',
+      underlined: 'Vitejte zpet v',
       highlighted: 'Think Different Academy',
     },
   },
   admin: {
-    pageTitle: 'Přihlášení',
-    cardTitle: 'Přihlášení správce platformy',
-    success: 'Přihlášení úspěšné',
-    failure: 'Přihlášení se nepodařilo',
+    pageTitle: 'Prihlaseni',
+    cardTitle: 'Prihlaseni spravce platformy',
+    success: 'Prihlaseni uspesne',
+    failure: 'Prihlaseni se nezdarilo',
     fields: {
       name: {
-        label: 'Jméno',
-        required: 'Jméno je povinné',
-        placeholder: 'Přihlašovací jméno správce',
+        label: 'Jmeno',
+        required: 'Jmeno je povinne',
+        placeholder: 'Prihlasovaci jmeno spravce',
       },
       password: {
         label: 'Heslo',
-        required: 'Heslo je povinné',
-        placeholder: '••••••••',
+        required: 'Heslo je povinne',
+        placeholder: '........',
       },
     },
     actions: {
-      submit: 'Přihlásit se',
+      submit: 'Prihlasit se',
       showPassword: 'Zobrazit heslo',
-      hidePassword: 'Skrýt heslo',
+      hidePassword: 'Skryt heslo',
     },
   },
   organization: {
-    pageTitle: 'Přihlášení organizace',
-    cardTitle: 'Přihlášení',
-    success: 'Přihlášení úspěšné',
-    failure: 'Nepodařilo se přihlásit',
+    pageTitle: 'Prihlaseni organizace',
+    cardTitle: 'Prihlaseni',
+    success: 'Prihlaseni uspesne',
+    failure: 'Nepodarilo se prihlasit',
     roles: {
       lecturer: 'Lektor',
       student: 'Student',
     },
     fields: {
       username: {
-        label: 'Uživatelské jméno',
-        required: 'Jméno je povinné',
+        label: 'Uzivatelske jmeno',
+        required: 'Jmeno je povinne',
         lecturerPlaceholder: 'Lektor',
         studentPlaceholder: 'Student',
       },
       password: {
         label: 'Heslo',
-        required: 'Heslo je povinné',
-        placeholder: '••••••••',
+        required: 'Heslo je povinne',
+        placeholder: '........',
       },
     },
     actions: {
-      submit: 'Přihlásit se',
+      submit: 'Prihlasit se',
       showPassword: 'Zobrazit heslo',
-      hidePassword: 'Skrýt heslo',
+      hidePassword: 'Skryt heslo',
+    },
+  },
+  organizationPassword: {
+    toasts: {
+      passwordChanged: 'Heslo bylo zmeneno',
+      passwordChangeError: 'Nepodarilo se zmenit heslo',
     },
   },
 } as const

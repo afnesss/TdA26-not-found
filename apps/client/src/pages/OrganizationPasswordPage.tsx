@@ -11,6 +11,7 @@ import FormField from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgDashboardPath } from '@/lib/routes'
+import { useTranslation } from 'react-i18next'
 
 const MIN_PASSWORD_LENGTH = 8
 
@@ -19,6 +20,7 @@ const OrganizationPasswordPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { me } = useOrganizationAuth(orgSlug)
+  const { t } = useTranslation('login')
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
 
@@ -40,11 +42,11 @@ const OrganizationPasswordPage = () => {
         newPassword: String(data.newPassword ?? ''),
       })
       queryClient.setQueryData(['org-auth', orgSlug], result)
-      toast.success('Heslo bylo změněno')
+      toast.success(t('organizationPassword.toasts.passwordChanged'))
       reset()
       navigate(buildOrgDashboardPath(orgSlug))
     } catch {
-      toast.error('Nepodařilo se změnit heslo')
+      toast.error(t('organizationPassword.toasts.passwordChangeError'))
     }
   }
 

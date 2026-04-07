@@ -1,5 +1,6 @@
 import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseSummary } from '@/lib/schemas'
+import i18n from '@/i18n'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -39,23 +40,35 @@ export const useCoursesSSE = (orgSlug?: string) => {
         const exists = Boolean(existingCourse)
 
         if (newCourse.status === 'paused' && existingCourse?.status === 'live') {
-          toastMessage = `Kurz "${newCourse.name}" byl pozastaven lektorem`
+          toastMessage = i18n.t('toasts.sse.coursePausedByInstructor', {
+            ns: 'dashboard',
+            name: newCourse.name,
+          })
         } else if (
           newCourse.status === 'live' &&
           existingCourse?.status !== 'live'
         ) {
-          toastMessage = `Kurz "${newCourse.name}" byl spuštěn`
+          toastMessage = i18n.t('toasts.sse.courseStarted', {
+            ns: 'dashboard',
+            name: newCourse.name,
+          })
         } else if (
           newCourse.status === 'planned' &&
           existingCourse?.status !== 'planned'
         ) {
-          toastMessage = `Kurz "${newCourse.name}" byl naplánován`
+          toastMessage = i18n.t('toasts.sse.courseScheduled', {
+            ns: 'dashboard',
+            name: newCourse.name,
+          })
         } else if (
           newCourse.status === 'planned' &&
           existingCourse?.status === 'planned' &&
           newCourse.scheduledFor !== existingCourse.scheduledFor
         ) {
-          toastMessage = `Termín kurzu "${newCourse.name}" byl změněn`
+          toastMessage = i18n.t('toasts.sse.courseScheduleChanged', {
+            ns: 'dashboard',
+            name: newCourse.name,
+          })
         }
 
         if (newCourse.status === 'draft' || newCourse.status === 'archived')
@@ -94,12 +107,22 @@ export const useCoursesSSE = (orgSlug?: string) => {
 
       if (shouldNotify) {
         if (removedCourseName && removedCourseStatus === 'archived') {
-          toast.info(`Kurz "${removedCourseName}" byl dokončen lektorem`)
+          toast.info(
+            i18n.t('toasts.sse.courseCompletedByInstructor', {
+              ns: 'dashboard',
+              name: removedCourseName,
+            }),
+          )
         } else {
           toast.info(
             removedCourseName
-              ? `Kurz "${removedCourseName}" byl smazán lektorem`
-              : 'Kurz byl smazán lektorem',
+              ? i18n.t('toasts.sse.courseDeletedByInstructorNamed', {
+                  ns: 'dashboard',
+                  name: removedCourseName,
+                })
+              : i18n.t('toasts.sse.courseDeletedByInstructorUnnamed', {
+                  ns: 'dashboard',
+                }),
           )
         }
       }

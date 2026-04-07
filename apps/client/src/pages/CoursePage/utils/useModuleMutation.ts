@@ -4,6 +4,7 @@ import {
   reorderModules,
   updateModule,
 } from '@/api/queries/moduleQueries'
+import i18n from '@/i18n'
 import type { CourseDetail } from '@/lib/schemas'
 import type {
   ModuleCreateRequest,
@@ -141,7 +142,7 @@ export const useCreateModuleMutation = (
     onSuccess: () => {
       invalidateModuleQueries(queryClient, courseId)
       setDraftModule?.(null)
-      toast.success('Modul vytvořen')
+      toast.success(i18n.t('toasts.module.created', { ns: 'dashboard' }))
     },
     onError: (error, _variables, context) => {
       if (context?.previousCourse !== undefined) {
@@ -149,7 +150,7 @@ export const useCreateModuleMutation = (
       }
       onErrorWithRollback(
         error,
-        'Chyba při vytváření modulu',
+        i18n.t('toasts.module.createError', { ns: 'dashboard' }),
         queryClient,
         modulesQueryKey,
         context?.previousModules,
@@ -227,7 +228,7 @@ export const useUpdateModuleMutation = (courseId: string, orgSlug?: string) => {
       })
 
       invalidateModuleQueries(queryClient, courseId, moduleId)
-      toast.success('Modul aktualizován')
+      toast.success(i18n.t('toasts.module.updated', { ns: 'dashboard' }))
     },
     onError: (error, variables, context) => {
       const moduleQueryKey = getCourseModuleQueryKey(
@@ -244,7 +245,7 @@ export const useUpdateModuleMutation = (courseId: string, orgSlug?: string) => {
 
       onErrorWithRollback(
         error,
-        'Chyba při aktualizaci modulu',
+        i18n.t('toasts.module.updateError', { ns: 'dashboard' }),
         queryClient,
         modulesQueryKey,
         context?.previousModules,
@@ -299,7 +300,7 @@ export const useDeleteModuleMutation = (courseId: string, orgSlug?: string) => {
         queryKey: getCourseModuleQueryKey(courseId, moduleId),
       })
       invalidateModuleQueries(queryClient, courseId)
-      toast.success('Modul smazán')
+      toast.success(i18n.t('toasts.module.deleted', { ns: 'dashboard' }))
     },
     onError: (error, _variables, context) => {
       if (context?.previousCourse !== undefined) {
@@ -307,7 +308,7 @@ export const useDeleteModuleMutation = (courseId: string, orgSlug?: string) => {
       }
       onErrorWithRollback(
         error,
-        'Chyba při mazání modulu',
+        i18n.t('toasts.module.deleteError', { ns: 'dashboard' }),
         queryClient,
         modulesQueryKey,
         context?.previousModules,
@@ -357,7 +358,7 @@ export const useReorderModulesMutation = (courseId: string, orgSlug?: string) =>
     onSuccess: (updatedModules) => {
       queryClient.setQueryData<ModuleSummary[]>(modulesQueryKey, updatedModules)
       invalidateModuleQueries(queryClient, courseId)
-      toast.success('Pořadí modulů aktualizováno')
+      toast.success(i18n.t('toasts.module.reordered', { ns: 'dashboard' }))
     },
     onError: (error, _variables, context) => {
       if (context?.previousCourse !== undefined) {
@@ -365,7 +366,7 @@ export const useReorderModulesMutation = (courseId: string, orgSlug?: string) =>
       }
       onErrorWithRollback(
         error,
-        'Chyba při změně pořadí modulů',
+        i18n.t('toasts.module.reorderError', { ns: 'dashboard' }),
         queryClient,
         modulesQueryKey,
         context?.previousModules,
@@ -394,12 +395,12 @@ export const useToggleModuleMutation = (courseId: string, orgSlug?: string) => {
       })
       toast.success(
         variables.nextStatus === 'active'
-          ? 'Modul byl úspěšně aktivován'
-          : 'Modul byl úspěšně skryt',
+          ? i18n.t('toasts.module.activated', { ns: 'dashboard' })
+          : i18n.t('toasts.module.hidden', { ns: 'dashboard' }),
       )
     },
     onError: () => {
-      toast.error('Chyba při změně stavu modulu')
+      toast.error(i18n.t('toasts.module.statusError', { ns: 'dashboard' }))
     },
   })
 }

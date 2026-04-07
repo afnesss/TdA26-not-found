@@ -18,6 +18,7 @@ import type { ApiError } from '@/lib/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, QrCode, RefreshCw, Share2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import QRCode from 'qrcode'
 import { toast } from 'sonner'
 
@@ -119,6 +120,7 @@ const CourseShareTrigger = ({
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const queryKey = ['course-share-link', courseId]
+  const { t } = useTranslation('dashboard')
 
   const { data, isLoading, isError } = useQuery({
     queryKey,
@@ -131,13 +133,15 @@ const CourseShareTrigger = ({
     mutationFn: () => regenerateCourseShareLink(courseId, orgSlug),
     onSuccess: (nextData) => {
       queryClient.setQueryData(queryKey, nextData)
-      toast.success(labels?.regenerateSuccess ?? 'QR kód byl obnoven')
+      toast.success(
+        labels?.regenerateSuccess ?? t('courseOverview.share.regenerateSuccess'),
+      )
     },
     onError: (error: ApiError) => {
       toast.error(
         error.body?.message ??
           labels?.regenerateError ??
-          'Nepodařilo se obnovit QR kód',
+          t('courseOverview.share.regenerateError'),
       )
     },
   })
@@ -149,9 +153,9 @@ const CourseShareTrigger = ({
 
     try {
       await navigator.clipboard.writeText(shareUrl)
-      toast.success(labels?.copySuccess ?? 'Odkaz byl zkopírován')
+      toast.success(labels?.copySuccess ?? t('courseOverview.share.copySuccess'))
     } catch {
-      toast.error(labels?.copyError ?? 'Nepodařilo se zkopírovat odkaz')
+      toast.error(labels?.copyError ?? t('courseOverview.share.copyError'))
     }
   }
 

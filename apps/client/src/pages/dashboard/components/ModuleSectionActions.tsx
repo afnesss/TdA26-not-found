@@ -4,6 +4,7 @@ import DashboardAddButton from './DashboardAddButton'
 import type { CourseStatus } from '@/lib/schemas'
 import type { DraftModuleForm } from './ModuleCard'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ModulesSectionActionsProps = {
   courseStatus: CourseStatus
@@ -33,8 +34,10 @@ export const ModulesSectionActions = ({
   onAddModule,
   headerRightSlot,
   labels,
-}: ModulesSectionActionsProps) => (
-  <div className='flex items-center gap-2'>
+}: ModulesSectionActionsProps) => {
+  const { t } = useTranslation('dashboard')
+
+  return <div className='flex items-center gap-2'>
     {headerRightSlot}
     {courseStatus === 'draft' && !previewMode && (
       <Button
@@ -47,22 +50,24 @@ export const ModulesSectionActions = ({
         className='rounded-full'
         aria-label={
           isReorderMode
-            ? labels?.cancelReorder ?? 'Zrušit přeskládání'
-            : labels?.reorder ?? 'Přeskládat'
+            ? labels?.cancelReorder ??
+              t('courseOverview.modules.actions.cancelReorder')
+            : labels?.reorder ?? t('courseOverview.modules.actions.reorder')
         }
       >
         {isReorderMode ? (
           <>
             <X className='w-4 h-4' />
             <span className='hidden sm:inline'>
-              {labels?.cancelReorder ?? 'Zrušit'}
+              {labels?.cancelReorder ??
+                t('courseOverview.modules.actions.cancelReorder')}
             </span>
           </>
         ) : (
           <>
             <Menu className='w-4 h-4' />
             <span className='hidden sm:inline'>
-              {labels?.reorder ?? 'Přeskládat'}
+              {labels?.reorder ?? t('courseOverview.modules.actions.reorder')}
             </span>
           </>
         )}
@@ -70,7 +75,7 @@ export const ModulesSectionActions = ({
     )}
     {!previewMode && (
       <DashboardAddButton
-        label={labels?.addModule ?? 'Přidat modul'}
+        label={labels?.addModule ?? t('courseOverview.modules.actions.addModule')}
         className='rounded-full'
         onClick={() => {
           if (!disableActions) onAddModule()
@@ -79,4 +84,4 @@ export const ModulesSectionActions = ({
       />
     )}
   </div>
-)
+}

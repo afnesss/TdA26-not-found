@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { Filter } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,8 +47,12 @@ const FilterDropdown = <T extends string = string>({
   triggerClassName = 'bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0',
   disabled = false,
   triggerLabel,
-  triggerAriaLabel = 'Filtrovat kurzy',
+  triggerAriaLabel,
 }: FilterDropdownProps<T>) => {
+  const { t } = useTranslation('common')
+  const resolvedTriggerAriaLabel =
+    triggerAriaLabel ?? t('filters.triggerAriaLabel')
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -55,7 +60,7 @@ const FilterDropdown = <T extends string = string>({
           variant='filter'
           className={triggerClassName}
           disabled={disabled || items.length === 0}
-          aria-label={triggerAriaLabel}
+          aria-label={resolvedTriggerAriaLabel}
         >
           <Filter size={16} />
           {triggerLabel && (

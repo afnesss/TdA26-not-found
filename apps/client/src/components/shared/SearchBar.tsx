@@ -3,6 +3,7 @@ import { Search } from 'lucide-react'
 import { Input } from '../ui/input'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type SearchBarProps = {
   searchQuery: string
@@ -19,15 +20,18 @@ const SearchBar = ({
   count,
   rightAdornment,
   className,
-  placeholder = 'Vyhledat kurz...',
+  placeholder,
 }: SearchBarProps) => {
+  const { t } = useTranslation('common')
+  const resolvedPlaceholder = placeholder ?? t('search.placeholder')
+
   return (
     <div className={cn('relative group max-w-2xl w-full min-w-0', className)}>
       <Search className='size-4 sm:size-5 absolute left-4 top-1/2 -translate-y-1/2 text-primary/80 group-focus-within:text-primary transition-all duration-300' />
       <Input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className={cn(
           'pl-10! md:pl-12!',
           count || rightAdornment ? 'pr-17 sm:pr-12' : 'pr-10 md:pr-12',

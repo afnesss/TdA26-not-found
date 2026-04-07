@@ -76,10 +76,10 @@ const getBackupCourseIds = (input: unknown): string[] => {
 const CourseBackupActionsDropdown = ({
   className,
   triggerLabel,
-  triggerAriaLabel = 'Zálohy kurzů',
-  menuLabel = 'Export a import',
-  exportLabel = 'Exportovat vše',
-  importLabel = 'Importovat kurzy',
+  triggerAriaLabel,
+  menuLabel,
+  exportLabel,
+  importLabel,
   invalidJsonMessage,
   duplicateCourseMessage,
   exportSuccessMessage,
@@ -90,6 +90,11 @@ const CourseBackupActionsDropdown = ({
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const { t } = useTranslation('dashboard')
+  const resolvedTriggerAriaLabel =
+    triggerAriaLabel ?? t('backup.triggerAriaLabel')
+  const resolvedMenuLabel = menuLabel ?? t('backup.menuLabel')
+  const resolvedExportLabel = exportLabel ?? t('backup.exportLabel')
+  const resolvedImportLabel = importLabel ?? t('backup.importLabel')
   const resolvedInvalidJsonMessage =
     invalidJsonMessage ?? t('backup.invalidJsonMessage')
   const resolvedDuplicateCourseMessage =
@@ -165,14 +170,14 @@ const CourseBackupActionsDropdown = ({
             variant='outline'
             className={cn('rounded-xl px-2', className)}
             disabled={isBusy}
-            aria-label={triggerAriaLabel}
+            aria-label={resolvedTriggerAriaLabel}
           >
             <FolderInput className='h-4 w-4 text-primary' aria-hidden='true' />
             {triggerLabel && <span>{triggerLabel}</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-56 rounded-xl'>
-          <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
+          <DropdownMenuLabel>{resolvedMenuLabel}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className='gap-2 cursor-pointer'
@@ -190,7 +195,7 @@ const CourseBackupActionsDropdown = ({
             }}
           >
             <Download className='h-4 w-4 text-gray-400' />
-            <span>{exportLabel}</span>
+            <span>{resolvedExportLabel}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className='gap-2 cursor-pointer'
@@ -198,7 +203,7 @@ const CourseBackupActionsDropdown = ({
             onSelect={() => importInputRef.current?.click()}
           >
             <Upload className='h-4 w-4 text-gray-400' />
-            <span>{importLabel}</span>
+            <span>{resolvedImportLabel}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -57,14 +57,17 @@ const CourseExportTrigger = ({
   variant = 'detail',
   disabled = false,
   label,
-  triggerAriaLabel = 'Export kurzu',
-  itemLabel = 'Exportovat zálohu JSON',
+  triggerAriaLabel,
+  itemLabel,
   successMessage,
   errorMessage,
 }: CourseExportTriggerProps) => {
   const [isExporting, setIsExporting] = useState(false)
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const { t } = useTranslation('dashboard')
+  const resolvedTriggerAriaLabel =
+    triggerAriaLabel ?? t('courseOverview.export.triggerAriaLabel')
+  const resolvedItemLabel = itemLabel ?? t('courseOverview.export.itemLabel')
   const resolvedSuccessMessage =
     successMessage ?? t('courseOverview.export.success')
   const resolvedErrorMessage = errorMessage ?? t('courseOverview.export.error')
@@ -102,7 +105,7 @@ const CourseExportTrigger = ({
           disabled={disabled || isExporting}
           classNameBtn={cn(className)}
           label={label}
-          aria-label={triggerAriaLabel}
+          aria-label={resolvedTriggerAriaLabel}
           onPointerDown={(event) => stopCardClick(event)}
           onClick={(event) => stopCardClick(event)}
         />
@@ -124,7 +127,7 @@ const CourseExportTrigger = ({
           className='gap-2 cursor-pointer text-xs sm:text-sm'
         >
           <FileJson2 className='h-4 w-4 text-gray-400' />
-          <span>{itemLabel}</span>
+          <span>{resolvedItemLabel}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

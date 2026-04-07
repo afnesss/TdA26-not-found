@@ -16,6 +16,41 @@ const common = {
   organizationAccess: {
     inactive: 'Organizace byla docasne pozastavena. Pristup byl ukoncen.',
   },
+  breadcrumb: {
+    goTo: 'Prejit na {{label}}',
+  },
+  editControls: {
+    saveChanges: 'Ulozit zmeny',
+    cancelEdits: 'Zrusit upravy',
+  },
+  filters: {
+    triggerAriaLabel: 'Filtrovat polozky',
+  },
+  search: {
+    placeholder: 'Vyhledat...',
+  },
+  stateComp: {
+    emptySearch: {
+      message: 'Zadne kurzy nenalezeny',
+      action: 'Vymazat vyhledavani',
+    },
+    error: {
+      message: 'Neco se pokazilo',
+      action: 'Zkusit znovu',
+    },
+    noContent: {
+      message: 'Zatim nemate zadne kurzy',
+      action: 'Vytvorit kurz',
+    },
+    notFound: {
+      message: 'Kurz nebyl nalezen',
+      action: 'Zpet na kurzy',
+    },
+    networkOffline: {
+      message: 'Zadne pripojeni k internetu',
+      action: 'Zkusit znovu',
+    },
+  },
   materialCard: {
     linkCopied: 'Odkaz zkopirovan',
     copyFailed: 'Nepodarilo se zkopirovat',

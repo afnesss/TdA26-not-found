@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { colorStyles } from '@/lib/constants'
+import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'usehooks-ts'
 import type { ForwardRefExoticComponent, RefAttributes } from 'react'
 
@@ -62,21 +63,24 @@ export function StatusActionButtons({
   labels,
 }: StatusActionButtonProps) {
   const isMd = useMediaQuery('(min-width: 768px)')
+  const { t } = useTranslation('dashboard')
 
   const getActions = (): ActionButton[] => {
     switch (currentStatus) {
       case 'draft':
         return [
           {
-            title: labels?.schedule ?? 'Naplánovat',
+            title: labels?.schedule ?? t('courseOverview.statusActions.schedule'),
             icon: Calendar,
             status: 'planned',
             variant: 'outline',
             primary: false,
           },
           {
-            title: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
-            mobileLabel: labels?.copyShort ?? 'Kopírovat',
+            title:
+              labels?.copyAsDraft ?? t('courseOverview.statusActions.copyAsDraft'),
+            mobileLabel:
+              labels?.copyShort ?? t('courseOverview.statusActions.copyShort'),
             icon: FilePlus,
             status: 'draft',
             variant: 'outline',
@@ -84,8 +88,8 @@ export function StatusActionButtons({
             action: 'copy',
           },
           {
-            label: labels?.launch ?? 'Spustit',
-            title: labels?.launch ?? 'Spustit',
+            label: labels?.launch ?? t('courseOverview.statusActions.launch'),
+            title: labels?.launch ?? t('courseOverview.statusActions.launch'),
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -95,16 +99,16 @@ export function StatusActionButtons({
       case 'planned':
         return [
           {
-            label: labels?.toDraft ?? 'Do návrhu',
-            title: labels?.toDraft ?? 'Do návrhu',
+            label: labels?.toDraft ?? t('courseOverview.statusActions.toDraft'),
+            title: labels?.toDraft ?? t('courseOverview.statusActions.toDraft'),
             icon: RotateCcw,
             status: 'draft',
             variant: 'outline',
             primary: false,
           },
           {
-            label: labels?.launch ?? 'Spustit',
-            title: labels?.launch ?? 'Spustit',
+            label: labels?.launch ?? t('courseOverview.statusActions.launch'),
+            title: labels?.launch ?? t('courseOverview.statusActions.launch'),
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -114,16 +118,16 @@ export function StatusActionButtons({
       case 'live':
         return [
           {
-            label: labels?.archive ?? 'Archivovat',
-            title: labels?.archive ?? 'Archivovat',
+            label: labels?.archive ?? t('courseOverview.statusActions.archive'),
+            title: labels?.archive ?? t('courseOverview.statusActions.archive'),
             icon: Archive,
             status: 'archived',
             variant: 'outline',
             primary: false,
           },
           {
-            label: labels?.pause ?? 'Pozastavit',
-            title: labels?.pause ?? 'Pozastavit',
+            label: labels?.pause ?? t('courseOverview.statusActions.pause'),
+            title: labels?.pause ?? t('courseOverview.statusActions.pause'),
             icon: Pause,
             status: 'paused',
             variant: 'grid',
@@ -133,22 +137,22 @@ export function StatusActionButtons({
       case 'paused':
         return [
           {
-            title: labels?.schedule ?? 'Naplánovat',
+            title: labels?.schedule ?? t('courseOverview.statusActions.schedule'),
             icon: Calendar,
             status: 'planned',
             variant: 'outline',
             primary: false,
           },
           {
-            title: labels?.archive ?? 'Archivovat',
+            title: labels?.archive ?? t('courseOverview.statusActions.archive'),
             icon: Archive,
             status: 'archived',
             variant: 'outline',
             primary: false,
           },
           {
-            label: labels?.resume ?? 'Obnovit',
-            title: labels?.resume ?? 'Obnovit',
+            label: labels?.resume ?? t('courseOverview.statusActions.resume'),
+            title: labels?.resume ?? t('courseOverview.statusActions.resume'),
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -159,9 +163,12 @@ export function StatusActionButtons({
         if (hideCopyAsDraft) return []
         return [
           {
-            label: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
-            title: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
-            mobileLabel: labels?.copyShort ?? 'Kopírovat',
+            label:
+              labels?.copyAsDraft ?? t('courseOverview.statusActions.copyAsDraft'),
+            title:
+              labels?.copyAsDraft ?? t('courseOverview.statusActions.copyAsDraft'),
+            mobileLabel:
+              labels?.copyShort ?? t('courseOverview.statusActions.copyShort'),
             icon: FilePlus,
             status: 'draft',
             variant: 'grid',

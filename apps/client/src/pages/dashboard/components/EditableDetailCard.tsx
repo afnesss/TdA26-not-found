@@ -9,6 +9,7 @@ import { Children, type ReactNode } from 'react'
 import thinkIconUrl from '@/assets/t-idea-blue.svg'
 import { Calendar } from 'lucide-react'
 import { handleSaveOnEnter } from '@/pages/CoursePage/utils/helperFunctions'
+import { useTranslation } from 'react-i18next'
 
 type BreadcrumbItem = {
   label: string
@@ -89,6 +90,7 @@ const EditableDetailCard = ({
   extraDateMeta,
   labels,
 }: EditableDetailCardProps) => {
+  const { t } = useTranslation('dashboard')
   const showUpdatedAt =
     updatedAt &&
     createdAt &&
@@ -104,9 +106,11 @@ const EditableDetailCard = ({
       onClick={() => onEnterSave?.()}
       disabled={saveDisabled || isNameEmpty}
     >
-      <span className='sm:hidden'>{labels?.saveMobile ?? 'Uložit'}</span>
+      <span className='sm:hidden'>
+        {labels?.saveMobile ?? t('courseOverview.card.saveMobile')}
+      </span>
       <span className='hidden sm:inline'>
-        {labels?.saveDesktop ?? 'Uložit změny'}
+        {labels?.saveDesktop ?? t('courseOverview.card.saveDesktop')}
       </span>
     </Button>
   ) : (
@@ -174,7 +178,7 @@ const EditableDetailCard = ({
             <div className='space-y-3'>
               <div>
                 <Label size='sm' className='mb-1 block'>
-                  {labels?.name ?? 'Název'}
+                  {labels?.name ?? t('courseOverview.card.name')}
                 </Label>
                 <Textarea
                   value={nameValue}
@@ -184,7 +188,9 @@ const EditableDetailCard = ({
                   }
                   minRows={1}
                   maxRows={2}
-                  placeholder={labels?.namePlaceholder ?? 'Zadejte název'}
+                  placeholder={
+                    labels?.namePlaceholder ?? t('courseOverview.card.namePlaceholder')
+                  }
                   className={cn(
                     'font-semibold text-base md:text-lg',
                     isNameEmpty && 'border-destructive',
@@ -192,14 +198,14 @@ const EditableDetailCard = ({
                 />
                 {isNameEmpty && (
                   <p className='error-text'>
-                    {labels?.nameRequired ?? 'Název je povinný'}
+                    {labels?.nameRequired ?? t('courseOverview.card.nameRequired')}
                   </p>
                 )}
               </div>
 
               <div>
                 <Label size='sm' className='mb-1 block'>
-                  {labels?.description ?? 'Popis'}
+                  {labels?.description ?? t('courseOverview.card.description')}
                 </Label>
                 <Textarea
                   value={descriptionValue ?? ''}
@@ -211,7 +217,7 @@ const EditableDetailCard = ({
                   maxRows={4}
                   placeholder={
                     labels?.descriptionPlaceholder ??
-                    'Zadejte popis (volitelné)'
+                    t('courseOverview.card.descriptionPlaceholder')
                   }
                 />
               </div>
@@ -228,7 +234,7 @@ const EditableDetailCard = ({
               >
                 <span className='flex flex-col items-center gap-1'>
                   <span className='text-xs text-gray-500'>
-                    {labels?.createdAt ?? 'Vytvořeno'}
+                    {labels?.createdAt ?? t('courseOverview.card.createdAt')}
                   </span>
                   <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
                     {fmtDate(createdAt)}
@@ -237,7 +243,7 @@ const EditableDetailCard = ({
                 {showUpdatedAt && (
                   <span className='flex flex-col items-center gap-1'>
                     <span className='text-xs text-gray-500'>
-                      {labels?.updatedAt ?? 'Upraveno'}
+                      {labels?.updatedAt ?? t('courseOverview.card.updatedAt')}
                     </span>
                     <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
                       {fmtDate(updatedAt)}

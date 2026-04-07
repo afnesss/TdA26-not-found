@@ -3,6 +3,7 @@ import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { Lock, Unlock } from 'lucide-react'
 import type { MouseEventHandler } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ModuleVisibilityActionButtonProps = {
   status: 'active' | 'passive'
@@ -20,10 +21,14 @@ const ModuleVisibilityActionButton = ({
   disabled,
   className,
   title,
-  activeLabel = 'Skrýt',
-  passiveLabel = 'Aktivovat',
+  activeLabel,
+  passiveLabel,
 }: ModuleVisibilityActionButtonProps) => {
+  const { t } = useTranslation('dashboard')
   const isActive = status === 'active'
+  const resolvedActiveLabel = activeLabel ?? t('moduleDetail.visibility.hide')
+  const resolvedPassiveLabel =
+    passiveLabel ?? t('moduleDetail.visibility.activate')
 
   return (
     <Button
@@ -51,7 +56,7 @@ const ModuleVisibilityActionButton = ({
       )}
       <span className='hidden md:inline-block'>
         {' '}
-        {isActive ? activeLabel : passiveLabel}
+        {isActive ? resolvedActiveLabel : resolvedPassiveLabel}
       </span>
     </Button>
   )

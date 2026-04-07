@@ -3,6 +3,7 @@ import feedImg from '@/assets/disconnect-blue.svg'
 import { cn } from '@/lib/utils'
 import { CheckCircle2, CircleX, Clock3, Trophy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Label } from '../ui/label'
 import StateComp from './StateComp'
 
@@ -42,12 +43,6 @@ const RANK_STYLES = {
 
 const getRankStyle = (rank: number) =>
   RANK_STYLES[rank as 1 | 2 | 3] ?? RANK_STYLES.default
-
-const defaultFormatAttemptsLabel = (attempts: number) => {
-  if (attempts === 1) return 'pokus'
-  if (attempts >= 2 && attempts <= 4) return 'pokusy'
-  return 'pokusů'
-}
 
 const StatToken = ({
   label,
@@ -166,7 +161,7 @@ const RowContent = ({
   attemptLabel: (count: number) => string
 }) => {
   const rankStyle = getRankStyle(entry.rank)
-  const successRate = entry.successRate == null ? '—' : `${entry.successRate}%`
+  const successRate = entry.successRate == null ? '-' : `${entry.successRate}%`
   const isCompleted = entry.status === 'completed'
   const isNotStarted = entry.completedQuizzes === 0
 
@@ -257,16 +252,30 @@ const RestRankRow = ({
 
 const CourseLeaderboard = ({
   leaderboard,
-  emptyMessage = 'Zatím žádná studentská odevzdání.',
+  emptyMessage,
   showLeaderTrophy = false,
-  showLessLabel = 'Zobrazit méně',
-  showMoreLabel = (count) => `Zobrazit další (${count})`,
-  attemptLabel = defaultFormatAttemptsLabel,
+  showLessLabel,
+  showMoreLabel,
+  attemptLabel,
 }: CourseLeaderboardProps) => {
+  const { t } = useTranslation('dashboard')
   const topThree = leaderboard.slice(0, 3)
   const rest = leaderboard.slice(3)
   const [isExpanded, setIsExpanded] = useState(false)
   const visibleEntries = isExpanded ? leaderboard : topThree
+  const resolvedEmptyMessage =
+    emptyMessage ?? t('courseOverview.leaderboard.empty')
+  const resolvedShowLessLabel =
+    showLessLabel ?? t('courseOverview.leaderboard.showLess')
+  const resolvedShowMoreLabel =
+    showMoreLabel ??
+    ((count: number) => t('courseOverview.leaderboard.showMore', { count }))
+  const resolvedAttemptLabel =
+    attemptLabel ??
+    ((count: number) =>
+      t('courseOverview.leaderboard.attempt', {
+        count,
+      }))
 
   return (
     <section className='space-y-2 rounded-2xl border border-border/70 bg-background p-3 shadow-sm sm:p-4'>
@@ -276,7 +285,7 @@ const CourseLeaderboard = ({
             img={feedImg}
             iconClassName='h-12 w-12 md:h-13 md:w-13'
             type='no-content'
-            message={emptyMessage}
+            message={resolvedEmptyMessage}
             className='pb-6 pt-8'
           />
         </div>
@@ -289,13 +298,13 @@ const CourseLeaderboard = ({
                   key={entry.userId}
                   entry={entry}
                   showLeaderTrophy={showLeaderTrophy}
-                  attemptLabel={attemptLabel}
+                  attemptLabel={resolvedAttemptLabel}
                 />
               ) : (
                 <RestRankRow
                   key={entry.userId}
                   entry={entry}
-                  attemptLabel={attemptLabel}
+                  attemptLabel={resolvedAttemptLabel}
                 />
               ),
             )}
@@ -310,7 +319,9 @@ const CourseLeaderboard = ({
               )}
               onClick={() => setIsExpanded((prev) => !prev)}
             >
-              {isExpanded ? showLessLabel : showMoreLabel(rest.length)}
+              {isExpanded
+                ? resolvedShowLessLabel
+                : resolvedShowMoreLabel(rest.length)}
             </button>
           )}
         </div>

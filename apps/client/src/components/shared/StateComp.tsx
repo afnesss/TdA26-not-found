@@ -2,7 +2,6 @@ import React from 'react'
 import {
   Search,
   AlertCircle,
-  BookOpen,
   FileQuestion,
   WifiOff,
   type LucideIcon,
@@ -10,6 +9,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import fileImg from '../../assets/files-blue.svg'
 
 type StateType =
@@ -40,6 +40,8 @@ const StateComp = ({
   iconClassName,
   img,
 }: Props) => {
+  const { t } = useTranslation('common')
+
   const stateConfig: Record<
     StateType,
     {
@@ -56,40 +58,40 @@ const StateComp = ({
       icon: Search,
       iconBg: 'bg-secondary/20',
       iconColor: 'text-primary',
-      defaultMessage: 'Žádné kurzy nenalezeny',
-      defaultAction: 'Vymazat vyhledávání',
+      defaultMessage: t('stateComp.emptySearch.message'),
+      defaultAction: t('stateComp.emptySearch.action'),
       showButton: true,
     },
     error: {
       icon: AlertCircle,
       iconBg: 'bg-destructive/20',
       iconColor: 'text-destructive/70',
-      defaultMessage: 'Něco se pokazilo',
-      defaultAction: 'Zkusit znovu',
+      defaultMessage: t('stateComp.error.message'),
+      defaultAction: t('stateComp.error.action'),
       showButton: true,
     },
     'no-content': {
       img: fileImg,
       iconBg: 'bg-secondary/20',
       iconColor: 'text-primary',
-      defaultMessage: 'Zatím nemáte žádné kurzy',
-      defaultAction: 'Vytvořit kurz',
+      defaultMessage: t('stateComp.noContent.message'),
+      defaultAction: t('stateComp.noContent.action'),
       showButton: true,
     },
     'not-found': {
       icon: FileQuestion,
       iconBg: 'bg-secondary/20',
       iconColor: 'text-primary',
-      defaultMessage: 'Kurz nebyl nalezen',
-      defaultAction: 'Zpět na kurzy',
+      defaultMessage: t('stateComp.notFound.message'),
+      defaultAction: t('stateComp.notFound.action'),
       showButton: true,
     },
     'network-offline': {
       icon: WifiOff,
       iconBg: 'bg-destructive/20',
       iconColor: 'text-destructive/70',
-      defaultMessage: 'Žádné připojení k internetu',
-      defaultAction: 'Zkusit znovu',
+      defaultMessage: t('stateComp.networkOffline.message'),
+      defaultAction: t('stateComp.networkOffline.action'),
       showButton: true,
     },
   }
@@ -101,8 +103,7 @@ const StateComp = ({
   return (
     <div className={cn('text-center py-16', className)}>
       <div
-        className={`w-18 h-18 md:w-20 md:h-20 lg:w-22 lg:h-22 ${config.iconBg} rounded-full flex items-center 
-                  justify-center mx-auto mb-6`}
+        className={`w-18 h-18 md:w-20 md:h-20 lg:w-22 lg:h-22 ${config.iconBg} rounded-full flex items-center justify-center mx-auto mb-6`}
       >
         {finalImg ? (
           <img
@@ -125,7 +126,7 @@ const StateComp = ({
             variant='primary'
             size='primary'
             onClick={onAction}
-            className=' w-fit'
+            className='w-fit'
             aria-label={actionText || config.defaultAction}
           >
             {actionText || config.defaultAction}

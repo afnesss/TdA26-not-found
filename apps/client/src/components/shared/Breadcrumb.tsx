@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { Button } from '../ui/button'
 import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Fragment } from 'react/jsx-runtime'
 import { truncateDescription } from '@/pages/CoursePage/utils/helperFunctions'
 
@@ -17,6 +18,7 @@ type BreadcrumbProps = {
 
 const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
 
   return (
     <div className={cn('flex items-center gap-1 ', className)}>
@@ -28,11 +30,13 @@ const Breadcrumb = ({ items, className }: BreadcrumbProps) => {
             <Button
               variant='link'
               className={cn(
-                ' w-fit text-accent-blue',
+                'w-fit text-accent-blue',
                 !item.path && 'hover:no-underline pointer-events-none',
               )}
               onClick={() => (item.path ? navigate(item.path) : undefined)}
-              aria-label={item.path ? `Přejít na ${item.label}` : item.label}
+              aria-label={
+                item.path ? t('breadcrumb.goTo', { label: item.label }) : item.label
+              }
             >
               <span className='flex sm:hidden'>
                 {truncateDescription(item.label, 15)}

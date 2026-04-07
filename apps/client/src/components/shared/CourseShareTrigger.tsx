@@ -80,7 +80,7 @@ const QrImage = ({ value, className, alt }: QrImageProps) => {
   return (
     <img
       src={qrState.src}
-      alt={alt ?? 'QR kód pro sdílení kurzu'}
+      alt={alt}
       className={cn('w-full rounded-md border border-border/60 bg-white', className)}
     />
   )
@@ -121,6 +121,19 @@ const CourseShareTrigger = ({
   const queryClient = useQueryClient()
   const queryKey = ['course-share-link', courseId]
   const { t } = useTranslation('dashboard')
+  const resolvedLabels = {
+    qrAlt: labels?.qrAlt ?? t('courseOverview.share.qrAlt'),
+    title: labels?.title ?? t('courseOverview.share.title'),
+    description: labels?.description ?? t('courseOverview.share.description'),
+    loadError: labels?.loadError ?? t('courseOverview.share.loadError'),
+    loading: labels?.loading ?? t('courseOverview.share.loading'),
+    copyLink: labels?.copyLink ?? t('courseOverview.share.copyLink'),
+    shareLink: labels?.shareLink ?? t('courseOverview.share.shareLink'),
+    regenerateQr: labels?.regenerateQr ?? t('courseOverview.share.regenerateQr'),
+    shareText:
+      labels?.shareText?.(courseName) ??
+      t('courseOverview.share.shareText', { name: courseName }),
+  }
 
   const { data, isLoading, isError } = useQuery({
     queryKey,
@@ -166,8 +179,7 @@ const CourseShareTrigger = ({
       try {
         await navigator.share({
           title: courseName,
-          text:
-            labels?.shareText?.(courseName) ?? `Otevřít kurz ${courseName}`,
+          text: resolvedLabels.shareText,
           url: shareUrl,
         })
         return
@@ -210,10 +222,9 @@ const CourseShareTrigger = ({
         </div>
 
         <AlertDialogHeader>
-          <AlertDialogTitle>{labels?.title ?? 'QR kód kurzu'}</AlertDialogTitle>
+          <AlertDialogTitle>{resolvedLabels.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            {labels?.description ??
-              'Studenti se přes QR dostanou přímo na kurz bez ručního hledání.'}
+            {resolvedLabels.description}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -222,7 +233,7 @@ const CourseShareTrigger = ({
             <QrImage
               value={shareUrl}
               className='rounded-xl'
-              alt={labels?.qrAlt}
+              alt={resolvedLabels.qrAlt}
             />
           </div>
           <p
@@ -232,9 +243,9 @@ const CourseShareTrigger = ({
             )}
           >
             {isError
-              ? labels?.loadError ?? 'Nepodařilo se načíst odkaz pro sdílení.'
+              ? resolvedLabels.loadError
               : isLoading || shareMutation.isPending
-                ? labels?.loading ?? 'Připravuji QR kód...'
+                ? resolvedLabels.loading
                 : courseName}
           </p>
         </div>
@@ -250,7 +261,7 @@ const CourseShareTrigger = ({
             disabled={!shareUrl}
           >
             <Copy className='size-4' />
-            {labels?.copyLink ?? 'Kopírovat odkaz'}
+            {resolvedLabels.copyLink}
           </Button>
           <Button
             variant='outline'
@@ -262,7 +273,7 @@ const CourseShareTrigger = ({
             disabled={!shareUrl}
           >
             <Share2 className='size-4' />
-            {labels?.shareLink ?? 'Sdílet odkaz'}
+            {resolvedLabels.shareLink}
           </Button>
           <Button
             variant='primary'
@@ -279,7 +290,7 @@ const CourseShareTrigger = ({
                 shareMutation.isPending && 'animate-spin',
               )}
             />
-            {labels?.regenerateQr ?? 'Obnovit QR'}
+            {resolvedLabels.regenerateQr}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

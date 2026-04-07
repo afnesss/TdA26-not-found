@@ -159,6 +159,7 @@ const dashboard = {
       attempt_one: 'attempt',
       attempt_few: 'attempts',
       attempt_many: 'attempts',
+      attempt_other: 'attempts',
       quizzesInCourse: 'Quizzes in course:',
     },
     sidePanel: {

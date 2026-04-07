@@ -16,6 +16,41 @@ const common = {
   organizationAccess: {
     inactive: 'The organization was temporarily suspended. Access has ended.',
   },
+  breadcrumb: {
+    goTo: 'Go to {{label}}',
+  },
+  editControls: {
+    saveChanges: 'Save changes',
+    cancelEdits: 'Cancel edits',
+  },
+  filters: {
+    triggerAriaLabel: 'Filter items',
+  },
+  search: {
+    placeholder: 'Search...',
+  },
+  stateComp: {
+    emptySearch: {
+      message: 'No courses found',
+      action: 'Clear search',
+    },
+    error: {
+      message: 'Something went wrong',
+      action: 'Try again',
+    },
+    noContent: {
+      message: 'You do not have any courses yet',
+      action: 'Create course',
+    },
+    notFound: {
+      message: 'Course not found',
+      action: 'Back to courses',
+    },
+    networkOffline: {
+      message: 'No internet connection',
+      action: 'Try again',
+    },
+  },
   materialCard: {
     linkCopied: 'Link copied',
     copyFailed: 'Failed to copy',

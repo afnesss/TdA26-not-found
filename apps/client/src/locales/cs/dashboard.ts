@@ -158,6 +158,7 @@ const dashboard = {
       attempt_one: 'pokus',
       attempt_few: 'pokusy',
       attempt_many: 'pokusů',
+      attempt_other: 'pokusů',
       quizzesInCourse: 'Kvízy v kurzu:',
     },
     sidePanel: {

@@ -6,6 +6,7 @@ import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ModulesSectionProps {
   courseId: string
@@ -50,10 +51,13 @@ const ModulesSection = ({
   isToggleVisibilityPending,
   lastActiveModuleUuid,
   firstPassiveModuleUuid,
-  emptyMessage = 'Kurz zatím nemá žádné moduly',
+  emptyMessage,
   moduleCardLabels,
 }: ModulesSectionProps) => {
+  const { t } = useTranslation('dashboard')
   const modulesList = modules
+  const resolvedEmptyMessage =
+    emptyMessage ?? t('courseOverview.modules.emptyAnalytics')
   const canToggleModuleVisibility = courseStatus === 'live'
 
   const shouldPlaceDraftInExistingLastRow =
@@ -92,7 +96,7 @@ const ModulesSection = ({
       {isEmpty ? (
         <StateComp
           type='no-content'
-          message={emptyMessage}
+          message={resolvedEmptyMessage}
           className='py-8'
         />
       ) : (

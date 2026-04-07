@@ -20,6 +20,7 @@ type DropdownMenuComponentProps = {
   align?: 'start' | 'center' | 'end'
   width?: string
   sideOffset?: number
+  footer?: ReactNode
 }
 
 const DropdownMenuComponent = ({
@@ -29,6 +30,7 @@ const DropdownMenuComponent = ({
   align = 'center',
   width = 'w-32',
   sideOffset = 5,
+  footer,
 }: DropdownMenuComponentProps) => {
   return (
     <DropdownMenu>
@@ -47,8 +49,8 @@ const DropdownMenuComponent = ({
               key={item.value}
               className={cn(
                 'px-2 sm:px-3 py-1 rounded-lg cursor-pointer transition-all',
-                'hover:bg-primary/10 hover:text-primary text-xs sm:text-sm font-medium',
-                selectedValue === item.value && 'bg-primary/5 text-primary',
+                'hover:bg-primary/15 hover:text-primary text-xs sm:text-sm font-medium',
+                selectedValue === item.value && 'bg-primary/10 text-primary',
               )}
               onClick={item.onClick}
             >
@@ -56,6 +58,9 @@ const DropdownMenuComponent = ({
             </DropdownMenuItem>
           ))}
         </div>
+        {footer ? (
+          <div className='mt-2 border-t border-gray-200 pt-2'>{footer}</div>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

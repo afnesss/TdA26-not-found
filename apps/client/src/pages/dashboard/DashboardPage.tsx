@@ -1,10 +1,10 @@
-﻿import {
+import {
   getCourseDashboardAnalytics,
   getCourses,
 } from '@/api/queries/courseQueries'
 import { useDashboardCoursesSSE } from '@/api/useDashboardCoursesSSE'
-import FilterDropdown from '@/components/shared/FilterDropdown'
 import CourseBackupActionsDropdown from '@/components/shared/CourseBackupActionsDropdown'
+import FilterDropdown from '@/components/shared/FilterDropdown'
 import HintPageText from '@/components/shared/HintPageText'
 import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import {
   defaultStatusFilters,
-  filterItems,
-  statusFilterItems,
   type FilterIds,
 } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
@@ -24,6 +22,7 @@ import { useCoursePlanning } from '@/pages/CoursePage/utils/useCoursePlanning'
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { BarChart3, BookOpenText, ChevronDown, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
 import { useMediaQuery } from 'usehooks-ts'
 import CourseComponent from '../../components/shared/CourseComponent'
@@ -42,8 +41,8 @@ import DashboardModeTabs from './components/DashboardModeTabs'
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
+  const { t } = useTranslation('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
-
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
     `${DASHBOARD_PAGE_FILTERS_KEY}-sort`,
     'newest',
@@ -51,16 +50,16 @@ const DashboardDesign1 = () => {
   const [statusFilters, setStatusFilters] = useLocalStorage<
     Record<CourseStatus, boolean>
   >(`${DASHBOARD_PAGE_FILTERS_KEY}-status`, defaultStatusFilters)
-
   const [dashboardMode, setDashboardMode] = useLocalStorage<
     'content' | 'analytics'
   >('dashboard-analytics-mode', 'content')
   const [showMobileActions, setShowMobileActions] = useState(false)
-
   const [courseDraft, setCourseDraft] = useState<CourseSummary | null>(null)
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+
+  useTitle(t('pageTitle'))
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -93,6 +92,7 @@ const DashboardDesign1 = () => {
   )
 
   const { isConnected } = useDashboardCoursesSSE(orgSlug)
+  const planning = useCoursePlanning({ queryClient, orgSlug })
 
   const handleStatusChange = async (
     courseId: string,
@@ -100,6 +100,29 @@ const DashboardDesign1 = () => {
   ) => {
     await planning.handleStatusChange(courseId, newStatus, courses)
   }
+
+  const filterItems = [
+    { label: t('sorting.newest'), value: 'newest' as const },
+    { label: t('sorting.oldest'), value: 'oldest' as const },
+  ]
+
+  const statusFilterCheckboxes = [
+    { label: t('statuses.draft'), value: 'draft' as const },
+    { label: t('statuses.planned'), value: 'planned' as const },
+    { label: t('statuses.live'), value: 'live' as const },
+    { label: t('statuses.paused'), value: 'paused' as const },
+    { label: t('statuses.archived'), value: 'archived' as const },
+  ].map((item) => ({
+    label: item.label,
+    value: item.value,
+    checked: statusFilters[item.value],
+    onCheckedChange: (checked: boolean) => {
+      setStatusFilters((prev) => ({
+        ...prev,
+        [item.value]: checked,
+      }))
+    },
+  }))
 
   const searchFilteredCourses = filterCourses(courses, searchQuery)
   const filteredCourses = searchFilteredCourses.filter(
@@ -125,17 +148,15 @@ const DashboardDesign1 = () => {
       (query) => query.isLoading && query.data === undefined,
     )
 
-  const planning = useCoursePlanning({ queryClient, orgSlug })
-
   const dashboardTabs: Array<{
     value: 'content' | 'statistics' | 'global'
     label: string
     disabled?: boolean
   }> = [
-    { value: 'content', label: 'Obsah' },
+    { value: 'content', label: t('tabs.content') },
     {
       value: 'statistics',
-      label: 'Statistiky',
+      label: t('tabs.statistics'),
       disabled: sortedCourses.length === 0,
     },
   ]
@@ -177,14 +198,14 @@ const DashboardDesign1 = () => {
       disabled={dashboardMode === 'analytics'}
       className={mobile ? 'px-3 shrink-0' : ''}
       onClick={handleAddCourse}
-      aria-label='Vytvořit kurz'
+      aria-label={t('buttons.createCourse')}
     >
       <Plus className='w-5 h-5' aria-hidden='true' />
-      {!mobile && <span className='whitespace-nowrap'>Vytvořit kurz</span>}
+      {!mobile && (
+        <span className='whitespace-nowrap'>{t('buttons.createCourse')}</span>
+      )}
     </Button>
   )
-
-  useTitle('Správa kurzů')
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const isNetworkError =
@@ -195,17 +216,6 @@ const DashboardDesign1 = () => {
 
   const isSearchEmpty = searchQuery.trim() === ''
   const useResetStatusAction = isSearchEmpty && courses.length > 0
-  const statusFilterCheckboxes = statusFilterItems.map((item) => ({
-    label: item.label,
-    value: item.value,
-    checked: statusFilters[item.value],
-    onCheckedChange: (checked: boolean) => {
-      setStatusFilters((prev) => ({
-        ...prev,
-        [item.value]: checked,
-      }))
-    },
-  }))
 
   return (
     <>
@@ -216,6 +226,7 @@ const DashboardDesign1 = () => {
               <SearchBar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                placeholder={t('searchPlaceholder')}
                 count={
                   (searchQuery && filteredCourses.length.toString()) ||
                   courses.length.toString()
@@ -232,7 +243,9 @@ const DashboardDesign1 = () => {
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${showMobileActions ? 'rotate-180' : ''}`}
               />
-              {showMobileActions ? 'Zavřít další' : 'Otevřít další'}
+              {showMobileActions
+                ? t('mobileActions.close')
+                : t('mobileActions.open')}
             </button>
             {showMobileActions && (
               <div className='flex items-center justify-center gap-4 flex-wrap'>
@@ -254,22 +267,34 @@ const DashboardDesign1 = () => {
                   align='center'
                   width='w-35 md:w-40'
                   triggerClassName='bg-background text-primary h-8.5 md:h-10 w-auto hover:bg-gray-50 border border-gray-200 shrink-0 px-3'
-                  triggerLabel='Filtry'
+                  triggerLabel={t('filterTriggerLabel')}
+                  triggerAriaLabel={t('filterAriaLabel')}
                 />
                 <CourseBackupActionsDropdown
                   className='rounded-xl px-3 h-8.5 md:h-10'
-                  triggerLabel='Export / import'
+                  triggerLabel={t('backup.triggerLabel')}
+                  triggerAriaLabel={t('backup.triggerAriaLabel')}
+                  menuLabel={t('backup.menuLabel')}
+                  exportLabel={t('backup.exportLabel')}
+                  importLabel={t('backup.importLabel')}
+                  invalidJsonMessage={t('backup.invalidJsonMessage')}
+                  duplicateCourseMessage={(courseId) =>
+                    t('backup.duplicateCourseMessage', { courseId })
+                  }
+                  exportSuccessMessage={t('backup.exportSuccessMessage')}
+                  exportErrorMessage={t('backup.exportErrorMessage')}
                 />
               </div>
             )}
           </div>
+
           <div className='hidden sm:flex sm:items-center sm:justify-center sm:gap-2 md:gap-3'>
             <div className='hidden lg:flex'>
               <HintPageText
                 text={
                   dashboardMode === 'analytics'
-                    ? 'Statistiky kurzů'
-                    : 'Správa kurzů'
+                    ? t('headings.analytics')
+                    : t('headings.content')
                 }
                 icon={dashboardMode === 'analytics' ? BarChart3 : BookOpenText}
                 spanText={
@@ -296,10 +321,12 @@ const DashboardDesign1 = () => {
               align={isMd ? 'center' : 'start'}
               width='w-35 md:w-40'
               triggerClassName='bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0'
+              triggerAriaLabel={t('filterAriaLabel')}
             />
             <SearchBar
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
+              placeholder={t('searchPlaceholder')}
               count={
                 (searchQuery && filteredCourses.length.toString()) ||
                 courses.length.toString()
@@ -307,7 +334,19 @@ const DashboardDesign1 = () => {
               className='flex-1 min-w-50 lg:flex-initial'
             />
             <span className='inline-flex'>
-              <CourseBackupActionsDropdown className='px-3 sm:px-4 py-2 md:py-2.5 shrink-0' />
+              <CourseBackupActionsDropdown
+                className='px-3 sm:px-4 py-2 md:py-2.5 shrink-0'
+                triggerAriaLabel={t('backup.triggerAriaLabel')}
+                menuLabel={t('backup.menuLabel')}
+                exportLabel={t('backup.exportLabel')}
+                importLabel={t('backup.importLabel')}
+                invalidJsonMessage={t('backup.invalidJsonMessage')}
+                duplicateCourseMessage={(courseId) =>
+                  t('backup.duplicateCourseMessage', { courseId })
+                }
+                exportSuccessMessage={t('backup.exportSuccessMessage')}
+                exportErrorMessage={t('backup.exportErrorMessage')}
+              />
             </span>
             <span className='sm:inline-flex lg:hidden'>{createButton(true)}</span>
             <span className='hidden lg:inline-flex'>{createButton(false)}</span>
@@ -322,10 +361,10 @@ const DashboardDesign1 = () => {
               displayedCourses.length === 0 ? (
                 <StateComp
                   type='no-content'
-                  message='Začněte vytvořením svého prvního kurzu'
+                  message={t('states.createFirstCourse')}
                 />
               ) : (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 '>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
                   {courseDraft && dashboardMode !== 'analytics' && (
                     <CourseComponent
                       key={courseDraft.uuid}
@@ -375,9 +414,9 @@ const DashboardDesign1 = () => {
                     variant='primary'
                     size='primary'
                     onClick={loadMoreCourses}
-                    aria-label='Načíst další kurzy'
+                    aria-label={t('buttons.loadMore')}
                   >
-                    Načíst další kurzy
+                    {t('buttons.loadMore')}
                   </Button>
                 </div>
               )}
@@ -393,16 +432,14 @@ const DashboardDesign1 = () => {
             ) : !coursesLoading && !coursesError && courses.length === 0 ? (
               <StateComp
                 type='no-content'
-                message='Začněte vytvořením svého prvního kurzu'
+                message={t('states.createFirstCourse')}
               />
             ) : coursesError ? (
               <StateComp
                 type={shouldShowNetworkError ? 'network-offline' : 'error'}
                 onAction={() => refetchCourses()}
                 message={
-                  shouldShowNetworkError
-                    ? undefined
-                    : 'Nepodařilo se načíst kurzy'
+                  shouldShowNetworkError ? undefined : t('states.loadError')
                 }
               />
             ) : (
@@ -418,7 +455,7 @@ const DashboardDesign1 = () => {
                     setSearchQuery('')
                   }}
                   actionText={
-                    useResetStatusAction ? 'Zrušit filtry' : undefined
+                    useResetStatusAction ? t('actions.resetFilters') : undefined
                   }
                 />
               )

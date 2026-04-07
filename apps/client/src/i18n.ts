@@ -12,6 +12,8 @@ void i18n.use(initReactI18next).init({
   ns: [
     'admin',
     'common',
+    'courses',
+    'dashboard',
     'footer',
     'header',
     'homepage',

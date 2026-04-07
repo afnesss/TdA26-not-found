@@ -10,6 +10,7 @@ type SearchBarProps = {
   count?: string
   rightAdornment?: ReactNode
   className?: string
+  placeholder?: string
 }
 
 const SearchBar = ({
@@ -18,6 +19,7 @@ const SearchBar = ({
   count,
   rightAdornment,
   className,
+  placeholder = 'Vyhledat kurz...',
 }: SearchBarProps) => {
   return (
     <div className={cn('relative group max-w-2xl w-full min-w-0', className)}>
@@ -25,7 +27,7 @@ const SearchBar = ({
       <Input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder='Vyhledat kurz...'
+        placeholder={placeholder}
         className={cn(
           'pl-10! md:pl-12!',
           count || rightAdornment ? 'pr-17 sm:pr-12' : 'pr-10 md:pr-12',

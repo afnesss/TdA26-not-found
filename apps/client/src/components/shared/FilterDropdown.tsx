@@ -33,6 +33,7 @@ type FilterDropdownProps<T extends string = string> = {
   triggerClassName?: string
   disabled?: boolean
   triggerLabel?: string
+  triggerAriaLabel?: string
 }
 
 const FilterDropdown = <T extends string = string>({
@@ -45,6 +46,7 @@ const FilterDropdown = <T extends string = string>({
   triggerClassName = 'bg-background text-primary h-8.5 md:h-10 w-10 hover:bg-gray-50 border border-gray-200 shrink-0',
   disabled = false,
   triggerLabel,
+  triggerAriaLabel = 'Filtrovat kurzy',
 }: FilterDropdownProps<T>) => {
   return (
     <DropdownMenu>
@@ -53,7 +55,7 @@ const FilterDropdown = <T extends string = string>({
           variant='filter'
           className={triggerClassName}
           disabled={disabled || items.length === 0}
-          aria-label='Filtrovat kurzy'
+          aria-label={triggerAriaLabel}
         >
           <Filter size={16} />
           {triggerLabel && (

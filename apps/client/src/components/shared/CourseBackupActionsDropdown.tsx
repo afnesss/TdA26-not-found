@@ -25,6 +25,14 @@ import { buildOrgDashboardCoursePath } from '@/lib/routes'
 type CourseBackupActionsDropdownProps = {
   className?: string
   triggerLabel?: string
+  triggerAriaLabel?: string
+  menuLabel?: string
+  exportLabel?: string
+  importLabel?: string
+  invalidJsonMessage?: string
+  duplicateCourseMessage?: (courseId: string) => string
+  exportSuccessMessage?: string
+  exportErrorMessage?: string
 }
 
 const downloadBlob = (blob: Blob, fileName: string) => {
@@ -67,6 +75,15 @@ const getBackupCourseIds = (input: unknown): string[] => {
 const CourseBackupActionsDropdown = ({
   className,
   triggerLabel,
+  triggerAriaLabel = 'Zálohy kurzů',
+  menuLabel = 'Export a import',
+  exportLabel = 'Exportovat vše',
+  importLabel = 'Importovat kurzy',
+  invalidJsonMessage = 'Vyber JSON zálohu',
+  duplicateCourseMessage = (courseId: string) =>
+    `Kurz s ID ${courseId} už existuje`,
+  exportSuccessMessage = 'Všechny kurzy byly exportovány',
+  exportErrorMessage = 'Nepodařilo se exportovat všechny kurzy',
 }: CourseBackupActionsDropdownProps) => {
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const queryClient = useQueryClient()
@@ -93,7 +110,7 @@ const CourseBackupActionsDropdown = ({
   const handleJsonFile = async (file: File | undefined) => {
     if (!file) return
     if (!file.name.toLowerCase().endsWith('.json')) {
-      toast.error('Vyber JSON zalohu')
+      toast.error(invalidJsonMessage)
       return
     }
 
@@ -107,7 +124,7 @@ const CourseBackupActionsDropdown = ({
       )
 
       if (duplicateCourseId) {
-        toast.error(`Kurz s ID ${duplicateCourseId} uz existuje`)
+        toast.error(duplicateCourseMessage(duplicateCourseId))
         return
       }
     } catch {
@@ -138,14 +155,14 @@ const CourseBackupActionsDropdown = ({
             variant='outline'
             className={cn('rounded-xl px-2', className)}
             disabled={isBusy}
-            aria-label='Zalohy kurzu'
+            aria-label={triggerAriaLabel}
           >
             <FolderInput className='h-4 w-4 text-primary' aria-hidden='true' />
             {triggerLabel && <span>{triggerLabel}</span>}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-56 rounded-xl'>
-          <DropdownMenuLabel>Export a import</DropdownMenuLabel>
+          <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className='gap-2 cursor-pointer'
@@ -155,15 +172,15 @@ const CourseBackupActionsDropdown = ({
                 try {
                   const blob = await exportAllCourses(orgSlug)
                   downloadBlob(blob, 'all-courses-backup.json')
-                  toast.success('Vsechny kurzy byly exportovany')
+                  toast.success(exportSuccessMessage)
                 } catch {
-                  toast.error('Nepodarilo se exportovat vsechny kurzy')
+                  toast.error(exportErrorMessage)
                 }
               })()
             }}
           >
             <Download className='h-4 w-4 text-gray-400' />
-            <span>Exportovat vse</span>
+            <span>{exportLabel}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className='gap-2 cursor-pointer'
@@ -171,7 +188,7 @@ const CourseBackupActionsDropdown = ({
             onSelect={() => importInputRef.current?.click()}
           >
             <Upload className='h-4 w-4 text-gray-400' />
-            <span>Importovat kurzy</span>
+            <span>{importLabel}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

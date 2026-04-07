@@ -1,32 +1,34 @@
 import { getCourses } from '@/api/queries/courseQueries'
-import SearchBar from '@/components/shared/SearchBar'
+import { useCoursesSSE } from '@/api/useCourseSSE'
 import FilterDropdown from '@/components/shared/FilterDropdown'
-import { filterItems, type FilterIds } from '@/lib/constants'
+import SearchBar from '@/components/shared/SearchBar'
+import HintPageText from '@/components/shared/HintPageText'
+import CourseComponent from '@/components/shared/CourseComponent'
+import CoursesPageSceleton from '@/components/shared/loadingskeleton/CoursesSceleton'
+import StateComp from '@/components/shared/StateComp'
+import { Button } from '@/components/ui/button'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useTitle } from '@/lib/dynamicTitleHook'
 import type { CourseSummary } from '@/lib/schemas'
-import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { BookOpenText } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import { useMediaQuery } from 'usehooks-ts'
-import CourseComponent from '../../components/shared/CourseComponent'
-import HintPageText from '../../components/shared/HintPageText'
-import CoursesPageSceleton from '../../components/shared/loadingskeleton/CoursesSceleton'
-import StateComp from '../../components/shared/StateComp'
-import { Button } from '../../components/ui/button'
+import type { FilterIds } from '@/lib/constants'
 import {
   filterCourses,
   sortCoursesByFilter,
   useAutoTopScroll,
 } from '../CoursePage/utils/helperFunctions'
-import { useTitle } from '@/lib/dynamicTitleHook'
-import { useCoursesSSE } from '@/api/useCourseSSE'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 const COURSES_PAGE_FILTERS_KEY = 'courses-page-filters'
 
 const CoursesPage = () => {
+  const { t } = useTranslation('courses')
   useAutoTopScroll()
+
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
     `${COURSES_PAGE_FILTERS_KEY}-sort`,
@@ -42,6 +44,9 @@ const CoursesPage = () => {
   const [displayCount, setDisplayCount] = useState(9)
   const isMd = useMediaQuery('(min-width: 768px)')
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+
+  useTitle(orgSlug ? t('organizationPageTitle') : t('pageTitle'))
+
   const { isConnected } = useCoursesSSE(orgSlug)
 
   const {
@@ -54,6 +59,17 @@ const CoursesPage = () => {
     queryFn: () => getCourses(true, orgSlug),
   })
 
+  const filterItems = [
+    { label: t('sorting.newest'), value: 'newest' as const },
+    { label: t('sorting.oldest'), value: 'oldest' as const },
+  ]
+
+  const statusFilterItems = [
+    { label: t('statuses.live'), value: 'live' as const },
+    { label: t('statuses.planned'), value: 'planned' as const },
+    { label: t('statuses.paused'), value: 'paused' as const },
+  ]
+
   const filteredCourses = filterCourses(courses, searchQuery).filter(
     (course) =>
       course.status === 'live' ||
@@ -64,9 +80,9 @@ const CoursesPage = () => {
   )
 
   const sortedCourses = sortCoursesByFilter(filteredCourses, selectedFilter)
-
   const hasMoreCourses = sortedCourses.length > displayCount
   const displayedCourses = sortedCourses.slice(0, displayCount)
+
   const loadMoreCourses = () => {
     setDisplayCount((prev) => prev + 6)
     refetch()
@@ -75,17 +91,6 @@ const CoursesPage = () => {
   const resetStatusFilters = () => {
     setStatusFilters({ live: true, planned: true, paused: true })
   }
-
-  const statusFilterItems: {
-    label: string
-    value: 'live' | 'planned' | 'paused'
-  }[] = [
-    { label: 'Aktivní', value: 'live' },
-    { label: 'Naplánované', value: 'planned' },
-    { label: 'Pozastavené', value: 'paused' },
-  ]
-
-  useTitle(orgSlug ? 'Kurzy organizace' : 'Kurzy')
 
   const isSearchEmpty = searchQuery.trim() === ''
   const isDefaultFilters =
@@ -97,12 +102,11 @@ const CoursesPage = () => {
 
   return (
     <div className='h-full'>
-      {/* Hero */}
-      <div className='max-w-7xl mx-auto  '>
+      <div className='max-w-7xl mx-auto'>
         <div className='flex flex-row md:justify-center justify-between items-center gap-2 sm:gap-3 mb-4 md:mb-5 w-full md:w-auto'>
           <div className='hidden lg:flex'>
             <HintPageText
-              text='Dostupné kurzy'
+              text={t('heading')}
               icon={BookOpenText}
               spanText={
                 (searchQuery && displayedCourses.length.toString()) ||
@@ -128,11 +132,13 @@ const CoursesPage = () => {
             }))}
             align={isMd ? 'center' : 'start'}
             width='w-35 md:w-40'
+            triggerAriaLabel={t('filterAriaLabel')}
           />
 
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            placeholder={t('searchPlaceholder')}
             count={
               (searchQuery && displayedCourses.length.toString()) ||
               courses.length.toString()
@@ -141,35 +147,27 @@ const CoursesPage = () => {
           />
         </div>
 
-        {/* Kurzy Grid */}
-        <div className=' relative '>
+        <div className='relative'>
           {isLoading ? (
             <CoursesPageSceleton />
           ) : (
             <>
-              {/* Grid kurzů */}
               {displayedCourses && (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6'>
-                  {displayedCourses.map((course, index) => {
-                    return (
-                      <CourseComponent
-                        key={course.uuid}
-                        course={course}
-                        index={index}
-                        type='classic'
-                      />
-                    )
-                  })}
+                  {displayedCourses.map((course, index) => (
+                    <CourseComponent
+                      key={course.uuid}
+                      course={course}
+                      index={index}
+                      type='classic'
+                    />
+                  ))}
                 </div>
               )}
 
-              {/* Empty state */}
               {displayedCourses.length === 0 && !isLoading && !isError ? (
                 courses.length === 0 && isSearchEmpty && isDefaultFilters ? (
-                  <StateComp
-                    message='Žádné kurzy k zobrazení'
-                    type='no-content'
-                  />
+                  <StateComp message={t('empty.noCourses')} type='no-content' />
                 ) : (
                   <StateComp
                     type='empty-search'
@@ -182,7 +180,7 @@ const CoursesPage = () => {
                       setDisplayCount(9)
                     }}
                     actionText={
-                      useResetStatusAction ? 'Zrušit filtry' : undefined
+                      useResetStatusAction ? t('actions.resetFilters') : undefined
                     }
                   />
                 )
@@ -195,7 +193,6 @@ const CoursesPage = () => {
                 />
               ) : null}
 
-              {/* Load More button */}
               {hasMoreCourses && (
                 <div className='mt-4 text-center'>
                   <Button
@@ -205,7 +202,7 @@ const CoursesPage = () => {
                       loadMoreCourses()
                     }}
                   >
-                    Načíst další kurzy
+                    {t('actions.loadMore')}
                   </Button>
                 </div>
               )}

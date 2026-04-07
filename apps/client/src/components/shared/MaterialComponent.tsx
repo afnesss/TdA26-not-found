@@ -553,7 +553,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                     )}
                     minRows={1}
                     maxRows={3}
-                    placeholder='https://example.com'
+                    placeholder={t('materialCard.urlPlaceholder')}
                   />
                   {'url' in errors && !!errors.url && (
                     <p className='error-text'>{errors.url.message}</p>

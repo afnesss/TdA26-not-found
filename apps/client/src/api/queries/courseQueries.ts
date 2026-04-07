@@ -9,6 +9,7 @@ import type {
 } from '@/lib/schemas'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import { buildLocaleHeaders } from '@/lib/i18n'
+import i18n from '@/i18n'
 import apiFetch from '../client'
 
 const buildCourseApiPath = (orgSlug?: string, path: string = '/courses') =>
@@ -126,7 +127,7 @@ export const exportCourse = async (
   if (!response.ok) {
     const errorBody = await response
       .json()
-      .catch(() => ({ message: 'Export selhal' }))
+      .catch(() => ({ message: i18n.t('errors.exportFailed', { ns: 'common' }) }))
     throw {
       status: response.status,
       statusText: response.statusText,
@@ -146,7 +147,7 @@ export const exportAllCourses = async (orgSlug?: string): Promise<Blob> => {
   if (!response.ok) {
     const errorBody = await response
       .json()
-      .catch(() => ({ message: 'Export selhal' }))
+      .catch(() => ({ message: i18n.t('errors.exportFailed', { ns: 'common' }) }))
     throw {
       status: response.status,
       statusText: response.statusText,

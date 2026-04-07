@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 type QuizPageSwitcherProps = {
   pageCount: number
@@ -14,10 +15,17 @@ const QuizPageSwitcher = ({
   onPageChange,
   className,
 }: QuizPageSwitcherProps) => {
+  const { t } = useTranslation('common')
+
   if (pageCount <= 1) return null
 
   return (
-    <div className={cn('flex justify-center border-t border-gray-100 pt-3', className)}>
+    <div
+      className={cn(
+        'flex justify-center border-t border-gray-100 pt-3',
+        className,
+      )}
+    >
       <div className='flex items-center gap-1.5 rounded-full border border-gray-100 bg-white/80 px-2 py-1 shadow-sm'>
         <Button
           variant='ghost'
@@ -25,7 +33,7 @@ const QuizPageSwitcher = ({
           className='h-7 w-7 p-0'
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 0}
-          aria-label='Předchozí stránka'
+          aria-label={t('pagination.previousPage')}
         >
           ‹
         </Button>
@@ -53,7 +61,7 @@ const QuizPageSwitcher = ({
           className='h-7 w-7 p-0'
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= pageCount - 1}
-          aria-label='Další stránka'
+          aria-label={t('pagination.nextPage')}
         >
           ›
         </Button>

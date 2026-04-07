@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import type { Question } from '@/lib/schemas'
 import { X } from 'lucide-react'
 import EditBtn from '@/pages/dashboard/components/EditBtn'
-import type { FieldError } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
 type QuizOptionProps = {
   option: string
@@ -13,8 +13,6 @@ type QuizOptionProps = {
   question: Question
   mode: 'user' | 'lecturer' | 'lecturer-preview'
   selectedCount?: number
-
-  // Lecturer mode
   isCorrect?: boolean
   onCorrectToggle?: () => void
   onOptionUpdate?: (value: string) => void
@@ -23,7 +21,6 @@ type QuizOptionProps = {
   onEditKeyDown?: (
     e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void
-  // User mode
   isSelected?: boolean
   isSubmitted?: boolean
   showCorrect?: boolean
@@ -47,6 +44,8 @@ const QuizOption = ({
   showCorrect = false,
   onAnswerChange,
 }: QuizOptionProps) => {
+  const { t } = useTranslation('common')
+
   if (mode === 'lecturer') {
     return (
       <div
@@ -68,7 +67,7 @@ const QuizOption = ({
           value={option}
           onChange={(e) => onOptionUpdate?.(e.target.value)}
           onKeyDown={onEditKeyDown}
-          placeholder='Zadejte možnost'
+          placeholder={t('quizOption.placeholder')}
           className='text-xs md:text-sm flex-1'
         />
 
@@ -80,7 +79,7 @@ const QuizOption = ({
               e?.stopPropagation()
               onOptionRemove?.()
             }}
-            aria-label={`Odstranit možnost ${optIndex + 1}`}
+            aria-label={t('quizOption.removeAria', { index: optIndex + 1 })}
           />
         )}
       </div>
@@ -128,7 +127,10 @@ const QuizOption = ({
           disabled={isSubmitted}
           onCheckedChange={onAnswerChange}
           answerState={getAnswerState()}
-          aria-label={`Možnost ${optIndex + 1}: ${option}`}
+          aria-label={t('quizOption.choiceAria', {
+            index: optIndex + 1,
+            option,
+          })}
           className={cn(mode === 'lecturer-preview' && 'cursor-default')}
         />
         <span className='text-xs sm:text-sm font-medium text-foreground'>

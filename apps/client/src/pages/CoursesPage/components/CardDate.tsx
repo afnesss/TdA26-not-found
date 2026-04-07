@@ -1,4 +1,5 @@
-﻿import { Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas/course'
 import { formatDateWithToday } from '@/pages/CoursePage/utils/helperFunctions'
 
@@ -33,22 +34,24 @@ const CardDate = ({
   label,
   date,
 }: CardDateProps) => {
+  const { t } = useTranslation(['common', 'dashboard'])
+
   const getStatusLabel = () => {
     if (label) return label
     if (planning?.isEditing) return
     switch (state) {
       case 'draft':
-        return 'Vytvořeno'
+        return t('courseDate.created', { ns: 'common' })
       case 'planned':
-        return 'Začíná'
+        return t('courseDate.starts', { ns: 'common' })
       case 'live':
-        return 'Běží od'
+        return t('courseDate.runningSince', { ns: 'common' })
       case 'paused':
-        return 'Pozastaveno'
+        return t('courseDate.paused', { ns: 'common' })
       case 'archived':
-        return 'Dokončeno'
+        return t('courseDate.completed', { ns: 'common' })
       default:
-        return 'Vytvořeno'
+        return t('courseDate.created', { ns: 'common' })
     }
   }
 
@@ -100,12 +103,14 @@ const CardDate = ({
       showTime,
     )
   }
+
   const today = new Date().toISOString().split('T')[0]
+
   return (
     <div className='flex flex-col gap-1'>
       {!hideStatusLabel && (
         <span className='text-xs text-gray-500'>
-          {isDraft ? 'Nový kurz' : getStatusLabel()}
+          {isDraft ? t('courseDate.newCourse', { ns: 'common' }) : getStatusLabel()}
         </span>
       )}
 
@@ -114,7 +119,9 @@ const CardDate = ({
           className='space-y-1 flex'
           onClick={(e) => e.stopPropagation()}
           role='group'
-          aria-label='Upravit datum a čas'
+          aria-label={t('courseOverview.planning.editDateTimeAria', {
+            ns: 'dashboard',
+          })}
         >
           <input
             type='datetime-local'

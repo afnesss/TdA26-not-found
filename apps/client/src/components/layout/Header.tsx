@@ -16,7 +16,7 @@ import type { Locale } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Languages, LogIn, LogOut } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -47,15 +47,8 @@ export default function Header() {
   const queryClient = useQueryClient()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isMd = useMediaQuery('(min-width: 768px)')
-  const { t, i18n } = useTranslation('header')
+  const { t } = useTranslation('header')
   const [uiLocale, setCurrentUiLocale] = useState<Locale>(getStoredUiLocale())
-
-  // useEffect(() => {
-  //   const nextLocale = i18n.resolvedLanguage
-  //   if (nextLocale === 'en' || nextLocale === 'cs') {
-  //     setCurrentUiLocale(nextLocale)
-  //   }
-  // }, [i18n.resolvedLanguage])
 
   const isAdminArea = pathname.startsWith('/admin')
   const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
@@ -256,7 +249,7 @@ export default function Header() {
             )
           }
           role='button'
-          aria-label='Přejít na úvodní stránku'
+          aria-label={t('actions.goHome')}
         />
       </div>
       <div className='flex w-1/2 items-center justify-end gap-4 px-4 sm:px-8 md:gap-6 md:px-12 lg:px-20'>

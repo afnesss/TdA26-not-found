@@ -31,7 +31,7 @@ const OrganizationPasswordPage = () => {
     reset,
   } = useForm()
 
-  useTitle('Změna hesla organizace')
+  useTitle(t('organizationPassword.pageTitle'))
 
   const onSubmit = async (data: FieldValues) => {
     if (!orgSlug) return
@@ -51,24 +51,28 @@ const OrganizationPasswordPage = () => {
   }
 
   return (
-    <AuthPageShell cardTitle='Nastavení hesla organizace'>
+    <AuthPageShell cardTitle={t('organizationPassword.cardTitle')}>
       <div className='space-y-5'>
         <p className='text-sm text-muted-foreground'>
           {me?.organizationName
-            ? `Organizace ${me.organizationName} se právě aktivuje. Nejprve změňte dočasné heslo a poté budete pokračovat do dashboardu.`
-            : 'Nejprve změňte dočasné heslo organizace. Poté budete pokračovat do dashboardu.'}
+            ? t('organizationPassword.descriptionWithOrganization', {
+                organizationName: me.organizationName,
+              })
+            : t('organizationPassword.description')}
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-3'>
           <FormField
-            label='Současné heslo'
+            label={t('organizationPassword.fields.currentPassword.label')}
             icon={Lock}
             inputProps={{
               ...register('currentPassword', {
-                required: 'Současné heslo je povinné',
+                required: t(
+                  'organizationPassword.fields.currentPassword.required',
+                ),
               }),
               type: showCurrentPassword ? 'text' : 'password',
-              placeholder: '••••••••',
+              placeholder: '........',
             }}
             rightElement={
               <button
@@ -77,7 +81,9 @@ const OrganizationPasswordPage = () => {
                 className='bg-transparent cursor-pointer'
                 aria-pressed={showCurrentPassword}
                 aria-label={
-                  showCurrentPassword ? 'Skrýt současné heslo' : 'Zobrazit současné heslo'
+                  showCurrentPassword
+                    ? t('organizationPassword.actions.hideCurrentPassword')
+                    : t('organizationPassword.actions.showCurrentPassword')
                 }
               >
                 {showCurrentPassword ? (
@@ -93,18 +99,23 @@ const OrganizationPasswordPage = () => {
           )}
 
           <FormField
-            label='Nové heslo'
+            label={t('organizationPassword.fields.newPassword.label')}
             icon={Lock}
             inputProps={{
               ...register('newPassword', {
-                required: 'Nové heslo je povinné',
+                required: t('organizationPassword.fields.newPassword.required'),
                 minLength: {
                   value: MIN_PASSWORD_LENGTH,
-                  message: `Nové heslo musí mít alespoň ${MIN_PASSWORD_LENGTH} znaků`,
+                  message: t(
+                    'organizationPassword.fields.newPassword.minLength',
+                    {
+                      count: MIN_PASSWORD_LENGTH,
+                    },
+                  ),
                 },
               }),
               type: showNewPassword ? 'text' : 'password',
-              placeholder: '••••••••',
+              placeholder: '........',
             }}
             rightElement={
               <button
@@ -112,7 +123,11 @@ const OrganizationPasswordPage = () => {
                 onClick={() => setShowNewPassword((value) => !value)}
                 className='bg-transparent cursor-pointer'
                 aria-pressed={showNewPassword}
-                aria-label={showNewPassword ? 'Skrýt nové heslo' : 'Zobrazit nové heslo'}
+                aria-label={
+                  showNewPassword
+                    ? t('organizationPassword.actions.hideNewPassword')
+                    : t('organizationPassword.actions.showNewPassword')
+                }
               >
                 {showNewPassword ? (
                   <Eye className='w-4 sm:w-5 h-4 sm:h-5 text-gray-800/50' />
@@ -133,7 +148,7 @@ const OrganizationPasswordPage = () => {
             size='primary'
             className='mt-3'
           >
-            Uložit nové heslo
+            {t('organizationPassword.actions.submit')}
           </Button>
         </form>
       </div>

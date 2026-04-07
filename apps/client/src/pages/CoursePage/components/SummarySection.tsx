@@ -5,6 +5,7 @@ import iconIdea from '@/assets/t-idea-blue.svg'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type SummaryBreadcrumbItem = {
   label: string
@@ -18,28 +19,29 @@ interface SummarySectionProps {
   className?: string
   cardClassName?: string
   rightSlot?: ReactNode
-
   collapsedLines?: number
 }
-
-const defaultBreadcrumbs: SummaryBreadcrumbItem[] = [
-  { label: 'Kurzy', path: '/courses' },
-  { label: 'Detaily kurzu' },
-]
 
 const SummarySection = ({
   name,
   description,
-  breadcrumbs = defaultBreadcrumbs,
+  breadcrumbs,
   className,
   cardClassName,
   rightSlot,
-
   collapsedLines = 2,
 }: SummarySectionProps) => {
+  const { t } = useTranslation(['courses', 'common'])
   const descriptionRef = useRef<HTMLParagraphElement>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [canExpand, setCanExpand] = useState(false)
+
+  const resolvedBreadcrumbs =
+    breadcrumbs ??
+    ([
+      { label: t('userCourse.breadcrumbRoot', { ns: 'courses' }), path: '/courses' },
+      { label: t('userCourse.breadcrumbCurrent', { ns: 'courses' }) },
+    ] satisfies SummaryBreadcrumbItem[])
 
   useEffect(() => {
     if (isExpanded || !description) return
@@ -84,7 +86,7 @@ const SummarySection = ({
         <div className='p-4 lg:p-6 -mt-2 gap-1 sm:gap-2 flex flex-col'>
           <div className='flex gap-1 justify-between '>
             <div className='flex flex-col gap-1 sm:gap-2'>
-              <Breadcrumb items={breadcrumbs} />
+              <Breadcrumb items={resolvedBreadcrumbs} />
               <Label className='mb-0 font-bold' size='lg'>
                 {name}
               </Label>
@@ -104,7 +106,6 @@ const SummarySection = ({
                 ref={descriptionRef}
                 className={cn(
                   'text-gray-600 text-sm md:text-base leading-relaxed',
-
                   !isExpanded && `line-clamp-${collapsedLines}`,
                 )}
               >
@@ -117,7 +118,9 @@ const SummarySection = ({
                   className='h-auto p-0'
                   onClick={() => setIsExpanded((prev) => !prev)}
                 >
-                  {isExpanded ? 'Zobrazit méně' : 'Zobrazit více'}
+                  {isExpanded
+                    ? t('summary.showLess', { ns: 'common' })
+                    : t('summary.showMore', { ns: 'common' })}
                 </Button>
               )}
             </div>

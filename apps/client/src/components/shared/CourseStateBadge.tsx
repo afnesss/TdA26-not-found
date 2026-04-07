@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Badge } from '../ui/badge'
 
@@ -11,33 +12,34 @@ interface CourseStateBadgeProps {
 const statusConfig: Record<
   CourseStatus,
   {
-    label: string
+    labelKey: string
     className: string
   }
 > = {
   draft: {
-    label: 'Návrh',
+    labelKey: 'courseStatus.draft',
     className: 'bg-accent-teal-light/20 text-[#2D8B6B]',
   },
   planned: {
-    label: 'Naplánováno',
+    labelKey: 'courseStatus.planned',
     className: 'bg-primary/20 text-primary',
   },
   live: {
-    label: 'Aktivní',
+    labelKey: 'courseStatus.live',
     className: 'bg-secondary/45 text-[#2D8B6B]',
   },
   paused: {
-    label: 'Pozastaveno',
+    labelKey: 'courseStatus.paused',
     className: 'bg-accent-teal/30 text-[#246969]',
   },
   archived: {
-    label: 'Archivováno',
+    labelKey: 'courseStatus.archived',
     className: 'bg-muted text-muted-foreground',
   },
 }
 
 export function CourseStateBadge({ status, className }: CourseStateBadgeProps) {
+  const { t } = useTranslation('common')
   const config = statusConfig[status] ?? statusConfig.archived
 
   return (
@@ -45,7 +47,7 @@ export function CourseStateBadge({ status, className }: CourseStateBadgeProps) {
       variant='secondary'
       className={cn(config.className ?? '', className ?? '')}
     >
-      {config.label}
+      {t(config.labelKey)}
     </Badge>
   )
 }

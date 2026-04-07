@@ -2,9 +2,9 @@ import type { FeedItem } from '@/lib/schemas'
 import { cn, formatDate } from '@/lib/utils'
 import { Edit } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
 import { Textarea } from '../ui/textarea'
-import { toast } from 'sonner'
 import DeleteConfirmDialog from '../ui/AlertDialog'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import EditSaveCancelButtons from './EditSaveCancelButtons'
@@ -25,6 +25,7 @@ const FeedItemComp = ({
   isDraft?: true
   onDelete?: () => void
 }) => {
+  const { t } = useTranslation('common')
   const [editName, setEditName] = useState(isDraft ? true : false)
   const [editedFeed, setEditedFeed] = useState<FeedItem>(feedItem)
   const [messageError, setMessageError] = useState<string | null>(null)
@@ -34,17 +35,17 @@ const FeedItemComp = ({
   useEffect(() => {
     setEditedFeed(feedItem)
   }, [feedItem])
+
   const handleSave = async () => {
     if (editedFeed.message.trim() === '') {
-      setMessageError('Příspěvek nesmí být prázdný')
+      setMessageError(t('feedItem.messageRequired'))
       return
     }
     try {
       await onSave?.(editedFeed)
       setEditName(false)
-    } catch (error) {
-      // Error is handled by parent, but we need to catch it here
-      // to prevent uncaught promise rejection
+    } catch {
+      // Parent handles the error state; this prevents an uncaught rejection.
     }
   }
 
@@ -64,11 +65,8 @@ const FeedItemComp = ({
           : 'bg-secondary/7 border-secondary'
       }`}
     >
-      {/* Header */}
       <div className='flex items-start justify-between gap-2 sm:gap-3 mb-2'>
-        {/* Badges and dates */}
         <div className='flex flex-wrap items-center gap-1.5 sm:gap-2 flex-1 min-w-0'>
-          {/* Badge */}
           <div className='flex gap-1.5 sm:gap-2 items-center'>
             <span
               className={cn(
@@ -78,10 +76,10 @@ const FeedItemComp = ({
                   : 'bg-secondary/15 text-accent-teal-light',
               )}
             >
-              {displayFeed.type === 'manual' ? 'Příspěvek' : 'Událost'}
+              {displayFeed.type === 'manual'
+                ? t('feedItem.manualLabel')
+                : t('feedItem.eventLabel')}
             </span>
-
-            {/* Dates */}
 
             <span className='whitespace-nowrap text-[10px] sm:text-xs md:text-sm text-gray-500'>
               {formatDate(displayFeed.createdAt)}
@@ -89,12 +87,11 @@ const FeedItemComp = ({
           </div>
           {displayFeed.edited && displayFeed.updatedAt && (
             <span className='text-[10px] sm:text-xs md:text-sm text-gray-400 italic whitespace-nowrap'>
-              (upraveno {formatDate(displayFeed.updatedAt)})
+              ({t('feedItem.editedAt', { date: formatDate(displayFeed.updatedAt) })})
             </span>
           )}
         </div>
 
-        {/* Action Buttons */}
         {displayFeed.type === 'manual' && type === 'edit' && (
           <div className='flex sm:gap-1 shrink-0'>
             {editName ? (
@@ -106,7 +103,7 @@ const FeedItemComp = ({
                   (editedFeed.message === feedItem.message ||
                     editedFeed.message.trim() === '')
                 }
-                saveAriaLabel='Uložit příspěvek'
+                saveAriaLabel={t('feedItem.saveAria')}
                 className='flex gap-1'
               />
             ) : (
@@ -114,13 +111,16 @@ const FeedItemComp = ({
                 <EditBtn
                   icon={Edit}
                   onClick={() => setEditName(true)}
-                  aria-label='Upravit příspěvek'
+                  aria-label={t('feedItem.editAria')}
                 />
                 <DeleteConfirmDialog
                   trigger={
-                    <EditBtn actionType='delete' aria-label='Smazat příspěvek' />
+                    <EditBtn
+                      actionType='delete'
+                      aria-label={t('feedItem.deleteAria')}
+                    />
                   }
-                  itemType='příspěvek'
+                  itemType={t('feedItem.itemType')}
                   onConfirm={() => {
                     onDelete?.()
                   }}
@@ -131,7 +131,6 @@ const FeedItemComp = ({
         )}
       </div>
 
-      {/* Content */}
       {editName && type === 'edit' ? (
         <>
           <Textarea
@@ -139,9 +138,9 @@ const FeedItemComp = ({
               'text-xs sm:text-sm md:text-base p-2 sm:placeholder:text-sm md:placeholder:pt-0.5',
               messageError && 'border-destructive',
             )}
-            variant={'ghost'}
+            variant='ghost'
             value={displayFeed.message}
-            placeholder='Text příspěvku'
+            placeholder={t('feedItem.placeholder')}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
               const capitalizedValue = handleCapitalizedInput(

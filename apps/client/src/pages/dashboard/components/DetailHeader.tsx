@@ -6,6 +6,7 @@ import Breadcrumb from '@/components/shared/Breadcrumb'
 import { buildOrgDashboardPath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 type DetailHeaderProps = {
   title: string
@@ -25,6 +26,7 @@ const DetailHeader = ({
   gradient = 'accent-teal',
 }: DetailHeaderProps) => {
   const { orgSlug } = useParams<{ orgSlug?: string }>()
+  const { t } = useTranslation('dashboard')
 
   return (
     <div className='bg-background rounded-xl shadow-sm overflow-hidden'>
@@ -34,8 +36,11 @@ const DetailHeader = ({
         <div className='flex flex-col gap-1'>
           <Breadcrumb
             items={[
-              { label: 'Sprava kurzů', path: buildOrgDashboardPath(orgSlug) },
-              { label: 'Detaily kurzu' },
+              {
+                label: t('courseOverview.card.breadcrumbRoot'),
+                path: buildOrgDashboardPath(orgSlug),
+              },
+              { label: t('courseOverview.card.breadcrumbCurrent') },
             ]}
           />
           <div className='flex items-center gap-3'>
@@ -46,6 +51,8 @@ const DetailHeader = ({
               <img
                 src={icon}
                 className='w-11 h-11 lg:w-13 lg:h-13 opacity-70'
+                alt=''
+                aria-hidden='true'
               />
             )}
           </div>
@@ -61,7 +68,7 @@ const DetailHeader = ({
           ) : (
             <Plus className='w-5 h-5 block md:hidden' aria-hidden='true' />
           )}
-          <span className={cn(`hidden md:block`)}>{buttonText}</span>
+          <span className={cn('hidden md:block')}>{buttonText}</span>
         </Button>
       </div>
     </div>

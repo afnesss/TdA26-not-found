@@ -32,6 +32,13 @@ const courses = {
     noMaterials: 'No materials yet',
     quizzesTitle: 'Quizzes',
     noQuizzes: 'No quizzes yet',
+    feedSection: {
+      title: 'Announcements',
+      loadingMore: 'Loading...',
+      loadMoreError: 'Loading error',
+      loadMore: 'Load more posts',
+      empty: 'No posts yet',
+    },
   },
 } as const
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
   CourseStateBadge,
   type CourseStatus,
 } from '@/components/shared/CourseStateBadge'
@@ -8,7 +8,6 @@ import CourseQuizCountBadge from '@/components/shared/CourseQuizCountBadge'
 import CourseLeaderboardSkeleton from '@/components/shared/loadingskeleton/CourseLeaderboardSkeleton'
 import StateComp from '@/components/shared/StateComp'
 import { StatusActionButtons } from '@/components/shared/StatusActionButtons'
-import { Button } from '@/components/ui/button'
 import { getCourseSessionOverview } from '@/api/queries/courseQueries'
 import { handleCapitalizedInput } from '@/lib/capitalize'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
@@ -28,6 +27,7 @@ import CardDate, {
 } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { useCourseModulesLayoutContext } from './CourseModulesLayoutContext'
@@ -52,6 +52,7 @@ import {
 import { useMediaQuery } from 'usehooks-ts'
 
 const CourseModulesOverviewPage = () => {
+  const { t } = useTranslation('dashboard')
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const {
@@ -65,14 +66,21 @@ const CourseModulesOverviewPage = () => {
   } = useCourseModulesLayoutContext()
 
   useTitle(
-    course?.name ? `Správa kurzů - ${course.name}` : 'Správa kurzů - kurz',
+    course?.name
+      ? t('courseOverview.pageTitleWithName', { name: course.name })
+      : t('courseOverview.pageTitleFallback'),
   )
   useAutoTopScroll()
 
-  const [courseName, setCourseName] = useState<string | null>(null)
-  const [courseDescription, setCourseDescription] = useState<string | null>(
-    null,
-  )
+  const [courseDraft, setCourseDraft] = useState<{
+    courseUuid?: string
+    name: string | null
+    description: string | null
+  }>({
+    courseUuid: undefined,
+    name: null,
+    description: null,
+  })
   const isMd = useMediaQuery('(min-width: 768px)')
   const [viewMode, setViewMode] = useLocalStorage<'content' | 'analytics'>(
     'dashboard-analytics-mode',
@@ -82,19 +90,8 @@ const CourseModulesOverviewPage = () => {
   const [isReorderMode, setIsReorderMode] = useState(false)
   const queryClient = useQueryClient()
 
-  // Track previous courseId to reset local edits when navigating to a different course
   const prevCourseUuidRef = useRef<string | undefined>(undefined)
   const prevCourseStatusRef = useRef<CourseStatus | undefined>(undefined)
-
-  useEffect(() => {
-    if (course?.uuid !== prevCourseUuidRef.current) {
-      prevCourseUuidRef.current = course?.uuid
-      if (courseName !== null) setCourseName(null)
-      if (courseDescription !== null) setCourseDescription(null)
-      prevCourseStatusRef.current = undefined
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course?.uuid])
 
   const {
     mutate: updateCourseDetailsMutation,
@@ -102,8 +99,11 @@ const CourseModulesOverviewPage = () => {
   } = useUpdateCourseMutation(
     courseId,
     (updatedCourse) => {
-      setCourseName(updatedCourse.name)
-      setCourseDescription(updatedCourse.description ?? '')
+      setCourseDraft({
+        courseUuid: updatedCourse.uuid,
+        name: updatedCourse.name,
+        description: updatedCourse.description ?? '',
+      })
     },
     orgSlug,
   )
@@ -120,7 +120,7 @@ const CourseModulesOverviewPage = () => {
         navigate(buildOrgDashboardCoursePath(orgSlug, clonedCourse.uuid))
       },
       toastMessage: (source) =>
-        `Kurz "${source.name}" byl zkopírován jako návrh`,
+        t('courseOverview.cloneSuccess', { name: source.name }),
     },
     orgSlug,
   )
@@ -136,14 +136,23 @@ const CourseModulesOverviewPage = () => {
     queryClient,
     orgSlug,
   })
+
   useEffect(() => {
     if (!course) return
+
+    if (prevCourseUuidRef.current !== course.uuid) {
+      prevCourseUuidRef.current = course.uuid
+      prevCourseStatusRef.current = course.status
+      return
+    }
+
     const prevStatus = prevCourseStatusRef.current
     if (prevStatus && prevStatus === 'planned' && course.status === 'live') {
-      toast.info(`Kurz ${course.name} byl automaticky spuštěn`)
+      toast.info(t('courseOverview.autoStarted', { name: course.name }))
     }
     prevCourseStatusRef.current = course.status
-  }, [course])
+  }, [course, t])
+
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const hasNetworkError = isError || !course
   const showLeaderboard =
@@ -169,7 +178,7 @@ const CourseModulesOverviewPage = () => {
       <StateComp
         type={isOffline ? 'network-offline' : 'error'}
         onAction={() => refetchCourse()}
-        message={isOffline ? undefined : 'Nepodařilo se načíst kurz'}
+        message={isOffline ? undefined : t('courseOverview.loadError')}
       />
     )
   }
@@ -178,8 +187,15 @@ const CourseModulesOverviewPage = () => {
     return <DashboardCourseOverviewSkeleton />
   }
 
-  const currentCourseName = courseName ?? course.name
-  const currentCourseDescription = courseDescription ?? course.description ?? ''
+  const isCurrentCourseDraft = courseDraft.courseUuid === course.uuid
+  const currentCourseName =
+    isCurrentCourseDraft && courseDraft.name !== null
+      ? courseDraft.name
+      : course.name
+  const currentCourseDescription =
+    isCurrentCourseDraft && courseDraft.description !== null
+      ? courseDraft.description
+      : (course.description ?? '')
 
   const handleCourseStatusChange = (status: CourseStatus) => {
     if (status !== 'draft') {
@@ -195,15 +211,7 @@ const CourseModulesOverviewPage = () => {
       { status },
       {
         onSuccess: () => {
-          toast.success(
-            {
-              draft: 'Kurz byl převeden do návrhu',
-              planned: 'Kurz byl naplánován',
-              live: 'Kurz byl spuštěn',
-              paused: 'Kurz byl pozastaven',
-              archived: 'Kurz byl archivován',
-            }[status],
-          )
+          toast.success(t(`courseOverview.statusChanged.${status}`))
         },
       },
     )
@@ -224,8 +232,11 @@ const CourseModulesOverviewPage = () => {
   }
 
   const handleCancelCourseDetails = () => {
-    setCourseName(null)
-    setCourseDescription(null)
+    setCourseDraft({
+      courseUuid: course.uuid,
+      name: null,
+      description: null,
+    })
   }
 
   const handleOpenModule = (moduleId: string) => {
@@ -281,7 +292,6 @@ const CourseModulesOverviewPage = () => {
   }
 
   const showPlanningFooter = course.status === 'planned' || planning.isEditing
-
   const disableDraftActionsInAnalytics =
     course.status === 'draft' && viewMode === 'analytics'
 
@@ -295,8 +305,8 @@ const CourseModulesOverviewPage = () => {
   const analyticsModules = modules ?? []
   const overviewTabs: Array<{ value: 'content' | 'analytics'; label: string }> =
     [
-      ...[{ value: 'content' as const, label: 'Obsah' }],
-      ...[{ value: 'analytics' as const, label: 'Statistiky' }],
+      { value: 'content', label: t('courseOverview.modules.tabs.content') },
+      { value: 'analytics', label: t('courseOverview.modules.tabs.analytics') },
     ]
   const courseGradientColor =
     course.status === 'live'
@@ -319,6 +329,16 @@ const CourseModulesOverviewPage = () => {
       buttonClassName='lg:h-9'
       labelClassName='text-xs lg:text-sm'
       onCopyAsDraft={() => cloneCourseMutation({ source: course })}
+      labels={{
+        schedule: t('courseOverview.statusActions.schedule'),
+        copyAsDraft: t('courseOverview.statusActions.copyAsDraft'),
+        copyShort: t('courseOverview.statusActions.copyShort'),
+        launch: t('courseOverview.statusActions.launch'),
+        toDraft: t('courseOverview.statusActions.toDraft'),
+        archive: t('courseOverview.statusActions.archive'),
+        pause: t('courseOverview.statusActions.pause'),
+        resume: t('courseOverview.statusActions.resume'),
+      }}
     />
   )
 
@@ -346,8 +366,8 @@ const CourseModulesOverviewPage = () => {
             saveDisabled={planning.saving || !!planning.error}
             cancelDisabled={planning.saving}
             className='flex items-center gap-1'
-            saveAriaLabel='Uložit kurz'
-            cancelAriaLabel='Zrušit úpravy'
+            saveAriaLabel={t('courseOverview.planning.saveAriaLabel')}
+            cancelAriaLabel={t('courseOverview.planning.cancelAriaLabel')}
           />
         </div>
       )}
@@ -359,18 +379,27 @@ const CourseModulesOverviewPage = () => {
       <EditableDetailCard
         gradient={courseGradientColor}
         breadcrumbItems={[
-          { label: 'Správa kurzů', path: buildOrgDashboardPath(orgSlug) },
+          {
+            label: t('courseOverview.card.breadcrumbRoot'),
+            path: buildOrgDashboardPath(orgSlug),
+          },
           { label: currentCourseName },
         ]}
         nameValue={currentCourseName}
         descriptionValue={currentCourseDescription}
         onNameChange={(value) => {
-          setCourseName(handleCapitalizedInput(value, currentCourseName))
+          setCourseDraft((prevDraft) => ({
+            ...prevDraft,
+            courseUuid: course.uuid,
+            name: handleCapitalizedInput(value, currentCourseName),
+          }))
         }}
         onDescriptionChange={(value) => {
-          setCourseDescription(
-            handleCapitalizedInput(value, currentCourseDescription),
-          )
+          setCourseDraft((prevDraft) => ({
+            ...prevDraft,
+            courseUuid: course.uuid,
+            description: handleCapitalizedInput(value, currentCourseDescription),
+          }))
         }}
         onEnterSave={handleSaveCourseDetails}
         onCancelEdit={handleCancelCourseDetails}
@@ -379,6 +408,19 @@ const CourseModulesOverviewPage = () => {
         saveDisabled={updateCourseDetailsPending || !currentCourseName.trim()}
         createdAt={course.createdAt}
         updatedAt={course.updatedAt}
+        labels={{
+          saveMobile: t('courseOverview.card.saveMobile'),
+          saveDesktop: t('courseOverview.card.saveDesktop'),
+          name: t('courseOverview.card.name'),
+          namePlaceholder: t('courseOverview.card.namePlaceholder'),
+          nameRequired: t('courseOverview.card.nameRequired'),
+          description: t('courseOverview.card.description'),
+          descriptionPlaceholder: t(
+            'courseOverview.card.descriptionPlaceholder',
+          ),
+          createdAt: t('courseOverview.card.createdAt'),
+          updatedAt: t('courseOverview.card.updatedAt'),
+        }}
         topBadges={
           <div className='flex flex-wrap items-center gap-2'>
             <CourseStateBadge status={course.status} />
@@ -391,7 +433,11 @@ const CourseModulesOverviewPage = () => {
               courseId={courseId}
               courseName={currentCourseName}
               variant='detail'
-              label={isMd ? 'Exportovat' : ''}
+              label={isMd ? t('courseOverview.export.label') : ''}
+              triggerAriaLabel={t('courseOverview.export.triggerAriaLabel')}
+              itemLabel={t('courseOverview.export.itemLabel')}
+              successMessage={t('courseOverview.export.success')}
+              errorMessage={t('courseOverview.export.error')}
             />
           </div>
         }
@@ -410,6 +456,22 @@ const CourseModulesOverviewPage = () => {
               courseId={courseId}
               courseName={currentCourseName}
               size='md'
+              labels={{
+                qrAlt: t('courseOverview.share.qrAlt'),
+                regenerateSuccess: t('courseOverview.share.regenerateSuccess'),
+                regenerateError: t('courseOverview.share.regenerateError'),
+                title: t('courseOverview.share.title'),
+                description: t('courseOverview.share.description'),
+                loadError: t('courseOverview.share.loadError'),
+                loading: t('courseOverview.share.loading'),
+                copyLink: t('courseOverview.share.copyLink'),
+                shareLink: t('courseOverview.share.shareLink'),
+                regenerateQr: t('courseOverview.share.regenerateQr'),
+                copySuccess: t('courseOverview.share.copySuccess'),
+                copyError: t('courseOverview.share.copyError'),
+                shareText: (name: string) =>
+                  t('courseOverview.share.shareText', { name }),
+              }}
             />
           ) : undefined
         }
@@ -427,21 +489,39 @@ const CourseModulesOverviewPage = () => {
                   strokeWidth='4'
                   offset='-bottom-0.5'
                 >
-                  Leaderboard studentů
+                  {t('courseOverview.leaderboard.title')}
                 </UnderlinedText>
               </Label>
               <CourseQuizCountBadge
                 totalQuizzes={courseSessionOverview?.totalQuizzes ?? 0}
+                label={t('courseOverview.leaderboard.quizzesInCourse')}
               />
             </div>
-            <CourseLeaderboard leaderboard={leaderboard} showLeaderTrophy />
+            <CourseLeaderboard
+              leaderboard={leaderboard}
+              showLeaderTrophy
+              emptyMessage={t('courseOverview.leaderboard.empty')}
+              showLessLabel={t('courseOverview.leaderboard.showLess')}
+              showMoreLabel={(count) =>
+                t('courseOverview.leaderboard.showMore', { count })
+              }
+              attemptLabel={(count) => {
+                if (count === 1) return t('courseOverview.leaderboard.attempt_one')
+                if (count >= 2 && count <= 4) {
+                  return t('courseOverview.leaderboard.attempt_few')
+                }
+                return t('courseOverview.leaderboard.attempt_many')
+              }}
+            />
           </>
         ))}
 
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <Label className='font-bold text-lg md:text-xl text-neutral-black'>
           <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-            {viewMode === 'analytics' ? 'Statistiky modulů' : 'Moduly kurzu'}
+            {viewMode === 'analytics'
+              ? t('courseOverview.modules.titleAnalytics')
+              : t('courseOverview.modules.titleContent')}
           </UnderlinedText>
         </Label>
         <ModulesSectionActions
@@ -453,6 +533,11 @@ const CourseModulesOverviewPage = () => {
           draftModule={draftModule}
           onToggleReorderMode={() => setIsReorderMode((prev) => !prev)}
           onAddModule={handleAddModuleDraft}
+          labels={{
+            cancelReorder: t('courseOverview.modules.actions.cancelReorder'),
+            reorder: t('courseOverview.modules.actions.reorder'),
+            addModule: t('courseOverview.modules.actions.addModule'),
+          }}
           headerRightSlot={
             overviewTabs.length > 1 ? (
               <DashboardModeTabs
@@ -485,13 +570,55 @@ const CourseModulesOverviewPage = () => {
           isToggleVisibilityPending={togglePending}
           lastActiveModuleUuid={lastActiveModuleUuid}
           firstPassiveModuleUuid={firstPassiveModuleUuid}
+          emptyMessage={t('courseOverview.modules.emptyAnalytics')}
+          moduleCardLabels={{
+            view: t('courseOverview.modules.card.view'),
+            draftNamePlaceholder: t(
+              'courseOverview.modules.card.draftNamePlaceholder',
+            ),
+            createModule: t('courseOverview.modules.card.createModule'),
+            cancelDraft: t('courseOverview.modules.card.cancelDraft'),
+            draftDescriptionPlaceholder: t(
+              'courseOverview.modules.card.draftDescriptionPlaceholder',
+            ),
+            materials: t('courseOverview.modules.card.materials'),
+            quizzes: t('courseOverview.modules.card.quizzes'),
+            total: (count) => t('courseOverview.modules.card.total', { count }),
+            noMaterials: t('courseOverview.modules.card.noMaterials'),
+            noMaterialsHint: t('courseOverview.modules.card.noMaterialsHint'),
+            noQuizzes: t('courseOverview.modules.card.noQuizzes'),
+            noQuizzesHint: t('courseOverview.modules.card.noQuizzesHint'),
+            noCriticalSignals: t(
+              'courseOverview.modules.card.noCriticalSignals',
+            ),
+            materialsNoInteraction: (count) =>
+              t('courseOverview.modules.card.materialsNoInteraction', { count }),
+            quizzesNoSubmission: (count) =>
+              t('courseOverview.modules.card.quizzesNoSubmission', { count }),
+            quizzesLowScore: (count) =>
+              t('courseOverview.modules.card.quizzesLowScore', { count }),
+            average: t('courseOverview.modules.card.average'),
+            submissions: t('courseOverview.modules.card.submissions'),
+            questions: t('courseOverview.modules.card.questions'),
+            materialsCount: t('courseOverview.modules.card.materialsCount'),
+            quizzesCount: t('courseOverview.modules.card.quizzesCount'),
+            editModuleAria: (name) =>
+              t('courseOverview.modules.card.editModuleAria', { name }),
+            deleteModuleAria: (name) =>
+              t('courseOverview.modules.card.deleteModuleAria', { name }),
+            deleteItemType: t('courseOverview.modules.card.deleteItemType'),
+            onlyLastActive: t('moduleDetail.visibility.onlyLastActive'),
+            onlyFirstHidden: t('moduleDetail.visibility.onlyFirstHidden'),
+            hide: t('moduleDetail.visibility.hide'),
+            activate: t('moduleDetail.visibility.activate'),
+          }}
         />
       ) : (
         <section className='space-y-4'>
           {analyticsModules.length === 0 ? (
             <StateComp
               type='no-content'
-              message='Kurz zatím nemá žádné moduly'
+              message={t('courseOverview.modules.emptyAnalytics')}
               className='py-8'
             />
           ) : (

@@ -11,6 +11,7 @@ import type { CourseDetail, FeedItem, StatusHistoryEvent } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Outlet, useParams, useMatch } from 'react-router-dom'
 import feedImg from '@/assets/disconnect-blue.svg'
 import {
@@ -26,6 +27,7 @@ import DashboardAddButton from './components/DashboardAddButton'
 type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
+  const { t } = useTranslation('dashboard')
   const { orgSlug, courseId } = useParams<{ orgSlug?: string; courseId: string }>()
   useCourseFeedSSE({
     courseId: courseId!,
@@ -94,7 +96,7 @@ const CourseModulesLayoutPage = () => {
   }, [course?.status_history])
 
   if (!courseId) {
-    return <StateComp type='not-found' message='Kurz nebyl nalezen' />
+    return <StateComp type='not-found' message={t('courseOverview.sidePanel.courseNotFound')} />
   }
 
   if (!courseLoading && (courseError || !course)) {
@@ -104,7 +106,7 @@ const CourseModulesLayoutPage = () => {
         type={
           isNotFound ? 'not-found' : isOffline ? 'network-offline' : 'error'
         }
-        message={isNotFound ? 'Kurz nebyl nalezen' : undefined}
+        message={isNotFound ? t('courseOverview.sidePanel.courseNotFound') : undefined}
         onAction={() => refetchCourse()}
       />
     )
@@ -187,7 +189,9 @@ const CourseModulesLayoutPage = () => {
         <div className='flex items-center justify-between gap-3'>
           <Label className='font-bold text-lg md:text-xl text-neutral-black'>
             <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-              {sideTab === 'feed' ? 'Oznámení' : 'Historie'}
+              {sideTab === 'feed'
+                ? t('courseOverview.sidePanel.feed')
+                : t('courseOverview.sidePanel.history')}
             </UnderlinedText>
           </Label>
           <div className='flex items-center gap-2'>
@@ -199,11 +203,13 @@ const CourseModulesLayoutPage = () => {
                 setSideTab(sideTab === 'feed' ? 'history' : 'feed')
               }
             >
-              {sideTab === 'feed' ? 'Historie' : 'Oznámení'}
+              {sideTab === 'feed'
+                ? t('courseOverview.sidePanel.history')
+                : t('courseOverview.sidePanel.feed')}
             </Button>
             {canManageFeed && sideTab === 'feed' && (
               <DashboardAddButton
-                label='Přidat příspěvek'
+                label={t('courseOverview.sidePanel.addPost')}
                 className='h-fit'
                 onClick={handleAddPost}
                 disabled={Boolean(draftPost)}
@@ -219,14 +225,14 @@ const CourseModulesLayoutPage = () => {
                 {feedLoading ? (
                   <StateComp
                     type='no-content'
-                    message='Načítání příspěvků...'
+                    message={t('courseOverview.sidePanel.postsLoading')}
                     className='pt-8 pb-0'
                   />
                 ) : feedError ? (
                   shouldSuppressFeedNetworkError ? (
                     <StateComp
                       type='no-content'
-                      message='Příspěvky nejsou dostupné'
+                      message={t('courseOverview.sidePanel.postsUnavailable')}
                       className='pt-8 pb-0'
                     />
                   ) : (
@@ -235,7 +241,7 @@ const CourseModulesLayoutPage = () => {
                       message={
                         isFeedOfflineError
                           ? undefined
-                          : 'Nepodařilo se načíst příspěvky'
+                          : t('courseOverview.sidePanel.postsLoadError')
                       }
                       onAction={() => {
                         refetchFeed()
@@ -256,7 +262,7 @@ const CourseModulesLayoutPage = () => {
                       />
                     )}
                     {allPosts.map((item) => {
-                      if (!item) return
+                      if (!item) return null
                       return (
                         <FeedItemComp
                           key={item.uuid}
@@ -285,10 +291,10 @@ const CourseModulesLayoutPage = () => {
                           disabled={isLoadingMore}
                         >
                           {isLoadingMore
-                            ? 'Načítání...'
+                            ? t('courseOverview.sidePanel.loadMoreLoading')
                             : paginationError
-                              ? 'Chyba při načítání'
-                              : 'Načíst další příspěvky'}
+                              ? t('courseOverview.sidePanel.loadMoreError')
+                              : t('courseOverview.sidePanel.loadMorePosts')}
                         </Button>
                       </div>
                     )}
@@ -298,7 +304,7 @@ const CourseModulesLayoutPage = () => {
                     type='no-content'
                     img={feedImg}
                     iconClassName='w-12 h-12 md:w-13 h-13'
-                    message='Zatím žádné příspěvky'
+                    message={t('courseOverview.sidePanel.noPosts')}
                     className='pt-8 pb-0'
                   />
                 )}
@@ -306,7 +312,7 @@ const CourseModulesLayoutPage = () => {
             ) : sideTab === 'feed' && hasCourseError ? (
               <StateComp
                 type='no-content'
-                message='Příspěvky nejsou dostupné'
+                message={t('courseOverview.sidePanel.postsUnavailable')}
                 className='pt-8 pb-0'
               />
             ) : (
@@ -318,7 +324,9 @@ const CourseModulesLayoutPage = () => {
                       className='rounded-xl border border-border/60 bg-muted/20 p-3'
                     >
                       <p className='text-sm font-semibold text-neutral-black'>
-                        Stav kurzu byl změněn na {event.status}
+                        {t('courseOverview.sidePanel.historyStatusChanged', {
+                          status: event.status,
+                        })}
                       </p>
                       {event.note && (
                         <p className='text-xs text-muted-foreground mt-1'>
@@ -333,7 +341,7 @@ const CourseModulesLayoutPage = () => {
                 ) : (
                   <StateComp
                     type='no-content'
-                    message='Zatím žádná historie'
+                    message={t('courseOverview.sidePanel.historyEmpty')}
                     className='pt-8 pb-0'
                   />
                 )}

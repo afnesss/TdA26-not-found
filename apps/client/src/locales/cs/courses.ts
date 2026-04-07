@@ -32,6 +32,13 @@ const courses = {
     noMaterials: 'Zatím žádné materiály',
     quizzesTitle: 'Kvízy',
     noQuizzes: 'Zatím žádné kvízy',
+    feedSection: {
+      title: 'Oznámení',
+      loadingMore: 'Načítání...',
+      loadMoreError: 'Chyba při načítání',
+      loadMore: 'Načíst další příspěvky',
+      empty: 'Zatím žádné příspěvky',
+    },
   },
 } as const
 

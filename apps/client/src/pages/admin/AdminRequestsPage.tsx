@@ -17,10 +17,13 @@ import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Inbox, Mail, MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 const AdminRequestsPage = () => {
-  useTitle('Žádosti organizací')
+  const { t, i18n } = useTranslation('admin')
+  useTitle(t('requests.pageTitle'))
+
   const queryClient = useQueryClient()
   const [noteById, setNoteById] = useState<Record<string, string>>({})
   const [rejectErrorById, setRejectErrorById] = useState<
@@ -44,10 +47,10 @@ const AdminRequestsPage = () => {
         queryKey: ['admin-organization-requests'],
       })
       void queryClient.invalidateQueries({ queryKey: ['admin-organizations'] })
-      toast.success('Žádost byla schválena')
+      toast.success(t('requests.toasts.approved'))
     },
     onError: () => {
-      toast.error('Žádost se nepodařilo schválit')
+      toast.error(t('requests.toasts.approveError'))
     },
   })
 
@@ -63,15 +66,15 @@ const AdminRequestsPage = () => {
       void queryClient.invalidateQueries({
         queryKey: ['admin-organization-requests'],
       })
-      toast.success('Žádost byla zamítnuta')
+      toast.success(t('requests.toasts.rejected'))
     },
     onError: () => {
-      toast.error('Žádost se nepodařilo zamítnout')
+      toast.error(t('requests.toasts.rejectError'))
     },
   })
 
   if (isLoading) {
-    return <StateComp type='no-content' message='Načítám žádosti…' />
+    return <StateComp type='no-content' message={t('requests.loading')} />
   }
 
   if (isError || !data) {
@@ -80,19 +83,16 @@ const AdminRequestsPage = () => {
 
   if (data.length === 0) {
     return (
-      <div className='max-w-7xl mx-auto'>
-        <StateComp
-          type='no-content'
-          message='Zatím zde nejsou žádné žádosti organizací'
-        />
+      <div className='mx-auto max-w-7xl'>
+        <StateComp type='no-content' message={t('requests.empty')} />
       </div>
     )
   }
 
   return (
-    <div className='max-w-7xl mx-auto space-y-5 md:space-y-6'>
+    <div className='mx-auto max-w-7xl space-y-5 md:space-y-6'>
       <HintPageText
-        text='Žádosti organizací'
+        text={t('requests.heading')}
         icon={Inbox}
         spanText={String(data.length)}
       />
@@ -107,7 +107,7 @@ const AdminRequestsPage = () => {
           return (
             <Card
               key={request.uuid}
-              className='rounded-xl bg-background cursor-auto shadow-md'
+              className='cursor-auto rounded-xl bg-background shadow-md'
             >
               <div
                 className={cn(
@@ -162,14 +162,14 @@ const AdminRequestsPage = () => {
                   {(showActions || noteValue) && (
                     <div className='space-y-2'>
                       <Label size='sm' className='block'>
-                        Poznámka správce
+                        {t('requests.adminNoteLabel')}
                       </Label>
                       <Textarea
-                        placeholder='Poznámka pro schválení nebo důvod zamítnutí'
+                        placeholder={t('requests.adminNotePlaceholder')}
                         minRows={1}
                         value={noteValue}
                         disabled={!showActions}
-                        className={cn(!showActions && 'min-h-0 mb-0')}
+                        className={cn(!showActions && 'mb-0 min-h-0')}
                         onChange={(event) => {
                           const value = event.target.value
                           setNoteById((prev) => ({
@@ -192,12 +192,14 @@ const AdminRequestsPage = () => {
                   )}
                 </div>
 
-                <CardFooter className='justify-between items-center gap-3 px-0 pb-0 border-none'>
+                <CardFooter className='items-center justify-between gap-3 border-none px-0 pb-0'>
                   <div className='shrink-0 text-xs font-semibold italic text-muted-foreground'>
                     <span className='font-medium text-gray-500'>
-                      Vytvořeno:
+                      {t('requests.createdAt')}
                     </span>{' '}
-                    {new Date(request.createdAt).toLocaleDateString('cs-CZ')}
+                    {new Date(request.createdAt).toLocaleDateString(
+                      i18n.resolvedLanguage === 'en' ? 'en-US' : 'cs-CZ',
+                    )}
                   </div>
 
                   {showActions ? (
@@ -210,8 +212,9 @@ const AdminRequestsPage = () => {
                           if (!noteValue.trim()) {
                             setRejectErrorById((prev) => ({
                               ...prev,
-                              [request.uuid]:
-                                'Pro zamítnutí nejdřív vyplňte poznámku.',
+                              [request.uuid]: t(
+                                'requests.validation.rejectNoteRequired',
+                              ),
                             }))
                             return
                           }
@@ -227,7 +230,7 @@ const AdminRequestsPage = () => {
                           })
                         }}
                       >
-                        Zamítnout
+                        {t('requests.actions.reject')}
                       </Button>
                       <Button
                         variant='primary'
@@ -240,7 +243,7 @@ const AdminRequestsPage = () => {
                           })
                         }
                       >
-                        Schválit
+                        {t('requests.actions.approve')}
                       </Button>
                     </div>
                   ) : (

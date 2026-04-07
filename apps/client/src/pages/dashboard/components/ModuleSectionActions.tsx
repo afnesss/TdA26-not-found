@@ -15,6 +15,11 @@ type ModulesSectionActionsProps = {
   onToggleReorderMode: () => void
   onAddModule: () => void
   headerRightSlot?: ReactNode
+  labels?: {
+    cancelReorder?: string
+    reorder?: string
+    addModule?: string
+  }
 }
 
 export const ModulesSectionActions = ({
@@ -27,36 +32,45 @@ export const ModulesSectionActions = ({
   onToggleReorderMode,
   onAddModule,
   headerRightSlot,
+  labels,
 }: ModulesSectionActionsProps) => (
   <div className='flex items-center gap-2'>
     {headerRightSlot}
     {courseStatus === 'draft' && !previewMode && (
       <Button
-        variant={'outline'}
+        variant='outline'
         size='sm'
         disabled={modulesLength < 2 || disableActions}
         onClick={() => {
           if (!disableActions) onToggleReorderMode()
         }}
         className='rounded-full'
-        aria-label={isReorderMode ? 'Zrušit preskládání' : 'Přeskládat'}
+        aria-label={
+          isReorderMode
+            ? labels?.cancelReorder ?? 'Zrušit přeskládání'
+            : labels?.reorder ?? 'Přeskládat'
+        }
       >
         {isReorderMode ? (
           <>
             <X className='w-4 h-4' />
-            <span className='hidden sm:inline'>Zrušit</span>
+            <span className='hidden sm:inline'>
+              {labels?.cancelReorder ?? 'Zrušit'}
+            </span>
           </>
         ) : (
           <>
             <Menu className='w-4 h-4' />
-            <span className='hidden sm:inline'>Přeskládat</span>
+            <span className='hidden sm:inline'>
+              {labels?.reorder ?? 'Přeskládat'}
+            </span>
           </>
         )}
       </Button>
     )}
     {!previewMode && (
       <DashboardAddButton
-        label='Pridat modul'
+        label={labels?.addModule ?? 'Přidat modul'}
         className='rounded-full'
         onClick={() => {
           if (!disableActions) onAddModule()

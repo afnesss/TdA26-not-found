@@ -13,21 +13,23 @@ interface DashboardModeTabsProps<T extends string> {
   tabs: DashboardModeTab<T>[]
   onChange: (value: T) => void
   className?: string
+  switchLabel?: string
+  switchAriaLabel?: string
 }
 
 const lastToggleValueByKey = new Map<string, string>()
 
-// Separate component so hooks are always called unconditionally
 const ToggleSwitch = <T extends string>({
   value,
   tabs,
   onChange,
   className,
+  switchLabel,
+  switchAriaLabel,
 }: DashboardModeTabsProps<T>) => {
   const [primaryTab, secondaryTab] = tabs
   const isSecondaryActive = value === secondaryTab.value
   const targetTab = isSecondaryActive ? primaryTab : secondaryTab
-  const isDisabled = Boolean(targetTab.disabled)
 
   const tabsKey = useMemo(
     () => `switch:${tabs.map((tab) => tab.value).join('|')}`,
@@ -54,13 +56,13 @@ const ToggleSwitch = <T extends string>({
   return (
     <div className={cn('inline-flex flex-col items-center gap-1', className)}>
       <span className='text-[10px] md:text-xs font-semibold tracking-wide text-primary'>
-        Statistiky
+        {switchLabel ?? secondaryTab.label}
       </span>
       <button
         type='button'
         role='switch'
         aria-checked={isSecondaryActive}
-        aria-label='Přepnout režim statistik'
+        aria-label={switchAriaLabel ?? secondaryTab.label}
         className={cn(
           'relative inline-flex h-3 md:h-4 w-8 md:w-10 cursor-pointer items-center rounded-full border transition-all duration-200 mr-0.5',
           isSecondaryActive
@@ -87,6 +89,8 @@ const DashboardModeTabs = <T extends string>({
   tabs,
   onChange,
   className,
+  switchLabel,
+  switchAriaLabel,
 }: DashboardModeTabsProps<T>) => {
   if (tabs.length === 0) return null
 
@@ -97,6 +101,8 @@ const DashboardModeTabs = <T extends string>({
         tabs={tabs}
         onChange={onChange}
         className={className}
+        switchLabel={switchLabel}
+        switchAriaLabel={switchAriaLabel}
       />
     )
   }

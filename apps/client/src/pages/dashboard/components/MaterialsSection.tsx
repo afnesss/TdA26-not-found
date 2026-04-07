@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label'
 import type { CourseStatus, Material } from '@/lib/schemas'
 import type { MaterialDraft } from '../../CoursePage/utils/useMaterialMutation'
 import DashboardAddButton from './DashboardAddButton'
+import { useTranslation } from 'react-i18next'
 
 interface MaterialsSectionProps {
   materials: Material[]
@@ -32,16 +33,19 @@ const MaterialsSection = ({
   onCancelDraft,
 }: MaterialsSectionProps) => {
   const isEmpty = !draftMaterial && materials.length === 0
+  const { t } = useTranslation('dashboard')
 
   return (
     <section className='space-y-3'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <Label className='font-bold'>
-          <UnderlinedText strokeWidth='4'>Studijní materiály</UnderlinedText>
+          <UnderlinedText strokeWidth='4'>
+            {t('moduleDetail.materialsSection.title')}
+          </UnderlinedText>
         </Label>
         {!previewMode && (
           <DashboardAddButton
-            label='Přidat materiál'
+            label={t('moduleDetail.materialsSection.add')}
             onClick={onAddMaterial}
             disabled={!!draftMaterial}
           />
@@ -52,7 +56,7 @@ const MaterialsSection = ({
         {isEmpty ? (
           <StateComp
             type='no-content'
-            message='Zatím žádné materiály'
+            message={t('moduleDetail.materialsSection.empty')}
             className='pt-8 pb-0'
           />
         ) : (
@@ -75,7 +79,9 @@ const MaterialsSection = ({
                   type='edit'
                   courseStatus={courseStatus}
                   onDelete={() => onDeleteMaterial(mat.uuid)}
-                  onSave={(editedMaterial) => onSaveMaterial(mat.uuid, editedMaterial)}
+                  onSave={(editedMaterial) =>
+                    onSaveMaterial(mat.uuid, editedMaterial)
+                  }
                 />
               ) : (
                 <MaterialCard

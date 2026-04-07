@@ -10,6 +10,8 @@ type ModuleVisibilityActionButtonProps = {
   disabled?: boolean
   className?: string
   title?: string
+  activeLabel?: string
+  passiveLabel?: string
 }
 
 const ModuleVisibilityActionButton = ({
@@ -18,6 +20,8 @@ const ModuleVisibilityActionButton = ({
   disabled,
   className,
   title,
+  activeLabel = 'Skrýt',
+  passiveLabel = 'Aktivovat',
 }: ModuleVisibilityActionButtonProps) => {
   const isActive = status === 'active'
 
@@ -47,7 +51,7 @@ const ModuleVisibilityActionButton = ({
       )}
       <span className='hidden md:inline-block'>
         {' '}
-        {isActive ? 'Skrýt' : 'Aktivovat'}
+        {isActive ? activeLabel : passiveLabel}
       </span>
     </Button>
   )

@@ -1,4 +1,4 @@
-﻿import {
+import {
   getCourseModules,
   getModuleByUuid,
   updateModule,
@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import {
   type CreateMaterialPayload,
@@ -51,7 +52,15 @@ import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 type QueryError = Error & { status?: number }
 
-const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
+const ModuleVisibilityBadge = ({
+  status,
+  activeLabel,
+  hiddenLabel,
+}: {
+  status: CourseModulesStatus
+  activeLabel: string
+  hiddenLabel: string
+}) => (
   <Badge
     variant='secondary'
     className={cn(
@@ -60,11 +69,12 @@ const ModuleVisibilityBadge = ({ status }: { status: CourseModulesStatus }) => (
         : 'bg-muted text-muted-foreground',
     )}
   >
-    {status === 'active' ? 'Aktivní' : 'Skrytý'}
+    {status === 'active' ? activeLabel : hiddenLabel}
   </Badge>
 )
 
 const CourseModuleDetailPage = () => {
+  const { t } = useTranslation('dashboard')
   const { orgSlug, courseId, moduleId } = useParams<{
     orgSlug?: string
     courseId: string
@@ -86,7 +96,6 @@ const CourseModuleDetailPage = () => {
     data: modules = [],
     isLoading: modulesLoading,
     isError: modulesError,
-    error: modulesQueryError,
     refetch: refetchModules,
   } = useQuery<ModuleSummary[], QueryError>({
     queryKey: ['course-modules', courseId],
@@ -111,12 +120,17 @@ const CourseModuleDetailPage = () => {
   const toggleVisibilityMutation = useMutation({
     mutationFn: async () => {
       if (!courseId || !selectedModule) {
-        throw new Error('Missing course/module')
+        throw new Error(t('moduleDetail.missingCourseOrModule'))
       }
 
-      return updateModule(courseId, selectedModule.uuid, {
-        status: selectedModule.status === 'active' ? 'passive' : 'active',
-      }, orgSlug)
+      return updateModule(
+        courseId,
+        selectedModule.uuid,
+        {
+          status: selectedModule.status === 'active' ? 'passive' : 'active',
+        },
+        orgSlug,
+      )
     },
     onSuccess: async (updatedModule) => {
       await Promise.all([
@@ -130,12 +144,12 @@ const CourseModuleDetailPage = () => {
       ])
       toast.success(
         updatedModule.status === 'active'
-          ? 'Modul byl úspěšně aktivován'
-          : 'Modul byl úspěšně skryt',
+          ? t('moduleDetail.activated')
+          : t('moduleDetail.hiddenSuccess'),
       )
     },
     onError: () => {
-      toast.error('Chyba při změně stavu modulu')
+      toast.error(t('moduleDetail.visibilityError'))
     },
   })
 
@@ -148,13 +162,18 @@ const CourseModuleDetailPage = () => {
       description: string
     }) => {
       if (!courseId || !moduleId) {
-        throw new Error('Missing course/module')
+        throw new Error(t('moduleDetail.missingCourseOrModule'))
       }
 
-      return updateModule(courseId, moduleId, {
-        name,
-        description: description || undefined,
-      }, orgSlug)
+      return updateModule(
+        courseId,
+        moduleId,
+        {
+          name,
+          description: description || undefined,
+        },
+        orgSlug,
+      )
     },
     onSuccess: async (updatedModule) => {
       setModuleName(null)
@@ -171,7 +190,7 @@ const CourseModuleDetailPage = () => {
         queryClient.invalidateQueries({ queryKey: ['course', courseId] }),
       ])
 
-      toast.success('Modul aktualizován')
+      toast.success(t('moduleDetail.updated'))
     },
   })
 
@@ -198,7 +217,11 @@ const CourseModuleDetailPage = () => {
     moduleId ?? '',
   )
 
-  useTitle(selectedModule?.name || 'Správa modulů - modul')
+  useTitle(
+    selectedModule?.name
+      ? t('moduleDetail.pageTitleWithName', { name: selectedModule.name })
+      : t('moduleDetail.pageTitleFallback'),
+  )
 
   const isOffline = typeof navigator !== 'undefined' && !navigator.onLine
   const isModuleNotFound = moduleQueryError?.status === 404
@@ -213,15 +236,15 @@ const CourseModuleDetailPage = () => {
     return (
       <StateComp
         type='not-found'
-        message='Modul nebyl nalezen'
-        actionText='Zpět na moduly'
+        message={t('moduleDetail.notFound')}
+        actionText={t('moduleDetail.backToModules')}
       />
     )
   }
 
   if (!moduleLoading && moduleError) {
     if (isModuleNotFound) {
-      return <StateComp type='not-found' message='Modul nebyl nalezen' />
+      return <StateComp type='not-found' message={t('moduleDetail.notFound')} />
     }
 
     return (
@@ -235,7 +258,7 @@ const CourseModuleDetailPage = () => {
   }
 
   if (!moduleLoading && !selectedModule) {
-    return <StateComp type='not-found' message='Modul nebyl nalezen' />
+    return <StateComp type='not-found' message={t('moduleDetail.notFound')} />
   }
 
   const currentModuleName = moduleName ?? selectedModule?.name ?? ''
@@ -411,9 +434,12 @@ const CourseModuleDetailPage = () => {
         <EditableDetailCard
           gradient={moduleGradient}
           breadcrumbItems={[
-            { label: 'Správa kurzů', path: buildOrgDashboardPath(orgSlug) },
             {
-              label: course?.name ?? 'Kurz',
+              label: t('moduleDetail.breadcrumbRoot'),
+              path: buildOrgDashboardPath(orgSlug),
+            },
+            {
+              label: course?.name ?? t('moduleDetail.breadcrumbCourseFallback'),
               path: buildOrgDashboardCoursePath(orgSlug, courseId),
             },
             { label: currentModuleName },
@@ -455,10 +481,25 @@ const CourseModuleDetailPage = () => {
                 ? moduleUpdatedAt.toISOString()
                 : undefined
           }
+          labels={{
+            saveMobile: t('moduleDetail.card.saveMobile'),
+            saveDesktop: t('moduleDetail.card.saveDesktop'),
+            name: t('moduleDetail.card.name'),
+            namePlaceholder: t('moduleDetail.card.namePlaceholder'),
+            nameRequired: t('moduleDetail.card.nameRequired'),
+            description: t('moduleDetail.card.description'),
+            descriptionPlaceholder: t('moduleDetail.card.descriptionPlaceholder'),
+            createdAt: t('moduleDetail.card.createdAt'),
+            updatedAt: t('moduleDetail.card.updatedAt'),
+          }}
           topBadges={
             <>
               {canToggleModuleVisibility && (
-                <ModuleVisibilityBadge status={selectedModule.status} />
+                <ModuleVisibilityBadge
+                  status={selectedModule.status}
+                  activeLabel={t('moduleDetail.active')}
+                  hiddenLabel={t('moduleDetail.hidden')}
+                />
               )}
             </>
           }
@@ -475,12 +516,14 @@ const CourseModuleDetailPage = () => {
                     (selectedModule.status === 'passive' &&
                       !isFirstPassiveModule)
                   }
+                  activeLabel={t('moduleDetail.visibility.hide')}
+                  passiveLabel={t('moduleDetail.visibility.activate')}
                   title={
                     selectedModule.status === 'active' && !isLastActiveModule
-                      ? 'Lze skrýt pouze poslední aktivní modul'
+                      ? t('moduleDetail.visibility.onlyLastActive')
                       : selectedModule.status === 'passive' &&
                           !isFirstPassiveModule
-                        ? 'Lze aktivovat pouze první skrytý modul'
+                        ? t('moduleDetail.visibility.onlyFirstHidden')
                         : ''
                   }
                 />

@@ -1,11 +1,7 @@
 import CourseModulesGrid from '@/components/shared/CourseModulesGrid'
 import StateComp from '@/components/shared/StateComp'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import type { ModuleDetail } from '@/lib/schemas/module'
 import type { CourseStatus } from '@/components/shared/CourseStateBadge'
-import { Menu, X } from 'lucide-react'
-import DashboardAddButton from './DashboardAddButton'
 import ModuleCard, { type DraftModuleForm } from './ModuleCard'
 import { DragDropModulesProvider } from './DragDropModulesProvider'
 import { DraggableModuleCard } from './DraggableModuleCard'
@@ -33,6 +29,8 @@ interface ModulesSectionProps {
   isToggleVisibilityPending: boolean
   lastActiveModuleUuid?: string
   firstPassiveModuleUuid?: string
+  emptyMessage?: string
+  moduleCardLabels?: React.ComponentProps<typeof ModuleCard>['labels']
 }
 
 const ModulesSection = ({
@@ -44,8 +42,6 @@ const ModulesSection = ({
   previewMode,
   isReorderMode,
   disableActions = false,
-  onToggleReorderMode,
-  onAddModule,
   onOpenModule,
   onCreateModule,
   onDeleteModule,
@@ -54,6 +50,8 @@ const ModulesSection = ({
   isToggleVisibilityPending,
   lastActiveModuleUuid,
   firstPassiveModuleUuid,
+  emptyMessage = 'Kurz zatím nemá žádné moduly',
+  moduleCardLabels,
 }: ModulesSectionProps) => {
   const modulesList = modules
   const canToggleModuleVisibility = courseStatus === 'live'
@@ -72,7 +70,6 @@ const ModulesSection = ({
     : null
 
   const isEmpty = modulesList.length === 0 && !draftModule
-
   const canDragAndDrop =
     courseStatus === 'draft' && isReorderMode && modulesList.length > 1
 
@@ -95,16 +92,13 @@ const ModulesSection = ({
       {isEmpty ? (
         <StateComp
           type='no-content'
-          message='Kurz zatím nemá žádné moduly'
+          message={emptyMessage}
           className='py-8'
         />
       ) : (
         <div className='space-y-4'>
           {modulesForGrid.length > 0 && (
-            <DragDropModulesProvider
-              courseId={courseId!}
-              modules={modulesForGrid}
-            >
+            <DragDropModulesProvider courseId={courseId} modules={modulesForGrid}>
               {(orderedModules) => (
                 <CourseModulesGrid
                   modules={orderedModules}
@@ -137,6 +131,7 @@ const ModulesSection = ({
                 onToggleModuleVisibility={onToggleVisibility}
                 lastActiveModuleUuid={lastActiveModuleUuid}
                 firstPassiveModuleUuid={firstPassiveModuleUuid}
+                labels={moduleCardLabels}
               />
 
               <div ref={draftCardRef}>
@@ -148,6 +143,7 @@ const ModulesSection = ({
                   onCreate={onCreateModule}
                   onCancel={() => setDraftModule(null)}
                   isCreating={isCreating}
+                  labels={moduleCardLabels}
                 />
               </div>
             </div>
@@ -163,6 +159,7 @@ const ModulesSection = ({
                 onCreate={onCreateModule}
                 onCancel={() => setDraftModule(null)}
                 isCreating={isCreating}
+                labels={moduleCardLabels}
               />
             </div>
           )}

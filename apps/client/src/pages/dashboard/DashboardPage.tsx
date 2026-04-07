@@ -10,10 +10,7 @@ import SearchBar from '@/components/shared/SearchBar'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import {
-  defaultStatusFilters,
-  type FilterIds,
-} from '@/lib/constants'
+import { defaultStatusFilters, type FilterIds } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgDashboardCoursePath } from '@/lib/routes'
 import type { CourseStatus, CourseSummary } from '@/lib/schemas'
@@ -237,7 +234,7 @@ const DashboardDesign1 = () => {
             </div>
             <button
               type='button'
-              className='self-center inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline'
+              className='cursor-pointer self-center inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline'
               onClick={() => setShowMobileActions((prev) => !prev)}
             >
               <ChevronDown
@@ -348,7 +345,9 @@ const DashboardDesign1 = () => {
                 exportErrorMessage={t('backup.exportErrorMessage')}
               />
             </span>
-            <span className='sm:inline-flex lg:hidden'>{createButton(true)}</span>
+            <span className='sm:inline-flex lg:hidden'>
+              {createButton(true)}
+            </span>
             <span className='hidden lg:inline-flex'>{createButton(false)}</span>
           </div>
 

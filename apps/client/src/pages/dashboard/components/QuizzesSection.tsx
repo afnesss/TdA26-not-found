@@ -6,6 +6,7 @@ import type { Quiz } from '@/lib/schemas'
 import type { CourseStatus } from '@/components/shared/CourseStateBadge'
 import DashboardAddButton from './DashboardAddButton'
 import quizImg from '@/assets/t-play-blue.svg'
+import { useTranslation } from 'react-i18next'
 
 interface QuizzesSectionProps {
   quizzes: Quiz[]
@@ -42,18 +43,19 @@ const QuizzesSection = ({
 }: QuizzesSectionProps) => {
   const isEmpty = !draftQuiz && quizzes.length === 0
   const isDraftCourse = courseStatus === 'draft'
+  const { t } = useTranslation('dashboard')
 
   return (
     <section className='space-y-4'>
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <Label className='font-bold mb-0'>
           <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-            Kvízy
+            {t('moduleDetail.quizzesSection.title')}
           </UnderlinedText>
         </Label>
         {canEdit && (
           <DashboardAddButton
-            label='Přidat kvíz'
+            label={t('moduleDetail.quizzesSection.add')}
             onClick={onAddQuiz}
             disabled={!!draftQuiz}
           />
@@ -66,7 +68,7 @@ const QuizzesSection = ({
             type='no-content'
             img={quizImg}
             iconClassName='w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16'
-            message='Zatím žádné kvízy'
+            message={t('moduleDetail.quizzesSection.empty')}
             className='pt-8 pb-0'
           />
         ) : (

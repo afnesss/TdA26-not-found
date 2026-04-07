@@ -1,5 +1,4 @@
-﻿import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { colorStyles } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import ModuleVisibilityActionButton from './ModuleVisibilityActionButton'
@@ -28,29 +27,47 @@ import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import AnalyticsAttentionAlert from './AnalyticsAttentionAlert'
 import AnalyticsStatCard from './AnalyticsStatCard'
-
-const formatCzechCount = (
-  count: number,
-  one: string,
-  few: string,
-  many: string,
-) => {
-  const abs = Math.abs(count)
-  const lastTwo = abs % 100
-  if (lastTwo >= 11 && lastTwo <= 14) return `${count} ${many}`
-  const last = abs % 10
-  if (last === 1) return `${count} ${one}`
-  if (last >= 2 && last <= 4) return `${count} ${few}`
-  return `${count} ${many}`
-}
+import { useTranslation } from 'react-i18next'
 
 export type DraftModuleForm = {
   name: string
   description: string
 }
 
+type ModuleCardLabels = {
+  view?: string
+  draftNamePlaceholder?: string
+  createModule?: string
+  cancelDraft?: string
+  draftDescriptionPlaceholder?: string
+  materials?: string
+  quizzes?: string
+  total?: (count: number) => string
+  noMaterials?: string
+  noMaterialsHint?: string
+  noQuizzes?: string
+  noQuizzesHint?: string
+  noCriticalSignals?: string
+  materialsNoInteraction?: (count: number) => string
+  quizzesNoSubmission?: (count: number) => string
+  quizzesLowScore?: (count: number) => string
+  average?: string
+  submissions?: string
+  questions?: string
+  materialsCount?: string
+  quizzesCount?: string
+  editModuleAria?: (name: string) => string
+  deleteModuleAria?: (name: string) => string
+  deleteItemType?: string
+  onlyLastActive?: string
+  onlyFirstHidden?: string
+  hide?: string
+  activate?: string
+}
+
 type BaseModuleCardProps = {
   moduleIndex: number
+  labels?: ModuleCardLabels
 }
 
 type ExistingModuleCardProps = BaseModuleCardProps & {
@@ -90,6 +107,7 @@ type DraftModuleCardProps = BaseModuleCardProps & {
 type ModuleCardProps = ExistingModuleCardProps | DraftModuleCardProps
 
 const ModuleCard = (props: ModuleCardProps) => {
+  const { t } = useTranslation('dashboard')
   if (props.variant === 'draft') {
     const {
       moduleIndex,
@@ -98,6 +116,7 @@ const ModuleCard = (props: ModuleCardProps) => {
       onCreate,
       onCancel,
       isCreating,
+      labels,
     } = props
 
     return (
@@ -122,7 +141,10 @@ const ModuleCard = (props: ModuleCardProps) => {
                 )
               }
               onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
-              placeholder='Zadejte název modulu'
+              placeholder={
+                labels?.draftNamePlaceholder ??
+                t('courseOverview.modules.card.draftNamePlaceholder')
+              }
               className='placeholder:font-semibold'
             />
             <EditSaveCancelButtons
@@ -130,8 +152,14 @@ const ModuleCard = (props: ModuleCardProps) => {
               onCancel={() => onCancel()}
               saveDisabled={isCreating || !draftModule.name.trim()}
               cancelDisabled={isCreating}
-              saveAriaLabel='Vytvořit modul'
-              cancelAriaLabel='Zrušit koncept modulu'
+              saveAriaLabel={
+                labels?.createModule ??
+                t('courseOverview.modules.card.createModule')
+              }
+              cancelAriaLabel={
+                labels?.cancelDraft ??
+                t('courseOverview.modules.card.cancelDraft')
+              }
               className='flex items-center gap-1'
             />
           </div>
@@ -156,7 +184,10 @@ const ModuleCard = (props: ModuleCardProps) => {
                   )
                 }
                 onKeyDown={(e) => handleSaveOnEnter(e, onCreate, onCancel)}
-                placeholder='Popis modulu (volitelné)'
+                placeholder={
+                  labels?.draftDescriptionPlaceholder ??
+                  t('courseOverview.modules.card.draftDescriptionPlaceholder')
+                }
               />
             </div>
           </div>
@@ -177,12 +208,13 @@ const ModuleCard = (props: ModuleCardProps) => {
     onToggleModuleVisibility,
     showGripHandle,
     gripHandleProps,
-  alwaysShowActions,
-  isDragging,
-  lastActiveModuleUuid,
-  firstPassiveModuleUuid,
-  userMode = false,
-} = props
+    alwaysShowActions,
+    isDragging,
+    lastActiveModuleUuid,
+    firstPassiveModuleUuid,
+    userMode = false,
+    labels,
+  } = props
 
   const isWholeCardDragEnabled = Boolean(gripHandleProps)
   const cardDragProps =
@@ -245,14 +277,23 @@ const ModuleCard = (props: ModuleCardProps) => {
     if (quiz.averagePercentage == null) return false
     return quiz.averagePercentage < 60
   }).length
+
   const quizAttentionParts: string[] = []
   if (moduleQuizzesWithoutSubmits > 0) {
     quizAttentionParts.push(
-      `Kvízy bez odeslání: ${moduleQuizzesWithoutSubmits}`,
+      labels?.quizzesNoSubmission?.(moduleQuizzesWithoutSubmits) ??
+        t('courseOverview.modules.card.quizzesNoSubmission', {
+          count: moduleQuizzesWithoutSubmits,
+        }),
     )
   }
   if (moduleLowScoreQuizzes > 0) {
-    quizAttentionParts.push(`Kvízy s nízkým skóre: ${moduleLowScoreQuizzes}`)
+    quizAttentionParts.push(
+      labels?.quizzesLowScore?.(moduleLowScoreQuizzes) ??
+        t('courseOverview.modules.card.quizzesLowScore', {
+          count: moduleLowScoreQuizzes,
+        }),
+    )
   }
   const materialsHasAttention =
     hasMaterials && moduleMaterialsWithoutInteraction > 0
@@ -323,7 +364,9 @@ const ModuleCard = (props: ModuleCardProps) => {
                 onOpenModule?.(module.uuid)
               }}
             >
-              <span className='font-semibold'>Zobrazit</span>
+              <span className='font-semibold'>
+                {labels?.view ?? t('courseOverview.modules.card.view')}
+              </span>
             </Button>
           ) : alwaysShowActions ? (
             <div className='flex shrink-0 items-center gap-2'>
@@ -332,11 +375,21 @@ const ModuleCard = (props: ModuleCardProps) => {
                 onClick={(e) => {
                   e?.stopPropagation()
                 }}
-                aria-label={`Upravit modul ${module.name}`}
+                aria-label={
+                  labels?.editModuleAria?.(module.name) ??
+                  t('courseOverview.modules.card.editModuleAria', {
+                    name: module.name,
+                  })
+                }
               />
               <EditBtn
                 actionType='delete'
-                aria-label={`Smazat modul ${module.name}`}
+                aria-label={
+                  labels?.deleteModuleAria?.(module.name) ??
+                  t('courseOverview.modules.card.deleteModuleAria', {
+                    name: module.name,
+                  })
+                }
               />
             </div>
           ) : courseStatus === 'draft' && onDeleteModule ? (
@@ -347,16 +400,29 @@ const ModuleCard = (props: ModuleCardProps) => {
                   e?.stopPropagation()
                   onOpenModule?.(module.uuid)
                 }}
-                aria-label={`Upravit modul ${module.name}`}
+                aria-label={
+                  labels?.editModuleAria?.(module.name) ??
+                  t('courseOverview.modules.card.editModuleAria', {
+                    name: module.name,
+                  })
+                }
               />
               <div onClick={(e) => e.stopPropagation()}>
                 <DeleteConfirmDialog
-                  itemType='modul'
+                  itemType={
+                    labels?.deleteItemType ??
+                    t('courseOverview.modules.card.deleteItemType')
+                  }
                   itemName={module.name}
                   trigger={
                     <EditBtn
                       actionType='delete'
-                      aria-label={`Smazat modul ${module.name}`}
+                      aria-label={
+                        labels?.deleteModuleAria?.(module.name) ??
+                        t('courseOverview.modules.card.deleteModuleAria', {
+                          name: module.name,
+                        })
+                      }
                     />
                   }
                   onConfirm={() => {
@@ -375,10 +441,13 @@ const ModuleCard = (props: ModuleCardProps) => {
                 <div className='pr-2 flex flex-col gap-2 h-full'>
                   <div className='flex items-center justify-between gap-2'>
                     <span className='text-xs font-semibold text-muted-foreground'>
-                      Materiály
+                      {labels?.materials ?? t('courseOverview.modules.card.materials')}
                     </span>
                     <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-xs font-semibold text-accent-teal-dark'>
-                      Celkem {module.materials.length}
+                      {labels?.total?.(module.materials.length) ??
+                        t('courseOverview.modules.card.total', {
+                          count: module.materials.length,
+                        })}
                     </span>
                   </div>
                   {hasMaterials ? (
@@ -410,17 +479,27 @@ const ModuleCard = (props: ModuleCardProps) => {
                   ) : (
                     <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
                       <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
-                        Žádné materiály
+                        {labels?.noMaterials ??
+                          t('courseOverview.modules.card.noMaterials')}
                       </p>
                       <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
-                        Interakce se zobrazí po přidání materiálů.
+                        {labels?.noMaterialsHint ??
+                          t('courseOverview.modules.card.noMaterialsHint')}
                       </p>
                     </div>
                   )}
                   {materialsHasAttention ? (
                     <AnalyticsAttentionAlert
                       messages={[
-                        `Materiály bez interakce: ${moduleMaterialsWithoutInteraction}`,
+                        labels?.materialsNoInteraction?.(
+                          moduleMaterialsWithoutInteraction,
+                        ) ??
+                          t(
+                            'courseOverview.modules.card.materialsNoInteraction',
+                            {
+                              count: moduleMaterialsWithoutInteraction,
+                            },
+                          ),
                       ]}
                     />
                   ) : (
@@ -428,7 +507,8 @@ const ModuleCard = (props: ModuleCardProps) => {
                       <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
                         <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
                         <span className='font-medium'>
-                          Bez kritických signálů
+                          {labels?.noCriticalSignals ??
+                            t('courseOverview.modules.card.noCriticalSignals')}
                         </span>
                       </div>
                     )
@@ -438,28 +518,37 @@ const ModuleCard = (props: ModuleCardProps) => {
                 <div className='pl-2 flex flex-col gap-2 h-full'>
                   <div className='flex items-center justify-between gap-2'>
                     <span className='text-xs font-semibold text-muted-foreground'>
-                      Kvízy
+                      {labels?.quizzes ?? t('courseOverview.modules.card.quizzes')}
                     </span>
                     <span className='rounded-full bg-accent-teal-dark/10 px-1.5 py-0.5 text-xs font-semibold text-accent-teal-dark'>
-                      Celkem {module.quizzes.length}
+                      {labels?.total?.(module.quizzes.length) ??
+                        t('courseOverview.modules.card.total', {
+                          count: module.quizzes.length,
+                        })}
                     </span>
                   </div>
                   {hasQuizzes ? (
                     <div className='grid grid-cols-3 gap-1.5 w-full items-stretch flex-1'>
                       {[
                         {
-                          label: 'Průměr:',
+                          label:
+                            labels?.average ??
+                            t('courseOverview.modules.card.average'),
                           value:
                             moduleQuizAverage == null
                               ? '-'
                               : `${moduleQuizAverage}%`,
                         },
                         {
-                          label: 'Odeslání:',
+                          label:
+                            labels?.submissions ??
+                            t('courseOverview.modules.card.submissions'),
                           value: moduleQuizAttempts,
                         },
                         {
-                          label: 'Otázky:',
+                          label:
+                            labels?.questions ??
+                            t('courseOverview.modules.card.questions'),
                           value: moduleQuizQuestionsTotal,
                         },
                       ].map(({ label, value }) => (
@@ -477,10 +566,12 @@ const ModuleCard = (props: ModuleCardProps) => {
                   ) : (
                     <div className='rounded-md border border-dashed border-border/70 bg-muted/40 px-2.5 py-2.5 text-center h-full'>
                       <p className='text-xs md:text-sm font-semibold text-muted-foreground'>
-                        Žádné kvízy
+                        {labels?.noQuizzes ??
+                          t('courseOverview.modules.card.noQuizzes')}
                       </p>
                       <p className='text-[10px] md:text-xs text-muted-foreground/80 mt-0.5'>
-                        Statistiky se zobrazí po přidání kvízů.
+                        {labels?.noQuizzesHint ??
+                          t('courseOverview.modules.card.noQuizzesHint')}
                       </p>
                     </div>
                   )}
@@ -491,7 +582,8 @@ const ModuleCard = (props: ModuleCardProps) => {
                       <div className='rounded-lg px-2 py-1 text-[10px] md:text-xs flex items-center gap-1.5 bg-secondary/10 text-accent-teal-light'>
                         <CheckCircle2 className='w-3 h-3 shrink-0 text-accent-teal-light' />
                         <span className='font-medium'>
-                          Bez kritických signálů
+                          {labels?.noCriticalSignals ??
+                            t('courseOverview.modules.card.noCriticalSignals')}
                         </span>
                       </div>
                     )
@@ -520,13 +612,15 @@ const ModuleCard = (props: ModuleCardProps) => {
             <div className='flex justify-between gap-3 pt-2 border-t border-border/60'>
               <div className='text-xs md:text-sm flex flex-wrap gap-2 sm:gap-5 items-center'>
                 <p className='text-muted-foreground'>
-                  Materiály:{' '}
+                  {labels?.materialsCount ??
+                    t('courseOverview.modules.card.materialsCount')}{' '}
                   <span className='font-semibold text-neutral-black'>
                     {module.materials?.length ?? 0}
                   </span>
                 </p>
                 <p className='text-muted-foreground'>
-                  Kvízy:{' '}
+                  {labels?.quizzesCount ??
+                    t('courseOverview.modules.card.quizzesCount')}{' '}
                   <span className='font-semibold text-neutral-black'>
                     {module.quizzes?.length ?? 0}
                   </span>
@@ -536,8 +630,8 @@ const ModuleCard = (props: ModuleCardProps) => {
                 <div className='flex shrink-0 items-center gap-2'>
                   {courseStatus !== 'draft' && (
                     <Button
-                      variant={'grid'}
-                      size={'sm'}
+                      variant='grid'
+                      size='sm'
                       onClick={(e) => {
                         e.stopPropagation()
                         onOpenModule?.(module.uuid)
@@ -548,7 +642,9 @@ const ModuleCard = (props: ModuleCardProps) => {
                         colorStyles.text['accent-teal-dark'],
                       )}
                     >
-                      <span className='font-semibold'>Zobrazit</span>
+                      <span className='font-semibold'>
+                        {labels?.view ?? t('courseOverview.modules.card.view')}
+                      </span>
                     </Button>
                   )}
                   {canToggleModuleVisibility && onToggleModuleVisibility && (
@@ -565,10 +661,19 @@ const ModuleCard = (props: ModuleCardProps) => {
                       }
                       title={
                         module.status === 'active' && !isLastActiveModule
-                          ? 'Lze skrýt pouze poslední aktivní modul'
+                          ? labels?.onlyLastActive ??
+                            t('moduleDetail.visibility.onlyLastActive')
                           : module.status === 'passive' && !isFirstPassiveModule
-                            ? 'Lze aktivovat pouze první skrytý modul'
-                          : ''
+                            ? labels?.onlyFirstHidden ??
+                              t('moduleDetail.visibility.onlyFirstHidden')
+                            : ''
+                      }
+                      activeLabel={
+                        labels?.hide ?? t('moduleDetail.visibility.hide')
+                      }
+                      passiveLabel={
+                        labels?.activate ??
+                        t('moduleDetail.visibility.activate')
                       }
                     />
                   )}

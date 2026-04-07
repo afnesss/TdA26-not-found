@@ -18,7 +18,6 @@ type BreadcrumbItem = {
 type EditableDetailCardProps = {
   breadcrumbItems: BreadcrumbItem[]
   gradient: keyof typeof colorStyles.line
-
   onNameChange?: (value: string) => void
   onDescriptionChange?: (value: string) => void
   onEnterSave?: () => void
@@ -41,6 +40,17 @@ type EditableDetailCardProps = {
     label: string
     value?: string | Date | null
     withTime?: boolean
+  }
+  labels?: {
+    saveMobile?: string
+    saveDesktop?: string
+    name?: string
+    namePlaceholder?: string
+    nameRequired?: string
+    description?: string
+    descriptionPlaceholder?: string
+    createdAt?: string
+    updatedAt?: string
   }
 }
 
@@ -77,6 +87,7 @@ const EditableDetailCard = ({
   createdAt,
   updatedAt,
   extraDateMeta,
+  labels,
 }: EditableDetailCardProps) => {
   const showUpdatedAt =
     updatedAt &&
@@ -85,6 +96,7 @@ const EditableDetailCard = ({
   const hasTopActions = Boolean(topActions && Children.count(topActions) > 0)
   const isNameEmpty = !disabled && !nameValue.trim()
   const showInlineSave = !disabled && isDirty
+
   const resolvedFooterActions = showInlineSave ? (
     <Button
       variant='primary'
@@ -92,8 +104,10 @@ const EditableDetailCard = ({
       onClick={() => onEnterSave?.()}
       disabled={saveDisabled || isNameEmpty}
     >
-      <span className='sm:hidden'>Uložit</span>
-      <span className='hidden sm:inline'>Uložit změny</span>
+      <span className='sm:hidden'>{labels?.saveMobile ?? 'Uložit'}</span>
+      <span className='hidden sm:inline'>
+        {labels?.saveDesktop ?? 'Uložit změny'}
+      </span>
     </Button>
   ) : (
     footerActions
@@ -101,7 +115,6 @@ const EditableDetailCard = ({
 
   return (
     <Card className='border border-border/60 shadow-md bg-background rounded-xl cursor-auto'>
-      {/* Gradient bar */}
       <div className={cn(headerLineHeight, colorStyles.line[gradient])} />
 
       <div
@@ -110,7 +123,6 @@ const EditableDetailCard = ({
           disabled && 'gap-1 sm:gap-2 flex flex-col',
         )}
       >
-        {/* Header */}
         <div className={cn(disabled ? '' : 'mb-4 space-y-3')}>
           <div className='flex items-start justify-between gap-3'>
             <div className='flex flex-wrap items-center gap-3 min-w-0'>
@@ -157,13 +169,12 @@ const EditableDetailCard = ({
           {headerBottom && <div>{headerBottom}</div>}
         </div>
 
-        {/* Form fields */}
         <CardContent className='space-y-4 p-0'>
           {disabled ? null : (
             <div className='space-y-3'>
               <div>
                 <Label size='sm' className='mb-1 block'>
-                  Název
+                  {labels?.name ?? 'Název'}
                 </Label>
                 <Textarea
                   value={nameValue}
@@ -173,18 +184,22 @@ const EditableDetailCard = ({
                   }
                   minRows={1}
                   maxRows={2}
-                  placeholder='Zadejte název'
+                  placeholder={labels?.namePlaceholder ?? 'Zadejte název'}
                   className={cn(
                     'font-semibold text-base md:text-lg',
                     isNameEmpty && 'border-destructive',
                   )}
                 />
-                {isNameEmpty && <p className='error-text'>Název je povinný</p>}
+                {isNameEmpty && (
+                  <p className='error-text'>
+                    {labels?.nameRequired ?? 'Název je povinný'}
+                  </p>
+                )}
               </div>
 
               <div>
                 <Label size='sm' className='mb-1 block'>
-                  Popis
+                  {labels?.description ?? 'Popis'}
                 </Label>
                 <Textarea
                   value={descriptionValue ?? ''}
@@ -194,13 +209,15 @@ const EditableDetailCard = ({
                   }
                   minRows={1}
                   maxRows={4}
-                  placeholder='Zadejte popis (volitelné)'
+                  placeholder={
+                    labels?.descriptionPlaceholder ??
+                    'Zadejte popis (volitelné)'
+                  }
                 />
               </div>
             </div>
           )}
 
-          {/* Footer with dates and actions */}
           <CardFooter className='flex justify-between gap-4 p-0 pt-3'>
             <div className='flex flex-wrap items-center gap-5'>
               <div
@@ -210,14 +227,18 @@ const EditableDetailCard = ({
                 )}
               >
                 <span className='flex flex-col items-center gap-1'>
-                  <span className='text-xs text-gray-500'>Vytvořeno</span>
+                  <span className='text-xs text-gray-500'>
+                    {labels?.createdAt ?? 'Vytvořeno'}
+                  </span>
                   <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
                     {fmtDate(createdAt)}
                   </span>
                 </span>
                 {showUpdatedAt && (
                   <span className='flex flex-col items-center gap-1'>
-                    <span className='text-xs text-gray-500'>Upraveno</span>
+                    <span className='text-xs text-gray-500'>
+                      {labels?.updatedAt ?? 'Upraveno'}
+                    </span>
                     <span className='shrink-0 text-xs md:text-sm font-medium text-gray-600'>
                       {fmtDate(updatedAt)}
                     </span>

@@ -26,9 +26,10 @@ const QR_RENDER_SIZE = 400
 type QrImageProps = {
   value?: string
   className?: string
+  alt?: string
 }
 
-const QrImage = ({ value, className }: QrImageProps) => {
+const QrImage = ({ value, className, alt }: QrImageProps) => {
   const [qrState, setQrState] = useState<{ value?: string; src: string }>({
     value: undefined,
     src: '',
@@ -78,7 +79,7 @@ const QrImage = ({ value, className }: QrImageProps) => {
   return (
     <img
       src={qrState.src}
-      alt='QR kód pro sdílení kurzu'
+      alt={alt ?? 'QR kód pro sdílení kurzu'}
       className={cn('w-full rounded-md border border-border/60 bg-white', className)}
     />
   )
@@ -90,6 +91,21 @@ type CourseShareTriggerProps = {
   orgSlug?: string
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  labels?: {
+    qrAlt?: string
+    regenerateSuccess?: string
+    regenerateError?: string
+    shareText?: (courseName: string) => string
+    title?: string
+    description?: string
+    loadError?: string
+    loading?: string
+    copyLink?: string
+    shareLink?: string
+    regenerateQr?: string
+    copySuccess?: string
+    copyError?: string
+  }
 }
 
 const CourseShareTrigger = ({
@@ -98,12 +114,13 @@ const CourseShareTrigger = ({
   orgSlug,
   className,
   size = 'sm',
+  labels,
 }: CourseShareTriggerProps) => {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const queryKey = ['course-share-link', courseId]
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey,
     queryFn: () => getCourseShareLink(courseId, orgSlug),
     enabled: open,
@@ -114,10 +131,14 @@ const CourseShareTrigger = ({
     mutationFn: () => regenerateCourseShareLink(courseId, orgSlug),
     onSuccess: (nextData) => {
       queryClient.setQueryData(queryKey, nextData)
-      toast.success('QR kód byl obnoven')
+      toast.success(labels?.regenerateSuccess ?? 'QR kód byl obnoven')
     },
     onError: (error: ApiError) => {
-      toast.error(error.body?.message ?? 'Nepodařilo se obnovit QR kód')
+      toast.error(
+        error.body?.message ??
+          labels?.regenerateError ??
+          'Nepodařilo se obnovit QR kód',
+      )
     },
   })
 
@@ -128,9 +149,9 @@ const CourseShareTrigger = ({
 
     try {
       await navigator.clipboard.writeText(shareUrl)
-      toast.success('Odkaz byl zkopírován')
+      toast.success(labels?.copySuccess ?? 'Odkaz byl zkopírován')
     } catch {
-      toast.error('Nepodařilo se zkopírovat odkaz')
+      toast.error(labels?.copyError ?? 'Nepodařilo se zkopírovat odkaz')
     }
   }
 
@@ -141,7 +162,8 @@ const CourseShareTrigger = ({
       try {
         await navigator.share({
           title: courseName,
-          text: `Otevřít kurz ${courseName}`,
+          text:
+            labels?.shareText?.(courseName) ?? `Otevřít kurz ${courseName}`,
           url: shareUrl,
         })
         return
@@ -184,15 +206,20 @@ const CourseShareTrigger = ({
         </div>
 
         <AlertDialogHeader>
-          <AlertDialogTitle>QR kód kurzu</AlertDialogTitle>
+          <AlertDialogTitle>{labels?.title ?? 'QR kód kurzu'}</AlertDialogTitle>
           <AlertDialogDescription>
-            Studenti se přes QR dostanou přímo na kurz bez ručního hledání.
+            {labels?.description ??
+              'Studenti se přes QR dostanou přímo na kurz bez ručního hledání.'}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className='flex flex-col items-center gap-4'>
           <div className='w-full rounded-2xl border border-border/60 bg-white p-3 shadow-sm'>
-            <QrImage value={shareUrl} className='rounded-xl' />
+            <QrImage
+              value={shareUrl}
+              className='rounded-xl'
+              alt={labels?.qrAlt}
+            />
           </div>
           <p
             className={cn(
@@ -201,9 +228,9 @@ const CourseShareTrigger = ({
             )}
           >
             {isError
-              ? ' Nepodařilo se načíst odkaz pro sdílení.'
+              ? labels?.loadError ?? 'Nepodařilo se načíst odkaz pro sdílení.'
               : isLoading || shareMutation.isPending
-                ? 'Připravuji QR kód...'
+                ? labels?.loading ?? 'Připravuji QR kód...'
                 : courseName}
           </p>
         </div>
@@ -219,7 +246,7 @@ const CourseShareTrigger = ({
             disabled={!shareUrl}
           >
             <Copy className='size-4' />
-            Kopírovat odkaz
+            {labels?.copyLink ?? 'Kopírovat odkaz'}
           </Button>
           <Button
             variant='outline'
@@ -231,7 +258,7 @@ const CourseShareTrigger = ({
             disabled={!shareUrl}
           >
             <Share2 className='size-4' />
-            Sdílet odkaz
+            {labels?.shareLink ?? 'Sdílet odkaz'}
           </Button>
           <Button
             variant='primary'
@@ -248,7 +275,7 @@ const CourseShareTrigger = ({
                 shareMutation.isPending && 'animate-spin',
               )}
             />
-            Obnovit QR
+            {labels?.regenerateQr ?? 'Obnovit QR'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

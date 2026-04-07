@@ -1,5 +1,7 @@
 import adminCs from './cs/admin'
 import commonCs from './cs/common'
+import coursesCs from './cs/courses'
+import dashboardCs from './cs/dashboard'
 import footerCs from './cs/footer'
 import headerCs from './cs/header'
 import homepageCs from './cs/homepage'
@@ -11,6 +13,8 @@ import organizationRequestStatusCs from './cs/organizationRequestStatus'
 import organizationInfoCs from './cs/organizationInfo'
 import adminEn from './en/admin'
 import commonEn from './en/common'
+import coursesEn from './en/courses'
+import dashboardEn from './en/dashboard'
 import footerEn from './en/footer'
 import headerEn from './en/header'
 import homepageEn from './en/homepage'
@@ -25,6 +29,8 @@ export const resources = {
   en: {
     admin: adminEn,
     common: commonEn,
+    courses: coursesEn,
+    dashboard: dashboardEn,
     footer: footerEn,
     header: headerEn,
     homepage: homepageEn,
@@ -38,6 +44,8 @@ export const resources = {
   cs: {
     admin: adminCs,
     common: commonCs,
+    courses: coursesCs,
+    dashboard: dashboardCs,
     footer: footerCs,
     header: headerCs,
     homepage: homepageCs,

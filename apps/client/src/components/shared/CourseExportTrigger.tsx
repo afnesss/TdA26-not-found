@@ -24,6 +24,10 @@ type CourseExportTriggerProps = {
   variant?: 'card' | 'detail'
   disabled?: boolean
   label?: string
+  triggerAriaLabel?: string
+  itemLabel?: string
+  successMessage?: string
+  errorMessage?: string
 }
 
 const slugifyFilePart = (value: string) =>
@@ -52,6 +56,10 @@ const CourseExportTrigger = ({
   variant = 'detail',
   disabled = false,
   label,
+  triggerAriaLabel = 'Export kurzu',
+  itemLabel = 'Exportovat zálohu JSON',
+  successMessage = 'Kurz byl exportován do JSON zálohy',
+  errorMessage = 'Nepodařilo se exportovat kurz',
 }: CourseExportTriggerProps) => {
   const [isExporting, setIsExporting] = useState(false)
   const { orgSlug } = useParams<{ orgSlug?: string }>()
@@ -73,9 +81,9 @@ const CourseExportTrigger = ({
       const blob = await exportCourse(courseId, 'json', orgSlug)
       const safeCourseName = slugifyFilePart(courseName) || 'course'
       downloadBlob(blob, `${safeCourseName}-backup.json`)
-      toast.success('Kurz byl exportovan do JSON zalohy')
+      toast.success(successMessage)
     } catch {
-      toast.error('Nepodarilo se exportovat kurz')
+      toast.error(errorMessage)
     } finally {
       setIsExporting(false)
     }
@@ -89,7 +97,7 @@ const CourseExportTrigger = ({
           disabled={disabled || isExporting}
           classNameBtn={cn(className)}
           label={label}
-          aria-label='Export kurzu'
+          aria-label={triggerAriaLabel}
           onPointerDown={(event) => stopCardClick(event)}
           onClick={(event) => stopCardClick(event)}
         />
@@ -111,7 +119,7 @@ const CourseExportTrigger = ({
           className='gap-2 cursor-pointer text-xs sm:text-sm'
         >
           <FileJson2 className='h-4 w-4 text-gray-400' />
-          <span>Exportovat zalohu JSON</span>
+          <span>{itemLabel}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

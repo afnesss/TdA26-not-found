@@ -22,6 +22,7 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { ShoppingBag } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
 import thinkBlueIcon from '@/assets/t-think-blue1.svg'
 import { Label } from '../ui/label'
@@ -48,6 +49,7 @@ const pickRandomItem = (items: ShopCatalogItem[]) => {
 }
 
 const RandomMerchPopup = () => {
+  const { t } = useTranslation('shop')
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const [isOpen, setIsOpen] = useState(false)
@@ -112,15 +114,15 @@ const RandomMerchPopup = () => {
           <div className='min-w-0 p-4 '>
             <AlertDialogHeader className='gap-3'>
               <p className='text-xs font-semibold uppercase tracking-[0.24em] text-primary/75'>
-                Think Different Academy merch
+                {t('popup.eyebrow')}
               </p>
               <Label size={'xl'} className='mb-0'>
-                Chceš myslet jinak?
+                {t('popup.title')}
               </Label>
               <AlertDialogDescription asChild>
                 <div className='space-y-4 text-sm text-foreground sm:text-base'>
                   <p className='leading-relaxed text-muted-foreground'>
-                    Podpoř nás koupí merche Think Different Academy.
+                    {t('popup.description')}
                   </p>
                   <div className='flex items-center gap-3 rounded-2xl bg-secondary/15 p-3 sm:gap-5 sm:p-4'>
                     <div className='relative w-full max-w-20 shrink-0 overflow-hidden rounded-2xl bg-background shadow-sm sm:max-w-24 md:max-w-28'>
@@ -168,7 +170,7 @@ const RandomMerchPopup = () => {
                     setIsOpen(false)
                   }}
                 >
-                  Prohlédnout merch
+                  {t('popup.browse')}
                 </Button>
               </AlertDialogAction>
               <AlertDialogCancel asChild>
@@ -178,7 +180,7 @@ const RandomMerchPopup = () => {
                   className='rounded-xl text-sm'
                   onClick={() => setIsOpen(false)}
                 >
-                  Zavřít
+                  {t('popup.close')}
                 </Button>
               </AlertDialogCancel>
             </AlertDialogFooter>

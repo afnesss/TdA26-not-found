@@ -20,6 +20,19 @@ const courses = {
     resetFilters: 'Zrušit filtry',
     loadMore: 'Načíst další kurzy',
   },
+  userCourse: {
+    breadcrumbRoot: 'Kurzy',
+    titleFallback: 'Kurz',
+    leaderboardTitle: 'Leaderboard studentů',
+    activeModulesTitle: 'Aktivní moduly',
+    noActiveModules: 'Kurz zatím nemá žádné aktivní moduly',
+    moduleTitleFallback: '{{courseName}} - modul',
+    moduleNotFound: 'Modul nebyl nalezen',
+    materialsTitle: 'Studijní materiály',
+    noMaterials: 'Zatím žádné materiály',
+    quizzesTitle: 'Kvízy',
+    noQuizzes: 'Zatím žádné kvízy',
+  },
 } as const
 
 export default courses

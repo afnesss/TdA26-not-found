@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, Copy, Download, Edit, ExternalLink } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useLocation, useParams } from 'react-router'
 import { toast } from 'sonner'
 import EditBtn from '../../pages/dashboard/components/EditBtn'
@@ -60,6 +61,7 @@ type MaterialCardProps =
 
 const MaterialCard = (props: MaterialCardProps) => {
   const { material, type } = props
+  const { t } = useTranslation('common')
   const { courseId, moduleId } = useParams<{
     courseId: string
     moduleId: string
@@ -108,10 +110,10 @@ const MaterialCard = (props: MaterialCardProps) => {
       await navigator.clipboard.writeText(url)
       void runInteraction('copy')
       setCopied(true)
-      toast.success('Odkaz zkopírován')
+      toast.success(t('materialCard.linkCopied'))
       setTimeout(() => setCopied(false), 1500)
     } catch (err) {
-      toast.error('Nepodařilo se zkopírovat')
+      toast.error(t('materialCard.copyFailed'))
     }
   }
   const handleTypeChange = (newType: 'file' | 'url') => {
@@ -178,7 +180,7 @@ const MaterialCard = (props: MaterialCardProps) => {
       if (data.type === 'file' && !tempFile) {
         setError('root.file', {
           type: 'manual',
-          message: 'Vyberte soubor',
+          message: t('materialCard.selectFile'),
         })
         return
       }
@@ -256,7 +258,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                         )}
                         minRows={1}
                         maxRows={3}
-                        placeholder='Název materiálu'
+                        placeholder={t('materialCard.namePlaceholder')}
                       />
                     </div>
 
@@ -264,7 +266,7 @@ const MaterialCard = (props: MaterialCardProps) => {
                       className='flex items-center gap-1 shrink-0'
                       onSave={saveEdit}
                       onCancel={cancelEdit}
-                      saveAriaLabel='Uložit materiál'
+                      saveAriaLabel={t('materialCard.saveAria')}
                       saveDisabled={
                         isSubmitting ||
                         !!errors.name ||
@@ -297,17 +299,21 @@ const MaterialCard = (props: MaterialCardProps) => {
                       <EditBtn
                         icon={Edit}
                         onClick={startEdit}
-                        aria-label={`Upravit materiál ${material.name}`}
+                        aria-label={t('materialCard.editAria', {
+                          name: material.name,
+                        })}
                       />
                       <DeleteConfirmDialog
                         trigger={
                           <EditBtn
                             actionType='delete'
-                            aria-label={`Smazat materiál ${material.name}`}
+                            aria-label={t('materialCard.deleteAria', {
+                              name: material.name,
+                            })}
                           />
                         }
                         itemName={material.name}
-                        itemType='materiál'
+                        itemType={t('materialCard.deleteItemType')}
                         onConfirm={() => {
                           if (props.onDelete) {
                             props.onDelete()
@@ -322,8 +328,10 @@ const MaterialCard = (props: MaterialCardProps) => {
                           <EditBtn
                             icon={Download}
                             onClick={handleDownloadClick}
-                            aria-label={`Stáhnout ${material.name}`}
-                            label='Stáhnout'
+                            aria-label={t('materialCard.downloadAria', {
+                              name: material.name,
+                            })}
+                            label={t('materialCard.downloadLabel')}
                             labelClassName='max-sm:hidden inline text-current whitespace-nowrap'
                             classNameBtn='h-7 px-2'
                           />
@@ -352,8 +360,8 @@ const MaterialCard = (props: MaterialCardProps) => {
                               onClick={() => handleCopyLink(material.url)}
                               aria-label={
                                 copied
-                                  ? 'Odkaz zkopírován'
-                                  : 'Kopírovat odkaz do schránky'
+                                  ? t('materialCard.copiedAria')
+                                  : t('materialCard.copyLinkAria')
                               }
                             />
                             {showLecturerCounters &&
@@ -374,12 +382,16 @@ const MaterialCard = (props: MaterialCardProps) => {
                               href={material.url}
                               target='_blank'
                               rel='noopener noreferrer'
-                              aria-label={`Otevřít ${material.name} v nové kartě`}
+                              aria-label={t('materialCard.openNewTabAria', {
+                                name: material.name,
+                              })}
                               onClick={() => void runInteraction('open')}
                             >
                               <EditBtn
                                 icon={ExternalLink}
-                                aria-label={`Otevřít ${material.name} v nové kartě`}
+                                aria-label={t('materialCard.openNewTabAria', {
+                                  name: material.name,
+                                })}
                               />
                             </a>
                             {showLecturerCounters &&
@@ -413,7 +425,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               className='block w-full text-xs sm:text-sm'
               minRows={1}
               maxRows={5}
-              placeholder='Popis materiálu'
+              placeholder={t('materialCard.descriptionPlaceholder')}
             />
           ) : (
             material.description && (
@@ -449,17 +461,17 @@ const MaterialCard = (props: MaterialCardProps) => {
                   >
                     <ToggleGroupItem
                       value='file'
-                      aria-label='Soubor'
+                      aria-label={t('materialCard.typeFile')}
                       className='gap-2'
                     >
-                      <span>Soubor</span>
+                      <span>{t('materialCard.typeFile')}</span>
                     </ToggleGroupItem>
                     <ToggleGroupItem
                       value='url'
-                      aria-label='Odkaz'
+                      aria-label={t('materialCard.typeUrl')}
                       className='gap-2'
                     >
-                      <span>Odkaz</span>
+                      <span>{t('materialCard.typeUrl')}</span>
                     </ToggleGroupItem>
                   </ToggleGroup>
                 )}
@@ -495,7 +507,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               {displayType === 'file' ? (
                 tempFile ? (
                   <div className='text-xs sm:text-sm text-gray-600 flex items-center gap-2'>
-                    <span className='font-medium'>Nový soubor:</span>
+                    <span className='font-medium'>{t('materialCard.newFile')}</span>
                     <span className='truncate'>{tempFile.name}</span>
                     <span className='text-gray-400'>
                       ({formatFileSize(tempFile.size)})
@@ -505,7 +517,9 @@ const MaterialCard = (props: MaterialCardProps) => {
                   <p className='error-text'>{errors.root.file.message}</p>
                 ) : (
                   <div className='flex gap-1 text-xs flex-row sm:items-end sm:text-sm text-gray-500'>
-                    <span className='font-medium'>Současný soubor:</span>
+                    <span className='font-medium'>
+                      {t('materialCard.currentFile')}
+                    </span>
                     <span className='truncate'>
                       {material.type === 'file' && material.originalFilename}
                     </span>
@@ -552,7 +566,7 @@ const MaterialCard = (props: MaterialCardProps) => {
               {material.type === 'file' && (
                 <>
                   <span className='font-medium text-gray-600 '>
-                    Soubor ke stažení:
+                    {t('materialCard.downloadableFile')}
                   </span>
                   <span className='text-accent-teal font-semibold'>
                     {formatFileSize(material.sizeBytes)}
@@ -561,7 +575,9 @@ const MaterialCard = (props: MaterialCardProps) => {
               )}
               {material.type === 'url' && (
                 <>
-                  <span className='font-medium text-gray-600'>Odkaz:</span>
+                  <span className='font-medium text-gray-600'>
+                    {t('materialCard.linkLabel')}
+                  </span>
                   <a
                     href={material.url}
                     className='text-primary hover:underline break-all'

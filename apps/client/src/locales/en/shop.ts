@@ -87,6 +87,13 @@ const shop = {
     backToShop: 'Back to shop',
     goToCourses: 'Go to courses',
   },
+  popup: {
+    eyebrow: 'Think Different Academy merch',
+    title: 'Want to think differently?',
+    description: 'Support us by buying Think Different Academy merch.',
+    browse: 'Browse merch',
+    close: 'Close',
+  },
 } as const
 
 export default shop

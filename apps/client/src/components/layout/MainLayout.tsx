@@ -22,7 +22,7 @@ const MainLayout = () => {
       <main
         className={`flex-1 p-4 sm:p-5
           bg-linear-to-b from-accent-teal-dark/10 to-accent-teal/10 
-          ${isHScreen ? 'flex items-center' : 'overflow-y-auto'}`}
+          ${isHScreen ? 'flex items-center justify-center' : 'overflow-y-auto'}`}
       >
         <Outlet />
       </main>

@@ -12,6 +12,9 @@ type CourseLeaderboardProps = {
   leaderboard: CourseSessionOverview['leaderboard']
   emptyMessage?: string
   showLeaderTrophy?: boolean
+  showLessLabel?: string
+  showMoreLabel?: (count: number) => string
+  attemptLabel?: (count: number) => string
 }
 
 const RANK_STYLES = {
@@ -40,7 +43,7 @@ const RANK_STYLES = {
 const getRankStyle = (rank: number) =>
   RANK_STYLES[rank as 1 | 2 | 3] ?? RANK_STYLES.default
 
-const formatAttemptsLabel = (attempts: number) => {
+const defaultFormatAttemptsLabel = (attempts: number) => {
   if (attempts === 1) return 'pokus'
   if (attempts >= 2 && attempts <= 4) return 'pokusy'
   return 'pokusů'
@@ -155,10 +158,12 @@ const RowContent = ({
   entry,
   emphasize = false,
   showLeaderTrophy = false,
+  attemptLabel,
 }: {
   entry: LeaderboardEntry
   emphasize?: boolean
   showLeaderTrophy?: boolean
+  attemptLabel: (count: number) => string
 }) => {
   const rankStyle = getRankStyle(entry.rank)
   const successRate = entry.successRate == null ? '—' : `${entry.successRate}%`
@@ -204,7 +209,7 @@ const RowContent = ({
               totalQuizzes={entry.totalQuizzes}
             />
             <StatToken
-              label={formatAttemptsLabel(entry.submissionsCount)}
+              label={attemptLabel(entry.submissionsCount)}
               value={`${entry.submissionsCount}`}
               className='bg-transparent text-foreground'
             />
@@ -218,22 +223,35 @@ const RowContent = ({
 const TopRankCard = ({
   entry,
   showLeaderTrophy = false,
+  attemptLabel,
 }: {
   entry: LeaderboardEntry
   showLeaderTrophy?: boolean
+  attemptLabel: (count: number) => string
 }) => {
   const rankStyle = getRankStyle(entry.rank)
 
   return (
     <div className={cn('px-2 py-3 transition-colors sm:px-4', rankStyle.card)}>
-      <RowContent entry={entry} emphasize showLeaderTrophy={showLeaderTrophy} />
+      <RowContent
+        entry={entry}
+        emphasize
+        showLeaderTrophy={showLeaderTrophy}
+        attemptLabel={attemptLabel}
+      />
     </div>
   )
 }
 
-const RestRankRow = ({ entry }: { entry: LeaderboardEntry }) => (
+const RestRankRow = ({
+  entry,
+  attemptLabel,
+}: {
+  entry: LeaderboardEntry
+  attemptLabel: (count: number) => string
+}) => (
   <div className='px-2 py-2 transition-colors hover:bg-background/35 sm:px-4 sm:py-2.5 md:px-4'>
-    <RowContent entry={entry} />
+    <RowContent entry={entry} attemptLabel={attemptLabel} />
   </div>
 )
 
@@ -241,6 +259,9 @@ const CourseLeaderboard = ({
   leaderboard,
   emptyMessage = 'Zatím žádná studentská odevzdání.',
   showLeaderTrophy = false,
+  showLessLabel = 'Zobrazit méně',
+  showMoreLabel = (count) => `Zobrazit další (${count})`,
+  attemptLabel = defaultFormatAttemptsLabel,
 }: CourseLeaderboardProps) => {
   const topThree = leaderboard.slice(0, 3)
   const rest = leaderboard.slice(3)
@@ -268,9 +289,14 @@ const CourseLeaderboard = ({
                   key={entry.userId}
                   entry={entry}
                   showLeaderTrophy={showLeaderTrophy}
+                  attemptLabel={attemptLabel}
                 />
               ) : (
-                <RestRankRow key={entry.userId} entry={entry} />
+                <RestRankRow
+                  key={entry.userId}
+                  entry={entry}
+                  attemptLabel={attemptLabel}
+                />
               ),
             )}
           </div>
@@ -284,7 +310,7 @@ const CourseLeaderboard = ({
               )}
               onClick={() => setIsExpanded((prev) => !prev)}
             >
-              {isExpanded ? 'Zobrazit méně' : `Zobrazit další (${rest.length})`}
+              {isExpanded ? showLessLabel : showMoreLabel(rest.length)}
             </button>
           )}
         </div>

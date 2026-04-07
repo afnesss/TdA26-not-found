@@ -20,6 +20,19 @@ const courses = {
     resetFilters: 'Reset filters',
     loadMore: 'Load more courses',
   },
+  userCourse: {
+    breadcrumbRoot: 'Courses',
+    titleFallback: 'Course',
+    leaderboardTitle: 'Student leaderboard',
+    activeModulesTitle: 'Active modules',
+    noActiveModules: 'This course has no active modules yet',
+    moduleTitleFallback: '{{courseName}} - module',
+    moduleNotFound: 'Module not found',
+    materialsTitle: 'Study materials',
+    noMaterials: 'No materials yet',
+    quizzesTitle: 'Quizzes',
+    noQuizzes: 'No quizzes yet',
+  },
 } as const
 
 export default courses

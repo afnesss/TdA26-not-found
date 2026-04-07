@@ -1,5 +1,5 @@
-﻿import { Button } from '@/components/ui/button'
-import type { CourseStatus, CourseSummary } from '@/lib/schemas'
+import { Button } from '@/components/ui/button'
+import type { CourseStatus } from '@/lib/schemas'
 import {
   Play,
   Pause,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { colorStyles } from '@/lib/constants'
-import EditBtn from '@/pages/dashboard/components/EditBtn'
 import { useMediaQuery } from 'usehooks-ts'
 import type { ForwardRefExoticComponent, RefAttributes } from 'react'
 
@@ -25,6 +24,16 @@ interface StatusActionButtonProps {
   labelClassName?: string
   onCopyAsDraft?: () => void
   hideCopyAsDraft?: boolean
+  labels?: {
+    schedule?: string
+    copyAsDraft?: string
+    copyShort?: string
+    launch?: string
+    toDraft?: string
+    archive?: string
+    pause?: string
+    resume?: string
+  }
 }
 
 type ActionButton = {
@@ -50,22 +59,24 @@ export function StatusActionButtons({
   labelClassName,
   onCopyAsDraft,
   hideCopyAsDraft = false,
+  labels,
 }: StatusActionButtonProps) {
   const isMd = useMediaQuery('(min-width: 768px)')
+
   const getActions = (): ActionButton[] => {
     switch (currentStatus) {
       case 'draft':
         return [
           {
-            title: 'Naplánovat',
+            title: labels?.schedule ?? 'Naplánovat',
             icon: Calendar,
             status: 'planned',
             variant: 'outline',
             primary: false,
           },
           {
-            title: 'Kopírovat jako návrh',
-            mobileLabel: 'Kopírovat',
+            title: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
+            mobileLabel: labels?.copyShort ?? 'Kopírovat',
             icon: FilePlus,
             status: 'draft',
             variant: 'outline',
@@ -73,8 +84,8 @@ export function StatusActionButtons({
             action: 'copy',
           },
           {
-            label: 'Spustit',
-            title: 'Spustit',
+            label: labels?.launch ?? 'Spustit',
+            title: labels?.launch ?? 'Spustit',
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -84,16 +95,16 @@ export function StatusActionButtons({
       case 'planned':
         return [
           {
-            label: 'Do návrhu',
-            title: 'Do návrhu',
+            label: labels?.toDraft ?? 'Do návrhu',
+            title: labels?.toDraft ?? 'Do návrhu',
             icon: RotateCcw,
             status: 'draft',
             variant: 'outline',
             primary: false,
           },
           {
-            label: 'Spustit',
-            title: 'Spustit',
+            label: labels?.launch ?? 'Spustit',
+            title: labels?.launch ?? 'Spustit',
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -103,16 +114,16 @@ export function StatusActionButtons({
       case 'live':
         return [
           {
-            label: 'Archivovat',
-            title: 'Archivovat',
+            label: labels?.archive ?? 'Archivovat',
+            title: labels?.archive ?? 'Archivovat',
             icon: Archive,
             status: 'archived',
             variant: 'outline',
             primary: false,
           },
           {
-            label: 'Pozastavit',
-            title: 'Pozastavit',
+            label: labels?.pause ?? 'Pozastavit',
+            title: labels?.pause ?? 'Pozastavit',
             icon: Pause,
             status: 'paused',
             variant: 'grid',
@@ -122,22 +133,22 @@ export function StatusActionButtons({
       case 'paused':
         return [
           {
-            title: 'Naplánovat',
+            title: labels?.schedule ?? 'Naplánovat',
             icon: Calendar,
             status: 'planned',
             variant: 'outline',
             primary: false,
           },
           {
-            title: 'Archivovat',
+            title: labels?.archive ?? 'Archivovat',
             icon: Archive,
             status: 'archived',
             variant: 'outline',
             primary: false,
           },
           {
-            label: 'Obnovit',
-            title: 'Obnovit',
+            label: labels?.resume ?? 'Obnovit',
+            title: labels?.resume ?? 'Obnovit',
             icon: Play,
             status: 'live',
             variant: 'grid',
@@ -148,9 +159,9 @@ export function StatusActionButtons({
         if (hideCopyAsDraft) return []
         return [
           {
-            label: 'Kopírovat jako návrh',
-            title: 'Kopírovat jako návrh',
-            mobileLabel: 'Kopírovat',
+            label: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
+            title: labels?.copyAsDraft ?? 'Kopírovat jako návrh',
+            mobileLabel: labels?.copyShort ?? 'Kopírovat',
             icon: FilePlus,
             status: 'draft',
             variant: 'grid',
@@ -173,7 +184,7 @@ export function StatusActionButtons({
 
         const handleClick = (e?: React.MouseEvent) => {
           e?.stopPropagation()
-          if (action.action && action.action === 'copy' && onCopyAsDraft) {
+          if (action.action === 'copy' && onCopyAsDraft) {
             onCopyAsDraft()
             return
           }
@@ -191,7 +202,7 @@ export function StatusActionButtons({
 
         return (
           <Button
-            key={action.status}
+            key={`${action.status}-${action.action ?? 'status'}`}
             variant={action.variant}
             size='sm'
             onClick={handleClick}
@@ -209,7 +220,9 @@ export function StatusActionButtons({
                 'w-3.5 h-3.5',
                 iconClassName,
                 ((isMd && action.label) ||
-                  (!isMd && action.primary && (action.mobileLabel || action.label))) &&
+                  (!isMd &&
+                    action.primary &&
+                    (action.mobileLabel || action.label))) &&
                   'mr-1',
               )}
             />

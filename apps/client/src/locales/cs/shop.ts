@@ -87,6 +87,13 @@ const shop = {
     backToShop: 'Zpět do shopu',
     goToCourses: 'Přejít na kurzy',
   },
+  popup: {
+    eyebrow: 'Think Different Academy merch',
+    title: 'Chceš myslet jinak?',
+    description: 'Podpoř nás koupí merche Think Different Academy.',
+    browse: 'Prohlédnout merch',
+    close: 'Zavřít',
+  },
 } as const
 
 export default shop

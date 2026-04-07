@@ -8,11 +8,13 @@ import UnderlinedText from '@/components/shared/UnderlinedText'
 import { Label } from '@/components/ui/label'
 import { buildOrgCoursesPath, buildOrgModulePath } from '@/lib/routes'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import SummarySection from '../CoursePage/components/SummarySection'
 import { useUserCourseLayoutContext } from './UserCourseLayoutContext'
 
 const UserCourseOverviewPage = () => {
+  const { t } = useTranslation('courses')
   const navigate = useNavigate()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const { courseId, courseData, activeModules } = useUserCourseLayoutContext()
@@ -37,7 +39,10 @@ const UserCourseOverviewPage = () => {
         name={courseData.name}
         description={courseData.description ?? undefined}
         breadcrumbs={[
-          { label: 'Kurzy', path: buildOrgCoursesPath(orgSlug) },
+          {
+            label: t('userCourse.breadcrumbRoot'),
+            path: buildOrgCoursesPath(orgSlug),
+          },
           { label: courseData.name },
         ]}
       />
@@ -50,7 +55,7 @@ const UserCourseOverviewPage = () => {
             <div className='flex items-center justify-between gap-3'>
               <Label className='font-bold'>
                 <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-                  Leaderboard studentů
+                  {t('userCourse.leaderboardTitle')}
                 </UnderlinedText>
               </Label>
               <CourseQuizCountBadge
@@ -65,7 +70,7 @@ const UserCourseOverviewPage = () => {
         <div className='flex flex-wrap items-center justify-between gap-3'>
           <Label className='mb-2 font-bold'>
             <UnderlinedText height='10' strokeWidth='4' offset='-bottom-0.5'>
-              Aktivní moduly
+              {t('userCourse.activeModulesTitle')}
             </UnderlinedText>
           </Label>
         </div>
@@ -73,7 +78,7 @@ const UserCourseOverviewPage = () => {
         {activeModules.length === 0 ? (
           <StateComp
             type='no-content'
-            message='Kurz zatím nemá žádné aktivní moduly'
+            message={t('userCourse.noActiveModules')}
             className='pb-0 pt-8'
           />
         ) : (

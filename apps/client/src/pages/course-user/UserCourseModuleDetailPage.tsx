@@ -28,8 +28,10 @@ import {
   clearQuizSubmission,
   getQuizSubmission,
 } from '../CoursePage/utils/quizSubmissionStorage'
+import { useTranslation } from 'react-i18next'
 
 const UserCourseModuleDetailPage = () => {
+  const { t } = useTranslation('courses')
   const { orgSlug, courseId, moduleId } = useParams<{
     orgSlug?: string
     courseId: string
@@ -46,7 +48,10 @@ const UserCourseModuleDetailPage = () => {
   const selectedModule =
     activeModules.find((module) => module.uuid === moduleId) ?? null
 
-  useTitle(selectedModule?.name || `${courseData.name} - modul`)
+  useTitle(
+    selectedModule?.name ||
+      t('userCourse.moduleTitleFallback', { courseName: courseData.name }),
+  )
 
   useEffect(() => {
     if (!selectedModule?.quizzes?.length) return
@@ -88,7 +93,7 @@ const UserCourseModuleDetailPage = () => {
   }, [courseId, moduleId, navigate, selectedModule])
 
   if (!courseId || !moduleId) {
-    return <StateComp type='not-found' message='Modul nebyl nalezen' />
+    return <StateComp type='not-found' message={t('userCourse.moduleNotFound')} />
   }
 
   if (!selectedModule) {
@@ -119,7 +124,10 @@ const UserCourseModuleDetailPage = () => {
             />
           }
           breadcrumbs={[
-            { label: 'Kurzy', path: buildOrgCoursesPath(orgSlug) },
+            {
+              label: t('userCourse.breadcrumbRoot'),
+              path: buildOrgCoursesPath(orgSlug),
+            },
             { label: courseData.name, path: buildOrgCoursePath(orgSlug, courseId) },
             { label: selectedModule.name },
           ]}
@@ -127,7 +135,9 @@ const UserCourseModuleDetailPage = () => {
 
         <section>
           <Label className='font-bold mb-3'>
-            <UnderlinedText strokeWidth='4'>Studijní materiály</UnderlinedText>
+            <UnderlinedText strokeWidth='4'>
+              {t('userCourse.materialsTitle')}
+            </UnderlinedText>
           </Label>
           <div className='space-y-3'>
             {selectedModule.materials.length ? (
@@ -141,7 +151,7 @@ const UserCourseModuleDetailPage = () => {
             ) : (
               <StateComp
                 type='no-content'
-                message='Zatím žádné materiály'
+                message={t('userCourse.noMaterials')}
                 className='pt-8 pb-0'
               />
             )}
@@ -151,7 +161,7 @@ const UserCourseModuleDetailPage = () => {
         <section>
           <Label className='font-bold mb-3'>
             <UnderlinedText offset='-bottom-0.5' strokeWidth='4'>
-              Kvízy
+              {t('userCourse.quizzesTitle')}
             </UnderlinedText>
           </Label>
 
@@ -245,7 +255,7 @@ const UserCourseModuleDetailPage = () => {
                 img={quizImg}
                 iconClassName='w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16'
                 type='no-content'
-                message='Zatím žádné kvízy'
+                message={t('userCourse.noQuizzes')}
                 className='pt-8 pb-0'
               />
             )}

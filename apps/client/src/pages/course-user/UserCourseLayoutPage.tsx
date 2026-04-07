@@ -6,6 +6,7 @@ import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgCoursePath, buildOrgCoursesPath } from '@/lib/routes'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import NotFoundPage from '../NotFoundPage'
@@ -14,6 +15,7 @@ import UserCourseFeedSection from './components/UserCourseFeedSection'
 import { useAutoTopScroll } from '../CoursePage/utils/helperFunctions'
 
 const UserCourseLayoutPage = () => {
+  const { t } = useTranslation('courses')
   const { orgSlug, courseId, moduleId } = useParams<{
     orgSlug?: string
     courseId: string
@@ -57,7 +59,7 @@ const UserCourseLayoutPage = () => {
   const isStudentUser = user?.role === 'student'
   const redirectTarget = `${location.pathname}${location.search}${location.hash}`
 
-  useTitle(courseData?.name || 'Kurz')
+  useTitle(courseData?.name || t('userCourse.titleFallback'))
 
   const hasAccessToCourse = coursesUser.some((c) => c.uuid === courseId)
   const canEvaluateCourseAccess =

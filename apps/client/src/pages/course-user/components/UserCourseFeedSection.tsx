@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { FeedItem } from '@/lib/schemas'
 import { useFeedPagination } from '@/pages/CoursePage/utils/useFeedPagination'
+import { useTranslation } from 'react-i18next'
 
 type UserCourseFeedSectionProps = {
   courseId: string
@@ -16,6 +17,7 @@ const UserCourseFeedSection = ({
   courseId,
   initialFeed,
 }: UserCourseFeedSectionProps) => {
+  const { t } = useTranslation('courses')
   const { allPosts, loadMorePosts, hasMore, isLoadingMore, paginationError } =
     useFeedPagination(courseId, initialFeed)
 
@@ -23,7 +25,7 @@ const UserCourseFeedSection = ({
     <section>
       <Label className='font-bold mb-2'>
         <UnderlinedText strokeWidth='4' height='10' offset='-bottom-0.5'>
-          Oznámení
+          {t('userCourse.feedSection.title')}
         </UnderlinedText>
       </Label>
       {allPosts && allPosts.length > 0 ? (
@@ -48,10 +50,10 @@ const UserCourseFeedSection = ({
                 disabled={isLoadingMore}
               >
                 {isLoadingMore
-                  ? 'Načítání...'
+                  ? t('userCourse.feedSection.loadingMore')
                   : paginationError
-                    ? 'Chyba při načítání'
-                    : 'Načíst další příspěvky'}
+                    ? t('userCourse.feedSection.loadMoreError')
+                    : t('userCourse.feedSection.loadMore')}
               </Button>
             </div>
           )}
@@ -61,7 +63,7 @@ const UserCourseFeedSection = ({
           img={feedImg}
           iconClassName='w-12 h-12 md:w-13 h-13'
           type='no-content'
-          message='Zatím žádné příspěvky'
+          message={t('userCourse.feedSection.empty')}
           className='pt-8 pb-0'
         />
       )}

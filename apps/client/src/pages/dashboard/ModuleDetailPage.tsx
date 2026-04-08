@@ -25,7 +25,7 @@ import {
 } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 import {
@@ -74,13 +74,23 @@ const ModuleVisibilityBadge = ({
 )
 
 const CourseModuleDetailPage = () => {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { orgSlug, courseId, moduleId } = useParams<{
     orgSlug?: string
     courseId: string
     moduleId: string
   }>()
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (courseId) {
+      queryClient.invalidateQueries({ queryKey: ['course-modules', courseId] })
+    }
+    if (courseId && moduleId) {
+      queryClient.invalidateQueries({ queryKey: ['course-module', courseId, moduleId] })
+    }
+  }, [uiLocale, courseId, moduleId, queryClient])
   const [expandedQuizIds, setExpandedQuizIds] = useState<string[]>([])
   const [draftMaterial, setDraftMaterial] = useState<Material | null>(null)
   const [draftQuiz, setDraftQuiz] = useState<Quiz | null>(null)

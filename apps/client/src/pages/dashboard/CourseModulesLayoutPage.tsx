@@ -9,8 +9,8 @@ import UnderlinedText from '@/components/shared/UnderlinedText'
 import { colorStyles } from '@/lib/constants'
 import type { CourseDetail, FeedItem, StatusHistoryEvent } from '@/lib/schemas'
 import type { ApiError } from '@/lib/types'
-import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useParams, useMatch } from 'react-router-dom'
 import feedImg from '@/assets/disconnect-blue.svg'
@@ -27,8 +27,17 @@ import DashboardAddButton from './components/DashboardAddButton'
 type QueryError = Error & { status?: number }
 
 const CourseModulesLayoutPage = () => {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { orgSlug, courseId } = useParams<{ orgSlug?: string; courseId: string }>()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (courseId) {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] })
+    }
+  }, [uiLocale, courseId, queryClient])
+
   useCourseFeedSSE({
     courseId: courseId!,
     orgSlug,

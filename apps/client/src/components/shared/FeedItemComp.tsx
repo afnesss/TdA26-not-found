@@ -1,4 +1,5 @@
 import type { FeedItem } from '@/lib/schemas'
+import { getCurrentUiLocale, resolveLocalizedText } from '@/lib/courseLocalization'
 import { cn, formatDate } from '@/lib/utils'
 import { Edit } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -29,8 +30,12 @@ const FeedItemComp = ({
   const [editName, setEditName] = useState(isDraft ? true : false)
   const [editedFeed, setEditedFeed] = useState<FeedItem>(feedItem)
   const [messageError, setMessageError] = useState<string | null>(null)
+  const uiLocale = getCurrentUiLocale()
 
   const displayFeed = type === 'edit' ? editedFeed : feedItem
+  const localizedMessage =
+    resolveLocalizedText(uiLocale, displayFeed.messageI18n, displayFeed.message) ??
+    displayFeed.message
 
   useEffect(() => {
     setEditedFeed(feedItem)
@@ -162,7 +167,7 @@ const FeedItemComp = ({
         </>
       ) : (
         <p className='text-gray-900 text-xs sm:text-sm md:text-base leading-relaxed wrap-break-word'>
-          {displayFeed.message}
+          {localizedMessage}
         </p>
       )}
     </div>

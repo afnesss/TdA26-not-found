@@ -1,7 +1,14 @@
 import { getFeed } from '@/api/queries/feedQueries'
+import i18n from '@/i18n'
 import type { FeedItem } from '@/lib/schemas'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+
+export const getFeedPaginatedQueryKey = (
+  orgSlug: string | undefined,
+  courseId: string,
+  locale: 'cs' | 'en' = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en',
+) => ['feed-paginated', orgSlug, courseId, locale] as const
 
 export const useFeedPagination = (
   courseId: string,
@@ -9,6 +16,7 @@ export const useFeedPagination = (
   orgSlug?: string,
   enabled: boolean = true,
 ) => {
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const {
     data,
     fetchNextPage,
@@ -19,7 +27,7 @@ export const useFeedPagination = (
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['feed-paginated', orgSlug, courseId],
+    queryKey: getFeedPaginatedQueryKey(orgSlug, courseId, uiLocale),
     queryFn: ({ pageParam }) => getFeed(courseId, pageParam, orgSlug),
     getNextPageParam: (lastPage) => {
       if (!lastPage || lastPage.length < 15) return undefined

@@ -4,7 +4,9 @@ import {
   type CourseDetail,
   type CourseSummary,
 } from '@/lib/schemas'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type CourseQueryError = Error & { status?: number }
 
@@ -40,12 +42,22 @@ const fetchCourse = async (
 }
 
 export const useCoursePageQueries = (id?: string, orgSlug?: string) => {
+  const { i18n } = useTranslation()
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (id) {
+      queryClient.invalidateQueries({ queryKey: ['course', id] })
+    }
+  }, [uiLocale, id, queryClient])
+
   const {
     data: coursesUser = [],
     isLoading: isCoursesUserLoading,
     isFetching: isCoursesUserFetching,
   } = useQuery<CourseSummary[]>({
-    queryKey: ['courses-user'],
+    queryKey: ['courses-user', uiLocale],
     queryFn: () => getCourses(true, orgSlug),
     enabled: Boolean(id),
     networkMode: 'always',

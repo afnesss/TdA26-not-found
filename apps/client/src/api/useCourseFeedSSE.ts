@@ -11,6 +11,7 @@ import type { ModuleDetail } from '@/lib/schemas/module'
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { getFeedPaginatedQueryKey } from '@/pages/CoursePage/utils/useFeedPagination'
 
 type CourseModule = CourseDetail['modules'][number]
 type CourseMaterial = CourseModule['materials'][number]
@@ -140,7 +141,7 @@ export const useCourseFeedSSE = ({
       }
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, uiLocale),
         (oldData) => {
           if (!oldData?.pages) return oldData
 
@@ -174,7 +175,7 @@ export const useCourseFeedSSE = ({
 
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, uiLocale),
         (oldData) => {
           if (!oldData?.pages) return oldData
 
@@ -208,7 +209,7 @@ export const useCourseFeedSSE = ({
 
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, uiLocale),
         (oldData) => {
           if (!oldData?.pages) return oldData
 

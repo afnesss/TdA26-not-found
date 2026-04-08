@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import { onError, onErrorWithRollback } from './helperFunctions'
 import type { FeedItem } from '@/lib/schemas'
+import { getFeedPaginatedQueryKey } from './useFeedPagination'
 
 const invalidateQueries = (
   queryClient: QueryClient,
@@ -44,15 +45,17 @@ export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
       ),
     networkMode: 'always',
     onMutate: async (data) => {
-      await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', orgSlug, courseId],
-      })
-
-      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
-        'feed-paginated',
+      const feedQueryKey = getFeedPaginatedQueryKey(
         orgSlug,
         courseId,
-      ])
+        getStoredUiLocale(),
+      )
+      await queryClient.cancelQueries({
+        queryKey: feedQueryKey,
+      })
+
+      const previousFeed =
+        queryClient.getQueryData<InfiniteData<FeedItem[]>>(feedQueryKey)
 
       const optimisticPost: FeedItem = {
         uuid: 'temp-' + Date.now(),
@@ -62,7 +65,7 @@ export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
       }
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        feedQueryKey,
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -86,7 +89,7 @@ export const useCreatePostMutation = (courseId: string, orgSlug?: string) => {
         error,
         i18n.t('toasts.feed.createError', { ns: 'dashboard' }),
         queryClient,
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, getStoredUiLocale()),
         context?.previousFeed,
       )
     },
@@ -105,18 +108,20 @@ export const useUpdatePostMutation = (courseId: string, orgSlug?: string) => {
       updatePost(courseId, postId, data, orgSlug),
     networkMode: 'always',
     onMutate: async ({ postId, data }) => {
-      await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', orgSlug, courseId],
-      })
-
-      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
-        'feed-paginated',
+      const feedQueryKey = getFeedPaginatedQueryKey(
         orgSlug,
         courseId,
-      ])
+        getStoredUiLocale(),
+      )
+      await queryClient.cancelQueries({
+        queryKey: feedQueryKey,
+      })
+
+      const previousFeed =
+        queryClient.getQueryData<InfiniteData<FeedItem[]>>(feedQueryKey)
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        feedQueryKey,
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -142,7 +147,7 @@ export const useUpdatePostMutation = (courseId: string, orgSlug?: string) => {
         error,
         i18n.t('toasts.feed.updateError', { ns: 'dashboard' }),
         queryClient,
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, getStoredUiLocale()),
         context?.previousFeed,
       )
     },
@@ -160,18 +165,20 @@ export const useDeletePostMutation = (courseId: string, orgSlug?: string) => {
     mutationFn: (postId: string) => deletePost(courseId, postId, orgSlug),
     networkMode: 'always',
     onMutate: async (postId) => {
-      await queryClient.cancelQueries({
-        queryKey: ['feed-paginated', orgSlug, courseId],
-      })
-
-      const previousFeed = queryClient.getQueryData<InfiniteData<FeedItem[]>>([
-        'feed-paginated',
+      const feedQueryKey = getFeedPaginatedQueryKey(
         orgSlug,
         courseId,
-      ])
+        getStoredUiLocale(),
+      )
+      await queryClient.cancelQueries({
+        queryKey: feedQueryKey,
+      })
+
+      const previousFeed =
+        queryClient.getQueryData<InfiniteData<FeedItem[]>>(feedQueryKey)
 
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', orgSlug, courseId],
+        feedQueryKey,
         (oldData) => {
           if (!oldData?.pages) return oldData
           return {
@@ -194,7 +201,7 @@ export const useDeletePostMutation = (courseId: string, orgSlug?: string) => {
         error,
         i18n.t('toasts.feed.deleteError', { ns: 'dashboard' }),
         queryClient,
-        ['feed-paginated', orgSlug, courseId],
+        getFeedPaginatedQueryKey(orgSlug, courseId, getStoredUiLocale()),
         context?.previousFeed,
       )
     },

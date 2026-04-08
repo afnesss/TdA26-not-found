@@ -1,4 +1,5 @@
 import type {
+  AdminShopOrder,
   ShopCatalogItem,
   ShopCreateOrderRequest,
   ShopOrder,
@@ -29,6 +30,10 @@ export const createShopOrder = async (
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export const getAdminShopOrders = async (): Promise<AdminShopOrder[]> => {
+  return await apiFetch<AdminShopOrder[]>('/admin/orders')
 }
 
 export const purchaseShopVoucher = async (

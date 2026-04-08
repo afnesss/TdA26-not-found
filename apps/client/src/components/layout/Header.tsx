@@ -58,6 +58,7 @@ export default function Header() {
   const isAdminLoginActive = pathname === '/admin/login'
   const isAdminRequestsActive = pathname.startsWith('/admin/requests')
   const isAdminOrganizationsActive = pathname.startsWith('/admin/organizations')
+  const isAdminOrdersActive = pathname.startsWith('/admin/orders')
   const isShopActive = pathname.startsWith('/shop')
   const isLegalPage =
     pathname === '/terms-of-use' || pathname === '/privacy-policy'
@@ -130,6 +131,12 @@ export default function Header() {
                 value: 'requests',
                 isActive: isAdminRequestsActive,
                 onClick: () => navigate('/admin/requests'),
+              },
+              {
+                label: t('navigation.orders'),
+                value: 'orders',
+                isActive: isAdminOrdersActive,
+                onClick: () => navigate('/admin/orders'),
               },
               {
                 label: t('navigation.organizations'),

@@ -25,6 +25,7 @@ import OrganizationRequestPage from './pages/OrganizationRequestPage'
 import OrganizationRequestStatusPage from './pages/OrganizationRequestStatusPage'
 import AdminRequestsPage from './pages/admin/AdminRequestsPage'
 import AdminOrganizationsPage from './pages/admin/AdminOrganizationsPage'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import OrganizationHomePage from './pages/OrganizationHomePage'
 import OrganizationInfoPage from './pages/OrganizationInfoPage'
@@ -86,6 +87,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminOrganizationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/admin/orders'
+          element={
+            <ProtectedRoute>
+              <AdminOrdersPage />
             </ProtectedRoute>
           }
         />

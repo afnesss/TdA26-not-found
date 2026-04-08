@@ -3,6 +3,7 @@ import {
   getShopCatalog,
   validateShopPromoCode,
 } from '@/api/queries/shopQueries'
+import { getOrganizationPublicInfo } from '@/api/queries/organizationQueries'
 import playIcon from '@/assets/t-play-blue.svg'
 import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,11 @@ const ShopCheckoutPage = () => {
   } = useQuery({
     queryKey: ['shop-catalog', uiLocale],
     queryFn: getShopCatalog,
+  })
+  const { data: organizationInfo } = useQuery({
+    queryKey: ['organization-public-info', orgSlug],
+    queryFn: () => getOrganizationPublicInfo(orgSlug!),
+    enabled: Boolean(orgSlug),
   })
 
   const promoValidation = useQuery({
@@ -137,6 +143,21 @@ const ShopCheckoutPage = () => {
 
     createOrderMutation.mutate({
       contactEmail: trimmedEmail,
+      customerType:
+        me?.actorType === 'organization_user'
+          ? me.role
+          : me?.actorType === 'organization_admin'
+            ? 'lecturer'
+            : 'guest',
+      customerName:
+        me?.actorType === 'organization_user'
+          ? me.username
+          : me?.actorType === 'organization_admin'
+            ? 'Admin'
+            : null,
+      organizationName:
+        me?.organizationName ?? organizationInfo?.name ?? orgSlug ?? null,
+      interfaceLanguage: uiLocale,
       items: cart.items,
       promoCode: cart.promoCode.trim() || undefined,
     })

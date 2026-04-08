@@ -44,6 +44,10 @@ export const ShopOrderItemSnapshotSchema = z.object({
 
 export const ShopCreateOrderRequestSchema = z.object({
   contactEmail: z.string().trim().email().max(320),
+  customerType: z.enum(['guest', 'lecturer', 'student']).default('guest'),
+  customerName: z.string().trim().min(1).max(256).optional().nullable(),
+  organizationName: z.string().trim().min(1).max(256).optional().nullable(),
+  interfaceLanguage: z.string().trim().min(2).max(8).optional().nullable(),
   items: z.array(ShopCartItemInputSchema).min(1),
   promoCode: z.string().trim().max(64).optional().nullable(),
 })
@@ -51,6 +55,25 @@ export const ShopCreateOrderRequestSchema = z.object({
 export const ShopOrderSchema = z.object({
   orderId: z.string().uuid(),
   contactEmail: z.string().email(),
+  customerType: z.enum(['guest', 'lecturer', 'student']),
+  customerName: z.string().nullable().optional(),
+  organizationName: z.string().nullable().optional(),
+  interfaceLanguage: z.string().nullable().optional(),
+  items: z.array(ShopOrderItemSnapshotSchema),
+  appliedPromoCode: z.string().nullable(),
+  subtotalCents: z.number().int().nonnegative(),
+  discountCents: z.number().int().nonnegative(),
+  totalCents: z.number().int().nonnegative(),
+  createdAt: z.string().datetime().or(z.date()),
+})
+
+export const AdminShopOrderSchema = z.object({
+  orderId: z.string().uuid(),
+  contactEmail: z.string().email(),
+  customerType: z.enum(['guest', 'lecturer', 'student']),
+  customerName: z.string().nullable().optional(),
+  organizationName: z.string().nullable().optional(),
+  interfaceLanguage: z.string().nullable().optional(),
   items: z.array(ShopOrderItemSnapshotSchema),
   appliedPromoCode: z.string().nullable(),
   subtotalCents: z.number().int().nonnegative(),
@@ -82,6 +105,7 @@ export type ShopPromoValidateResponse = z.infer<
 >
 export type ShopCreateOrderRequest = z.infer<typeof ShopCreateOrderRequestSchema>
 export type ShopOrder = z.infer<typeof ShopOrderSchema>
+export type AdminShopOrder = z.infer<typeof AdminShopOrderSchema>
 export type ShopVoucherPurchaseRequest = z.infer<
   typeof ShopVoucherPurchaseRequestSchema
 >

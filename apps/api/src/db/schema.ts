@@ -276,6 +276,12 @@ export type ShopOrderItemSnapshot = {
   lineTotalCents: number;
 };
 
+export const shopOrderCustomerTypeEnum = [
+  "guest",
+  "lecturer",
+  "student",
+] as const;
+
 export const merchItems = pgTable(
   "merch_items",
   {
@@ -320,6 +326,12 @@ export const shopOrders = pgTable(
   {
     uuid: uuid("uuid").defaultRandom().primaryKey(),
     contactEmail: varchar("contact_email", { length: 320 }).notNull(),
+    customerType: varchar("customer_type", { length: 16 })
+      .notNull()
+      .default("guest"),
+    customerName: varchar("customer_name", { length: 256 }),
+    organizationName: varchar("organization_name", { length: 256 }),
+    interfaceLanguage: varchar("interface_language", { length: 8 }),
     items: jsonb("items").$type<ShopOrderItemSnapshot[]>().notNull(),
     promoCode: varchar("promo_code", { length: 64 }),
     subtotalCents: integer("subtotal_cents").notNull(),
@@ -328,6 +340,10 @@ export const shopOrders = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
+    check(
+      "shop_orders_customer_type_allowed",
+      sql`${t.customerType} in ('guest', 'lecturer', 'student')`,
+    ),
     check("shop_orders_subtotal_non_negative", sql`${t.subtotalCents} >= 0`),
     check("shop_orders_discount_non_negative", sql`${t.discountCents} >= 0`),
     check("shop_orders_total_non_negative", sql`${t.totalCents} >= 0`),

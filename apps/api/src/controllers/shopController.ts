@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { db } from "../db";
 import { merchItems, promoCodes, shopOrders, users } from "../db/schema";
 import type { ShopCartItemInput } from "../schemas";
-import { AuthRequest } from "../types/auth";
+import { AuthRequest, type AuthUser } from "../types/auth";
 import { getRequestLocale } from "../utils/i18n";
 import { logger } from "../utils/logger";
 import { localizeNameDescription } from "../utils/localizedResponse";
@@ -22,6 +22,8 @@ type PromoCodeRecord = {
   discountType: string;
   discountValue: number;
 };
+
+type ShopOrderCustomerType = "guest" | "lecturer" | "student";
 
 const XP_PER_LEVEL = 100;
 const VOUCHER_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -47,6 +49,26 @@ const generateVoucherPromoCode = (discountPercent: number) =>
 
 const calculateSubtotal = (items: ResolvedCartLine[]) =>
   items.reduce((sum, item) => sum + item.lineTotalCents, 0);
+
+const normalizeOptionalString = (value?: string | null) => {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+};
+
+const resolveCustomerType = (
+  reqUser?: AuthUser,
+  requestedType?: ShopOrderCustomerType,
+): ShopOrderCustomerType => {
+  if (reqUser?.actorType === "organization_user") {
+    return reqUser.role;
+  }
+
+  if (reqUser?.actorType === "organization_admin") {
+    return "lecturer";
+  }
+
+  return requestedType ?? "guest";
+};
 
 const calculateDiscountCents = (
   promo: PromoCodeRecord,
@@ -412,15 +434,34 @@ export async function validateShopPromoCode(req: Request, res: Response) {
 
 export async function createShopOrder(req: Request, res: Response) {
   try {
-    const { contactEmail, items, promoCode } = req.body as {
+    const { contactEmail, customerType, customerName, organizationName, interfaceLanguage, items, promoCode } = req.body as {
       contactEmail: string;
+      customerType?: ShopOrderCustomerType;
+      customerName?: string | null;
+      organizationName?: string | null;
+      interfaceLanguage?: string | null;
       items: ShopCartItemInput[];
       promoCode?: string | null;
     };
+    const authReq = req as AuthRequest;
 
     const normalizedPromoCode = promoCode
       ? normalizePromoCode(promoCode)
       : undefined;
+    const resolvedCustomerType = resolveCustomerType(
+      authReq.user,
+      customerType,
+    );
+    const resolvedCustomerName =
+      authReq.user?.actorType === "organization_user"
+        ? authReq.user.username
+        : authReq.user?.actorType === "organization_admin"
+          ? normalizeOptionalString(customerName) ?? "Admin"
+          : normalizeOptionalString(customerName);
+    const resolvedOrganizationName = normalizeOptionalString(organizationName);
+    const resolvedInterfaceLanguage = normalizeOptionalString(
+      interfaceLanguage,
+    )?.toLowerCase();
 
     const createdOrder = await db.transaction(async (tx) => {
       const queryable = tx as unknown as typeof db;
@@ -469,6 +510,10 @@ export async function createShopOrder(req: Request, res: Response) {
         .insert(shopOrders)
         .values({
           contactEmail: contactEmail.trim().toLowerCase(),
+          customerType: resolvedCustomerType,
+          customerName: resolvedCustomerName,
+          organizationName: resolvedOrganizationName,
+          interfaceLanguage: resolvedInterfaceLanguage,
           items: resolvedItems,
           promoCode: appliedPromoCode,
           subtotalCents,
@@ -478,6 +523,10 @@ export async function createShopOrder(req: Request, res: Response) {
         .returning({
           uuid: shopOrders.uuid,
           contactEmail: shopOrders.contactEmail,
+          customerType: shopOrders.customerType,
+          customerName: shopOrders.customerName,
+          organizationName: shopOrders.organizationName,
+          interfaceLanguage: shopOrders.interfaceLanguage,
           items: shopOrders.items,
           promoCode: shopOrders.promoCode,
           subtotalCents: shopOrders.subtotalCents,
@@ -503,6 +552,10 @@ export async function createShopOrder(req: Request, res: Response) {
     return res.status(201).json({
       orderId: createdOrder.uuid,
       contactEmail: createdOrder.contactEmail,
+      customerType: createdOrder.customerType as ShopOrderCustomerType,
+      customerName: createdOrder.customerName,
+      organizationName: createdOrder.organizationName,
+      interfaceLanguage: createdOrder.interfaceLanguage,
       items: createdOrder.items,
       appliedPromoCode: createdOrder.promoCode,
       subtotalCents: createdOrder.subtotalCents,
@@ -518,4 +571,26 @@ export async function createShopOrder(req: Request, res: Response) {
     logger.error({ err: error }, "Failed to create shop order");
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
+}
+
+export async function listAdminShopOrders(_req: Request, res: Response) {
+  const orders = await db
+    .select({
+      orderId: shopOrders.uuid,
+      contactEmail: shopOrders.contactEmail,
+      customerType: shopOrders.customerType,
+      customerName: shopOrders.customerName,
+      organizationName: shopOrders.organizationName,
+      interfaceLanguage: shopOrders.interfaceLanguage,
+      items: shopOrders.items,
+      appliedPromoCode: shopOrders.promoCode,
+      subtotalCents: shopOrders.subtotalCents,
+      discountCents: shopOrders.discountCents,
+      totalCents: shopOrders.totalCents,
+      createdAt: shopOrders.createdAt,
+    })
+    .from(shopOrders)
+    .orderBy(desc(shopOrders.createdAt));
+
+  res.json(orders);
 }

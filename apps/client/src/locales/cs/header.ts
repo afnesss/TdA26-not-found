@@ -4,6 +4,7 @@ const header = {
     courses: 'Kurzy',
     dashboard: 'Dashboard',
     requests: 'Žádosti',
+    orders: 'Objednávky',
     organizations: 'Organizace',
     menu: 'Menu',
   },

@@ -8,6 +8,7 @@ import {
   rejectOrganizationRequest,
   updateOrganization,
 } from "../controllers/organizationController";
+import { listAdminShopOrders } from "../controllers/shopController";
 import { adminAuthMiddleware } from "../middleware/auth";
 import { requirePlatformAdmin } from "../middleware/organization";
 import { validate } from "../middleware/validate";
@@ -34,6 +35,7 @@ router.post(
 );
 
 router.get("/organizations", listOrganizations);
+router.get("/orders", listAdminShopOrders);
 router.put(
   "/organizations/:orgId",
   validate(OrganizationUpdateSchema),

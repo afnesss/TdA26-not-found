@@ -72,6 +72,7 @@ export const ShopVoucherPurchaseResponseSchema = z.object({
   xpCost: z.number().int().positive(),
   remainingXp: z.number().int().nonnegative(),
   level: z.number().int().positive(),
+  alreadyActive: z.boolean().optional(),
 });
 
 export type ShopCartItemInput = z.infer<typeof ShopCartItemInputSchema>;

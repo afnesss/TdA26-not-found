@@ -8,9 +8,10 @@ import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useShopCart } from '@/hooks/useShopCart'
+import { buildShopCartStorageKey, useShopCart } from '@/hooks/useShopCart'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import type { ApiError } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -32,7 +33,18 @@ const ShopCheckoutPage = () => {
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
-  const { cart, clearCart } = useShopCart()
+  const { me } = useOrganizationAuth(orgSlug, {
+    enabled: Boolean(orgSlug),
+  })
+  const cartStorageKey = buildShopCartStorageKey(
+    orgSlug,
+    me?.actorType === 'organization_user'
+      ? me.id
+      : me?.actorType === 'organization_admin'
+        ? 'organization-admin'
+        : null,
+  )
+  const { cart, clearCart } = useShopCart(cartStorageKey)
   const [contactEmail, setContactEmail] = useState('')
 
   const {
@@ -77,6 +89,9 @@ const ShopCheckoutPage = () => {
     ? (promoValidation.data?.discountCents ?? 0)
     : 0
   const totalCents = Math.max(0, subtotalCents - discountCents)
+  const promoError = promoValidation.error as ApiError | null
+  const promoErrorMessage =
+    promoError?.body?.message ?? t('cart.promoValidationFailed')
 
   const createOrderMutation = useMutation({
     mutationFn: createShopOrder,
@@ -177,14 +192,21 @@ const ShopCheckoutPage = () => {
                   <p className='font-medium text-foreground'>
                     {line.item?.name ?? t('checkout.unavailableItem')}
                   </p>
-                  <p className='text-xs text-muted-foreground'>
+                  <div className='flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground'>
                     {t('checkout.quantity', { count: line.quantity })}
                     {line.item
-                      ? ` • ${t('cart.perUnit', {
-                          price: formatPrice(line.item.unitPriceCents),
-                        })}`
+                      ? (
+                          <>
+                            <span aria-hidden='true'>&bull;</span>
+                            <span>
+                              {t('cart.perUnit', {
+                                price: formatPrice(line.item.unitPriceCents),
+                              })}
+                            </span>
+                          </>
+                        )
                       : ''}
-                  </p>
+                  </div>
                 </div>
                 <span className='font-semibold text-foreground'>
                   {formatPrice(line.lineTotalCents)}
@@ -254,12 +276,26 @@ const ShopCheckoutPage = () => {
             </p>
           )}
           {cart.promoCode.trim().length > 0 &&
+            promoValidation.isFetching && (
+              <p className='text-xs text-muted-foreground'>
+                {t('cart.promoValidating')}
+              </p>
+            )}
+          {hasValidPromo && (
+            <p className='text-xs font-medium text-primary'>
+              {t('cart.promoActive')}
+            </p>
+          )}
+          {cart.promoCode.trim().length > 0 &&
             !promoValidation.isFetching &&
             promoValidation.data?.valid === false && (
               <p className='text-xs text-destructive'>
                 {t('cart.promoInvalidOrUsed')}
               </p>
             )}
+          {promoError && (
+            <p className='text-xs text-destructive'>{promoErrorMessage}</p>
+          )}
 
           <div className='grid grid-cols-[40%_60%] gap-2'>
             <Button

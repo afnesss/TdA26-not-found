@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like } from "drizzle-orm";
 import { Request, Response } from "express";
 import { db } from "../db";
 import { merchItems, promoCodes, shopOrders, users } from "../db/schema";
@@ -188,6 +188,30 @@ const findPromoCode = async (code: string, queryable: typeof db) => {
   } satisfies PromoCodeRecord;
 };
 
+const findActiveVoucherPromoCode = async (
+  voucherItemId: string,
+  userId: string,
+  queryable: typeof db,
+) => {
+  const redemptionPrefix = `voucher:${voucherItemId}:${userId}:`;
+  const [promo] = await queryable
+    .select({
+      code: promoCodes.code,
+    })
+    .from(promoCodes)
+    .where(
+      and(
+        eq(promoCodes.isActive, true),
+        eq(promoCodes.isUsed, false),
+        like(promoCodes.xpRedemptionRef, `${redemptionPrefix}%`),
+      ),
+    )
+    .orderBy(desc(promoCodes.createdAt))
+    .limit(1);
+
+  return promo ?? null;
+};
+
 export async function getShopCatalog(_req: Request, res: Response) {
   const locale = getRequestLocale(_req);
   const items = await db
@@ -236,6 +260,7 @@ export async function purchaseShopVoucherWithXp(
         .select({
           uuid: users.uuid,
           xp: users.xp,
+          level: users.level,
         })
         .from(users)
         .where(eq(users.uuid, studentId))
@@ -274,6 +299,23 @@ export async function purchaseShopVoucherWithXp(
         throw new ShopValidationError("Voucher není správně nastaven.", 500);
       }
 
+      const existingPromo = await findActiveVoucherPromoCode(
+        voucherItem.uuid,
+        currentUser.uuid,
+        queryable,
+      );
+
+      if (existingPromo) {
+        return {
+          code: existingPromo.code,
+          discountPercent,
+          xpCost,
+          remainingXp: currentUser.xp,
+          level: currentUser.level,
+          alreadyActive: true,
+        };
+      }
+
       if (currentUser.xp < xpCost) {
         throw new ShopValidationError("Nemáte dostatek XP pro nákup voucheru.");
       }
@@ -310,6 +352,7 @@ export async function purchaseShopVoucherWithXp(
         xpCost,
         remainingXp: updatedUser.xp,
         level: updatedUser.level,
+        alreadyActive: false,
       };
     });
 

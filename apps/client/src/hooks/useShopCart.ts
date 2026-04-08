@@ -6,7 +6,7 @@ type ShopCartState = {
   promoCode: string
 }
 
-const SHOP_CART_STORAGE_KEY = 'platform-shop-cart-v1'
+const SHOP_CART_STORAGE_KEY_PREFIX = 'platform-shop-cart-v2'
 
 const EMPTY_CART_STATE: ShopCartState = {
   items: [],
@@ -18,9 +18,19 @@ const clampQuantity = (quantity: number) => {
   return Math.max(1, Math.min(99, Math.floor(quantity)))
 }
 
-export function useShopCart() {
+export const buildShopCartStorageKey = (
+  orgSlug?: string | null,
+  actorScope?: string | null,
+) => {
+  const normalizedOrg = orgSlug?.trim() || 'global'
+  const normalizedActor = actorScope?.trim() || 'guest'
+
+  return `${SHOP_CART_STORAGE_KEY_PREFIX}:${normalizedOrg}:${normalizedActor}`
+}
+
+export function useShopCart(storageKey = buildShopCartStorageKey()) {
   const [cart, setCart] = useLocalStorage<ShopCartState>(
-    SHOP_CART_STORAGE_KEY,
+    storageKey,
     EMPTY_CART_STATE,
   )
 

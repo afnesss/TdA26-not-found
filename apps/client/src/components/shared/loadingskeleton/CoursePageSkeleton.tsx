@@ -18,7 +18,7 @@ const CourseSkeleton = ({
         {/* summary */}
         <section>
           <div className='bg-background rounded-xl border border-gray-100 overflow-hidden'>
-            <div className='bg-linear-to-r from-secondary to-accent-teal-light h-2' />
+            <div className='bg-secondary h-1.5' />
             <div className='px-5 md:px-6 py-5 gap-3 flex flex-col'>
               <div className='flex md:flex-row gap-3 items-center'>
                 <Skeleton className='h-8 w-20 rounded-lg' />

@@ -1,24 +1,30 @@
 import { useState, useEffect, useCallback } from 'react'
 
+const readLocalStorageValue = <T>(key: string, initialValue: T) => {
+  if (typeof window === 'undefined') {
+    return initialValue
+  }
+
+  try {
+    const item = window.localStorage.getItem(key)
+    return item ? (JSON.parse(item) as T) : initialValue
+  } catch (error) {
+    console.warn(`Error reading localStorage key "${key}":`, error)
+    return initialValue
+  }
+}
+
 export function useLocalStorage<T>(
   key: string,
   initialValue: T,
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  // Get initial value from localStorage or use initialValue
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
-      return initialValue
-    }
-    try {
-      const item = window.localStorage.getItem(key)
-      return item ? JSON.parse(item) : initialValue
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error)
-      return initialValue
-    }
-  })
+  const [state, setState] = useState<{ key: string; value: T }>(() => ({
+    key,
+    value: readLocalStorageValue(key, initialValue),
+  }))
+  const storedValue =
+    state.key === key ? state.value : readLocalStorageValue(key, initialValue)
 
-  // Update localStorage when value changes
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -29,15 +35,20 @@ export function useLocalStorage<T>(
     }
   }, [key, storedValue])
 
-  // Return a wrapped version of useState's setter that also updates localStorage
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
-      setStoredValue((prev) => {
-        const valueToStore = value instanceof Function ? value(prev) : value
-        return valueToStore
+      setState((prev) => {
+        const prevValue =
+          prev.key === key ? prev.value : readLocalStorageValue(key, initialValue)
+        const valueToStore = value instanceof Function ? value(prevValue) : value
+
+        return {
+          key,
+          value: valueToStore,
+        }
       })
     },
-    [],
+    [initialValue, key],
   )
 
   return [storedValue, setValue]

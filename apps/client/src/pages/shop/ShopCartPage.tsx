@@ -6,9 +6,10 @@ import StateComp from '@/components/shared/StateComp'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useShopCart } from '@/hooks/useShopCart'
+import { buildShopCartStorageKey, useShopCart } from '@/hooks/useShopCart'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import type { ApiError } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
@@ -32,14 +33,20 @@ const ShopCartPage = () => {
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
+  const { me } = useOrganizationAuth(orgSlug, {
+    enabled: Boolean(orgSlug),
+  })
+  const cartStorageKey = buildShopCartStorageKey(
+    orgSlug,
+    me?.actorType === 'organization_user'
+      ? me.id
+      : me?.actorType === 'organization_admin'
+        ? 'organization-admin'
+        : null,
+  )
 
-  const {
-    cart,
-    updateQuantity,
-    removeItem,
-    setPromoCode,
-    itemCount,
-  } = useShopCart()
+  const { cart, updateQuantity, removeItem, setPromoCode, itemCount } =
+    useShopCart(cartStorageKey)
   const [promoDraft, setPromoDraft] = useState(cart.promoCode)
 
   const {
@@ -77,6 +84,11 @@ const ShopCartPage = () => {
   }, [orgSlug])
 
   const cartLines = resolveCartLines(cart.items, catalog)
+  useEffect(() => {
+    if (cartLines.length === 0) {
+      navigate(buildShopPath('/shop', orgSlug))
+    }
+  }, [hasItems])
   const subtotalCents = cartLines.reduce(
     (sum, line) => sum + line.lineTotalCents,
     0,
@@ -94,17 +106,6 @@ const ShopCartPage = () => {
 
   if (isError) {
     return <StateComp type='error' onAction={refetch} />
-  }
-
-  if (!isLoading && !hasItems) {
-    return (
-      <StateComp
-        type='no-content'
-        message={t('cart.emptyCart')}
-        onAction={() => navigate(buildShopPath('/shop', orgSlug))}
-        actionText={t('cart.backToShop')}
-      />
-    )
   }
 
   const handlePromoSubmit = () => {
@@ -272,15 +273,21 @@ const ShopCartPage = () => {
 
           <div className='space-y-2 text-sm'>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>{t('cart.itemCount')}</span>
+              <span className='text-muted-foreground'>
+                {t('cart.itemCount')}
+              </span>
               <span>{itemCount}</span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>{t('cart.subtotal')}</span>
+              <span className='text-muted-foreground'>
+                {t('cart.subtotal')}
+              </span>
               <span>{formatPrice(subtotalCents)}</span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground'>{t('cart.discount')}</span>
+              <span className='text-muted-foreground'>
+                {t('cart.discount')}
+              </span>
               <span
                 className={
                   discountCents > 0
@@ -301,20 +308,35 @@ const ShopCartPage = () => {
             <label className='text-sm font-medium text-foreground'>
               {t('cart.promoLabel')}
             </label>
-            <Input
-              value={promoDraft}
-              onChange={(event) =>
-                setPromoDraft(event.target.value.toUpperCase())
-              }
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  handlePromoSubmit()
+            <div className='relative'>
+              <Input
+                value={promoDraft}
+                onChange={(event) =>
+                  setPromoDraft(event.target.value.toUpperCase())
                 }
-              }}
-              placeholder={t('cart.promoPlaceholder')}
-            />
-            <p className='text-xs text-muted-foreground'>{t('cart.promoHint')}</p>
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    handlePromoSubmit()
+                  }
+                }}
+                placeholder={t('cart.promoPlaceholder')}
+                className='pr-24'
+              />
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                className='absolute right-1 top-1 h-8 rounded-lg px-3'
+                onClick={handlePromoSubmit}
+                disabled={!promoDraft.trim() || promoValidation.isFetching}
+              >
+                {t('cart.applyPromo')}
+              </Button>
+            </div>
+            <p className='text-xs text-muted-foreground'>
+              {t('cart.promoHint')}
+            </p>
             {cart.promoCode.trim().length > 0 && promoValidation.isFetching && (
               <p className='text-xs text-muted-foreground'>
                 {t('cart.promoValidating')}

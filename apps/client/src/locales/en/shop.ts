@@ -1,12 +1,13 @@
 const shop = {
   catalog: {
-    pageTitle: 'Platform Shop',
+    pageTitle: 'Shop',
     title: 'Think Different Academy merch',
     cartCta: 'Cart',
     emptyCatalog: 'The catalog is currently empty.',
     reload: 'Reload',
     voucherPurchaseFailed: 'Failed to purchase the voucher.',
-    voucherStudentOnly: 'Vouchers can only be purchased from a student account.',
+    voucherStudentOnly:
+      'Vouchers can only be purchased from a student account.',
     promoCopyFailed: 'Failed to copy the promo code.',
     voucherPurchasedTitle: 'Voucher purchased',
     voucherAlreadyActive: 'This voucher is already active.',
@@ -18,14 +19,15 @@ const shop = {
     voucherSingleUseWarning: 'After use, it will no longer be valid.',
     continue: 'Continue',
     voucherBadge: 'XP voucher',
-    insufficientXp: 'You do not have enough XP ({{current}} / {{required}} XP).',
+    insufficientXp:
+      'You do not have enough XP ({{current}} / {{required}} XP).',
     defaultDescription: 'Stylish merch from the platform shop.',
     buy: 'Buy',
     add: 'Add',
     addedToCart: '"{{name}}" was added to the cart.',
   },
   cart: {
-    pageTitle: 'Cart | Platform Shop',
+    pageTitle: 'Cart | Shop',
     emptyCart: 'Your cart is currently empty.',
     backToShop: 'Back to shop',
     title: 'Cart',
@@ -42,7 +44,8 @@ const shop = {
     total: 'Total',
     promoLabel: 'Promo code (1 code per cart)',
     promoPlaceholder: 'e.g. WELCOME10',
-    promoHint: 'Press Enter to validate the promo code.',
+    applyPromo: 'Apply',
+    promoHint: 'Apply the promo code to validate it.',
     promoValidating: 'Validating promo code...',
     promoActive: 'Promo code is active. The discount has been applied.',
     promoValidationFailed: 'Failed to validate the promo code.',
@@ -52,7 +55,7 @@ const shop = {
     remove: 'Remove',
   },
   checkout: {
-    pageTitle: 'Checkout | Platform Shop',
+    pageTitle: 'Checkout | Shop',
     emptyCheckout: 'Your cart is empty, checkout cannot be completed.',
     goToShop: 'Go to shop',
     title: 'Checkout',
@@ -77,9 +80,10 @@ const shop = {
     missingEmail: 'Please enter a contact email.',
   },
   success: {
-    pageTitle: 'Order created | Platform Shop',
+    pageTitle: 'Order created | Shop',
     title: 'Order created',
-    description: 'Thank you. The order has been automatically stored in the system.',
+    description:
+      'Thank you. The order has been automatically stored in the system.',
     orderId: 'Order ID',
     contactEmail: 'Contact email',
     itemCount: 'Item count',

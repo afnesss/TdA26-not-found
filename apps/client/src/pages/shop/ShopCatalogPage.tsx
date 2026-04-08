@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { useShopCart } from '@/hooks/useShopCart'
+import { buildShopCartStorageKey, useShopCart } from '@/hooks/useShopCart'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgLoginPath } from '@/lib/routes'
@@ -47,10 +47,18 @@ const ShopCatalogPage = () => {
   const [purchasedVoucher, setPurchasedVoucher] =
     useState<PurchasedVoucher | null>(null)
   const [isVoucherCodeCopied, setIsVoucherCodeCopied] = useState(false)
-  const { isAuth: isOrgAuth, user } = useOrganizationAuth(orgSlug, {
+  const { isAuth: isOrgAuth, me, user } = useOrganizationAuth(orgSlug, {
     enabled: Boolean(orgSlug),
   })
-  const { cart, addItem, itemCount } = useShopCart()
+  const cartStorageKey = buildShopCartStorageKey(
+    orgSlug,
+    me?.actorType === 'organization_user'
+      ? me.id
+      : me?.actorType === 'organization_admin'
+        ? 'organization-admin'
+        : null,
+  )
+  const { cart, addItem, itemCount } = useShopCart(cartStorageKey)
   const {
     data: catalog = [],
     isLoading,
@@ -89,6 +97,7 @@ const ShopCatalogPage = () => {
       setPurchasedVoucher({
         code: response.code,
         xpCost: response.xpCost,
+        alreadyActive: response.alreadyActive,
       })
     },
     onError: (error: ApiError) => {
@@ -107,7 +116,7 @@ const ShopCatalogPage = () => {
 
   const handleVoucherPurchase = (
     merchItemId: string,
-    voucherXpCost?: number | null,
+    _voucherXpCost?: number | null,
   ) => {
     if (!isOrgAuth || user?.role !== 'student') {
       toast.error(t('catalog.voucherStudentOnly'))
@@ -117,16 +126,6 @@ const ShopCatalogPage = () => {
           `${buildOrgLoginPath(orgSlug)}?mode=student&redirect=${encodeURIComponent(redirect)}`,
         )
       }
-      return
-    }
-
-    const activePromoCode = cart.promoCode.trim()
-    if (activePromoCode) {
-      setPurchasedVoucher({
-        code: activePromoCode,
-        xpCost: voucherXpCost ?? 0,
-        alreadyActive: true,
-      })
       return
     }
 

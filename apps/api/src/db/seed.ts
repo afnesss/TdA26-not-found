@@ -296,6 +296,9 @@ const courseStatusByIndex = new Map<number, (typeof courseStatusEnum)[number]>([
   [3, "planned"],
   [4, "planned"],
   [5, "paused"],
+  [6, "paused"],
+  [7, "live"],
+  [8, "planned"],
 ]);
 
 const now = new Date();
@@ -652,7 +655,11 @@ const syncSeededCourseContent = async (courseId: string) => {
 
   if (existingModules.length !== moduleBlueprints.length) {
     logger.warn(
-      { courseId, expected: moduleBlueprints.length, actual: existingModules.length },
+      {
+        courseId,
+        expected: moduleBlueprints.length,
+        actual: existingModules.length,
+      },
       "Skipping seeded module localization sync because the course structure differs",
     );
     return;
@@ -676,7 +683,9 @@ const syncSeededCourseContent = async (courseId: string) => {
       .where(eq(modules.uuid, module.uuid));
   }
 
-  const moduleIdByPosition = new Map(existingModules.map((item) => [item.position, item.uuid]));
+  const moduleIdByPosition = new Map(
+    existingModules.map((item) => [item.position, item.uuid]),
+  );
 
   for (const position of [1, 2] as const) {
     const moduleId = moduleIdByPosition.get(position);
@@ -758,27 +767,32 @@ const syncSeededCourseContent = async (courseId: string) => {
                   : {}),
               };
             }),
-            questionsI18n: blueprint.questions.map((question, questionIndex) => {
-              const existingQuestions = Array.isArray(quiz.questions)
-                ? (quiz.questions as Array<{ uuid?: string }>)
-                : [];
+            questionsI18n: blueprint.questions.map(
+              (question, questionIndex) => {
+                const existingQuestions = Array.isArray(quiz.questions)
+                  ? (quiz.questions as Array<{ uuid?: string }>)
+                  : [];
 
-              return {
-                uuid: existingQuestions[questionIndex]?.uuid,
-                type: question.type,
-                questionI18n: { cs: question.question, en: question.questionEn },
-                optionsI18n: question.options.map((option, optionIndex) => ({
-                  cs: option,
-                  en: question.optionsEn[optionIndex],
-                })),
-                ...(typeof question.correctIndex === "number"
-                  ? { correctIndex: question.correctIndex }
-                  : {}),
-                ...(Array.isArray(question.correctIndices)
-                  ? { correctIndices: question.correctIndices }
-                  : {}),
-              };
-            }),
+                return {
+                  uuid: existingQuestions[questionIndex]?.uuid,
+                  type: question.type,
+                  questionI18n: {
+                    cs: question.question,
+                    en: question.questionEn,
+                  },
+                  optionsI18n: question.options.map((option, optionIndex) => ({
+                    cs: option,
+                    en: question.optionsEn[optionIndex],
+                  })),
+                  ...(typeof question.correctIndex === "number"
+                    ? { correctIndex: question.correctIndex }
+                    : {}),
+                  ...(Array.isArray(question.correctIndices)
+                    ? { correctIndices: question.correctIndices }
+                    : {}),
+                };
+              },
+            ),
             updatedAt: new Date(),
           })
           .where(eq(quizzes.uuid, quiz.uuid));
@@ -861,7 +875,7 @@ const merchCatalogSeed = [
     imageUrl: "/api/uploads/10sleva.png",
     unitPriceCents: 0,
     purchaseMode: "xp" as const,
-    xpCost: 250,
+    xpCost: 1,
     voucherDiscountPercent: 10,
     active: true,
   },
@@ -1234,7 +1248,10 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Oficiální sylabus kurzu",
-          nameI18n: { cs: "Oficiální sylabus kurzu", en: "Official Course Syllabus" },
+          nameI18n: {
+            cs: "Oficiální sylabus kurzu",
+            en: "Official Course Syllabus",
+          },
           description:
             "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
           descriptionI18n: {
@@ -1252,7 +1269,10 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Doplňková četba - Modul 1: Základy",
-          nameI18n: { cs: "Doplňková četba - Modul 1: Základy", en: "Supplementary Reading - Module 1: Basics" },
+          nameI18n: {
+            cs: "Doplňková četba - Modul 1: Základy",
+            en: "Supplementary Reading - Module 1: Basics",
+          },
           description:
             "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
           descriptionI18n: {
@@ -1267,7 +1287,10 @@ export async function seed() {
           moduleId: module1Id,
           type: "file" as const,
           name: "Prezentace z přednášky - Týden 1: Úvod",
-          nameI18n: { cs: "Prezentace z přednášky - Týden 1: Úvod", en: "Lecture Slides - Week 1: Introduction" },
+          nameI18n: {
+            cs: "Prezentace z přednášky - Týden 1: Úvod",
+            en: "Lecture Slides - Week 1: Introduction",
+          },
           description:
             "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
           descriptionI18n: {
@@ -1284,7 +1307,10 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Interaktivní programovací prostředí",
-          nameI18n: { cs: "Interaktivní programovací prostředí", en: "Interactive Programming Environment" },
+          nameI18n: {
+            cs: "Interaktivní programovací prostředí",
+            en: "Interactive Programming Environment",
+          },
           description:
             "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
           descriptionI18n: {
@@ -1302,7 +1328,10 @@ export async function seed() {
           moduleId: module2Id,
           type: "file" as const,
           name: "Cvičení - Modul 2: Datové struktury",
-          nameI18n: { cs: "Cvičení - Modul 2: Datové struktury", en: "Exercises - Module 2: Data Structures" },
+          nameI18n: {
+            cs: "Cvičení - Modul 2: Datové struktury",
+            en: "Exercises - Module 2: Data Structures",
+          },
           description: "Úkoly k řešení zaměřené na běžné datové struktury.",
           descriptionI18n: {
             cs: "Úkoly k řešení zaměřené na běžné datové struktury.",
@@ -1317,7 +1346,10 @@ export async function seed() {
           moduleId: module2Id,
           type: "url" as const,
           name: "Fórum pro pokročilá témata",
-          nameI18n: { cs: "Fórum pro pokročilá témata", en: "Advanced Topics Forum" },
+          nameI18n: {
+            cs: "Fórum pro pokročilá témata",
+            en: "Advanced Topics Forum",
+          },
           description:
             "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
           descriptionI18n: {
@@ -1332,7 +1364,10 @@ export async function seed() {
           moduleId: module2Id,
           type: "file" as const,
           name: "Pokyny k miniprojektu",
-          nameI18n: { cs: "Pokyny k miniprojektu", en: "Mini-project Guidelines" },
+          nameI18n: {
+            cs: "Pokyny k miniprojektu",
+            en: "Mini-project Guidelines",
+          },
           description:
             "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
           descriptionI18n: {
@@ -1348,7 +1383,10 @@ export async function seed() {
           moduleId: module2Id,
           type: "url" as const,
           name: "Externí zdroje kurzu",
-          nameI18n: { cs: "Externí zdroje kurzu", en: "External Course Resources" },
+          nameI18n: {
+            cs: "Externí zdroje kurzu",
+            en: "External Course Resources",
+          },
           description:
             "Vybraný seznam externích knih, tutoriálů a online kurzů.",
           descriptionI18n: {
@@ -1376,7 +1414,10 @@ export async function seed() {
         {
           moduleId: module1Id,
           title: "Modul 1: Kvíz ze základů",
-          titleI18n: { cs: "Modul 1: Kvíz ze základů", en: "Module 1: Basics Quiz" },
+          titleI18n: {
+            cs: "Modul 1: Kvíz ze základů",
+            en: "Module 1: Basics Quiz",
+          },
           questions: [
             {
               uuid: uuidv4(),
@@ -1434,7 +1475,10 @@ export async function seed() {
         {
           moduleId: module2Id,
           title: "Modul 2: Hodnocení klíčových konceptů",
-          titleI18n: { cs: "Modul 2: Hodnocení klíčových konceptů", en: "Module 2: Key Concepts Assessment" },
+          titleI18n: {
+            cs: "Modul 2: Hodnocení klíčových konceptů",
+            en: "Module 2: Key Concepts Assessment",
+          },
           questions: [
             {
               uuid: uuidv4(),

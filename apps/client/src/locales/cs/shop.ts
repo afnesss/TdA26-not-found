@@ -1,6 +1,6 @@
 const shop = {
   catalog: {
-    pageTitle: 'Platform Shop',
+    pageTitle: 'Shop',
     title: 'Merch Think Different Academy',
     cartCta: 'Košík',
     emptyCatalog: 'Katalog je zatím prázdný.',
@@ -25,7 +25,7 @@ const shop = {
     addedToCart: '"{{name}}" byl přidán do košíku.',
   },
   cart: {
-    pageTitle: 'Košík | Platform Shop',
+    pageTitle: 'Košík | Shop',
     emptyCart: 'Košík je zatím prázdný.',
     backToShop: 'Zpět do shopu',
     title: 'Košík',
@@ -42,7 +42,8 @@ const shop = {
     total: 'Celkem',
     promoLabel: 'Promo kód (1 kód na košík)',
     promoPlaceholder: 'Např. WELCOME10',
-    promoHint: 'Pro ověření promo kódu stiskněte Enter.',
+    applyPromo: 'Použít',
+    promoHint: 'Pro ověření promo kódu ho použijte tlačítkem.',
     promoValidating: 'Ověřuji promo kód...',
     promoActive: 'Promo kód je aktivní. Sleva byla přepočítána.',
     promoValidationFailed: 'Promo kód se nepodařilo ověřit.',
@@ -52,7 +53,7 @@ const shop = {
     remove: 'Odebrat',
   },
   checkout: {
-    pageTitle: 'Checkout | Platform Shop',
+    pageTitle: 'Checkout | Shop',
     emptyCheckout: 'Košík je prázdný, checkout není možné dokončit.',
     goToShop: 'Přejít do shopu',
     title: 'Checkout',
@@ -77,7 +78,7 @@ const shop = {
     missingEmail: 'Vyplňte prosím kontaktní e-mail.',
   },
   success: {
-    pageTitle: 'Objednávka vytvořena | Platform Shop',
+    pageTitle: 'Objednávka vytvořena | Shop',
     title: 'Objednávka byla vytvořena',
     description: 'Děkujeme. Objednávka byla automaticky uložena v systému.',
     orderId: 'ID objednávky',

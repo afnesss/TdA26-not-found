@@ -55,7 +55,7 @@ export const createPost = async (req: Request, res: Response) => {
       .returning();
 
     const localizedItem = localizeMessage(newItem, locale);
-    sseManager.broadcast(courseId, "new_post", localizedItem);
+    sseManager.broadcast(courseId, "new_post", newItem, localizeMessage);
 
     res.status(201).json(localizedItem);
   } catch (error) {
@@ -101,7 +101,7 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 
     const localizedItem = localizeMessage(updatedItem, locale);
-    sseManager.broadcast(courseId, "post_updated", localizedItem);
+    sseManager.broadcast(courseId, "post_updated", updatedItem, localizeMessage);
 
     res.json(localizedItem);
   } catch (error) {
@@ -134,11 +134,12 @@ export const deletePost = async (req: Request, res: Response) => {
 
 export const streamFeed = (req: Request, res: Response) => {
   const { courseId } = req.params;
+  const locale = getRequestLocale(req);
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  sseManager.addClient(courseId, res);
+  sseManager.addClient(courseId, res, locale);
 };

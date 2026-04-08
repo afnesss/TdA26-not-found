@@ -1,12 +1,18 @@
 import { Response } from "express";
+import type { Locale } from "../schemas";
 
 type FeedEvent = {
   event: string;
   data: any;
 };
 
+type SseClient = {
+  res: Response;
+  locale: Locale;
+};
+
 class SSEManager {
-  private clients: Map<string, Response[]> = new Map();
+  private clients: Map<string, SseClient[]> = new Map();
   private heartbeatInterval: NodeJS.Timeout;
 
   constructor() {
@@ -16,12 +22,12 @@ class SSEManager {
     }, 30000);
   }
 
-  addClient(courseId: string, res: Response) {
+  addClient(courseId: string, res: Response, locale: Locale = "en") {
     if (!this.clients.has(courseId)) {
       this.clients.set(courseId, []);
     }
     const courseClients = this.clients.get(courseId)!;
-    courseClients.push(res);
+    courseClients.push({ res, locale });
 
     // Send initial ping to establish connection immediately
     res.write(": connected\n\n");
@@ -37,25 +43,31 @@ class SSEManager {
     if (courseClients) {
       this.clients.set(
         courseId,
-        courseClients.filter((client) => client !== res)
+        courseClients.filter((client) => client.res !== res)
       );
     }
   }
 
-  broadcast(courseId: string, event: string, data: any) {
+  broadcast(
+    courseId: string,
+    event: string,
+    data: any,
+    localize?: (data: any, locale: Locale) => any,
+  ) {
     const courseClients = this.clients.get(courseId);
     if (courseClients) {
-      const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
       courseClients.forEach((client) => {
-        client.write(message);
+        const payload = localize ? localize(data, client.locale) : data;
+        const message = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+        client.res.write(message);
       });
     }
   }
 
   private sendHeartbeat() {
-    this.clients.forEach((clients, courseId) => {
+    this.clients.forEach((clients) => {
       clients.forEach((client) => {
-        client.write(": heartbeat\n\n");
+        client.res.write(": heartbeat\n\n");
       });
     });
   }

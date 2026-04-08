@@ -7,7 +7,6 @@ import type {
   CourseSummary,
   CourseUpdateRequest,
 } from '@/lib/schemas'
-import { localizeCoursesForUi } from '@/lib/courseLocalization'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import { buildLocaleHeaders } from '@/lib/i18n'
 import i18n from '@/i18n'
@@ -24,7 +23,7 @@ export const getCourses = async (
   const courses = await apiFetch<CourseSummary[]>(
     buildCourseApiPath(orgSlug, `/courses${params}`),
   )
-  return localizeCoursesForUi(courses)
+  return courses;
 }
 
 export const getCourseById = async (

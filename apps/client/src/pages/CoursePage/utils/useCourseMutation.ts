@@ -208,10 +208,7 @@ export const useUpdateCourseMutation = (
     mutationFn: async (data: { name: string; description?: string }) => {
       const result = await updateCourse(
         courseId,
-        {
-          ...data,
-          sourceLocale: getStoredUiLocale(),
-        },
+        { ...data },
         orgSlug,
       )
       if (!result) {
@@ -367,11 +364,7 @@ export const useUpdateCourseStatusMutation = (
   const queryClient = useQueryClient()
   return useMutation<CourseSummary, ApiError, { status: CourseStatus }>({
     mutationFn: ({ status }) =>
-      updateCourse(
-        courseId,
-        { status, sourceLocale: getStoredUiLocale() },
-        orgSlug,
-      ),
+      updateCourse(courseId, { status }, orgSlug),
     onSuccess: async () => {
       await invalidateCourseQueries(queryClient, courseId)
     },

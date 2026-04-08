@@ -308,7 +308,15 @@ export async function updateModule(req: Request, res: Response) {
 
       await createSystemEvent(
         courseId,
-        `Modul "${updatedModule.name}" byl ${status === "active" ? "aktivován" : "skryt"} lektorem`,
+        status === "active"
+          ? {
+              en: `Module "${updatedModule.name}" was activated by the lecturer`,
+              cs: `Modul "${updatedModule.name}" byl aktivován lektorem`,
+            }
+          : {
+              en: `Module "${updatedModule.name}" was hidden by the lecturer`,
+              cs: `Modul "${updatedModule.name}" byl skryt lektorem`,
+            },
       );
     }
 

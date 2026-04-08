@@ -4,6 +4,7 @@ import type {
   CourseSummary,
   FeedItem,
 } from '@/lib/schemas'
+import { appendLocaleQuery } from '@/lib/i18n'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import i18n from '@/i18n'
 import type { ModuleDetail } from '@/lib/schemas/module'
@@ -101,7 +102,9 @@ export const useCourseFeedSSE = ({
     const isDev = import.meta.env.DEV
 
     const eventSource = new EventSource(
-      `/api${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`,
+      appendLocaleQuery(
+        `/api${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`,
+      ),
     )
 
     eventSource.onopen = () => {

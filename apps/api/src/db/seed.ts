@@ -15,7 +15,7 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { logger } from "../utils/logger";
 import { buildLocalizedField } from "../utils/i18n";
 
@@ -428,6 +428,375 @@ const moduleBlueprints = [
   },
 ];
 
+const seededMaterialBlueprints = [
+  {
+    modulePosition: 1,
+    name: "Oficiální sylabus kurzu",
+    nameI18n: { cs: "Oficiální sylabus kurzu", en: "Official Course Syllabus" },
+    description: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
+    descriptionI18n: {
+      cs: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
+      en: "A detailed overview of topics, grading and schedule for the semester.",
+    },
+  },
+  {
+    modulePosition: 1,
+    name: "Doplňková četba - Modul 1: Základy",
+    nameI18n: {
+      cs: "Doplňková četba - Modul 1: Základy",
+      en: "Supplementary Reading - Module 1: Basics",
+    },
+    description:
+      "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
+    descriptionI18n: {
+      cs: "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
+      en: "External articles and blog posts to deepen understanding of basic concepts.",
+    },
+  },
+  {
+    modulePosition: 1,
+    name: "Prezentace z přednášky - Týden 1: Úvod",
+    nameI18n: {
+      cs: "Prezentace z přednášky - Týden 1: Úvod",
+      en: "Lecture Slides - Week 1: Introduction",
+    },
+    description:
+      "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
+    descriptionI18n: {
+      cs: "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
+      en: "Downloadable slides from the first introductory lecture. Includes setup and basic concepts.",
+    },
+  },
+  {
+    modulePosition: 1,
+    name: "Interaktivní programovací prostředí",
+    nameI18n: {
+      cs: "Interaktivní programovací prostředí",
+      en: "Interactive Programming Environment",
+    },
+    description:
+      "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
+    descriptionI18n: {
+      cs: "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
+      en: "Practice your skills with live code execution and interactive exercises.",
+    },
+  },
+  {
+    modulePosition: 2,
+    name: "Cvičení - Modul 2: Datové struktury",
+    nameI18n: {
+      cs: "Cvičení - Modul 2: Datové struktury",
+      en: "Exercises - Module 2: Data Structures",
+    },
+    description: "Úkoly k řešení zaměřené na běžné datové struktury.",
+    descriptionI18n: {
+      cs: "Úkoly k řešení zaměřené na běžné datové struktury.",
+      en: "Problem sets focused on common data structures.",
+    },
+  },
+  {
+    modulePosition: 2,
+    name: "Fórum pro pokročilá témata",
+    nameI18n: {
+      cs: "Fórum pro pokročilá témata",
+      en: "Advanced Topics Forum",
+    },
+    description:
+      "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+    descriptionI18n: {
+      cs: "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+      en: "Community forum for discussing advanced topics and getting help.",
+    },
+  },
+  {
+    modulePosition: 2,
+    name: "Pokyny k miniprojektu",
+    nameI18n: { cs: "Pokyny k miniprojektu", en: "Mini-project Guidelines" },
+    description:
+      "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
+    descriptionI18n: {
+      cs: "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
+      en: "Detailed document with mini-project requirements, grading criteria and submission process.",
+    },
+  },
+  {
+    modulePosition: 2,
+    name: "Externí zdroje kurzu",
+    nameI18n: { cs: "Externí zdroje kurzu", en: "External Course Resources" },
+    description: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
+    descriptionI18n: {
+      cs: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
+      en: "Curated list of external books, tutorials and online courses.",
+    },
+  },
+];
+
+const seededQuizBlueprints = [
+  {
+    modulePosition: 1,
+    title: "Modul 1: Kvíz ze základů",
+    titleI18n: { cs: "Modul 1: Kvíz ze základů", en: "Module 1: Basics Quiz" },
+    questions: [
+      {
+        type: "singleChoice" as const,
+        question: "Jaký je hlavní cíl úvodního modulu?",
+        questionEn: "What is the main goal of the introductory module?",
+        options: [
+          "Zapamatovat si definice",
+          "Pochopit základní koncepty a terminologii",
+          "Vytvořit kompletní aplikaci",
+          "Provádět pokročilé optimalizace",
+        ],
+        optionsEn: [
+          "Memorize definitions",
+          "Understand basic concepts and terminology",
+          "Build a complete application",
+          "Perform advanced optimizations",
+        ],
+        correctIndex: 1,
+      },
+      {
+        type: "multipleChoice" as const,
+        question:
+          "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
+        questionEn:
+          "Which of these programming paradigms are relevant to this course?",
+        options: [
+          "Objektově orientované",
+          "Funkcionální",
+          "Procedurální",
+          "Logické",
+        ],
+        optionsEn: ["Object-oriented", "Functional", "Procedural", "Logical"],
+        correctIndices: [0, 1, 2],
+      },
+      {
+        type: "singleChoice" as const,
+        question:
+          "V kterém roce byl vyvinut první široce uznávaný vysokoúrovňový programovací jazyk?",
+        questionEn:
+          "In which year was the first widely recognized high-level programming language developed?",
+        options: ["1940", "1950", "1960", "1970"],
+        optionsEn: ["1940", "1950", "1960", "1970"],
+        correctIndex: 1,
+      },
+    ],
+  },
+  {
+    modulePosition: 2,
+    title: "Modul 2: Hodnocení klíčových konceptů",
+    titleI18n: {
+      cs: "Modul 2: Hodnocení klíčových konceptů",
+      en: "Module 2: Key Concepts Assessment",
+    },
+    questions: [
+      {
+        type: "multipleChoice" as const,
+        question:
+          "Které z následujících jsou výhody použití verzovacích systémů jako Git?",
+        questionEn:
+          "Which of the following are advantages of using version control systems like Git?",
+        options: [
+          "Sledování změn",
+          "Spolupráce s ostatními",
+          "Automatické nasazování aplikací",
+          "Vytváření uživatelských rozhraní",
+        ],
+        optionsEn: [
+          "Tracking changes",
+          "Collaborating with others",
+          "Automatically deploying applications",
+          "Creating user interfaces",
+        ],
+        correctIndices: [0, 1],
+      },
+      {
+        type: "singleChoice" as const,
+        question: "Co je to algoritmus?",
+        questionEn: "What is an algorithm?",
+        options: [
+          "Programovací jazyk",
+          "Sada instrukcí pro řešení problému",
+          "Typ databáze",
+          "Prvek uživatelského rozhraní",
+        ],
+        optionsEn: [
+          "A programming language",
+          "A set of instructions for solving a problem",
+          "A type of database",
+          "A user interface element",
+        ],
+        correctIndex: 1,
+      },
+      {
+        type: "multipleChoice" as const,
+        question: "Běžné webové technologie zahrnují:",
+        questionEn: "Common web technologies include:",
+        options: ["HTML", "CSS", "JavaScript", "SQL"],
+        optionsEn: ["HTML", "CSS", "JavaScript", "SQL"],
+        correctIndices: [0, 1, 2],
+      },
+    ],
+  },
+];
+
+const syncSeededCourseContent = async (courseId: string) => {
+  const existingModules = await db
+    .select({
+      uuid: modules.uuid,
+      position: modules.position,
+    })
+    .from(modules)
+    .where(eq(modules.courseId, courseId))
+    .orderBy(asc(modules.position), asc(modules.createdAt), asc(modules.uuid));
+
+  if (existingModules.length !== moduleBlueprints.length) {
+    logger.warn(
+      { courseId, expected: moduleBlueprints.length, actual: existingModules.length },
+      "Skipping seeded module localization sync because the course structure differs",
+    );
+    return;
+  }
+
+  for (let index = 0; index < moduleBlueprints.length; index += 1) {
+    const blueprint = moduleBlueprints[index];
+    const module = existingModules[index];
+
+    await db
+      .update(modules)
+      .set({
+        sourceLocale: SEED_SOURCE_LOCALE,
+        name: blueprint.name,
+        nameI18n: blueprint.nameI18n,
+        description: blueprint.description,
+        descriptionI18n: blueprint.descriptionI18n,
+        status: blueprint.status,
+        updatedAt: new Date(),
+      })
+      .where(eq(modules.uuid, module.uuid));
+  }
+
+  const moduleIdByPosition = new Map(existingModules.map((item) => [item.position, item.uuid]));
+
+  for (const position of [1, 2] as const) {
+    const moduleId = moduleIdByPosition.get(position);
+    if (!moduleId) continue;
+
+    const materialBlueprints = seededMaterialBlueprints.filter(
+      (item) => item.modulePosition === position,
+    );
+    const existingMaterials = await db
+      .select({ uuid: courseMaterials.uuid })
+      .from(courseMaterials)
+      .where(eq(courseMaterials.moduleId, moduleId))
+      .orderBy(asc(courseMaterials.createdAt), asc(courseMaterials.uuid));
+
+    if (existingMaterials.length === materialBlueprints.length) {
+      for (let index = 0; index < materialBlueprints.length; index += 1) {
+        const blueprint = materialBlueprints[index];
+        const material = existingMaterials[index];
+
+        await db
+          .update(courseMaterials)
+          .set({
+            sourceLocale: SEED_SOURCE_LOCALE,
+            name: blueprint.name,
+            nameI18n: blueprint.nameI18n,
+            description: blueprint.description,
+            descriptionI18n: blueprint.descriptionI18n,
+            updatedAt: new Date(),
+          })
+          .where(eq(courseMaterials.uuid, material.uuid));
+      }
+    } else {
+      logger.warn(
+        {
+          courseId,
+          modulePosition: position,
+          expected: materialBlueprints.length,
+          actual: existingMaterials.length,
+        },
+        "Skipping seeded material localization sync because the module structure differs",
+      );
+    }
+
+    const quizBlueprints = seededQuizBlueprints.filter(
+      (item) => item.modulePosition === position,
+    );
+    const existingModuleQuizzes = await db
+      .select({ uuid: quizzes.uuid, questions: quizzes.questions })
+      .from(quizzes)
+      .where(eq(quizzes.moduleId, moduleId))
+      .orderBy(asc(quizzes.createdAt), asc(quizzes.uuid));
+
+    if (existingModuleQuizzes.length === quizBlueprints.length) {
+      for (let index = 0; index < quizBlueprints.length; index += 1) {
+        const blueprint = quizBlueprints[index];
+        const quiz = existingModuleQuizzes[index];
+
+        await db
+          .update(quizzes)
+          .set({
+            sourceLocale: SEED_SOURCE_LOCALE,
+            title: blueprint.title,
+            titleI18n: blueprint.titleI18n,
+            questions: blueprint.questions.map((question, questionIndex) => {
+              const existingQuestions = Array.isArray(quiz.questions)
+                ? (quiz.questions as Array<{ uuid?: string }>)
+                : [];
+
+              return {
+                uuid: existingQuestions[questionIndex]?.uuid,
+                type: question.type,
+                question: question.question,
+                options: question.options,
+                ...(typeof question.correctIndex === "number"
+                  ? { correctIndex: question.correctIndex }
+                  : {}),
+                ...(Array.isArray(question.correctIndices)
+                  ? { correctIndices: question.correctIndices }
+                  : {}),
+              };
+            }),
+            questionsI18n: blueprint.questions.map((question, questionIndex) => {
+              const existingQuestions = Array.isArray(quiz.questions)
+                ? (quiz.questions as Array<{ uuid?: string }>)
+                : [];
+
+              return {
+                uuid: existingQuestions[questionIndex]?.uuid,
+                type: question.type,
+                questionI18n: { cs: question.question, en: question.questionEn },
+                optionsI18n: question.options.map((option, optionIndex) => ({
+                  cs: option,
+                  en: question.optionsEn[optionIndex],
+                })),
+                ...(typeof question.correctIndex === "number"
+                  ? { correctIndex: question.correctIndex }
+                  : {}),
+                ...(Array.isArray(question.correctIndices)
+                  ? { correctIndices: question.correctIndices }
+                  : {}),
+              };
+            }),
+            updatedAt: new Date(),
+          })
+          .where(eq(quizzes.uuid, quiz.uuid));
+      }
+    } else {
+      logger.warn(
+        {
+          courseId,
+          modulePosition: position,
+          expected: quizBlueprints.length,
+          actual: existingModuleQuizzes.length,
+        },
+        "Skipping seeded quiz localization sync because the module structure differs",
+      );
+    }
+  }
+};
+
 const merchCatalogSeed = [
   {
     slug: "platform-backpack",
@@ -794,6 +1163,8 @@ export async function seed() {
         updatedAt: new Date(),
       })
       .where(eq(courses.uuid, existingCourseId));
+
+    await syncSeededCourseContent(existingCourseId);
   }
 
   const coursesToInsert = seedCourses.filter(

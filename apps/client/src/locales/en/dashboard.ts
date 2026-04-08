@@ -132,7 +132,7 @@ const dashboard = {
         analytics: 'Statistics',
       },
       actions: {
-        cancelReorder: 'Cancel reordering',
+        cancelReorder: 'Cancel',
         reorder: 'Reorder',
         addModule: 'Add module',
       },

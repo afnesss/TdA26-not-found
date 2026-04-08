@@ -166,7 +166,7 @@ export const onErrorWithRollback = (
   error: ApiError,
   message: string,
   queryClient: QueryClient,
-  queryKey: unknown[],
+  queryKey: readonly unknown[],
   previousData: unknown,
 ) => {
   if (previousData !== undefined) {

@@ -3,7 +3,7 @@ import type { CourseSummary } from '@/lib/schemas'
 
 type UiLocale = 'cs' | 'en'
 
-const resolveLocalizedText = (
+export const resolveLocalizedText = (
   locale: UiLocale,
   field?: { cs?: string; en?: string },
   fallback?: string | null,

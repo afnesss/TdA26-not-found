@@ -26,8 +26,8 @@ import {
 const COURSES_PAGE_FILTERS_KEY = 'courses-page-filters'
 
 const CoursesPage = () => {
-  const { t } = useTranslation('courses')
   useAutoTopScroll()
+  const { t, i18n } = useTranslation('courses')
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
@@ -48,6 +48,7 @@ const CoursesPage = () => {
   useTitle(orgSlug ? t('organizationPageTitle') : t('pageTitle'))
 
   const { isConnected } = useCoursesSSE(orgSlug)
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
 
   const {
     data: courses = [],
@@ -55,7 +56,7 @@ const CoursesPage = () => {
     isError,
     refetch,
   } = useQuery<CourseSummary[]>({
-    queryKey: ['courses-user'],
+    queryKey: ['courses-user', uiLocale],
     queryFn: () => getCourses(true, orgSlug),
   })
 
@@ -180,7 +181,9 @@ const CoursesPage = () => {
                       setDisplayCount(9)
                     }}
                     actionText={
-                      useResetStatusAction ? t('actions.resetFilters') : undefined
+                      useResetStatusAction
+                        ? t('actions.resetFilters')
+                        : undefined
                     }
                   />
                 )

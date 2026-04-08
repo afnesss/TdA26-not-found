@@ -13,6 +13,7 @@ import {
   type CourseSummary,
   CoursesBackupCollectionSchema,
 } from '@/lib/schemas/course'
+import { getStoredUiLocale } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useImportCourseMutation } from '@/pages/CoursePage/utils/useCourseMutation'
 import { useQueryClient } from '@tanstack/react-query'
@@ -132,7 +133,10 @@ const CourseBackupActionsDropdown = ({
     try {
       const parsed = JSON.parse(await file.text())
       const existingCourses =
-        queryClient.getQueryData<CourseSummary[]>(['courses']) ?? []
+        queryClient.getQueryData<CourseSummary[]>([
+          'courses',
+          getStoredUiLocale(),
+        ]) ?? []
       const existingCourseIds = new Set(existingCourses.map((course) => course.uuid))
       const duplicateCourseId = getBackupCourseIds(parsed).find((courseId) =>
         existingCourseIds.has(courseId),

@@ -17,7 +17,7 @@ import fs from "fs/promises";
 import path from "path";
 import { and, eq, inArray } from "drizzle-orm";
 import { logger } from "../utils/logger";
-import { buildLocalizedField, buildLocalizedQuestions } from "../utils/i18n";
+import { buildLocalizedField } from "../utils/i18n";
 
 const SEED_SOURCE_LOCALE = "cs" as const;
 
@@ -29,7 +29,9 @@ const localizedTextWithEnglish = (
   enValue?: string | null,
 ) => ({
   ...buildLocalizedField(SEED_SOURCE_LOCALE, csValue ?? null),
-  ...(typeof enValue === "string" && enValue.trim() ? { en: enValue.trim() } : {}),
+  ...(typeof enValue === "string" && enValue.trim()
+    ? { en: enValue.trim() }
+    : {}),
 });
 
 const sampleCourses = [
@@ -160,6 +162,133 @@ const sampleCourses = [
   },
 ];
 
+const sampleCourseTranslationsEn = [
+  {
+    nameEn: "Introduction to Python",
+    descriptionEn:
+      "Master the fundamentals of Python programming, from variables to object-oriented design. Ideal for beginners and aspiring data analysts.",
+  },
+  {
+    nameEn: "Advanced React Patterns",
+    descriptionEn:
+      "Dive into React hooks, context, performance optimization, and scalable architecture. Learn to build enterprise-grade frontend applications.",
+  },
+  {
+    nameEn: "System Design 101",
+    descriptionEn:
+      "Learn to design scalable, reliable, and maintainable software systems for large applications. Covers microservices, databases, caching, and more.",
+  },
+  {
+    nameEn: "Data Science with R",
+    descriptionEn:
+      "Explore data analysis, visualization, and machine learning using the R programming language, with a focus on practical applications and case studies.",
+  },
+  {
+    nameEn: "Cloud Fundamentals",
+    descriptionEn:
+      "Understand the core concepts of cloud platforms such as AWS, Azure, and Google Cloud. Learn about IaaS, PaaS, SaaS, and deployment strategies.",
+  },
+  {
+    nameEn: "Cybersecurity Fundamentals",
+    descriptionEn:
+      "An introduction to network security, common vulnerabilities, and protection strategies. Essential knowledge for anyone working with sensitive data.",
+  },
+  {
+    nameEn: "Frontend Web Development with Vue.js",
+    descriptionEn:
+      "Build dynamic and responsive user interfaces with Vue.js. Covers components, routing, state management, and API integration.",
+  },
+  {
+    nameEn: "Backend API Development with Node.js & Express",
+    descriptionEn:
+      "Build robust and efficient RESTful APIs with Node.js and Express. Learn about routing, middleware, database integration, and authentication.",
+  },
+  {
+    nameEn: "Mobile App Development with Flutter",
+    descriptionEn:
+      "Develop beautiful, natively compiled apps for mobile, web, and desktop from a single codebase using Flutter and Dart.",
+  },
+  {
+    nameEn: "Machine Learning with TensorFlow",
+    descriptionEn:
+      "Discover the principles and applications of machine learning with TensorFlow. Includes neural networks, deep learning, and model deployment.",
+  },
+  {
+    nameEn: "Advanced JavaScript and ES6",
+    descriptionEn:
+      "Explore modern JavaScript, ES6+, asynchronous programming, and advanced concepts for professional development.",
+  },
+  {
+    nameEn: "Database Systems with PostgreSQL",
+    descriptionEn:
+      "Learn to design and manage relational databases with PostgreSQL, including SQL, optimization, and transactions.",
+  },
+  {
+    nameEn: "DevOps and CI/CD",
+    descriptionEn:
+      "Implement continuous integration and deployment using tools such as Docker, Kubernetes, and Jenkins.",
+  },
+  {
+    nameEn: "Cybersecurity for Developers",
+    descriptionEn:
+      "Protect your applications from common vulnerabilities, and learn about OWASP and secure coding practices.",
+  },
+  {
+    nameEn: "Mobile Development with React Native",
+    descriptionEn:
+      "Build cross-platform mobile applications using React Native and JavaScript.",
+  },
+  {
+    nameEn: "Machine Learning with Python",
+    descriptionEn:
+      "Learn the basics of machine learning, algorithms, and practical applications using Python and libraries such as scikit-learn.",
+  },
+  {
+    nameEn: "Blockchain and Cryptocurrencies",
+    descriptionEn:
+      "Understand the principles of blockchain technology, smart contracts, and decentralized application development.",
+  },
+  {
+    nameEn: "Graphic Design for the Web",
+    descriptionEn:
+      "Learn UI/UX design principles, tools such as Figma, and how to create attractive user interfaces.",
+  },
+  {
+    nameEn: "Software Testing",
+    descriptionEn:
+      "Master unit testing, integration testing, and automated testing using frameworks such as Jest and Selenium.",
+  },
+  {
+    nameEn: "Microservices and Architecture",
+    descriptionEn:
+      "Learn to design scalable applications using microservices, API gateways, and distributed systems.",
+  },
+  {
+    nameEn: "Big Data with Apache Spark",
+    descriptionEn:
+      "Process large-scale datasets using Apache Spark, Hadoop, and analytical tools.",
+  },
+  {
+    nameEn: "Internet of Things (IoT)",
+    descriptionEn:
+      "Develop applications for IoT devices, sensors, and cloud platforms such as AWS IoT.",
+  },
+  {
+    nameEn: "Game Development with Unity",
+    descriptionEn:
+      "Create 2D and 3D games using the Unity engine and C# programming.",
+  },
+  {
+    nameEn: "Artificial Intelligence and Neural Networks",
+    descriptionEn:
+      "Learn the basics of AI, neural networks, deep learning, and applications across different domains.",
+  },
+  {
+    nameEn: "Agile Methodologies and Scrum",
+    descriptionEn:
+      "Learn agile development processes, the Scrum framework, and effective team collaboration.",
+  },
+] as const;
 const courseStatusByIndex = new Map<number, (typeof courseStatusEnum)[number]>([
   [0, "live"],
   [1, "live"],
@@ -212,6 +341,7 @@ const getCreatedAt = (
 
 const seedCourses = sampleCourses.map((course, index) => {
   const status = courseStatusByIndex.get(index) ?? "draft";
+  const translation = sampleCourseTranslationsEn[index];
   const createdAt = getCreatedAt(status, index);
   const status_history =
     status === "paused"
@@ -247,6 +377,8 @@ const seedCourses = sampleCourses.map((course, index) => {
 
   return {
     ...course,
+    nameEn: translation?.nameEn,
+    descriptionEn: translation?.descriptionEn,
     status,
     scheduledFor: status === "planned" ? plannedFor : null,
     createdAt,
@@ -266,16 +398,32 @@ const seedCourses = sampleCourses.map((course, index) => {
 const moduleBlueprints = [
   {
     position: 1,
-    name: "Modul 1: Start a orientace",
+    name: "Start a orientace",
+    nameI18n: {
+      cs: "Start a orientace",
+      en: "Start and orientation",
+    },
     description:
       "Úvodní tematický blok se základními pojmy, orientací v kurzu a prvními studijními materiály.",
+    descriptionI18n: {
+      cs: "Úvodní tematický blok se základními pojmy, orientací v kurzu a prvními studijními materiály.",
+      en: "Introductory thematic block with basic concepts, course orientation and first study materials.",
+    },
     status: "active" as const,
   },
   {
     position: 2,
     name: "Modul 2: Praktická cvičení a miniprojekt",
+    nameI18n: {
+      cs: "Modul 2: Praktická cvičení a miniprojekt",
+      en: "Module 2: Practical Exercises and Mini-project",
+    },
     description:
       "Procvičování a prohloubení hlavních konceptů pomocí cvičení, diskuze a průběžného ověření znalostí.",
+    descriptionI18n: {
+      cs: "Procvičování a prohloubení hlavních konceptů pomocí cvičení, diskuze a průběžného ověření znalostí.",
+      en: "Practice and deepening of main concepts through exercises, discussion and ongoing knowledge verification.",
+    },
     status: "passive" as const,
   },
 ];
@@ -596,23 +744,76 @@ export async function seed() {
 
   logger.info("Shop catalog synchronized");
 
-  const [existingCourse] = await db
-    .select({ uuid: courses.uuid })
+  const existingCourses = await db
+    .select({
+      uuid: courses.uuid,
+      name: courses.name,
+      nameI18n: courses.nameI18n,
+    })
     .from(courses)
-    .where(eq(courses.organizationId, tdaOrganization.uuid))
-    .limit(1);
+    .where(eq(courses.organizationId, tdaOrganization.uuid));
 
-  if (existingCourse) {
-    logger.info("Courses already exist for organization tda, skipping seed");
-  } else {
+  const existingCoursesBySeedKey = new Map<string, string>();
+  for (const course of existingCourses) {
+    existingCoursesBySeedKey.set(course.name, course.uuid);
+
+    const csName = course.nameI18n?.cs?.trim();
+    if (csName) {
+      existingCoursesBySeedKey.set(csName, course.uuid);
+    }
+
+    const enName = course.nameI18n?.en?.trim();
+    if (enName) {
+      existingCoursesBySeedKey.set(enName, course.uuid);
+    }
+  }
+
+  for (const course of seedCourses) {
+    const existingCourseId =
+      existingCoursesBySeedKey.get(course.name) ??
+      (course.nameEn ? existingCoursesBySeedKey.get(course.nameEn) : undefined);
+    if (!existingCourseId) {
+      continue;
+    }
+
+    await db
+      .update(courses)
+      .set({
+        sourceLocale: SEED_SOURCE_LOCALE,
+        name: course.name,
+        nameI18n: localizedTextWithEnglish(course.name, course.nameEn),
+        description: course.description,
+        descriptionI18n: localizedTextWithEnglish(
+          course.description,
+          course.descriptionEn,
+        ),
+        status: course.status,
+        scheduledFor: course.scheduledFor,
+        startedAt: course.startedAt,
+        status_history: course.status_history,
+        updatedAt: new Date(),
+      })
+      .where(eq(courses.uuid, existingCourseId));
+  }
+
+  const coursesToInsert = seedCourses.filter(
+    (course) =>
+      !existingCoursesBySeedKey.has(course.name) &&
+      !(course.nameEn && existingCoursesBySeedKey.has(course.nameEn)),
+  );
+
+  if (coursesToInsert.length > 0) {
     const createdCourses = await db
       .insert(courses)
       .values(
-        seedCourses.map((course) => ({
+        coursesToInsert.map(({ nameEn, descriptionEn, ...course }) => ({
           ...course,
           sourceLocale: SEED_SOURCE_LOCALE,
-          nameI18n: localizedText(course.name),
-          descriptionI18n: localizedText(course.description),
+          nameI18n: localizedTextWithEnglish(course.name, nameEn),
+          descriptionI18n: localizedTextWithEnglish(
+            course.description,
+            descriptionEn,
+          ),
           organizationId: tdaOrganization.uuid,
         })),
       )
@@ -639,9 +840,9 @@ export async function seed() {
             courseId: course.uuid,
             sourceLocale: SEED_SOURCE_LOCALE,
             name: m.name,
-            nameI18n: localizedText(m.name),
+            nameI18n: m.nameI18n ?? localizedText(m.name),
             description: m.description,
-            descriptionI18n: localizedText(m.description),
+            descriptionI18n: m.descriptionI18n ?? localizedText(m.description),
             status: m.status,
             position: m.position,
           })),
@@ -662,8 +863,13 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Oficiální sylabus kurzu",
+          nameI18n: { cs: "Oficiální sylabus kurzu", en: "Official Course Syllabus" },
           description:
             "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
+          descriptionI18n: {
+            cs: "Podrobný přehled témat, hodnocení a rozvrhu pro semestr.",
+            en: "A detailed overview of topics, grading and schedule for the semester.",
+          },
           url: "https://example.com/syllabus",
           faviconUrl:
             "https://www.google.com/s2/favicons?domain=example.com&sz=64",
@@ -675,8 +881,13 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Doplňková četba - Modul 1: Základy",
+          nameI18n: { cs: "Doplňková četba - Modul 1: Základy", en: "Supplementary Reading - Module 1: Basics" },
           description:
             "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
+          descriptionI18n: {
+            cs: "Externí články a blogové příspěvky pro prohloubení pochopení základních konceptů.",
+            en: "External articles and blog posts to deepen understanding of basic concepts.",
+          },
           url: "https://medium.com/tag/programming-basics",
           faviconUrl:
             "https://www.google.com/s2/favicons?domain=medium.com&sz=64",
@@ -685,8 +896,13 @@ export async function seed() {
           moduleId: module1Id,
           type: "file" as const,
           name: "Prezentace z přednášky - Týden 1: Úvod",
+          nameI18n: { cs: "Prezentace z přednášky - Týden 1: Úvod", en: "Lecture Slides - Week 1: Introduction" },
           description:
             "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
+          descriptionI18n: {
+            cs: "Ke stažení prezentace z první úvodní přednášky. Zahrnuje nastavení a základní koncepty.",
+            en: "Downloadable slides from the first introductory lecture. Includes setup and basic concepts.",
+          },
           fileUrl: "/api/uploads/lecture-slides-week1.txt",
           mimeType: "text/plain",
           sizeBytes: 1024 * 700,
@@ -697,8 +913,13 @@ export async function seed() {
           moduleId: module1Id,
           type: "url" as const,
           name: "Interaktivní programovací prostředí",
+          nameI18n: { cs: "Interaktivní programovací prostředí", en: "Interactive Programming Environment" },
           description:
             "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
+          descriptionI18n: {
+            cs: "Procvičujte si své dovednosti s živým spouštěním kódu a interaktivními cvičeními.",
+            en: "Practice your skills with live code execution and interactive exercises.",
+          },
           url: "https://replit.com/",
           faviconUrl:
             "https://www.google.com/s2/favicons?domain=replit.com&sz=64",
@@ -710,7 +931,12 @@ export async function seed() {
           moduleId: module2Id,
           type: "file" as const,
           name: "Cvičení - Modul 2: Datové struktury",
+          nameI18n: { cs: "Cvičení - Modul 2: Datové struktury", en: "Exercises - Module 2: Data Structures" },
           description: "Úkoly k řešení zaměřené na běžné datové struktury.",
+          descriptionI18n: {
+            cs: "Úkoly k řešení zaměřené na běžné datové struktury.",
+            en: "Problem sets focused on common data structures.",
+          },
           fileUrl: "/api/uploads/exercise-sheet-module2.txt",
           mimeType: "text/plain",
           sizeBytes: 1024 * 250,
@@ -720,8 +946,13 @@ export async function seed() {
           moduleId: module2Id,
           type: "url" as const,
           name: "Fórum pro pokročilá témata",
+          nameI18n: { cs: "Fórum pro pokročilá témata", en: "Advanced Topics Forum" },
           description:
             "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+          descriptionI18n: {
+            cs: "Komunitní fórum pro diskuzi o pokročilých tématech a získání pomoci.",
+            en: "Community forum for discussing advanced topics and getting help.",
+          },
           url: `https://stackoverflow.com/tags/${course.name.split(" ")[0].toLowerCase()}`,
           faviconUrl:
             "https://www.google.com/s2/favicons?domain=stackoverflow.com&sz=64",
@@ -730,8 +961,13 @@ export async function seed() {
           moduleId: module2Id,
           type: "file" as const,
           name: "Pokyny k miniprojektu",
+          nameI18n: { cs: "Pokyny k miniprojektu", en: "Mini-project Guidelines" },
           description:
             "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
+          descriptionI18n: {
+            cs: "Podrobný dokument s požadavky na miniprojekt, kritérii hodnocení a procesem odevzdání.",
+            en: "Detailed document with mini-project requirements, grading criteria and submission process.",
+          },
           fileUrl: "/api/uploads/project-guidelines.txt",
           mimeType: "text/plain",
           sizeBytes: 1024 * 900,
@@ -741,8 +977,13 @@ export async function seed() {
           moduleId: module2Id,
           type: "url" as const,
           name: "Externí zdroje kurzu",
+          nameI18n: { cs: "Externí zdroje kurzu", en: "External Course Resources" },
           description:
             "Vybraný seznam externích knih, tutoriálů a online kurzů.",
+          descriptionI18n: {
+            cs: "Vybraný seznam externích knih, tutoriálů a online kurzů.",
+            en: "Curated list of external books, tutorials and online courses.",
+          },
           url: `https://www.freecodecamp.org/news/tag/${course.name
             .split(" ")[0]
             .toLowerCase()}`,
@@ -755,8 +996,8 @@ export async function seed() {
         materials.map((material) => ({
           ...material,
           sourceLocale: SEED_SOURCE_LOCALE,
-          nameI18n: localizedText(material.name),
-          descriptionI18n: localizedText(material.description),
+          nameI18n: material.nameI18n,
+          descriptionI18n: material.descriptionI18n,
         })),
       );
 
@@ -764,38 +1005,57 @@ export async function seed() {
         {
           moduleId: module1Id,
           title: "Modul 1: Kvíz ze základů",
+          titleI18n: { cs: "Modul 1: Kvíz ze základů", en: "Module 1: Basics Quiz" },
           questions: [
             {
               uuid: uuidv4(),
-              type: "singleChoice",
+              type: "singleChoice" as const,
               question: `Jaký je hlavní cíl úvodního modulu v ${course.name}?`,
+              questionEn: `What is the main goal of the introductory module in ${course.nameI18n?.en ?? course.name}?`,
               options: [
                 "Zapamatovat si definice",
                 "Pochopit základní koncepty a terminologii",
                 "Vytvořit kompletní aplikaci",
                 "Provádět pokročilé optimalizace",
               ],
+              optionsEn: [
+                "Memorize definitions",
+                "Understand basic concepts and terminology",
+                "Build a complete application",
+                "Perform advanced optimizations",
+              ],
               correctIndex: 1,
             },
             {
               uuid: uuidv4(),
-              type: "multipleChoice",
+              type: "multipleChoice" as const,
               question:
                 "Které z těchto programovacích paradigmat jsou relevantní pro tento kurz?",
+              questionEn:
+                "Which of these programming paradigms are relevant to this course?",
               options: [
                 "Objektově orientované",
                 "Funkcionální",
                 "Procedurální",
                 "Logické",
               ],
+              optionsEn: [
+                "Object-oriented",
+                "Functional",
+                "Procedural",
+                "Logical",
+              ],
               correctIndices: [0, 1, 2],
             },
             {
               uuid: uuidv4(),
-              type: "singleChoice",
+              type: "singleChoice" as const,
               question:
                 "V kterém roce byl vyvinut první široce uznávaný vysokoúrovňový programovací jazyk?",
+              questionEn:
+                "In which year was the first widely recognized high-level programming language developed?",
               options: ["1940", "1950", "1960", "1970"],
+              optionsEn: ["1940", "1950", "1960", "1970"],
               correctIndex: 1,
             },
           ],
@@ -803,37 +1063,55 @@ export async function seed() {
         {
           moduleId: module2Id,
           title: "Modul 2: Hodnocení klíčových konceptů",
+          titleI18n: { cs: "Modul 2: Hodnocení klíčových konceptů", en: "Module 2: Key Concepts Assessment" },
           questions: [
             {
               uuid: uuidv4(),
-              type: "multipleChoice",
+              type: "multipleChoice" as const,
               question:
                 "Které z následujících jsou výhody použití verzovacích systémů jako Git?",
+              questionEn:
+                "Which of the following are advantages of using version control systems like Git?",
               options: [
                 "Sledování změn",
                 "Spolupráce s ostatními",
                 "Automatické nasazování aplikací",
                 "Vytváření uživatelských rozhraní",
               ],
+              optionsEn: [
+                "Tracking changes",
+                "Collaborating with others",
+                "Automatically deploying applications",
+                "Creating user interfaces",
+              ],
               correctIndices: [0, 1],
             },
             {
               uuid: uuidv4(),
-              type: "singleChoice",
+              type: "singleChoice" as const,
               question: "Co je to algoritmus?",
+              questionEn: "What is an algorithm?",
               options: [
                 "Programovací jazyk",
                 "Sada instrukcí pro řešení problému",
                 "Typ databáze",
                 "Prvek uživatelského rozhraní",
               ],
+              optionsEn: [
+                "A programming language",
+                "A set of instructions for solving a problem",
+                "A type of database",
+                "A user interface element",
+              ],
               correctIndex: 1,
             },
             {
               uuid: uuidv4(),
-              type: "multipleChoice",
+              type: "multipleChoice" as const,
               question: "Běžné webové technologie zahrnují:",
+              questionEn: "Common web technologies include:",
               options: ["HTML", "CSS", "JavaScript", "SQL"],
+              optionsEn: ["HTML", "CSS", "JavaScript", "SQL"],
               correctIndices: [0, 1, 2],
             },
           ],
@@ -844,20 +1122,26 @@ export async function seed() {
         .insert(quizzes)
         .values(
           quizzesData.map((quiz) => ({
-            ...quiz,
+            moduleId: quiz.moduleId,
             sourceLocale: SEED_SOURCE_LOCALE,
-            titleI18n: localizedText(quiz.title),
-            questionsI18n: buildLocalizedQuestions(
-              SEED_SOURCE_LOCALE,
-              quiz.questions as Array<{
-                uuid?: string;
-                type: "singleChoice" | "multipleChoice";
-                question: string;
-                options: string[];
-                correctIndex?: number;
-                correctIndices?: number[];
-              }>,
-            ),
+            title: quiz.title,
+            titleI18n: quiz.titleI18n,
+            questions: quiz.questions,
+            questionsI18n: quiz.questions.map((q) => ({
+              uuid: q.uuid,
+              type: q.type,
+              questionI18n: { cs: q.question, en: q.questionEn },
+              optionsI18n: q.options.map((opt, i) => ({
+                cs: opt,
+                en: q.optionsEn[i],
+              })),
+              ...(typeof q.correctIndex === "number"
+                ? { correctIndex: q.correctIndex }
+                : {}),
+              ...(Array.isArray(q.correctIndices)
+                ? { correctIndices: q.correctIndices }
+                : {}),
+            })),
           })),
         )
         .returning({ uuid: quizzes.uuid, moduleId: quizzes.moduleId });
@@ -990,6 +1274,10 @@ export async function seed() {
         })),
       );
     }
+  } else {
+    logger.info(
+      "Courses already exist for organization tda, synchronized translations",
+    );
   }
 
   logger.info("Seeding complete with production-ready data");

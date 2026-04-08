@@ -39,7 +39,7 @@ const invalidateModuleQueries = (
     queryKey: getCourseModulesQueryKey(courseId),
   })
   queryClient.invalidateQueries({ queryKey: ['course-feed', courseId] })
-  queryClient.invalidateQueries({ queryKey: ['feed-paginated', courseId] })
+  queryClient.invalidateQueries({ queryKey: ['feed-paginated'] })
   if (moduleId) {
     queryClient.invalidateQueries({
       queryKey: getCourseModuleQueryKey(courseId, moduleId),
@@ -392,6 +392,9 @@ export const useToggleModuleMutation = (courseId: string, orgSlug?: string) => {
       })
       await queryClient.invalidateQueries({
         queryKey: ['course-feed', courseId],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['feed-paginated'],
       })
       toast.success(
         variables.nextStatus === 'active'

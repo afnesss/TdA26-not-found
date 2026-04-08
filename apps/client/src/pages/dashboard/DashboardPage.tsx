@@ -38,7 +38,7 @@ import DashboardModeTabs from './components/DashboardModeTabs'
 const DASHBOARD_PAGE_FILTERS_KEY = 'dashboard-page-filters'
 
 const DashboardDesign1 = () => {
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useLocalStorage<FilterIds>(
     `${DASHBOARD_PAGE_FILTERS_KEY}-sort`,
@@ -60,6 +60,7 @@ const DashboardDesign1 = () => {
 
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
 
   const {
     data: courses = [],
@@ -69,7 +70,7 @@ const DashboardDesign1 = () => {
     error: coursesQueryError,
     refetch: refetchCourses,
   } = useQuery<CourseSummary[], ApiError>({
-    queryKey: ['courses'],
+    queryKey: ['courses', uiLocale],
     queryFn: () => getCourses(false, orgSlug),
     networkMode: 'always',
   })

@@ -1,5 +1,6 @@
 import { pendingCloneIds } from '@/api/pendingCloneIds'
 import i18n from '@/i18n'
+import { getCurrentUiLocale, localizeCourseForUi } from '@/lib/courseLocalization'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseDetail, CourseSummary } from '@/lib/schemas'
 import { useQueryClient } from '@tanstack/react-query'
@@ -9,6 +10,7 @@ import { toast } from 'sonner'
 export const useDashboardCoursesSSE = (orgSlug?: string) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
+  const uiLocale = getCurrentUiLocale()
 
   useEffect(() => {
     const isDev = import.meta.env.DEV
@@ -29,9 +31,11 @@ export const useDashboardCoursesSSE = (orgSlug?: string) => {
     }
 
     eventSource.addEventListener('course_upserted', (event) => {
-      const updatedCourse = JSON.parse(event.data) as CourseSummary
-
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
+      const updatedCourse = localizeCourseForUi(
+        JSON.parse(event.data) as CourseSummary,
+        uiLocale,
+      )
+      const updateCourses = (old: CourseSummary[] = []) => {
         for (const tempId of pendingCloneIds) {
           const tempIndex = old.findIndex((c) => c.uuid === tempId)
           if (tempIndex !== -1) {
@@ -46,19 +50,33 @@ export const useDashboardCoursesSSE = (orgSlug?: string) => {
         return exists
           ? old.map((c) => (c.uuid === updatedCourse.uuid ? updatedCourse : c))
           : [updatedCourse, ...old]
-      })
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses'], updateCourses)
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses', uiLocale],
+        updateCourses,
+      )
     })
 
     eventSource.addEventListener('course_auto_started', (event) => {
-      const startedCourse = JSON.parse(event.data) as CourseSummary
-
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (old) => {
+      const startedCourse = localizeCourseForUi(
+        JSON.parse(event.data) as CourseSummary,
+        uiLocale,
+      )
+      const updateCourses = (old: CourseSummary[] | undefined) => {
         if (!old) return old
 
         return old.map((c) =>
           c.uuid === startedCourse.uuid ? startedCourse : c,
         )
-      })
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses'], updateCourses)
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses', uiLocale],
+        updateCourses,
+      )
 
       toast.info(
         i18n.t('toasts.sse.courseAutoStarted', {
@@ -141,7 +159,7 @@ export const useDashboardCoursesSSE = (orgSlug?: string) => {
       eventSource.close()
       setIsConnected(false)
     }
-  }, [queryClient])
+  }, [queryClient, uiLocale])
 
   return { isConnected }
 }

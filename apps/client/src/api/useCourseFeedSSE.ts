@@ -90,6 +90,7 @@ export const useCourseFeedSSE = ({
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
   const onCourseRemovedRef = useRef(onCourseRemoved)
+  const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
 
   useEffect(() => {
     onCourseRemovedRef.current = onCourseRemoved
@@ -114,7 +115,6 @@ export const useCourseFeedSSE = ({
       if (isDev)
         console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
-      eventSource.close()
     }
 
     eventSource.addEventListener('new_post', (event) => {
@@ -137,7 +137,7 @@ export const useCourseFeedSSE = ({
       }
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
 
@@ -171,7 +171,7 @@ export const useCourseFeedSSE = ({
 
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
 
@@ -205,7 +205,7 @@ export const useCourseFeedSSE = ({
 
       // Update feed-paginated cache
       queryClient.setQueryData<InfiniteData<FeedItem[]>>(
-        ['feed-paginated', courseId],
+        ['feed-paginated', orgSlug, courseId],
         (oldData) => {
           if (!oldData?.pages) return oldData
 
@@ -257,6 +257,7 @@ export const useCourseFeedSSE = ({
         },
       )
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user', uiLocale] })
     })
 
     eventSource.addEventListener('course_removed', (event) => {
@@ -287,13 +288,20 @@ export const useCourseFeedSSE = ({
         )
       }
 
-      queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
+      const removeCourse = (oldData: CourseSummary[] | undefined) => {
         if (!oldData) return oldData
         if (!removedCourseId) return oldData
         return oldData.filter((course) => course.uuid !== removedCourseId)
-      })
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses-user'], removeCourse)
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses-user', uiLocale],
+        removeCourse,
+      )
 
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user', uiLocale] })
 
       if (onCourseRemovedRef.current) {
         onCourseRemovedRef.current(payload)
@@ -438,10 +446,12 @@ export const useCourseFeedSSE = ({
     }
   }, [
     courseId,
+    orgSlug,
     queryClient,
     showNewPostToast,
     showSseToasts,
     syncModuleActivation,
+    uiLocale,
   ])
 
   return { isConnected }

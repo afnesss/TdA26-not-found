@@ -173,6 +173,7 @@ const UserCourseLayoutPage = () => {
             <UserCourseFeedSection
               courseId={courseId}
               initialFeed={courseData.feed ?? []}
+              orgSlug={orgSlug}
             />
           </>
         )}

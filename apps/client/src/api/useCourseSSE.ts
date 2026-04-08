@@ -1,5 +1,7 @@
 import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseSummary } from '@/lib/schemas'
+import { appendLocaleQuery } from '@/lib/i18n'
+import { getCurrentUiLocale, localizeCourseForUi } from '@/lib/courseLocalization'
 import i18n from '@/i18n'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
@@ -8,11 +10,12 @@ import { toast } from 'sonner'
 export const useCoursesSSE = (orgSlug?: string) => {
   const queryClient = useQueryClient()
   const [isConnected, setIsConnected] = useState(false)
+  const uiLocale = getCurrentUiLocale()
 
   useEffect(() => {
     const isDev = import.meta.env.DEV
     const eventSource = new EventSource(
-      `/api${buildOrgApiPrefix(orgSlug)}/courses/stream`,
+      appendLocaleQuery(`/api${buildOrgApiPrefix(orgSlug)}/courses/stream`),
     )
 
     eventSource.onopen = () => {
@@ -26,14 +29,16 @@ export const useCoursesSSE = (orgSlug?: string) => {
       if (isDev)
         console.error('EventSource readyState:', eventSource.readyState)
       setIsConnected(false)
-      eventSource.close()
     }
 
     eventSource.addEventListener('course_upserted', (event) => {
-      const newCourse = JSON.parse(event.data) as CourseSummary
+      const newCourse = localizeCourseForUi(
+        JSON.parse(event.data) as CourseSummary,
+        uiLocale,
+      )
       let toastMessage: string | null = null
 
-      queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
+      const updateCourses = (oldData: CourseSummary[] | undefined) => {
         if (!oldData) return oldData
 
         const existingCourse = oldData.find((c) => c.uuid === newCourse.uuid)
@@ -71,15 +76,22 @@ export const useCoursesSSE = (orgSlug?: string) => {
           })
         }
 
-        if (newCourse.status === 'draft' || newCourse.status === 'archived')
+        if (newCourse.status === 'draft' || newCourse.status === 'archived') {
           return oldData
+        }
 
         return exists
           ? oldData.map((c: CourseSummary) =>
               c.uuid === newCourse.uuid ? newCourse : c,
             )
           : [newCourse, ...oldData]
-      })
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses-user'], updateCourses)
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses-user', uiLocale],
+        updateCourses,
+      )
       if (toastMessage) {
         toast.info(toastMessage)
       }
@@ -93,9 +105,13 @@ export const useCoursesSSE = (orgSlug?: string) => {
       const courseIdToDelete =
         typeof payload === 'string' ? payload : payloadData?.uuid
 
-      const existingCourse = queryClient
-        .getQueryData<CourseSummary[]>(['courses-user'])
-        ?.find((course) => course.uuid === courseIdToDelete)
+      const existingCourse =
+        queryClient
+          .getQueryData<CourseSummary[]>(['courses-user', uiLocale])
+          ?.find((course) => course.uuid === courseIdToDelete) ??
+        queryClient
+          .getQueryData<CourseSummary[]>(['courses-user'])
+          ?.find((course) => course.uuid === courseIdToDelete)
 
       const removedCourseName = payloadData?.name ?? existingCourse?.name
       const removedCourseStatus = payloadData?.status ?? existingCourse?.status
@@ -127,14 +143,21 @@ export const useCoursesSSE = (orgSlug?: string) => {
         }
       }
 
-      queryClient.setQueryData<CourseSummary[]>(['courses-user'], (oldData) => {
+      const removeCourse = (oldData: CourseSummary[] | undefined) => {
         if (!oldData) return oldData
         if (!courseIdToDelete) return oldData
 
         return oldData.filter((c: CourseSummary) => c.uuid !== courseIdToDelete)
-      })
+      }
+
+      queryClient.setQueryData<CourseSummary[]>(['courses-user'], removeCourse)
+      queryClient.setQueryData<CourseSummary[]>(
+        ['courses-user', uiLocale],
+        removeCourse,
+      )
 
       queryClient.invalidateQueries({ queryKey: ['courses-user'] })
+      queryClient.invalidateQueries({ queryKey: ['courses-user', uiLocale] })
     })
 
     return () => {
@@ -142,6 +165,6 @@ export const useCoursesSSE = (orgSlug?: string) => {
       eventSource.close()
       setIsConnected(false)
     }
-  }, [queryClient])
+  }, [queryClient, uiLocale])
   return { isConnected }
 }

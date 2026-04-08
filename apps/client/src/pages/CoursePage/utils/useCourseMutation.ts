@@ -15,6 +15,9 @@ import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { CourseDetail, CourseStatus, CourseSummary } from '@/lib/schemas'
 
+const getDashboardCoursesQueryKey = (locale = getStoredUiLocale()) =>
+  ['courses', locale] as const
+
 export const invalidateCourseQueries = async (
   queryClient: QueryClient,
   courseId: string,
@@ -35,20 +38,23 @@ export const useDeleteCourseMutation = (orgSlug?: string) => {
     mutationFn: async (courseId: string) => await deleteCourse(courseId, orgSlug),
     networkMode: 'always',
     onMutate: async (courseId) => {
-      await queryClient.cancelQueries({ queryKey: ['courses'] })
+      const dashboardCoursesQueryKey = getDashboardCoursesQueryKey()
+      await queryClient.cancelQueries({ queryKey: dashboardCoursesQueryKey })
       await queryClient.cancelQueries({ queryKey: ['courses-user'] })
 
-      const previousCourses = queryClient.getQueryData<CourseSummary[]>([
-        'courses',
-      ])
+      const previousCourses =
+        queryClient.getQueryData<CourseSummary[]>(dashboardCoursesQueryKey)
       const previousCoursesUser = queryClient.getQueryData<CourseSummary[]>([
         'courses-user',
       ])
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (oldCourses) => {
-        if (!oldCourses) return oldCourses
-        return oldCourses.filter((course) => course.uuid !== courseId)
-      })
+      queryClient.setQueryData<CourseSummary[]>(
+        dashboardCoursesQueryKey,
+        (oldCourses) => {
+          if (!oldCourses) return oldCourses
+          return oldCourses.filter((course) => course.uuid !== courseId)
+        },
+      )
 
       queryClient.setQueryData<CourseSummary[]>(
         ['courses-user'],
@@ -70,7 +76,7 @@ export const useDeleteCourseMutation = (orgSlug?: string) => {
         error,
         i18n.t('toasts.course.deleteError', { ns: 'dashboard' }),
         queryClient,
-        ['courses'],
+        getDashboardCoursesQueryKey(),
         context?.previousCourses,
       )
     },
@@ -103,33 +109,37 @@ export const useCloneCourseMutation = (options?: {
       return result
     },
     onSuccess: (clonedCourse, variables, context) => {
+      const dashboardCoursesQueryKey = getDashboardCoursesQueryKey()
       pendingCloneIds.delete(context?.tempId ?? '')
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
-        if (!old) return old
+      queryClient.setQueryData<CourseSummary[]>(
+        dashboardCoursesQueryKey,
+        (old = []) => {
+          if (!old) return old
 
-        const realExists = old.some((c) => c.uuid === clonedCourse.uuid)
-        if (realExists) {
-          return old.map((c) =>
-            c.uuid === clonedCourse.uuid ? clonedCourse : c,
-          )
-        }
-
-        if (context?.tempId) {
-          const tempExists = old.some((c) => c.uuid === context.tempId)
-          if (tempExists) {
+          const realExists = old.some((c) => c.uuid === clonedCourse.uuid)
+          if (realExists) {
             return old.map((c) =>
-              c.uuid === context.tempId ? clonedCourse : c,
+              c.uuid === clonedCourse.uuid ? clonedCourse : c,
             )
           }
-        }
 
-        if (options?.optimisticInsert) {
-          return options.optimisticInsert(old, clonedCourse)
-        }
+          if (context?.tempId) {
+            const tempExists = old.some((c) => c.uuid === context.tempId)
+            if (tempExists) {
+              return old.map((c) =>
+                c.uuid === context.tempId ? clonedCourse : c,
+              )
+            }
+          }
 
-        return [clonedCourse, ...old]
-      })
+          if (options?.optimisticInsert) {
+            return options.optimisticInsert(old, clonedCourse)
+          }
+
+          return [clonedCourse, ...old]
+        },
+      )
 
       if (!options?.skipInvalidateCourses) {
         queryClient.invalidateQueries({ queryKey: ['courses'] })
@@ -142,11 +152,11 @@ export const useCloneCourseMutation = (options?: {
       options?.onSuccess?.(clonedCourse, variables.source)
     },
     onMutate: async ({ source }) => {
-      await queryClient.cancelQueries({ queryKey: ['courses'] })
+      const dashboardCoursesQueryKey = getDashboardCoursesQueryKey()
+      await queryClient.cancelQueries({ queryKey: dashboardCoursesQueryKey })
 
-      const previousCourses = queryClient.getQueryData<CourseSummary[]>([
-        'courses',
-      ])
+      const previousCourses =
+        queryClient.getQueryData<CourseSummary[]>(dashboardCoursesQueryKey)
       const tempId = `temp-clone-${Date.now()}`
 
       const optimistic: CourseSummary = {
@@ -158,12 +168,15 @@ export const useCloneCourseMutation = (options?: {
         updatedAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (old = []) => {
-        if (options?.optimisticInsert) {
-          return options.optimisticInsert(old, optimistic)
-        }
-        return [optimistic, ...old]
-      })
+      queryClient.setQueryData<CourseSummary[]>(
+        dashboardCoursesQueryKey,
+        (old = []) => {
+          if (options?.optimisticInsert) {
+            return options.optimisticInsert(old, optimistic)
+          }
+          return [optimistic, ...old]
+        },
+      )
       pendingCloneIds.add(tempId)
 
       return { previousCourses, tempId }
@@ -174,7 +187,7 @@ export const useCloneCourseMutation = (options?: {
         error,
         i18n.t('toasts.course.copyError', { ns: 'dashboard' }),
         queryClient,
-        ['courses'],
+        getDashboardCoursesQueryKey(),
         context?.previousCourses,
       )
     },
@@ -208,25 +221,28 @@ export const useUpdateCourseMutation = (
     },
     networkMode: 'always',
     onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: ['courses'] })
+      const dashboardCoursesQueryKey = getDashboardCoursesQueryKey()
+      await queryClient.cancelQueries({ queryKey: dashboardCoursesQueryKey })
       await queryClient.cancelQueries({ queryKey: ['course', courseId] })
 
-      const previousCourses = queryClient.getQueryData<CourseSummary[]>([
-        'courses',
-      ])
+      const previousCourses =
+        queryClient.getQueryData<CourseSummary[]>(dashboardCoursesQueryKey)
       const previousCourse = queryClient.getQueryData<CourseDetail>([
         'course',
         courseId,
       ])
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (oldCourses) => {
-        if (!oldCourses) return oldCourses
-        return oldCourses.map((course) =>
-          course.uuid === courseId
-            ? { ...course, name: data.name, description: data.description }
-            : course,
-        )
-      })
+      queryClient.setQueryData<CourseSummary[]>(
+        dashboardCoursesQueryKey,
+        (oldCourses) => {
+          if (!oldCourses) return oldCourses
+          return oldCourses.map((course) =>
+            course.uuid === courseId
+              ? { ...course, name: data.name, description: data.description }
+              : course,
+          )
+        },
+      )
 
       queryClient.setQueryData<CourseDetail>(
         ['course', courseId],
@@ -258,7 +274,10 @@ export const useUpdateCourseMutation = (
     },
     onError: (error: ApiError, _variables, context) => {
       if (context?.previousCourses) {
-        queryClient.setQueryData(['courses'], context.previousCourses)
+        queryClient.setQueryData(
+          getDashboardCoursesQueryKey(),
+          context.previousCourses,
+        )
       }
       if (context?.previousCourse) {
         queryClient.setQueryData(['course', courseId], context.previousCourse)
@@ -294,11 +313,11 @@ export const useCreateCourseMutation = (
     },
     networkMode: 'always',
     onMutate: async (data) => {
-      await queryClient.cancelQueries({ queryKey: ['courses'] })
+      const dashboardCoursesQueryKey = getDashboardCoursesQueryKey()
+      await queryClient.cancelQueries({ queryKey: dashboardCoursesQueryKey })
 
-      const previousCourses = queryClient.getQueryData<CourseSummary[]>([
-        'courses',
-      ])
+      const previousCourses =
+        queryClient.getQueryData<CourseSummary[]>(dashboardCoursesQueryKey)
 
       const optimisticCourse: CourseSummary = {
         uuid: 'temp-' + Date.now(),
@@ -309,10 +328,13 @@ export const useCreateCourseMutation = (
         updatedAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<CourseSummary[]>(['courses'], (oldCourses) => {
-        if (!oldCourses) return oldCourses
-        return [...oldCourses, optimisticCourse]
-      })
+      queryClient.setQueryData<CourseSummary[]>(
+        dashboardCoursesQueryKey,
+        (oldCourses) => {
+          if (!oldCourses) return oldCourses
+          return [...oldCourses, optimisticCourse]
+        },
+      )
 
       return { previousCourses }
     },
@@ -331,7 +353,7 @@ export const useCreateCourseMutation = (
         error,
         i18n.t('toasts.course.createError', { ns: 'dashboard' }),
         queryClient,
-        ['courses'],
+        getDashboardCoursesQueryKey(),
         context?.previousCourses,
       )
     },

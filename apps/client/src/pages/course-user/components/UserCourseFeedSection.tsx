@@ -11,15 +11,17 @@ import { useTranslation } from 'react-i18next'
 type UserCourseFeedSectionProps = {
   courseId: string
   initialFeed: FeedItem[]
+  orgSlug?: string
 }
 
 const UserCourseFeedSection = ({
   courseId,
   initialFeed,
+  orgSlug,
 }: UserCourseFeedSectionProps) => {
   const { t } = useTranslation('courses')
   const { allPosts, loadMorePosts, hasMore, isLoadingMore, paginationError } =
-    useFeedPagination(courseId, initialFeed)
+    useFeedPagination(courseId, initialFeed, orgSlug)
 
   return (
     <section>

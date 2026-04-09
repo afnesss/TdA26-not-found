@@ -28,7 +28,8 @@ export default async function apiFetch<T>(
 
   let response: Response
   try {
-    response = await fetch(`/api${input}`, {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
+    response = await fetch(`${baseUrl}/api${input}`, {
       ...safeOptions,
       credentials: 'include',
       headers: {

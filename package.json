@@ -5,7 +5,7 @@
     "apps/*"
   ],
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "validate": "npm run typecheck -w api && npm run build -w api && npm run typecheck -w client && npm run build -w client",
     "test": "vitest"
   },

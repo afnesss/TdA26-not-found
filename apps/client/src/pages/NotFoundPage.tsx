@@ -2,14 +2,13 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useTitle } from '@/lib/dynamicTitleHook'
+import { useTranslation } from 'react-i18next'
 
 const NotFoundPage = () => {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
 
-  useTitle('Stránka nenalezena - 404')
-  const handleGoBack = () => {
-    navigate('/courses')
-  }
+  useTitle(t('notFoundPage.pageTitle'))
 
   return (
     <div className='flex flex-col items-center justify-center min-h-[70vh] px-4'>
@@ -18,21 +17,21 @@ const NotFoundPage = () => {
 
         <div className='space-y-2'>
           <h2 className='text-3xl font-semibold text-foreground'>
-            Hmm... Tato stránka nebyla nalezena
+            {t('notFoundPage.title')}
           </h2>
           <p className='text-muted-foreground text-lg'>
-            Stránka, kterou hledáte, neexistuje nebo byla odstraněna.
+            {t('notFoundPage.description')}
           </p>
         </div>
 
         <Button
           variant='primary'
           size='primary'
-          onClick={handleGoBack}
+          onClick={() => navigate(-1)}
           className='gap-2'
         >
           <ArrowLeft className='w-4 h-4' />
-          Zpět na přehled kurzů
+          {t('notFoundPage.goBack')}
         </Button>
       </div>
     </div>

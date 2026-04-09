@@ -182,6 +182,12 @@ const common = {
     quizTitleRequired: 'Název kvízu nesmí být prázdný',
     quizAtLeastOneQuestion: 'Musí být alespoň jedna otázka',
   },
+  notFoundPage: {
+    pageTitle: 'Stránka nenalezena - 404',
+    title: 'Hmm... Tato stránka nebyla nalezena',
+    description: 'Stránka, kterou hledáte, neexistuje nebo byla odstraněna.',
+    goBack: 'Zpět',
+  },
   deleteConfirm: {
     itemTypeDefault: 'položku',
     title: 'Smazat {{itemType}}?',

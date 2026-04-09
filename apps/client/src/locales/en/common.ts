@@ -180,6 +180,12 @@ const common = {
     quizTitleRequired: 'Quiz title must not be empty',
     quizAtLeastOneQuestion: 'At least one question is required',
   },
+  notFoundPage: {
+    pageTitle: 'Page not found - 404',
+    title: 'Hmm... Page not found',
+    description: 'The page you are looking for does not exist or has been removed.',
+    goBack: 'Go back',
+  },
   deleteConfirm: {
     itemTypeDefault: 'item',
     title: 'Delete {{itemType}}?',

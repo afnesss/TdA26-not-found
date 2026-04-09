@@ -144,6 +144,7 @@ function App() {
               element={<CourseModuleDetailPage />}
             />
           </Route>
+          <Route path='*' element={<NotFoundPage />} />
         </Route>
         <Route path='*' element={<NotFoundPage />} />
       </Route>,

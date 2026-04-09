@@ -101,7 +101,8 @@ const ShopCatalogPage = () => {
       })
     },
     onError: (error: ApiError) => {
-      toast.error(error?.body?.message ?? t('catalog.voucherPurchaseFailed'))
+      void error
+      toast.error(t('catalog.voucherPurchaseFailed'))
     },
   })
 

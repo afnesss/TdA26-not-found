@@ -4,17 +4,19 @@ import { db } from "../db";
 import { courses, organizations } from "../db/schema";
 import { AuthRequest } from "../types/auth";
 import { logger } from "../utils/logger";
+import { getApiMessage } from "../utils/apiMessages";
 
 type LoadOrganizationOptions = {
   allowStatuses?: string[];
 };
 
 const respondOrganizationInactive = (
+  req: AuthRequest,
   res: Response,
   organizationStatus: string,
 ) =>
   res.status(403).json({
-    message: "Organizace není dostupná",
+    message: getApiMessage(req, "orgInactive"),
     code: "ORG_INACTIVE",
     organizationStatus,
   });
@@ -25,7 +27,9 @@ export const loadOrganization =
     try {
       const orgSlug = String(req.params.orgSlug ?? "").trim();
       if (!orgSlug) {
-        return res.status(400).json({ message: "Chybí slug organizace" });
+        return res
+          .status(400)
+          .json({ message: getApiMessage(req, "orgMissingSlug") });
       }
 
       const [organization] = await db
@@ -48,21 +52,25 @@ export const loadOrganization =
         .where(eq(organizations.slug, orgSlug));
 
       if (!organization) {
-        return res.status(404).json({ message: "Organizace nebyla nalezena" });
+        return res
+          .status(404)
+          .json({ message: getApiMessage(req, "orgNotFound") });
       }
 
       if (
         options?.allowStatuses &&
         !options.allowStatuses.includes(organization.status)
       ) {
-        return respondOrganizationInactive(res, organization.status);
+        return respondOrganizationInactive(req, res, organization.status);
       }
 
       req.organization = organization;
       next();
     } catch (error) {
       logger.error({ err: error }, "Failed to load organization");
-      return res.status(500).json({ message: "Došlo k chybě serveru" });
+      return res
+        .status(500)
+        .json({ message: getApiMessage(req, "serverError") });
     }
   };
 
@@ -72,7 +80,9 @@ export const requirePlatformAdmin = (
   next: NextFunction,
 ) => {
   if (req.user?.actorType !== "platform_admin") {
-    return res.status(403).json({ message: "Přístup pouze pro správce platformy" });
+    return res
+      .status(403)
+      .json({ message: getApiMessage(req, "platformAdminOnly") });
   }
 
   return next();
@@ -86,7 +96,7 @@ export const requireOrganizationAdmin = (
   if (!req.user) {
     return res
       .status(403)
-      .json({ message: "Přístup pouze pro správce organizace" });
+      .json({ message: getApiMessage(req, "orgAdminOnly") });
   }
 
   if (req.user.actorType === "organization_admin") {
@@ -95,7 +105,9 @@ export const requireOrganizationAdmin = (
       req.user.organizationId !== req.organization.uuid &&
       req.user.orgSlug !== req.organization.slug
     ) {
-      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+      return res
+        .status(403)
+        .json({ message: getApiMessage(req, "crossOrgForbidden") });
     }
 
     return next();
@@ -110,17 +122,15 @@ export const requireOrganizationAdmin = (
       req.user.organizationId !== req.organization.uuid &&
       req.user.orgSlug !== req.organization.slug
     ) {
-      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+      return res
+        .status(403)
+        .json({ message: getApiMessage(req, "crossOrgForbidden") });
     }
 
     return next();
   }
 
-  {
-    return res
-      .status(403)
-      .json({ message: "Přístup pouze pro správce organizace" });
-  }
+  return res.status(403).json({ message: getApiMessage(req, "orgAdminOnly") });
 };
 
 export const requireScopedOrganizationAdmin = (
@@ -146,7 +156,7 @@ export const requireOrganizationPasswordChanged = (
 
   if (req.organization?.mustChangePassword) {
     return res.status(403).json({
-      message: "Nejprve změňte výchozí heslo organizace",
+      message: getApiMessage(req, "orgPasswordChangeRequired"),
       code: "ORG_PASSWORD_CHANGE_REQUIRED",
     });
   }
@@ -174,18 +184,24 @@ export const requireScopedOrganizationUser =
     }
 
     if (req.user?.actorType !== "organization_user") {
-      return res.status(403).json({ message: "Přístup pouze pro uživatele organizace" });
+      return res
+        .status(403)
+        .json({ message: getApiMessage(req, "orgUserOnly") });
     }
 
     if (
       req.user.organizationId !== req.organization.uuid ||
       req.user.orgSlug !== req.organization.slug
     ) {
-      return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+      return res
+        .status(403)
+        .json({ message: getApiMessage(req, "crossOrgForbidden") });
     }
 
     if (allowedRoles && !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Nedostatečná oprávnění" });
+      return res.status(403).json({
+        message: getApiMessage(req, "insufficientPermissions"),
+      });
     }
 
     return next();
@@ -203,7 +219,9 @@ export const requireScopedOrganizationMember =
         req.user.organizationId !== req.organization.uuid &&
         req.user.orgSlug !== req.organization.slug
       ) {
-        return res.status(403).json({ message: "Přístup do jiné organizace není povolen" });
+        return res
+          .status(403)
+          .json({ message: getApiMessage(req, "crossOrgForbidden") });
       }
 
       return next();
@@ -223,7 +241,9 @@ export const requireCourseBelongsToOrganization = async (
     const organizationId = req.organization?.uuid;
 
     if (!courseId || !organizationId) {
-      return res.status(400).json({ message: "Chybí identifikátor kurzu nebo organizace" });
+      return res
+        .status(400)
+        .json({ message: getApiMessage(req, "courseOrOrgIdMissing") });
     }
 
     const [course] = await db
@@ -234,12 +254,16 @@ export const requireCourseBelongsToOrganization = async (
       );
 
     if (!course) {
-      return res.status(404).json({ message: "Kurz nebyl nalezen" });
+      return res
+        .status(404)
+        .json({ message: getApiMessage(req, "courseNotFound") });
     }
 
     return next();
   } catch (error) {
     logger.error({ err: error }, "Failed to validate organization course access");
-    return res.status(500).json({ message: "Došlo k chybě serveru" });
+    return res
+      .status(500)
+      .json({ message: getApiMessage(req, "serverError") });
   }
 };

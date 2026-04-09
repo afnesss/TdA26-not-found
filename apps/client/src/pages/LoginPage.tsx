@@ -41,16 +41,8 @@ const LoginPage = () => {
         reset()
       }
     } catch (error) {
-      const apiError = error as ApiError | undefined
-      const message =
-        apiError?.body &&
-        typeof apiError.body === 'object' &&
-        'error' in apiError.body &&
-        typeof (apiError.body as { error?: unknown }).error === 'string'
-          ? (apiError.body as { error: string }).error
-          : t('admin.failure')
-
-      toast.error(message)
+      const _apiError = error as ApiError | undefined
+      toast.error(t('admin.failure'))
     }
   }
 

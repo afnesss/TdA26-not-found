@@ -4,6 +4,7 @@ import { db } from "../db";
 import { merchItems, promoCodes, shopOrders, users } from "../db/schema";
 import type { ShopCartItemInput } from "../schemas";
 import { AuthRequest, type AuthUser } from "../types/auth";
+import { getApiMessage } from "../utils/apiMessages";
 import { getRequestLocale } from "../utils/i18n";
 import { logger } from "../utils/logger";
 import { localizeNameDescription } from "../utils/localizedResponse";
@@ -572,6 +573,34 @@ export async function createShopOrder(req: Request, res: Response) {
     return res.status(500).json({ message: "Došlo k chybě serveru" });
   }
 }
+
+const resolveShopErrorMessage = (req: Request, message: string) => {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("ko") && normalized.includes("pr")) {
+    return getApiMessage(req, "cartEmpty");
+  }
+  if (normalized.includes("polo") && normalized.includes("dost")) {
+    return getApiMessage(req, "cartItemUnavailable");
+  }
+  if (normalized.includes("neplatn") && normalized.includes("ko")) {
+    return getApiMessage(req, "cartItemInvalid");
+  }
+  if (normalized.includes("relace")) {
+    return getApiMessage(req, "sessionExpired");
+  }
+  if (normalized.includes("voucher") && normalized.includes("spr")) {
+    return getApiMessage(req, "voucherMisconfigured");
+  }
+  if (normalized.includes("dostatek xp")) {
+    return getApiMessage(req, "xpInsufficient");
+  }
+  if (normalized.includes("promo")) {
+    return getApiMessage(req, "promoInvalidOrUsed");
+  }
+
+  return message;
+};
 
 export async function listAdminShopOrders(_req: Request, res: Response) {
   const orders = await db

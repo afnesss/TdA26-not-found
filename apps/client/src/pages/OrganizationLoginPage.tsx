@@ -68,16 +68,8 @@ const OrganizationLoginPage = () => {
       navigate(safeRedirect || defaultRedirect)
       reset()
     } catch (error) {
-      const apiError = error as ApiError | undefined
-      const message =
-        apiError?.body &&
-        typeof apiError.body === 'object' &&
-        'message' in apiError.body &&
-        typeof (apiError.body as { message?: unknown }).message === 'string'
-          ? (apiError.body as { message: string }).message
-          : t('organization.failure')
-
-      toast.error(message)
+      const _apiError = error as ApiError | undefined
+      toast.error(t('organization.failure'))
     }
   }
 

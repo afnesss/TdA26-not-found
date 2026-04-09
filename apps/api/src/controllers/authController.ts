@@ -1,7 +1,8 @@
-﻿import { Request, Response } from "express";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AuthRequest } from "../types/auth";
 import { logger } from "../utils/logger";
+import { getApiMessage } from "../utils/apiMessages";
 import {
   LEGACY_AUTH_COOKIE,
   ADMIN_AUTH_COOKIE,
@@ -28,7 +29,9 @@ export async function login(req: Request, res: Response) {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    res.status(400).json({ error: "Vyplňte prosím jméno a heslo" });
+    res.status(400).json({
+      error: getApiMessage(req, "adminCredentialsRequired"),
+    });
     return;
   }
 
@@ -37,7 +40,7 @@ export async function login(req: Request, res: Response) {
     username !== adminCredentials.username ||
     password !== adminCredentials.password
   ) {
-    res.status(401).json({ error: "Nesprávné přihlašovací údaje" });
+    res.status(401).json({ error: getApiMessage(req, "invalidCredentials") });
     return;
   }
 
@@ -53,20 +56,20 @@ export async function login(req: Request, res: Response) {
   res.json({ message: "OK" });
 }
 
-export async function logoutAdmin(_req: Request, res: Response) {
+export async function logoutAdmin(req: Request, res: Response) {
   res.clearCookie(ADMIN_AUTH_COOKIE, getAdminCookieOptions());
-  res.json({ message: "Odhlášení proběhlo úspěšně" });
+  res.json({ message: getApiMessage(req, "logoutSuccess") });
 }
 
-export async function logoutOrganization(_req: Request, res: Response) {
+export async function logoutOrganization(req: Request, res: Response) {
   res.clearCookie(ORG_AUTH_COOKIE, getOrgCookieOptions());
   res.clearCookie(LEGACY_AUTH_COOKIE, getLegacyCookieOptions());
-  res.json({ message: "Odhlášení proběhlo úspěšně" });
+  res.json({ message: getApiMessage(req, "logoutSuccess") });
 }
 
 export async function me(req: AuthRequest, res: Response) {
   if (!req.user || req.user.actorType !== "platform_admin") {
-    return res.status(401).json({ error: "Nejste oprávněni" });
+    return res.status(401).json({ error: getApiMessage(req, "unauthorized") });
   }
 
   res.json({

@@ -96,8 +96,7 @@ const ShopCheckoutPage = () => {
     : 0
   const totalCents = Math.max(0, subtotalCents - discountCents)
   const promoError = promoValidation.error as ApiError | null
-  const promoErrorMessage =
-    promoError?.body?.message ?? t('cart.promoValidationFailed')
+  const promoErrorMessage = t('cart.promoValidationFailed')
 
   const createOrderMutation = useMutation({
     mutationFn: createShopOrder,
@@ -109,7 +108,8 @@ const ShopCheckoutPage = () => {
       })
     },
     onError: (error: ApiError) => {
-      toast.error(error?.body?.message ?? t('checkout.orderCreateFailed'))
+      void error
+      toast.error(t('checkout.orderCreateFailed'))
     },
   })
 

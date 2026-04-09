@@ -1,6 +1,7 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 import { AuthActorType, AuthRequest, AuthUser } from "../types/auth";
+import { getApiMessage } from "../utils/apiMessages";
 
 export const ADMIN_AUTH_COOKIE = "admin_token";
 export const ORG_AUTH_COOKIE = "org_token";
@@ -28,12 +29,13 @@ export const getLegacyCookieOptions = () => ({
 });
 
 const clearAuthCookieAndRespond = (
+  req: AuthRequest,
   res: Response,
   cookieName: string,
   cookieOptions: ReturnType<typeof getAdminCookieOptions>,
 ) => {
   res.clearCookie(cookieName, cookieOptions);
-  res.status(401).json({ message: "Relace vypršela" });
+  res.status(401).json({ message: getApiMessage(req, "sessionExpired") });
 };
 
 const getJwtSecret = () => {
@@ -113,28 +115,32 @@ const createAuthMiddleware =
   (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.[cookieName];
     if (!token) {
-      res.status(401).json({ message: "Nejste oprávnění" });
+      res.status(401).json({ message: getApiMessage(req, "unauthorized") });
       return;
     }
 
     try {
       const payload = jwt.verify(token, getJwtSecret());
 
-      if (typeof payload === "string" || typeof payload !== "object" || payload === null) {
-        clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+      if (
+        typeof payload === "string" ||
+        typeof payload !== "object" ||
+        payload === null
+      ) {
+        clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
         return;
       }
 
       const user = mapPayloadToUser(payload as jwt.JwtPayload);
       if (!user || user.actorType !== expectedActorType) {
-        clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+        clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
         return;
       }
 
       req.user = user;
       next();
     } catch {
-      clearAuthCookieAndRespond(res, cookieName, cookieOptions);
+      clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
     }
   };
 
@@ -167,8 +173,6 @@ export const organizationScopedAuthMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  // Prefer organization user token when both cookies are present
-  // (e.g. after switching between admin and lecturer sessions).
   if (req.cookies?.[LEGACY_AUTH_COOKIE]) {
     return authMiddleware(req, res, next);
   }
@@ -180,7 +184,6 @@ export const organizationScopedAuthMiddleware = (
   return authMiddleware(req, res, next);
 };
 
-// Backward-compatible middleware for legacy student/shop endpoints.
 export const authMiddleware = (
   req: AuthRequest,
   res: Response,
@@ -188,14 +191,23 @@ export const authMiddleware = (
 ) => {
   const token = req.cookies?.[LEGACY_AUTH_COOKIE];
   if (!token) {
-    res.status(401).json({ message: "Nejste oprávnění" });
+    res.status(401).json({ message: getApiMessage(req, "unauthorized") });
     return;
   }
 
   try {
     const payload = jwt.verify(token, getJwtSecret());
-    if (typeof payload === "string" || typeof payload !== "object" || payload === null) {
-      clearAuthCookieAndRespond(res, LEGACY_AUTH_COOKIE, getAdminCookieOptions());
+    if (
+      typeof payload === "string" ||
+      typeof payload !== "object" ||
+      payload === null
+    ) {
+      clearAuthCookieAndRespond(
+        req,
+        res,
+        LEGACY_AUTH_COOKIE,
+        getAdminCookieOptions(),
+      );
       return;
     }
 
@@ -205,14 +217,24 @@ export const authMiddleware = (
       (user.actorType !== "legacy_user" &&
         user.actorType !== "organization_user")
     ) {
-      clearAuthCookieAndRespond(res, LEGACY_AUTH_COOKIE, getAdminCookieOptions());
+      clearAuthCookieAndRespond(
+        req,
+        res,
+        LEGACY_AUTH_COOKIE,
+        getAdminCookieOptions(),
+      );
       return;
     }
 
     req.user = user;
     next();
   } catch {
-    clearAuthCookieAndRespond(res, LEGACY_AUTH_COOKIE, getAdminCookieOptions());
+    clearAuthCookieAndRespond(
+      req,
+      res,
+      LEGACY_AUTH_COOKIE,
+      getAdminCookieOptions(),
+    );
   }
 };
 
@@ -224,7 +246,9 @@ export const requireRole =
         req.user.actorType !== "organization_user") ||
       req.user.role !== role
     ) {
-      res.status(403).json({ message: "Nedostatečná oprávnění" });
+      res.status(403).json({
+        message: getApiMessage(req, "insufficientPermissions"),
+      });
       return;
     }
 

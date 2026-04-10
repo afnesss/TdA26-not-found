@@ -35,6 +35,14 @@ app.use(
 app.use(cookieParser());
 app.set("trust proxy", 1);
 
+// Strip /api prefix when present (e.g. Render deployments without Caddy)
+app.use((req, _res, next) => {
+  if (req.path.startsWith("/api/")) {
+    req.url = req.url.slice(4);
+  }
+  next();
+});
+
 app.use(httpLogger);
 app.use(localeMiddleware);
 

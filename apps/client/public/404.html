@@ -29,15 +29,15 @@
         background: var(--bg);
         color: var(--fg);
         font-family:
-          "Dosis",
+          'Dosis',
           system-ui,
           -apple-system,
-          "Segoe UI",
+          'Segoe UI',
           Roboto,
-          "Helvetica Neue",
+          'Helvetica Neue',
           Arial,
-          "Noto Sans",
-          "Liberation Sans",
+          'Noto Sans',
+          'Liberation Sans',
           sans-serif;
       }
       .wrap {
@@ -60,21 +60,26 @@
         font-size: 18px;
         color: var(--muted);
       }
-      a.button {
+      button.button {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         background: var(--primary);
         color: #ffffff;
-        text-decoration: none;
+        border: none;
+        cursor: pointer;
         padding: 12px 18px;
         border-radius: 12px;
         font-weight: 700;
-        transition: transform 120ms ease, box-shadow 120ms ease;
+        font-size: 16px;
+        font-family: inherit;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease;
         box-shadow: 0 6px 16px rgba(0, 112, 187, 0.25);
       }
-      a.button:focus,
-      a.button:hover {
+      button.button:focus,
+      button.button:hover {
         transform: translateY(-1px);
         box-shadow: 0 10px 22px rgba(0, 112, 187, 0.35);
       }
@@ -83,9 +88,58 @@
   <body>
     <main class="wrap" role="main">
       <div class="code">404</div>
-      <h1>Hmm... Tato stránka nebyla nalezena</h1>
-      <p>Stránka, kterou hledáte, neexistuje nebo byla odstraněná.</p>
-      <a class="button" href="/courses">Zpět na přehled kurzů</a>
+      <h1 id="title"></h1>
+      <p id="desc"></p>
+      <button class="button" onclick="goBack()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+        <span id="btn"></span>
+      </button>
     </main>
+    <script>
+      var i18n = {
+        cs: {
+          title: 'Hmm... Tato stránka nebyla nalezena',
+          desc: 'Stránka, kterou hledáte, neexistuje nebo byla odstraněna.',
+          btn: 'Zpět',
+          pageTitle: 'Stránka nenalezena - 404 | Think Different Academy',
+        },
+        en: {
+          title: 'Hmm... Page not found',
+          desc: 'The page you are looking for does not exist or has been removed.',
+          btn: 'Go back',
+          pageTitle: 'Page not found - 404 | Think Different Academy',
+        },
+      }
+
+      var locale = localStorage.getItem('tda-ui-locale') || 'en'
+      var t = i18n[locale] || i18n['en']
+
+      document.getElementById('title').textContent = t.title
+      document.getElementById('desc').textContent = t.desc
+      document.getElementById('btn').textContent = t.btn
+      document.title = t.pageTitle
+      document.documentElement.lang = locale
+
+      function goBack() {
+        if (window.history.length > 1) {
+          window.history.back()
+        } else {
+          window.location.href = '/'
+        }
+      }
+    </script>
   </body>
 </html>

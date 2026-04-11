@@ -1,5 +1,6 @@
 const header = {
   navigation: {
+    home: 'Úvod',
     shop: 'Shop',
     courses: 'Kurzy',
     dashboard: 'Dashboard',

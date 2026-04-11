@@ -62,12 +62,14 @@ export default function Header() {
   const isShopActive = pathname.startsWith('/shop')
   const isLegalPage =
     pathname === '/terms-of-use' || pathname === '/privacy-policy'
+  const isRootHomeActive = pathname === '/'
   const isOrgCoursesActive =
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/courses`)
   const isOrgDashboardActive =
     isOrganizationArea && pathname.startsWith(`/${orgSlug}/dashboard`)
   const isOrgLoginActive =
     isOrganizationArea && pathname === buildOrgLoginPath(orgSlug)
+  const isOrgHomeActive = isOrganizationArea && pathname === `/${orgSlug}`
 
   const shopOrgSlug = resolveShopOrgSlug(
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
@@ -182,8 +184,26 @@ export default function Header() {
           },
         ]
 
+  const mobileNavigationItems: NavigationItem[] = [
+    {
+      label: t('navigation.home'),
+      value: 'home',
+      isActive:
+        hasOrgNavigation && effectiveOrgSlug
+          ? isOrgHomeActive
+          : isRootHomeActive,
+      onClick: () =>
+        navigate(
+          hasOrgNavigation && effectiveOrgSlug ? `/${effectiveOrgSlug}` : '/',
+        ),
+    },
+    ...navigationItems,
+  ]
+
   const activeNavigationItem =
-    navigationItems.find((item) => item.isActive) ?? navigationItems[0]
+    (isMd ? navigationItems : mobileNavigationItems).find(
+      (item) => item.isActive,
+    ) ?? (isMd ? navigationItems : mobileNavigationItems)[0]
   const isAuthAction = isAdminArea || hasOrgNavigation
   const shouldShowXpInfo = hasOrgNavigation && orgUser?.role === 'student'
 
@@ -289,7 +309,7 @@ export default function Header() {
             width='w-24'
           />
         )}
-        {isMd || navigationItems.length <= 1 ? (
+        {isMd ? (
           <>
             {navigationItems.map((item) => (
               <Button
@@ -314,14 +334,14 @@ export default function Header() {
                 <ChevronDown size={16} className='opacity-60' />
               </Button>
             }
-            items={navigationItems.map((item) => ({
+            items={mobileNavigationItems.map((item) => ({
               label: item.label,
               value: item.value,
               onClick: item.onClick,
             }))}
             selectedValue={activeNavigationItem?.value}
             align='end'
-            width='w-40'
+            width='w-36'
             footer={<div className='w-full px-1'>{localeSwitcherFooter}</div>}
           />
         )}

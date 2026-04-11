@@ -11,6 +11,20 @@ type ApiClientOptions = {
   token?: string
 }
 
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
+
+const getApiBaseUrl = () => trimTrailingSlash(import.meta.env.VITE_API_BASE_URL ?? '')
+
+export const buildApiUrl = (input: string) => {
+  const normalizedInput = input.startsWith('/') ? input : `/${input}`
+  const apiPath =
+    normalizedInput === '/api' || normalizedInput.startsWith('/api/')
+      ? normalizedInput
+      : `/api${normalizedInput}`
+
+  return `${getApiBaseUrl()}${apiPath}`
+}
+
 export default async function apiFetch<T>(
   input: string,
   options?: RequestInit,
@@ -28,8 +42,7 @@ export default async function apiFetch<T>(
 
   let response: Response
   try {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL ?? ''
-    response = await fetch(`${baseUrl}/api${input}`, {
+    response = await fetch(buildApiUrl(input), {
       ...safeOptions,
       credentials: 'include',
       headers: {

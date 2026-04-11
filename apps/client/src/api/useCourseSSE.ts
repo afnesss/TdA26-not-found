@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/api/client'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import type { CourseSummary } from '@/lib/schemas'
 import { appendLocaleQuery } from '@/lib/i18n'
@@ -15,7 +16,7 @@ export const useCoursesSSE = (orgSlug?: string) => {
   useEffect(() => {
     const isDev = import.meta.env.DEV
     const eventSource = new EventSource(
-      appendLocaleQuery(`/api${buildOrgApiPrefix(orgSlug)}/courses/stream`),
+      appendLocaleQuery(buildApiUrl(`${buildOrgApiPrefix(orgSlug)}/courses/stream`)),
     )
 
     eventSource.onopen = () => {

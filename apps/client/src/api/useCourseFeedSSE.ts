@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/api/client'
 import type {
   CourseDetail,
   CourseStatus,
@@ -104,7 +105,7 @@ export const useCourseFeedSSE = ({
 
     const eventSource = new EventSource(
       appendLocaleQuery(
-        `/api${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`,
+        buildApiUrl(`${buildOrgApiPrefix(orgSlug)}/courses/${courseId}/feed/stream`),
       ),
     )
 

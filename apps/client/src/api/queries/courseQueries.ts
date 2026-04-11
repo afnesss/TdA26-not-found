@@ -7,6 +7,7 @@ import type {
   CourseSummary,
   CourseUpdateRequest,
 } from '@/lib/schemas'
+import { buildApiUrl } from '../client'
 import { buildOrgApiPrefix } from '@/lib/routes'
 import { buildLocaleHeaders } from '@/lib/i18n'
 import i18n from '@/i18n'
@@ -120,7 +121,7 @@ export const exportCourse = async (
   orgSlug?: string,
 ): Promise<Blob> => {
   const response = await fetch(
-    `/api${buildCourseApiPath(orgSlug, `/courses/${courseId}/export`)}?format=${format}`,
+    `${buildApiUrl(buildCourseApiPath(orgSlug, `/courses/${courseId}/export`))}?format=${format}`,
     {
       credentials: 'include',
       headers: buildLocaleHeaders(),
@@ -142,7 +143,7 @@ export const exportCourse = async (
 }
 
 export const exportAllCourses = async (orgSlug?: string): Promise<Blob> => {
-  const response = await fetch(`/api${buildCourseApiPath(orgSlug, '/courses/export-all')}`, {
+  const response = await fetch(buildApiUrl(buildCourseApiPath(orgSlug, '/courses/export-all')), {
     credentials: 'include',
     headers: buildLocaleHeaders(),
   })

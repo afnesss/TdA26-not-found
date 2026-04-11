@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/api/client'
 import { pendingCloneIds } from '@/api/pendingCloneIds'
 import i18n from '@/i18n'
 import { getCurrentUiLocale, localizeCourseForUi } from '@/lib/courseLocalization'
@@ -15,7 +16,7 @@ export const useDashboardCoursesSSE = (orgSlug?: string) => {
   useEffect(() => {
     const isDev = import.meta.env.DEV
     const eventSource = new EventSource(
-      `/api${buildOrgApiPrefix(orgSlug)}/courses/stream`,
+      buildApiUrl(`${buildOrgApiPrefix(orgSlug)}/courses/stream`),
     )
 
     eventSource.onopen = () => {

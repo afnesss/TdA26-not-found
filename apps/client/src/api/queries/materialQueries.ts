@@ -7,7 +7,7 @@ import type {
   UrlMaterialUpdateRequest,
 } from '@/lib/schemas'
 import { buildOrgApiPrefix } from '@/lib/routes'
-import apiFetch from '../client'
+import apiFetch, { buildApiUrl } from '../client'
 
 type MaterialBody = FileMaterialUpdateRequest | UrlMaterialUpdateRequest
 
@@ -129,5 +129,7 @@ export const getMaterialDownloadUrl = (
   materialId: string,
   orgSlug?: string,
 ): string => {
-  return `/api${buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}/download`)}`
+  return buildApiUrl(
+    buildMaterialApiPath(courseId, moduleId, orgSlug, `/${materialId}/download`),
+  )
 }

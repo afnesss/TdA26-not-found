@@ -21,7 +21,11 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useMediaQuery } from 'usehooks-ts'
-import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
+import {
+  buildShopPath,
+  resolveShopAdminContext,
+  resolveShopOrgSlug,
+} from '@/pages/shop/shopUtils'
 import logo from '../../assets/white_logo.svg'
 
 type NavigationItem = {
@@ -51,6 +55,10 @@ export default function Header() {
   const [uiLocale, setCurrentUiLocale] = useState<Locale>(getStoredUiLocale())
 
   const isAdminArea = pathname.startsWith('/admin')
+  const isAdminContextPage = resolveShopAdminContext(
+    new URLSearchParams(search).get('admin'),
+  )
+  const isEffectiveAdminArea = isAdminArea || isAdminContextPage
   const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
   const isOrganizationRequestActive = pathname.startsWith(
     '/organization-request',
@@ -85,8 +93,8 @@ export default function Header() {
   const isPublicOrgContextPage = isShopActive || isLegalPage
   const hasOrgNavigation =
     Boolean(effectiveOrgSlug) &&
-    !isAdminArea &&
-    (isOrganizationArea || (isPublicOrgContextPage && isOrgAuth))
+    !isEffectiveAdminArea &&
+    (isOrganizationArea || isPublicOrgContextPage)
 
   const selectedSecondaryButtonClass =
     'bg-secondary text-accent-blue hover:bg-secondary active:bg-secondary'
@@ -118,13 +126,13 @@ export default function Header() {
     }
   }
 
-  const navigationItems: NavigationItem[] = isAdminArea
+  const navigationItems: NavigationItem[] = isEffectiveAdminArea
     ? [
         {
           label: t('navigation.shop'),
           value: 'shop',
           isActive: isShopActive,
-          onClick: () => navigate(buildShopPath('/shop', shopOrgSlug)),
+          onClick: () => navigate(buildShopPath('/shop', shopOrgSlug, true)),
         },
         ...(isAdminAuth
           ? [
@@ -204,10 +212,10 @@ export default function Header() {
     (isMd ? navigationItems : mobileNavigationItems).find(
       (item) => item.isActive,
     ) ?? (isMd ? navigationItems : mobileNavigationItems)[0]
-  const isAuthAction = isAdminArea || hasOrgNavigation
+  const isAuthAction = isEffectiveAdminArea || hasOrgNavigation
   const shouldShowXpInfo = hasOrgNavigation && orgUser?.role === 'student'
 
-  const secondaryAction: SecondaryAction = isAdminArea
+  const secondaryAction: SecondaryAction = isEffectiveAdminArea
     ? {
         label: isAdminAuth ? t('actions.signOut') : t('actions.signIn'),
         icon: isAdminAuth ? LogOut : LogIn,
@@ -272,6 +280,8 @@ export default function Header() {
             navigate(
               hasOrgNavigation && effectiveOrgSlug
                 ? `/${effectiveOrgSlug}`
+                : isEffectiveAdminArea
+                  ? '/admin'
                 : '/',
             )
           }

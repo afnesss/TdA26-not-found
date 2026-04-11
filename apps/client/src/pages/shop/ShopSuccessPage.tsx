@@ -17,7 +17,9 @@ import {
 import {
   buildShopPath,
   formatPrice,
+  persistShopAdminContext,
   persistShopOrgSlug,
+  resolveShopAdminContext,
   resolveShopOrgSlug,
 } from './shopUtils'
 
@@ -30,6 +32,7 @@ const ShopSuccessPage = () => {
   const { orderId } = useParams()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
   const { t } = useTranslation('shop')
   const location = useLocation()
   const state = location.state as ShopSuccessLocationState | null
@@ -39,7 +42,8 @@ const ShopSuccessPage = () => {
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
-  }, [orgSlug])
+    persistShopAdminContext(isAdminContextPage)
+  }, [isAdminContextPage, orgSlug])
 
   return (
     <div className='mx-auto w-full max-w-3xl'>
@@ -99,7 +103,7 @@ const ShopSuccessPage = () => {
           <Button
             variant='primary'
             className='h-13 px-8 text-base font-bold sm:text-lg'
-            onClick={() => navigate(buildShopPath('/shop', orgSlug))}
+            onClick={() => navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))}
           >
             {t('success.backToShop')}
           </Button>
@@ -110,7 +114,7 @@ const ShopSuccessPage = () => {
               navigate(
                 orgSlug
                   ? buildOrgCoursesPath(orgSlug)
-                  : buildShopPath('/shop', orgSlug),
+                  : buildShopPath('/shop', orgSlug, isAdminContextPage),
               )
             }
           >

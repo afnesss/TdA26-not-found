@@ -23,8 +23,10 @@ import EditBtn from '../dashboard/components/EditBtn'
 import {
   buildShopPath,
   formatPrice,
+  persistShopAdminContext,
   persistShopOrgSlug,
   resolveCartLines,
+  resolveShopAdminContext,
   resolveShopOrgSlug,
 } from './shopUtils'
 
@@ -32,6 +34,7 @@ const ShopCartPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { me } = useOrganizationAuth(orgSlug, {
@@ -82,12 +85,13 @@ const ShopCartPage = () => {
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
-  }, [orgSlug])
+    persistShopAdminContext(isAdminContextPage)
+  }, [isAdminContextPage, orgSlug])
 
   const cartLines = resolveCartLines(cart.items, catalog)
   useEffect(() => {
     if (cartLines.length === 0) {
-      navigate(buildShopPath('/shop', orgSlug))
+      navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))
     }
   }, [hasItems])
   const subtotalCents = cartLines.reduce(
@@ -133,7 +137,7 @@ const ShopCartPage = () => {
           <Button
             variant='outline'
             size='md'
-            onClick={() => navigate(buildShopPath('/shop', orgSlug))}
+            onClick={() => navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))}
           >
             {t('cart.continueShopping')}
           </Button>
@@ -363,7 +367,9 @@ const ShopCartPage = () => {
           <Button
             variant='primary'
             className='h-12 w-full text-base font-bold'
-            onClick={() => navigate(buildShopPath('/shop/checkout', orgSlug))}
+            onClick={() =>
+              navigate(buildShopPath('/shop/checkout', orgSlug, isAdminContextPage))
+            }
             disabled={!hasItems}
           >
             {t('cart.proceedToCheckout')}

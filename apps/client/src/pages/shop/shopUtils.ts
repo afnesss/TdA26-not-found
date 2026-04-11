@@ -2,6 +2,7 @@ import type { ShopCartItemInput, ShopCatalogItem } from '@/lib/schemas'
 import { getIntlLocale } from '@/lib/i18n'
 
 const SHOP_ORG_STORAGE_KEY = 'shop-org-slug-v1'
+const SHOP_ADMIN_CONTEXT_KEY = 'shop-admin-context-v1'
 
 export const formatPrice = (cents: number) => {
   return new Intl.NumberFormat(getIntlLocale(), {
@@ -59,10 +60,47 @@ export const persistShopOrgSlug = (orgSlug?: string | null) => {
   }
 }
 
-export const buildShopPath = (path: string, orgSlug?: string | null) => {
+export const resolveShopAdminContext = (
+  explicitAdminContext?: string | boolean | null,
+) => {
+  if (explicitAdminContext === true) return true
+  if (explicitAdminContext === '1' || explicitAdminContext === 'true') return true
+
+  if (typeof window === 'undefined') return false
+
+  return window.localStorage.getItem(SHOP_ADMIN_CONTEXT_KEY) === '1'
+}
+
+export const persistShopAdminContext = (enabled: boolean) => {
+  if (typeof window === 'undefined') return
+
+  if (enabled) {
+    window.localStorage.setItem(SHOP_ADMIN_CONTEXT_KEY, '1')
+    return
+  }
+
+  window.localStorage.removeItem(SHOP_ADMIN_CONTEXT_KEY)
+}
+
+export const buildShopPath = (
+  path: string,
+  orgSlug?: string | null,
+  adminContext: boolean = false,
+) => {
   const normalized = orgSlug?.trim()
-  if (!normalized) return path
+  const params = new URLSearchParams()
+
+  if (normalized) {
+    params.set('org', normalized)
+  }
+
+  if (adminContext) {
+    params.set('admin', '1')
+  }
+
+  const query = params.toString()
+  if (!query) return path
 
   const separator = path.includes('?') ? '&' : '?'
-  return `${path}${separator}org=${encodeURIComponent(normalized)}`
+  return `${path}${separator}${query}`
 }

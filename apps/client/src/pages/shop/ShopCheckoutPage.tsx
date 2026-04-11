@@ -23,7 +23,9 @@ import { toast } from 'sonner'
 import {
   buildShopPath,
   formatPrice,
+  persistShopAdminContext,
   persistShopOrgSlug,
+  resolveShopAdminContext,
   resolveCartLines,
   resolveShopOrgSlug,
 } from './shopUtils'
@@ -32,6 +34,7 @@ const ShopCheckoutPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { me } = useOrganizationAuth(orgSlug, {
@@ -103,7 +106,7 @@ const ShopCheckoutPage = () => {
     onSuccess: (order) => {
       toast.success(t('checkout.orderCreated'))
       clearCart()
-      navigate(buildShopPath(`/shop/success/${order.orderId}`, orgSlug), {
+      navigate(buildShopPath(`/shop/success/${order.orderId}`, orgSlug, isAdminContextPage), {
         state: { order },
       })
     },
@@ -117,7 +120,8 @@ const ShopCheckoutPage = () => {
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
-  }, [orgSlug])
+    persistShopAdminContext(isAdminContextPage)
+  }, [isAdminContextPage, orgSlug])
 
   if (isError) {
     return <StateComp type='error' onAction={refetch} />
@@ -128,7 +132,7 @@ const ShopCheckoutPage = () => {
       <StateComp
         type='no-content'
         message={t('checkout.emptyCheckout')}
-        onAction={() => navigate(buildShopPath('/shop', orgSlug))}
+        onAction={() => navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))}
         actionText={t('checkout.goToShop')}
       />
     )
@@ -322,7 +326,9 @@ const ShopCheckoutPage = () => {
             <Button
               variant='outline'
               size='primary'
-              onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
+              onClick={() =>
+                navigate(buildShopPath('/shop/cart', orgSlug, isAdminContextPage))
+              }
               disabled={createOrderMutation.isPending}
             >
               <span className='sm:hidden'>{t('checkout.back')}</span>

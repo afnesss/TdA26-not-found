@@ -27,8 +27,10 @@ import { toast } from 'sonner'
 import {
   buildShopPath,
   formatPrice,
+  persistShopAdminContext,
   persistShopOrgSlug,
   resolveCartLines,
+  resolveShopAdminContext,
   resolveShopOrgSlug,
 } from './shopUtils'
 
@@ -42,6 +44,7 @@ const ShopCatalogPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
+  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
   const queryClient = useQueryClient()
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
@@ -74,7 +77,8 @@ const ShopCatalogPage = () => {
 
   useEffect(() => {
     persistShopOrgSlug(orgSlug)
-  }, [orgSlug])
+    persistShopAdminContext(isAdminContextPage)
+  }, [isAdminContextPage, orgSlug])
 
   const purchaseVoucherMutation = useMutation({
     mutationFn: purchaseShopVoucher,
@@ -258,7 +262,9 @@ const ShopCatalogPage = () => {
               variant='primary'
               size='lg'
               disabled={itemCount === 0}
-              onClick={() => navigate(buildShopPath('/shop/cart', orgSlug))}
+              onClick={() =>
+                navigate(buildShopPath('/shop/cart', orgSlug, isAdminContextPage))
+              }
               className='w-fit rounded-xl'
             >
               <ShoppingCart size={18} />

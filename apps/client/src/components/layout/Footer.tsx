@@ -1,5 +1,9 @@
 import { buildOrgCoursesPath, buildOrgInfoPath } from '@/lib/routes'
-import { buildShopPath, resolveShopOrgSlug } from '@/pages/shop/shopUtils'
+import {
+  buildShopPath,
+  resolveShopAdminContext,
+  resolveShopOrgSlug,
+} from '@/pages/shop/shopUtils'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
@@ -9,6 +13,14 @@ const Footer = () => {
   const { pathname, search } = useLocation()
   const { orgSlug } = useParams<{ orgSlug?: string }>()
   const isOrganizationArea = Boolean(orgSlug) && !pathname.startsWith('/admin')
+  const isPublicOrgContextPage =
+    pathname.startsWith('/shop') ||
+    pathname === '/terms-of-use' ||
+    pathname === '/privacy-policy'
+  const isAdminArea = pathname.startsWith('/admin')
+  const isAdminContextPage =
+    isAdminArea ||
+    resolveShopAdminContext(new URLSearchParams(search).get('admin'))
   const effectiveOrgSlug = resolveShopOrgSlug(
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
   )
@@ -26,45 +38,52 @@ const Footer = () => {
           <span className='mr-2'>{t('copyright')}</span>
 
           <div className='flex flex-wrap gap-2 sm:gap-4 items-center'>
-            {orgSlug && (
+            {effectiveOrgSlug && !isAdminArea && (
               <span
                 className='cursor-pointer hover:text-secondary'
                 onClick={() =>
                   navigate(
                     isOrganizationArea && orgSlug
                       ? buildOrgCoursesPath(orgSlug)
-                      : '/',
+                      : buildOrgCoursesPath(effectiveOrgSlug),
                   )
                 }
               >
                 {t('navigation.courses')}
               </span>
             )}
-            {isOrganizationArea && orgSlug && (
-              <span
-                className='cursor-pointer hover:text-secondary'
-                onClick={() => navigate(buildOrgInfoPath(orgSlug))}
-              >
-                {t('navigation.info')}
-              </span>
-            )}
+            {(isOrganizationArea || isPublicOrgContextPage) &&
+              effectiveOrgSlug && (
+                <span
+                  className='cursor-pointer hover:text-secondary'
+                  onClick={() => navigate(buildOrgInfoPath(effectiveOrgSlug))}
+                >
+                  {t('navigation.info')}
+                </span>
+              )}
             <span
               className='cursor-pointer hover:text-secondary'
-              onClick={() => navigate(buildShopPath('/shop', effectiveOrgSlug))}
+              onClick={() =>
+                navigate(buildShopPath('/shop', effectiveOrgSlug, isAdminContextPage))
+              }
             >
               {t('navigation.shop')}
             </span>
             <span
               className='cursor-pointer hover:text-secondary'
               onClick={() =>
-                navigate(buildShopPath('/terms-of-use', effectiveOrgSlug))
+                navigate(
+                  buildShopPath('/terms-of-use', effectiveOrgSlug, isAdminContextPage),
+                )
               }
             >
               {t('navigation.terms')}
             </span>
             <span
               onClick={() =>
-                navigate(buildShopPath('/privacy-policy', effectiveOrgSlug))
+                navigate(
+                  buildShopPath('/privacy-policy', effectiveOrgSlug, isAdminContextPage),
+                )
               }
               className='cursor-pointer hover:text-secondary'
             >

@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import {
   buildShopPath,
   formatPrice,
+  resolveShopAdminContext,
   resolveShopOrgSlug,
 } from '@/pages/shop/shopUtils'
 import { useQuery } from '@tanstack/react-query'
@@ -57,6 +58,9 @@ const RandomMerchPopup = () => {
   const [selectedItem, setSelectedItem] = useState<ShopCatalogItem | null>(null)
 
   const currentOrgSlug = getOrgSlugFromPathname(pathname)
+  const isAdminContextPage = resolveShopAdminContext(
+    new URLSearchParams(search).get('admin'),
+  )
   const shopOrgSlug = resolveShopOrgSlug(
     currentOrgSlug ?? new URLSearchParams(search).get('org'),
   )
@@ -167,7 +171,7 @@ const RandomMerchPopup = () => {
                   size='lg'
                   className='rounded-xl font-bold'
                   onClick={() => {
-                    navigate(buildShopPath('/shop', shopOrgSlug))
+                    navigate(buildShopPath('/shop', shopOrgSlug, isAdminContextPage))
                     setIsOpen(false)
                   }}
                 >

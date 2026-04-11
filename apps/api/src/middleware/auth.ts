@@ -10,7 +10,10 @@ export const LEGACY_AUTH_COOKIE = "token";
 const getBaseCookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "none" as const,
+  sameSite:
+    process.env.NODE_ENV === "production"
+      ? ("none" as const)
+      : ("strict" as const),
 });
 
 export const getAdminCookieOptions = () => ({

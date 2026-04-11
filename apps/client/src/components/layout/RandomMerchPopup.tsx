@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { colorStyles, headerLineHeight } from '@/lib/constants'
 import type { ShopCatalogItem } from '@/lib/schemas'
 import { getOrgSlugFromPathname } from '@/lib/routes'
+import { getAssetUrl } from '@/lib/assetUrl'
 import { cn } from '@/lib/utils'
 import {
   buildShopPath,
@@ -128,7 +129,7 @@ const RandomMerchPopup = () => {
                     <div className='relative w-full max-w-20 shrink-0 overflow-hidden rounded-2xl bg-background shadow-sm sm:max-w-24 md:max-w-28'>
                       {selectedItem.imageUrl ? (
                         <img
-                          src={selectedItem.imageUrl}
+                          src={getAssetUrl(selectedItem.imageUrl)}
                           alt={selectedItem.name}
                           className=' h-full w-full object-cover'
                         />

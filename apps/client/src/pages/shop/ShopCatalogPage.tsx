@@ -16,6 +16,7 @@ import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { buildOrgLoginPath } from '@/lib/routes'
 import type { ApiError } from '@/lib/types'
+import { getAssetUrl } from '@/lib/assetUrl'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, CheckCircle2, Copy, ShoppingCart } from 'lucide-react'
@@ -312,7 +313,7 @@ const ShopCatalogPage = () => {
 
                 {item.imageUrl ? (
                   <img
-                    src={item.imageUrl}
+                    src={getAssetUrl(item.imageUrl)}
                     alt={item.name}
                     className={cn(
                       item.purchaseMode === 'xp' ? 'h-38' : 'h-48',

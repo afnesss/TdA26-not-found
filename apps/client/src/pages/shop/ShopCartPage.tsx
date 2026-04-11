@@ -11,6 +11,7 @@ import { colorStyles, headerLineHeight } from '@/lib/constants'
 import { useTitle } from '@/lib/dynamicTitleHook'
 import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import type { ApiError } from '@/lib/types'
+import { getAssetUrl } from '@/lib/assetUrl'
 import { cn } from '@/lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, ShoppingBag } from 'lucide-react'
@@ -160,7 +161,7 @@ const ShopCartPage = () => {
                   <div className='flex items-center gap-2'>
                     {line.item?.imageUrl ? (
                       <img
-                        src={line.item.imageUrl}
+                        src={getAssetUrl(line.item.imageUrl)}
                         alt={line.item.name}
                         className='h-14 w-14 shrink-0 rounded-lg bg-muted/20 p-1 object-contain'
                       />

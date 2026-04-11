@@ -55,10 +55,6 @@ export default function Header() {
   const [uiLocale, setCurrentUiLocale] = useState<Locale>(getStoredUiLocale())
 
   const isAdminArea = pathname.startsWith('/admin')
-  const isAdminContextPage = resolveShopAdminContext(
-    new URLSearchParams(search).get('admin'),
-  )
-  const isEffectiveAdminArea = isAdminArea || isAdminContextPage
   const isOrganizationArea = Boolean(orgSlug) && !isAdminArea
   const isOrganizationRequestActive = pathname.startsWith(
     '/organization-request',
@@ -83,6 +79,10 @@ export default function Header() {
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
   )
   const effectiveOrgSlug = isOrganizationArea ? orgSlug : shopOrgSlug
+  const isAdminContextPage =
+    !effectiveOrgSlug &&
+    resolveShopAdminContext(new URLSearchParams(search).get('admin'))
+  const isEffectiveAdminArea = isAdminArea || isAdminContextPage
 
   const { isAuth: isAdminAuth } = useAuth()
   const {

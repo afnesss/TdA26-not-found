@@ -64,7 +64,8 @@ export const resolveShopAdminContext = (
   explicitAdminContext?: string | boolean | null,
 ) => {
   if (explicitAdminContext === true) return true
-  if (explicitAdminContext === '1' || explicitAdminContext === 'true') return true
+  if (explicitAdminContext === '1' || explicitAdminContext === 'true')
+    return true
 
   if (typeof window === 'undefined') return false
 
@@ -92,9 +93,7 @@ export const buildShopPath = (
 
   if (normalized) {
     params.set('org', normalized)
-  }
-
-  if (adminContext) {
+  } else if (adminContext) {
     params.set('admin', '1')
   }
 

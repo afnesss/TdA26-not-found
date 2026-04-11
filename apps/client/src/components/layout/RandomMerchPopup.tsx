@@ -58,12 +58,12 @@ const RandomMerchPopup = () => {
   const [selectedItem, setSelectedItem] = useState<ShopCatalogItem | null>(null)
 
   const currentOrgSlug = getOrgSlugFromPathname(pathname)
-  const isAdminContextPage = resolveShopAdminContext(
-    new URLSearchParams(search).get('admin'),
-  )
   const shopOrgSlug = resolveShopOrgSlug(
     currentOrgSlug ?? new URLSearchParams(search).get('org'),
   )
+  const isAdminContextPage =
+    !shopOrgSlug &&
+    resolveShopAdminContext(new URLSearchParams(search).get('admin'))
   const shouldSkipPopup =
     pathname.startsWith('/admin') ||
     pathname.startsWith('/shop') ||

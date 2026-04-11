@@ -34,7 +34,8 @@ const ShopCartPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
-  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
+  const isAdminContextPage =
+    !orgSlug && resolveShopAdminContext(searchParams.get('admin'))
   const { t, i18n } = useTranslation('shop')
   const uiLocale = i18n.resolvedLanguage === 'cs' ? 'cs' : 'en'
   const { me } = useOrganizationAuth(orgSlug, {

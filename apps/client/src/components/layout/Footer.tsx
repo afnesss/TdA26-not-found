@@ -18,12 +18,13 @@ const Footer = () => {
     pathname === '/terms-of-use' ||
     pathname === '/privacy-policy'
   const isAdminArea = pathname.startsWith('/admin')
-  const isAdminContextPage =
-    isAdminArea ||
-    resolveShopAdminContext(new URLSearchParams(search).get('admin'))
   const effectiveOrgSlug = resolveShopOrgSlug(
     isOrganizationArea ? orgSlug : new URLSearchParams(search).get('org'),
   )
+  const isAdminContextPage =
+    isAdminArea ||
+    (!effectiveOrgSlug &&
+      resolveShopAdminContext(new URLSearchParams(search).get('admin')))
 
   return (
     <footer className='w-full bg-foreground/90'>

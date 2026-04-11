@@ -32,7 +32,8 @@ const ShopSuccessPage = () => {
   const { orderId } = useParams()
   const [searchParams] = useSearchParams()
   const orgSlug = resolveShopOrgSlug(searchParams.get('org'))
-  const isAdminContextPage = resolveShopAdminContext(searchParams.get('admin'))
+  const isAdminContextPage =
+    !orgSlug && resolveShopAdminContext(searchParams.get('admin'))
   const { t } = useTranslation('shop')
   const location = useLocation()
   const state = location.state as ShopSuccessLocationState | null

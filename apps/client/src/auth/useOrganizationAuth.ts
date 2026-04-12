@@ -1,5 +1,6 @@
 import { organizationMe } from '@/api/queries/organizationQueries'
 import { useQuery } from '@tanstack/react-query'
+import type { ApiError } from '@/lib/types'
 
 type UseOrganizationAuthOptions = {
   enabled?: boolean
@@ -26,26 +27,29 @@ export const useOrganizationAuth = (
     refetchOnReconnect: options?.refetchOnReconnect ?? false,
   })
 
+  const isUnauthorized = (error as ApiError | null)?.status === 401
+  const me = isUnauthorized ? null : data
+
   return {
-    isAuth: Boolean(data?.organizationId),
-    isAdmin: data?.actorType === 'organization_admin',
+    isAuth: Boolean(me?.organizationId),
+    isAdmin: me?.actorType === 'organization_admin',
     isStaff:
-      data?.actorType === 'organization_admin' ||
-      (data?.actorType === 'organization_user' && data.role === 'lecturer'),
+      me?.actorType === 'organization_admin' ||
+      (me?.actorType === 'organization_user' && me.role === 'lecturer'),
     user:
-      data?.actorType === 'organization_user'
+      me?.actorType === 'organization_user'
         ? {
-            id: data.id,
-            username: data.username,
-            role: data.role,
-            xp: data.role === 'student' ? (data.xp ?? 0) : undefined,
-            level: data.role === 'student' ? (data.level ?? 1) : undefined,
-            organizationId: data.organizationId,
-            orgSlug: data.orgSlug,
+            id: me.id,
+            username: me.username,
+            role: me.role,
+            xp: me.role === 'student' ? (me.xp ?? 0) : undefined,
+            level: me.role === 'student' ? (me.level ?? 1) : undefined,
+            organizationId: me.organizationId,
+            orgSlug: me.orgSlug,
           }
         : null,
     isLoading: isPending,
-    me: data,
+    me,
     error,
     revalidateAuth: refetch,
   }

@@ -1,7 +1,9 @@
 import type {
   AdminAuthMe,
+  AdminLoginResponse,
   Organization,
   OrganizationAuthMe,
+  OrganizationLoginResponse,
   OrganizationPublicInfo,
   OrganizationRequest,
   OrganizationRequestCreate,
@@ -31,7 +33,7 @@ export const getOrganizationDirectory = async (): Promise<
 export const adminLogin = async (body: {
   username: string
   password: string
-}) =>
+}): Promise<AdminLoginResponse> =>
   apiFetch('/admin/auth/login', {
     method: 'POST',
     body: JSON.stringify(body),
@@ -105,7 +107,7 @@ export const organizationLogin = async (
     username?: string
     password: string
   },
-): Promise<OrganizationAuthMe> =>
+): Promise<OrganizationLoginResponse> =>
   apiFetch(`${buildOrgApiPrefix(orgSlug)}/auth/login`, {
     method: 'POST',
     body: JSON.stringify(body),

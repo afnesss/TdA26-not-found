@@ -89,6 +89,10 @@ export const AdminAuthMeSchema = z.object({
   username: z.string(),
 })
 
+export const AdminLoginResponseSchema = AdminAuthMeSchema.extend({
+  token: z.string(),
+})
+
 export const OrganizationAuthMeSchema = z.discriminatedUnion('actorType', [
   z.object({
     actorType: z.literal('organization_admin'),
@@ -99,6 +103,30 @@ export const OrganizationAuthMeSchema = z.discriminatedUnion('actorType', [
     status: OrganizationStatusSchema,
   }),
   z.object({
+    actorType: z.literal('organization_user'),
+    organizationId: z.string().uuid(),
+    orgSlug: z.string(),
+    organizationName: z.string(),
+    id: z.string().uuid(),
+    username: z.string(),
+    role: z.enum(['lecturer', 'student']),
+    xp: z.number().optional(),
+    level: z.number().optional(),
+  }),
+])
+
+export const OrganizationLoginResponseSchema = z.discriminatedUnion('actorType', [
+  z.object({
+    token: z.string(),
+    actorType: z.literal('organization_admin'),
+    organizationId: z.string().uuid(),
+    orgSlug: z.string(),
+    organizationName: z.string(),
+    mustChangePassword: z.boolean(),
+    status: OrganizationStatusSchema,
+  }),
+  z.object({
+    token: z.string(),
     actorType: z.literal('organization_user'),
     organizationId: z.string().uuid(),
     orgSlug: z.string(),
@@ -139,5 +167,7 @@ export type OrganizationRequestPublicStatusResponse = z.infer<
   typeof OrganizationRequestPublicStatusResponseSchema
 >
 export type AdminAuthMe = z.infer<typeof AdminAuthMeSchema>
+export type AdminLoginResponse = z.infer<typeof AdminLoginResponseSchema>
 export type OrganizationAuthMe = z.infer<typeof OrganizationAuthMeSchema>
+export type OrganizationLoginResponse = z.infer<typeof OrganizationLoginResponseSchema>
 export type OrganizationPublicInfo = z.infer<typeof OrganizationPublicInfoSchema>

@@ -1,4 +1,5 @@
 import { userLogin } from '@/api/queries/authQueries'
+import { setAdminToken } from '@/auth/storage'
 import AuthPageShell from '@/components/auth/AuthPageShell'
 import FormField from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
@@ -35,7 +36,11 @@ const LoginPage = () => {
       })
 
       if (result) {
-        queryClient.setQueryData(['auth', 'me'], { username: data.name })
+        setAdminToken(result.token)
+        queryClient.setQueryData(['auth', 'me'], {
+          actorType: result.actorType,
+          username: result.username,
+        })
         toast.success(t('admin.success'))
         navigate('/admin/requests')
         reset()

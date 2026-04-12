@@ -570,6 +570,7 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
       const studentProgress =
         normalizedRole === "student" ? { xp: user.xp, level: user.level } : {};
       return res.json({
+        token,
         actorType: "organization_user",
         id: user.id,
         username: user.username,
@@ -601,6 +602,7 @@ export async function loginOrganization(req: AuthRequest, res: Response) {
     res.clearCookie(LEGACY_AUTH_COOKIE, getLegacyCookieOptions());
     res.cookie(ORG_AUTH_COOKIE, token, getOrgCookieOptions());
     return res.json({
+      token,
       actorType: "organization_admin",
       organizationId: fullOrganization.uuid,
       orgSlug: fullOrganization.slug,

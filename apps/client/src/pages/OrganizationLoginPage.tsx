@@ -1,4 +1,5 @@
 import { organizationLogin } from '@/api/queries/organizationQueries'
+import { setOrgToken } from '@/auth/storage'
 import AuthPageShell from '@/components/auth/AuthPageShell'
 import FormField from '@/components/shared/FormField'
 import { Button } from '@/components/ui/button'
@@ -56,13 +57,15 @@ const OrganizationLoginPage = () => {
         username: String(data.username ?? '').trim(),
         password: String(data.password ?? ''),
       })
-      queryClient.setQueryData(['org-auth', orgSlug], result)
+      setOrgToken(orgSlug, result.token)
+      const { token: _token, ...authMe } = result
+      queryClient.setQueryData(['org-auth', orgSlug], authMe)
       toast.success(t('organization.success'))
       const defaultRedirect =
-        result.actorType === 'organization_admin'
+        authMe.actorType === 'organization_admin'
           ? '/admin/requests'
-          : result.actorType === 'organization_user' &&
-              result.role === 'lecturer'
+          : authMe.actorType === 'organization_user' &&
+              authMe.role === 'lecturer'
             ? buildOrgDashboardPath(orgSlug)
             : buildOrgCoursesPath(orgSlug)
       navigate(safeRedirect || defaultRedirect)

@@ -1,5 +1,11 @@
 import i18n from '@/i18n'
 import {
+  clearAdminToken,
+  clearOrgToken,
+  getAdminToken,
+  getOrgToken,
+} from '@/auth/storage'
+import {
   emitOrganizationInactiveEvent,
   getOrgSlugFromApiInput,
   isOrganizationInactiveError,
@@ -14,6 +20,31 @@ type ApiClientOptions = {
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
 
 const getApiBaseUrl = () => trimTrailingSlash(import.meta.env.VITE_API_BASE_URL ?? '')
+
+const resolveStoredToken = (input: string) => {
+  const orgSlug = getOrgSlugFromApiInput(input)
+  if (orgSlug) {
+    return getOrgToken(orgSlug)
+  }
+
+  if (input === '/admin/auth/login' || input.startsWith('/admin/')) {
+    return getAdminToken()
+  }
+
+  return null
+}
+
+const clearStoredToken = (input: string) => {
+  const orgSlug = getOrgSlugFromApiInput(input)
+  if (orgSlug) {
+    clearOrgToken(orgSlug)
+    return
+  }
+
+  if (input === '/admin/auth/me' || input.startsWith('/admin/')) {
+    clearAdminToken()
+  }
+}
 
 export const buildApiUrl = (input: string) => {
   const normalizedInput = input.startsWith('/') ? input : `/${input}`
@@ -33,12 +64,14 @@ export default async function apiFetch<T>(
   const safeOptions: RequestInit = options ?? {}
   const safeClientOptions: ApiClientOptions = clientOptions ?? {}
 
-  const { headers } = safeClientOptions
+  const { headers, token } = safeClientOptions
 
   const defaultHeaders: HeadersInit = {}
   if (!(safeOptions.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/json'
   }
+
+  const authToken = token ?? resolveStoredToken(input)
 
   let response: Response
   try {
@@ -48,6 +81,7 @@ export default async function apiFetch<T>(
       headers: {
         ...defaultHeaders,
         ...buildLocaleHeaders(),
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...headers,
         ...safeOptions.headers,
       },
@@ -74,6 +108,10 @@ export default async function apiFetch<T>(
       status: response.status,
       statusText: response.statusText,
       body: errorBody,
+    }
+
+    if (response.status === 401) {
+      clearStoredToken(input)
     }
 
     if (isOrganizationInactiveError(apiError)) {

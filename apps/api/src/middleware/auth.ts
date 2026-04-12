@@ -31,11 +31,43 @@ export const getLegacyCookieOptions = () => ({
   path: "/api",
 });
 
+type CookieOptions = ReturnType<typeof getAdminCookieOptions>;
+type SupportedAuthActorType = AuthActorType | "legacy_user";
+type AuthCookieConfig = {
+  name: string;
+  options: CookieOptions;
+};
+type ExtractedToken =
+  | {
+      token: string;
+      source: "authorization";
+    }
+  | {
+      token: string;
+      source: "cookie";
+      cookie: AuthCookieConfig;
+    };
+
+const ADMIN_COOKIE_CONFIG: AuthCookieConfig = {
+  name: ADMIN_AUTH_COOKIE,
+  options: getAdminCookieOptions(),
+};
+
+const ORG_COOKIE_CONFIG: AuthCookieConfig = {
+  name: ORG_AUTH_COOKIE,
+  options: getOrgCookieOptions(),
+};
+
+const LEGACY_COOKIE_CONFIG: AuthCookieConfig = {
+  name: LEGACY_AUTH_COOKIE,
+  options: getLegacyCookieOptions(),
+};
+
 const clearAuthCookieAndRespond = (
   req: AuthRequest,
   res: Response,
   cookieName: string,
-  cookieOptions: ReturnType<typeof getAdminCookieOptions>,
+  cookieOptions: CookieOptions,
 ) => {
   res.clearCookie(cookieName, cookieOptions);
   res.status(401).json({ message: getApiMessage(req, "sessionExpired") });
@@ -48,6 +80,46 @@ const getJwtSecret = () => {
   }
 
   return jwtSecret;
+};
+
+const getBearerToken = (req: AuthRequest) => {
+  const authorizationHeader = req.header("authorization");
+  if (!authorizationHeader) {
+    return null;
+  }
+
+  const [scheme, token] = authorizationHeader.split(" ");
+  if (scheme !== "Bearer" || !token) {
+    return null;
+  }
+
+  return token.trim() || null;
+};
+
+const extractToken = (
+  req: AuthRequest,
+  cookieConfigs: AuthCookieConfig[],
+): ExtractedToken | null => {
+  const bearerToken = getBearerToken(req);
+  if (bearerToken) {
+    return {
+      token: bearerToken,
+      source: "authorization",
+    };
+  }
+
+  for (const cookieConfig of cookieConfigs) {
+    const token = req.cookies?.[cookieConfig.name];
+    if (token) {
+      return {
+        token,
+        source: "cookie",
+        cookie: cookieConfig,
+      };
+    }
+  }
+
+  return null;
 };
 
 const mapPayloadToUser = (payload: jwt.JwtPayload): AuthUser | null => {
@@ -109,54 +181,105 @@ const mapPayloadToUser = (payload: jwt.JwtPayload): AuthUser | null => {
   return null;
 };
 
+const verifyToken = (token: string) => {
+  const payload = jwt.verify(token, getJwtSecret());
+  if (
+    typeof payload === "string" ||
+    typeof payload !== "object" ||
+    payload === null
+  ) {
+    return null;
+  }
+
+  return mapPayloadToUser(payload as jwt.JwtPayload);
+};
+
+const matchesOrganizationScope = (req: AuthRequest, user: AuthUser) => {
+  const requestOrgSlug =
+    req.organization?.slug || String(req.params.orgSlug ?? "").trim() || null;
+  const requestOrganizationId = req.organization?.uuid ?? null;
+
+  if (!requestOrgSlug && !requestOrganizationId) {
+    return true;
+  }
+
+  if (
+    user.actorType !== "organization_admin" &&
+    user.actorType !== "organization_user"
+  ) {
+    return true;
+  }
+
+  if (
+    requestOrganizationId &&
+    user.organizationId !== requestOrganizationId
+  ) {
+    return false;
+  }
+
+  if (requestOrgSlug && user.orgSlug !== requestOrgSlug) {
+    return false;
+  }
+
+  return true;
+};
+
+const handleUnauthorized = (
+  req: AuthRequest,
+  res: Response,
+  extractedToken?: ExtractedToken | null,
+) => {
+  if (extractedToken?.source === "cookie") {
+    clearAuthCookieAndRespond(
+      req,
+      res,
+      extractedToken.cookie.name,
+      extractedToken.cookie.options,
+    );
+    return;
+  }
+
+  res.status(401).json({ message: getApiMessage(req, "unauthorized") });
+};
+
 const createAuthMiddleware =
   (
-    cookieName: string,
-    cookieOptions: ReturnType<typeof getAdminCookieOptions>,
-    expectedActorType: AuthActorType,
+    cookieConfigs: AuthCookieConfig[],
+    expectedActorTypes: SupportedAuthActorType[],
   ) =>
   (req: AuthRequest, res: Response, next: NextFunction) => {
-    const token = req.cookies?.[cookieName];
-    if (!token) {
+    const extractedToken = extractToken(req, cookieConfigs);
+    if (!extractedToken) {
       res.status(401).json({ message: getApiMessage(req, "unauthorized") });
       return;
     }
 
     try {
-      const payload = jwt.verify(token, getJwtSecret());
-
+      const user = verifyToken(extractedToken.token);
       if (
-        typeof payload === "string" ||
-        typeof payload !== "object" ||
-        payload === null
+        !user ||
+        !expectedActorTypes.includes(user.actorType) ||
+        !matchesOrganizationScope(req, user)
       ) {
-        clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
-        return;
-      }
-
-      const user = mapPayloadToUser(payload as jwt.JwtPayload);
-      if (!user || user.actorType !== expectedActorType) {
-        clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
+        handleUnauthorized(req, res, extractedToken);
         return;
       }
 
       req.user = user;
       next();
     } catch {
-      clearAuthCookieAndRespond(req, res, cookieName, cookieOptions);
+      handleUnauthorized(req, res, extractedToken);
     }
   };
 
 export const adminAuthMiddleware = createAuthMiddleware(
-  ADMIN_AUTH_COOKIE,
-  getAdminCookieOptions(),
-  "platform_admin",
+  [ADMIN_COOKIE_CONFIG],
+  ["platform_admin"],
 );
 
 export const organizationAuthMiddleware = createAuthMiddleware(
-  ORG_AUTH_COOKIE,
-  getOrgCookieOptions(),
-  "organization_admin",
+  [ORG_COOKIE_CONFIG],
+  ["organization_admin"],
 );
 
 export const scopedAuthMiddleware = (
@@ -176,15 +299,11 @@ export const organizationScopedAuthMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (req.cookies?.[LEGACY_AUTH_COOKIE]) {
-    return authMiddleware(req, res, next);
-  }
-
-  if (req.cookies?.[ORG_AUTH_COOKIE]) {
-    return organizationAuthMiddleware(req, res, next);
-  }
-
-  return authMiddleware(req, res, next);
+  return createAuthMiddleware([LEGACY_COOKIE_CONFIG, ORG_COOKIE_CONFIG], [
+    "legacy_user",
+    "organization_admin",
+    "organization_user",
+  ])(req, res, next);
 };
 
 export const authMiddleware = (
@@ -192,53 +311,10 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  const token = req.cookies?.[LEGACY_AUTH_COOKIE];
-  if (!token) {
-    res.status(401).json({ message: getApiMessage(req, "unauthorized") });
-    return;
-  }
-
-  try {
-    const payload = jwt.verify(token, getJwtSecret());
-    if (
-      typeof payload === "string" ||
-      typeof payload !== "object" ||
-      payload === null
-    ) {
-      clearAuthCookieAndRespond(
-        req,
-        res,
-        LEGACY_AUTH_COOKIE,
-        getAdminCookieOptions(),
-      );
-      return;
-    }
-
-    const user = mapPayloadToUser(payload as jwt.JwtPayload);
-    if (
-      !user ||
-      (user.actorType !== "legacy_user" &&
-        user.actorType !== "organization_user")
-    ) {
-      clearAuthCookieAndRespond(
-        req,
-        res,
-        LEGACY_AUTH_COOKIE,
-        getAdminCookieOptions(),
-      );
-      return;
-    }
-
-    req.user = user;
-    next();
-  } catch {
-    clearAuthCookieAndRespond(
-      req,
-      res,
-      LEGACY_AUTH_COOKIE,
-      getAdminCookieOptions(),
-    );
-  }
+  return createAuthMiddleware([LEGACY_COOKIE_CONFIG], [
+    "legacy_user",
+    "organization_user",
+  ])(req, res, next);
 };
 
 export const requireRole =

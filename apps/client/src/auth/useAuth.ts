@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { userCheck } from '@/api/queries/authQueries'
+import type { ApiError } from '@/lib/types'
 
 type AuthMeResponse = {
   actorType: 'platform_admin'
@@ -12,7 +13,7 @@ type AuthMeResponse = {
 } | null
 
 export const useAuth = () => {
-  const { data, isPending, refetch } = useQuery<AuthMeResponse>({
+  const { data, error, isPending, refetch } = useQuery<AuthMeResponse>({
     queryKey: ['auth', 'me'],
     queryFn: async () => userCheck() as Promise<AuthMeResponse>,
     retry: false,
@@ -23,13 +24,16 @@ export const useAuth = () => {
     refetchOnReconnect: false,
   })
 
+  const isUnauthorized = (error as ApiError | null)?.status === 401
+  const effectiveUser = isUnauthorized ? null : data
+
   const revalidateAuth = useCallback(async () => {
     await refetch()
   }, [refetch])
 
   return {
-    user: data,
-    isAuth: Boolean(data?.username),
+    user: effectiveUser,
+    isAuth: Boolean(effectiveUser?.username),
     isLoading: isPending,
     revalidateAuth,
   }

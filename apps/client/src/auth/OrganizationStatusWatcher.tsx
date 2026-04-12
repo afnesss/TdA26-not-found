@@ -2,6 +2,7 @@ import {
   getOrganizationAccessStatus,
   organizationLogout,
 } from '@/api/queries/organizationQueries'
+import { clearOrgToken } from '@/auth/storage'
 import {
   ORG_INACTIVE_EVENT,
   isOrganizationInactiveError,
@@ -36,6 +37,7 @@ const OrganizationStatusWatcher = () => {
       if (!orgSlug || handledRef.current) return
 
       handledRef.current = true
+      clearOrgToken(orgSlug)
       queryClient.setQueryData(['org-auth', orgSlug], null)
       void organizationLogout(orgSlug).catch(() => undefined)
 

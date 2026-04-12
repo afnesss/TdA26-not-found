@@ -54,7 +54,11 @@ export async function login(req: Request, res: Response) {
 
   res.cookie(ADMIN_AUTH_COOKIE, token, getAdminCookieOptions());
 
-  res.json({ message: "OK" });
+  res.json({
+    token,
+    actorType: "platform_admin",
+    username,
+  });
 }
 
 export async function logoutAdmin(req: Request, res: Response) {

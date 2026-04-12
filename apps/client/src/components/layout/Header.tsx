@@ -2,6 +2,10 @@ import {
   adminLogout,
   organizationLogout,
 } from '@/api/queries/organizationQueries'
+import {
+  clearAdminToken,
+  clearOrgToken,
+} from '@/auth/storage'
 import { useAuth } from '@/auth/useAuth'
 import { useOrganizationAuth } from '@/auth/useOrganizationAuth'
 import DropdownMenuComponent from '@/components/shared/DropdownMenuComponent'
@@ -108,6 +112,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       if (effectiveOrgSlug && isOrgAuth) {
+        clearOrgToken(effectiveOrgSlug)
         await organizationLogout(effectiveOrgSlug)
         queryClient.setQueryData(['org-auth', effectiveOrgSlug], null)
         toast.success(t('toasts.logoutSuccess'))
@@ -116,6 +121,7 @@ export default function Header() {
       }
 
       if (isAdminAuth) {
+        clearAdminToken()
         await adminLogout()
         queryClient.setQueryData(['auth', 'me'], null)
         toast.success(t('toasts.logoutSuccess'))

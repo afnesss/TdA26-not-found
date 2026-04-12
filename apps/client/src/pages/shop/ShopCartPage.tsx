@@ -138,7 +138,9 @@ const ShopCartPage = () => {
           <Button
             variant='outline'
             size='md'
-            onClick={() => navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))}
+            onClick={() =>
+              navigate(buildShopPath('/shop', orgSlug, isAdminContextPage))
+            }
           >
             {t('cart.continueShopping')}
           </Button>
@@ -333,7 +335,7 @@ const ShopCartPage = () => {
                 type='button'
                 variant='outline'
                 size='sm'
-                className='absolute right-1 top-1 h-8 rounded-lg px-3'
+                className='absolute right-1 top-1 h-6 md:h-8 rounded-lg px-3'
                 onClick={handlePromoSubmit}
                 disabled={!promoDraft.trim() || promoValidation.isFetching}
               >
@@ -369,7 +371,9 @@ const ShopCartPage = () => {
             variant='primary'
             className='h-12 w-full text-base font-bold'
             onClick={() =>
-              navigate(buildShopPath('/shop/checkout', orgSlug, isAdminContextPage))
+              navigate(
+                buildShopPath('/shop/checkout', orgSlug, isAdminContextPage),
+              )
             }
             disabled={!hasItems}
           >

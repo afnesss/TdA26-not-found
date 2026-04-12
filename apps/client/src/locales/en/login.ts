@@ -38,6 +38,9 @@ const login = {
       lecturer: 'Lecturer',
       student: 'Student',
     },
+    hints: {
+      studentLogin: 'To create a new account, enter a new username',
+    },
     fields: {
       username: {
         label: 'Username',

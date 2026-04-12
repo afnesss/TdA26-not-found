@@ -38,6 +38,9 @@ const login = {
       lecturer: 'Lektor',
       student: 'Student',
     },
+    hints: {
+      studentLogin: 'Pro vytvoření nového učtu zadejte nové uživatelské jméno.',
+    },
     fields: {
       username: {
         label: 'Uživatelské jméno',

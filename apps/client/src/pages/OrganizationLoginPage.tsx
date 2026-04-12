@@ -95,6 +95,12 @@ const OrganizationLoginPage = () => {
           </Button>
         </div>
 
+        {mode === 'student' && (
+          <p className='text-xs text-muted-foreground'>
+            {t('organization.hints.studentLogin')}
+          </p>
+        )}
+
         <FormField
           label={t('organization.fields.username.label')}
           icon={User}

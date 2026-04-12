@@ -94,7 +94,7 @@ The project currently has two deployment targets:
 
 - The frontend is deployed on Render as a `Static Site`.
 - The backend is deployed separately as a `Web Service`, so frontend and backend run as cross-origin services.
-- `https://tda26-not-found.onrender.com` is the backend Render origin used by the frontend.
+- The frontend should use `VITE_API_BASE_URL` to communicate with the Render backend origin for the active environment.
 - Render uses an SPA fallback rule so client routes resolve to `index.html`.
 
 Main frontend entry points:
@@ -117,10 +117,10 @@ The seeded default organization is available at `/tda`.
 - `apps/client/nginx.conf`: SPA fallback for nginx-based deployment
 - `apps/client/public/_redirects`: static-hosting fallback rule
 
-### Current Render Status
+### Render Notes
 
 - **Frontend routing**: Render uses an SPA rewrite so client routes resolve to `index.html`.
-- **Frontend API calls**: the frontend uses `VITE_API_BASE_URL` to communicate with the separate Render backend origin.
+- **Frontend API calls**: the frontend uses `VITE_API_BASE_URL` to communicate with the separate Render backend origin for the current deployment.
 - **Authentication**: protected routes use cookie-based auth between the Render frontend and backend origins.
 
 ### Login Model

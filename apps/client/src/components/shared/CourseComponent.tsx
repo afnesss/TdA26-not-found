@@ -18,7 +18,7 @@ import { buildOrgCoursePath } from '@/lib/routes'
 import { cn } from '@/lib/utils'
 import type { CoursePlanningState } from '@/pages/CoursesPage/components/CardDate'
 import { useQuery } from '@tanstack/react-query'
-import { Edit } from 'lucide-react'
+import { Edit, LockKeyhole } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
@@ -395,6 +395,12 @@ const CourseComponent = (props: CourseCompProps) => {
                 )}
                 disabled={!canOpenCourse}
               >
+                {!canOpenCourse && (
+                  <LockKeyhole
+                    className='size-3.5 shrink-0 md:hidden'
+                    aria-hidden='true'
+                  />
+                )}
                 <span className='font-semibold'>
                   {t('actions.view', { ns: 'courses' })}
                 </span>

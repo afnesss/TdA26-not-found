@@ -29,7 +29,7 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-    allowedHeaders: ["Authorization", "Content-Type"],
+    allowedHeaders: ["Authorization", "Content-Type", "X-Locale"],
   }),
 );
 

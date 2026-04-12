@@ -13,12 +13,13 @@ import {
 } from "../middleware/auth";
 
 const getPlatformAdminCredentials = () => {
-  const username = process.env.ADMIN_USERNAME?.trim() || "superadmin";
-  const password = process.env.ADMIN_PASSWORD || "change-me";
+  const username =
+    process.env.ADMIN_USERNAME?.trim() || "CHANGE_ME_ADMIN_USERNAME";
+  const password = process.env.ADMIN_PASSWORD || "CHANGE_ME_ADMIN_PASSWORD";
 
   if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
     logger.warn(
-      "ADMIN_USERNAME/ADMIN_PASSWORD not set, using development fallback credentials",
+      "ADMIN_USERNAME/ADMIN_PASSWORD not set, using placeholder fallback credentials",
     );
   }
 

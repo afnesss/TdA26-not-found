@@ -1,0 +1,13 @@
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: password
+
+  api:
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/tda26
+      SESSION_SECRET: dev-session-secret
+      JWT_SECRET: dev-jwt-secret
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: change-me
+      ORG_DEFAULT_PASSWORD: org-change-me

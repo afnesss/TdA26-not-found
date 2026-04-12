@@ -7,6 +7,7 @@
 - [UI & Styling](#ui--styling)
 - [Data Fetching](#data-fetching)
 - [Running Locally](#running-locally)
+- [Render Deployment](#render-deployment)
 
 ---
 

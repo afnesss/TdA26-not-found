@@ -1,77 +1,130 @@
-# Tým: Not Found
+# Team: not-found
 
-Tento repozitář obsahuje naši implementaci projektu pro Tour de App 2026.
+This repository contains the Tour de App 2026 project of team not-found.
 
-## Členové týmu
+## Team Members
 
 - [**Team Leader**](https://github.com/bondar7)
-- [**Frontend Developer & UI/UX**](https://github.com/afnesss)
+- [**Full-Stack Developer & UI/UX**](https://github.com/afnesss)
 - [**Backend Developer**](https://github.com/Shadowinger)
 
-## Architektura a Dokumentace
+## Architecture and Documentation
 
-Projekt je strukturován jako monorepo. Pro detailní informace o jednotlivých částech systému prosím navštivte příslušné dokumentace:
+The project is structured as a monorepo. For more detail about each part of the system, see:
 
-- **[Frontend Dokumentace](apps/client/README.md)**
-- **[Backend Dokumentace](apps/api/README.md)**
+- **[Frontend Documentation](apps/client/README.md)**
+- **[Backend Documentation](apps/api/README.md)**
 
-### Použité technologie
+### Technologies Used
 
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS
 - **Backend**: Node.js, Express, TypeScript
-- **Databáze**: PostgreSQL, Drizzle ORM
-- **Infrastruktura**: Docker, Docker Compose, Caddy
+- **Database**: PostgreSQL, Drizzle ORM
+- **Infrastructure**: Docker, Docker Compose, Caddy, Render
 
 ---
 
-## Lokální Vývoj a Spuštění
+## Local Development
 
-Pro konzistentní vývojové prostředí používáme Docker.
+For a consistent development environment, we use Docker.
 
-### 1. Doporučené spuštění (Docker Compose)
+### 1. Recommended Setup: Docker Compose
 
-Nejjednodušší způsob, jak spustit celý stack (Client, API, DB, Caddy), je pomocí Docker Compose. Tento způsob simuluje produkční prostředí včetně reverzní proxy.
+The easiest way to run the full stack locally is:
+
+1. Copy `docker-compose.override.example.yaml` to `docker-compose.override.yaml`
+2. Adjust the local-only development credentials there if needed
+3. Start the stack:
 
 ```bash
 docker-compose up --build
 ```
 
-> **Doba nasazení:** První build může trvat **5-10 minut** (stahování image, instalace závislostí). Další spuštění jsou v řádu sekund.
+This starts:
 
-### 2. Alternativní spuštění (Manuální)
+- client
+- api
+- db
+- caddy
 
-Pokud potřebujete spustit například pouze databázi a zbytek spouštět lokálně na hostitelském stroji (např. pro rychlejší debugování):
+This setup is the closest to the intended integrated environment because Caddy proxies frontend and backend under one entry point.
+The base `docker-compose.yaml` intentionally uses placeholder secrets so the repository is safe to publish; the local untracked `docker-compose.override.yaml` provides convenient development values.
+
+### 2. Alternative Setup
+
+You can also run only the database in Docker and start the rest manually:
 
 ```bash
-# Spustí pouze databázi na portu 5433
 docker-compose up db
 ```
 
-_Při manuálním spouštění API/Clienta mimo Docker nezapomeňte vytvořit `.env` soubory v příslušných složkách (`apps/client/.env`, `apps/api/.env`)._
+When running API or client outside Docker, create the relevant `.env` files in:
+
+- `apps/client/.env`
+- `apps/api/.env`
 
 ---
 
-## Infrastruktura a Konfigurace
+## Infrastructure and Routing
 
 ### Caddy (Reverse Proxy)
 
-Caddy funguje jako vstupní brána pro celou aplikaci. Řeší směrování požadavků, což zjednodušuje komunikaci mezi frontendem a backendem bez nutnosti CORS konfigurace pro vývoj.
+Caddy acts as the entry point for the local integrated stack.
 
-- **Frontend requests**: Všechny požadavky na `/` jsou směrovány na React aplikaci.
-- **API requests**: Všechny požadavky začínající na `/api` jsou směrovány na backend kontejner.
+- Requests to `/` are routed to the React frontend.
+- Requests to `/api` are routed to the backend.
 
-Díky tomu může frontend volat API jednoduše pomocí relativních cest (např. `fetch("/api/courses")`), což funguje identicky lokálně i v produkci.
+Because of this, the frontend can use relative API paths such as `fetch("/api/courses")` in same-origin deployments.
 
-**Konfigurační soubory:**
+Key files:
 
-- `caddy/Caddyfile.development`: Používá se pro lokální vývoj (`localhost:8080`).
-- `caddy/Caddyfile.production`: Používá se pro produkční nasazení.
+- `apps/caddy/Caddyfile.development`
+- `apps/caddy/Caddyfile.production`
 
-### Produkční nasazení (Deployment)
+---
 
-Nasazení je automatizováno pomocí GitHub Actions a konfigurace `tourdeapp.yaml`.
+## Deployment
 
-- **Kritické soubory**:
-  - `tourdeapp.yaml`: Definuje služby pro Tour de Cloud platformu.
-  - `.github/workflows/deploy.yml`: CI/CD pipeline, která se spouští při pushnutí do `main`.
-  - `Dockerfile` (v každé složce): Optimalizované instrukce pro sestavení produkčních image (multi-stage builds).
+The project currently has two deployment targets:
+
+- **Tour de App / Tour de Cloud**: deployment based on `tourdeapp.yaml`
+- **Render**: split deployment with separate services for frontend, backend, and database
+
+## Render Deployment
+
+- The frontend is deployed on Render as a `Static Site`.
+- The backend is deployed separately as a `Web Service`, so frontend and backend run as cross-origin services.
+- `https://tda26-not-found.onrender.com` is the backend Render origin used by the frontend.
+- Render uses an SPA fallback rule so client routes resolve to `index.html`.
+
+Main frontend entry points:
+
+- `/` public start page
+- `/:orgSlug` organization landing page
+- `/:orgSlug/info` organization info page
+- `/:orgSlug/login` organization login page
+- `/:orgSlug/courses` student course area
+- `/:orgSlug/dashboard` lecturer/staff dashboard
+
+The seeded default organization is available at `/tda`.
+
+### Important Deployment Files
+
+- `tourdeapp.yaml`: Tour de Cloud service definition
+- `.github/workflows/deploy.yml`: CI/CD workflow
+- `apps/api/Dockerfile`: backend image build
+- `apps/client/Dockerfile`: frontend Docker/nginx build
+- `apps/client/nginx.conf`: SPA fallback for nginx-based deployment
+- `apps/client/public/_redirects`: static-hosting fallback rule
+
+### Current Render Status
+
+- **Frontend routing**: Render uses an SPA rewrite so client routes resolve to `index.html`.
+- **Frontend API calls**: the frontend uses `VITE_API_BASE_URL` to communicate with the separate Render backend origin.
+- **Authentication**: protected routes use cookie-based auth between the Render frontend and backend origins.
+
+### Login Model
+
+- `/:orgSlug/login` is used for organization login.
+- Organization login supports two modes: `student` and `lecturer`.
+- After organization login, students are sent to the organization courses area and lecturers are sent to the courses dashboard.
